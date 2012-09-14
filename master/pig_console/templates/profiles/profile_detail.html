@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load user_social_url %}
+
+{% block content %}
+{% if profile.user == user %}
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% get_user_social_auth request.user 'google-oauth' %}
+{% get_user_social_auth request.user 'facebook' %}
+
+<br />
+<a href='{% url profiles_edit_profile %}'>Edit pofile</a>
+{% endif %}
+<br />
+last {{ profile.user.last_name }}<br />
+public {{ profile.public_profile_field }}
+
+{% endblock %}

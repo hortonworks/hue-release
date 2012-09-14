@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="float: left; width: 50%;">
+<form action="{% url root_pig %}" method="post">
+  {% csrf_token %}
+  <table>
+    {{ form }}
+  </table>
+  <input type="submit" name="submit" value="Save" >
+</form>
+</div>
+<div>
+  <div>
+    <h2>My scripts</h2>
+    <ul>
+      {% for v in contacts.object_list %}
+      <li>
+	<a href="{% url one_script v.id %}">{% if v.title %}{{ v.title }}{% else %}no title{% endif %}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="pagination">
+    <span class="step-links">
+      {% if contacts.has_previous %}
+      <a href="?page={{ contacts.previous_page_number }}">previous</a>
+      {% endif %}
+      
+      {% for page in page_count %}
+      <a href="?page={{ page }}">{{ page }}</a>
+      {% endfor %}
+      
+      {% if records.has_next %}
+      <a href="?page={{ contacts.next_page_number }}">next</a>
+      {% endif %}
+    </span>
+  </div>
+<div class="current">
+  Page {{ contacts.number }} of {{ contacts.paginator.num_pages }}.
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+from django.contrib import admin
+from pig.models import PigScript
+
+
+class PigScriptAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'text', 'creater', 'date_created',
+                    'is_temporery', 'pig_script')
+
+admin.site.register(PigScript, PigScriptAdmin)
