@@ -10,6 +10,8 @@ def authorization(func):
 			if request.POST.has_key("login"):
 				username = request.POST['username']
 				password = request.POST['password']
+				if username == password == '':
+					return HttpResponseRedirect('start_page/')
 				user = auth.authenticate(username=username, password=password)
 				if user is not None and user.is_active:
 					auth.login(request, user)
