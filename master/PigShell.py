@@ -2,7 +2,7 @@ from CommandPy import CommandPy
 
 class PigShell(CommandPy):
 
-    # This method get 1 parameter. (EXPLAIN or DESCRIPTION)
+    # This method get 1 parameter. (EXPLAIN or DESCRIBE)
     # Return code with one of this commands
     def ShowCommands(self, command = 'EXPLAIN'):
         last_variable = self.getLastVariable()
