@@ -30,6 +30,7 @@ class PigShell(CommandPy):
             try:
                 variable_index = c.index('=')
                 last_variable = c[:variable_index - 1].strip()
+                break
             except ValueError:
                 continue
 
