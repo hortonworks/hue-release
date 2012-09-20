@@ -14,8 +14,9 @@ class CommandPy:
         self.shell_path = shell_path.split()
         self.file_path = self.shell_path[-1]
 
-    def returnCode(self, code):
-        self.command(code)
+    def returnCode(self, code = ''):
+        if code:
+            self.command(code)
         slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds = True)
         answer = slave.communicate()
         if not answer[1]:
