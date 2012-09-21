@@ -16,16 +16,15 @@ class CommandPy:
             self.command(code)
         slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE,
                       stderr=PIPE, close_fds = True)
-        answer = slave.communicate()
-        error = answer[1]
+        answer, error = slave.communicate()
         error = '\n'.join(filter(lambda x: '[main] INFO' not in x and
                                            '[main] WARN' not in x,
                                            error.split('\n')))
-        if not answer[0]:
+        if not answer:
             self.last_error = error
             return False
         else:
-            return answer[0]
+            return answer
 
     def command(self, command):
         fl = open(self.file_path, 'a')
