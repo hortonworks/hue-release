@@ -14,8 +14,12 @@ class CommandPy:
     def returnCode(self, code = ''):
         if code:
             self.command(code)
-        slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds = True)
+        slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE,
+                      stderr=PIPE, close_fds = True)
         answer = slave.communicate()
+        answer[1] = '\n'.join(filter(lambda x: '[main] INFO' not in x and
+                                               '[main] WARN' not in x,
+                                               answer[1].split('\n')))
         if not answer[0]:
             self.last_error = answer[1]
             return False
@@ -27,3 +31,4 @@ class CommandPy:
         #fl.writelines(self.separator)
         fl.writelines(command)
         fl.close()
+
