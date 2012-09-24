@@ -16,9 +16,10 @@ class CommandPy:
             self.command(code)
         slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE,
                       stderr=PIPE, close_fds = True)
-        answer, error = slave.communicate()
-        error = '\n'.join(filter(lambda x: '[main] INFO' not in x and
-                                           '[main] WARN' not in x,
+        slave.wait()
+        answer, error = slave.stdout.read(), slave.stderr.read()
+        error = '\n'.join(filter(lambda x: '] INFO' not in x and
+                                           '] WARN' not in x,
                                            error.split('\n')))
         if not answer:
             self.last_error = error
