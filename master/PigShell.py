@@ -2,9 +2,12 @@ from CommandPy import CommandPy
 
 class PigShell(CommandPy):
 
-    # This method get 1 parameter. (EXPLAIN or DESCRIBE)
-    # Return code with one of this commands
     def ShowCommands(self, command = 'EXPLAIN'):
+        """
+          This method get 1 parameter. (EXPLAIN or DESCRIBE)
+          Return code with one of this commands
+          return False - means that in file no variables
+        """
         last_variable = self.getLastVariable()
         if not last_variable:
             return False
@@ -21,8 +24,10 @@ class PigShell(CommandPy):
 
         return returnCommand
 
-    # This method find last declared variable in PIG file script
     def getLastVariable(self):
+        """
+          This method find last declared variable in PIG file script
+        """
         fl = open(self.file_path, 'r')
         code = fl.readlines()[::-1]
         last_variable = ''
