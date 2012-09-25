@@ -32,13 +32,14 @@ from django import forms
 from pig.models import PigScript
 from django.contrib.auth.models import User
 from CommandPy import CommandPy
+from PigShell import PigShell
 
 class PigScriptForm(forms.Form):
     title = forms.CharField(max_length=100, required=False)
     text = forms.CharField(widget=forms.Textarea, required=False)
 
 
-def index(request):
+def index(request, text = False):
     pig_script = PigScript.objects.filter(creater=request.user)
 
     form = PigScriptForm()
@@ -50,8 +51,7 @@ def index(request):
             ps = PigScript.objects.create(**data)
             return redirect(one_script, ps.id)
 
-    return render('index.mako', request, dict(form = form, pig_script = pig_script))
-
+    return render('index.mako', request, dict(form = form, pig_script = pig_script, text = text))
 
 
 def one_script(request, obj_id, text = False):
@@ -60,21 +60,30 @@ def one_script(request, obj_id, text = False):
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
-            PigScript.objects.filter(id=obj_id).update(**data)
+            instance.update(**form.cleaned_data)
+            if request.POST.get('submit') == 'Execute':
+                f1 = open('pig.pig', 'w')
+                f1.write(instance[0].text)
+                f1.close()
+                pig = CommandPy('pig -x local pig.pig')
+                text = pig.returnCode() or pig.last_error
 
     form = PigScriptForm(instance.values('title', 'text')[0])
-    return render('edit_script.mako', request, dict(form = form, instance = instance[0], pig_script = pig_script, text = text1))
+    return render('edit_script.mako', request, dict(form=form, instance=instance[0], pig_script=pig_script, text=text))
 
-
-def execute(request, obj_id):
+def command(request, obj_id, command):
     instance = PigScript.objects.get(id=obj_id)
     f1 = open('pig.pig', 'w')
     f1.write(instance.text)
     f1.close()
-    pig = CommandPy('pig -x local pig.pig')
-    pig_answer = pig.returnCode()
-    if not pig_answer:
-        pig_answer = pig.last_error
+    pig = PigShell('pig -x local pig.pig')
+    pig_answer = pig.ShowCommands(command=command) or pig.last_error
     return one_script(request, obj_id, text=pig_answer)
-    #HttpResponse('<a href="{% url root_pig %}">back</a>' + '<pre>' + pig_answer + '</pre>')
+
+
+
+def delete(request, obj_id):
+    instance = PigScript.objects.get(id=obj_id)
+    text = instance.title + ' Deleted'
+    instance.delete()
+    return index(request, text = text)

@@ -18,7 +18,9 @@
 from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('pig',
-    url(r'execute/(?P<obj_id>\d+)/$', 'views.execute', name='execute_pig'),
+    url(r'(?P<obj_id>\d+)/(?P<command>[\w-]+)/$', 'views.command',
+        name='commands'),
+    url(r'delete/(?P<obj_id>\d+)/$', 'views.delete', name='delete'),
     url(r'(?P<obj_id>\d+)/$', 'views.one_script', name='one_script'),
     url(r'$', 'views.index', name='root_pig'),
 )

@@ -28,20 +28,14 @@ ${shared.menubar(section='mytab')}
     </div>
     <div class="span9" style="float: left; width: 70%;">
       <div class="clearfix">
+	<div class="div_conteiner">
+      % if text:
+      <pre>${text}</pre>
+      % endif
+    </div>
         <div class="input">
 	  <form action="${url('pig.views.index')}" method="post">
-	    <table>
-	      <tr>
-		<td>
-		  <input id="id_title" type="text" name="title" maxlength="100" />
-		</td>
-	      </tr>
-	      <tr>
-		<td>
-		  <textarea id="id_text" rows="10" cols="40" name="text"></textarea>
-		</td>
-	      </tr>
-	    </table>
+        ${form}
 	    <div class="actions">
 	      <input class="btn primary" type="submit" name="submit" value="Save" >
 	    </div>

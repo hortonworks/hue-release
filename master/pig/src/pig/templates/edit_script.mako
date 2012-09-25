@@ -33,8 +33,10 @@ ${shared.menubar(section='mytab')}
 		  ${form}
 	    <div class="actions">
 	      <input class="btn primary" type="submit" name="submit" value="Save" >
-	      <a id="executeQuery" class="btn primary" href="${url('pig.views.execute', instance.id)}" >Execute</a>
-	      <a id="explainQuery" class="btn">Explain</a>
+	      <input class="btn primary" type="submit" name="submit" value="Execute" />
+	      <a class="btn" href="${url('pig.views.command', instance.id, 'EXPLAIN')}">Explain</a>
+	      <a class="btn" href="${url('pig.views.command', instance.id, 'DESCRIBE')}">Describe</a>
+          <a class="btn" href="${url('pig.views.delete', instance.id)}">Delete</a>
 	      &nbsp; or create a &nbsp;<a class="btn" href="#">New query</a>
 	    </div>
 	  </form>

@@ -28,6 +28,11 @@ ${shared.menubar(section='mytab')}
     </div>
     <div class="span9" style="float: left; width: 70%;">
       <div class="clearfix">
+	<div class="div_conteiner">
+      % if text:
+      <pre>${text}</pre>
+      % endif
+    </div>
         <div class="input">
 	  <form action="${url('pig.views.index')}" method="post">
 	    <table>
@@ -51,4 +56,12 @@ ${shared.menubar(section='mytab')}
     </div>
   </div>
 </div>
+    <script type="text/javascript" >
+      var editor = CodeMirror.fromTextArea(document.getElementById("id_text"), {
+        lineNumbers: true,
+        matchBrackets: true,
+        indentUnit: 4,
+        mode: "text/x-pig"
+      });
+    </script>
 ${commonfooter()}
