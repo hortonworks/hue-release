@@ -17,12 +17,34 @@ class PigShell(CommandPy):
         fl.close()
 
         returnCommand = self.returnCode()
+        if returnCommand:
+            if command.upper() == 'DESCRIBE':
+                returnCommand = returnCommand.split('\n')[-1]
+            elif command.upper() == 'EXPLAIN':
+                returnCommand = '%s\n%s\n%s' % ('-' * 47, 'Logical Plan:',
+                                                returnCommand.split('Logical Plan:')[1])
+            elif command.upper() == 'DUMP':
+                dump = returnCommand.split('\n')[::-1]
+                i = 0
+                for d in dump:
+                    try:
+                        if d[0] != '(' or d[-1] != ')':
+                            break
+                    except IndexError:
+                        pass
+                    i += 1
+                returnCommand = dump[:i + 1][::-1]
+            else:
+                return False
 
         fl = open(self.file_path, 'w')
         fl.write(''.join(code))
         fl.close()
 
         return returnCommand
+
+    def DUMPlimit(self):
+        pass
 
     def getLastVariable(self):
         """
