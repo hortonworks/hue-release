@@ -1,19 +1,19 @@
-#!/usr/bin/env python
-# Licensed to Cloudera, Inc. under one
+# Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
-# regarding copyright ownership.  Cloudera, Inc. licenses this file
+# regarding copyright ownership.  The ASF licenses this file
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 
 """
 Views & controls for creating tables
@@ -30,9 +30,9 @@ from desktop.lib.django_forms import MultiForm
 from hadoop.fs import hadoopfs
 
 import hcatalog.common
-import beeswax.forms
-from beeswax.views import describe_table, confirm_query, execute_directly
-from beeswax.views import make_beeswax_query
+import hcatalog.forms
+from hcatalog.views import describe_table, confirm_query, execute_directly
+from hcatalog.views import make_hcatalog_query
 from hcatalog import db_utils
 
 LOG = logging.getLogger(__name__)
@@ -45,9 +45,9 @@ def index(request):
 def create_table(request):
   """Create a table by specifying its attributes manually"""
   form = MultiForm(
-      table=beeswax.forms.CreateTableForm,
-      columns=beeswax.forms.ColumnTypeFormSet,
-      partitions=beeswax.forms.PartitionTypeFormSet)
+      table=hcatalog.forms.CreateTableForm,
+      columns=hcatalog.forms.ColumnTypeFormSet,
+      partitions=hcatalog.forms.PartitionTypeFormSet)
   if request.method == "POST":
     form.bind(request.POST)
     if form.is_valid():
@@ -60,6 +60,10 @@ def create_table(request):
           'partition_columns': partition_columns
         }
       )
+
+      db_utils.meta_client().create_table("default", proposed_query)
+      tables = db_utils.meta_client().get_tables("default", ".*")
+      return render("show_tables.mako", request, dict(tables=tables, tbl_name=""))
       # Mako outputs bytestring in utf8
       proposed_query = proposed_query.decode('utf-8')
       tablename = form.table.cleaned_data['name']
@@ -67,6 +71,7 @@ def create_table(request):
       return confirm_query(request, proposed_query, on_success_url)
   else:
     form.bind()
+    
   return render("create_table_manually.mako", request, dict(
     action="#",
     table_form=form.table,
@@ -120,7 +125,7 @@ def import_wizard(request):
       s3_col_formset = None
 
       # Everything requires a valid file form
-      s1_file_form = beeswax.forms.CreateByImportFileForm(request.POST)
+      s1_file_form = hcatalog.forms.CreateByImportFileForm(request.POST)
       if not s1_file_form.is_valid():
         break
 
@@ -140,14 +145,14 @@ def import_wizard(request):
       #
       if not do_s2_auto_delim:
         # We should have a valid delim form
-        s2_delim_form = beeswax.forms.CreateByImportDelimForm(request.POST)
+        s2_delim_form = hcatalog.forms.CreateByImportDelimForm(request.POST)
         if not s2_delim_form.is_valid():
           # Go back to picking delimiter
           do_s2_user_delim, do_s3_column_def, do_hive_create = True, False, False
 
       if do_hive_create:
         # We should have a valid columns formset
-        s3_col_formset = beeswax.forms.ColumnTypeFormSet(prefix='cols', data=request.POST)
+        s3_col_formset = hcatalog.forms.ColumnTypeFormSet(prefix='cols', data=request.POST)
         if not s3_col_formset.is_valid():
           # Go back to define columns
           do_s3_column_def, do_hive_create = True, False
@@ -181,7 +186,7 @@ def import_wizard(request):
           file_form=s1_file_form,
           delim_form=s2_delim_form,
           fields_list=fields_list,
-          delimiter_choices=beeswax.forms.TERMINATOR_CHOICES,
+          delimiter_choices=hcatalog.forms.TERMINATOR_CHOICES,
           n_cols=n_cols,
         ))
 
@@ -196,7 +201,7 @@ def import_wizard(request):
                 column_name='col_%s' % (i,),
                 column_type='string',
             ))
-          s3_col_formset = beeswax.forms.ColumnTypeFormSet(prefix='cols', initial=columns)
+          s3_col_formset = hcatalog.forms.ColumnTypeFormSet(prefix='cols', initial=columns)
         return render('define_columns.mako', request, dict(
           action=urlresolvers.reverse(import_wizard),
           file_form=s1_file_form,
@@ -227,7 +232,7 @@ def import_wizard(request):
         path = s1_file_form.cleaned_data['path']
         return _submit_create_and_load(request, proposed_query, table_name, path, do_load_data)
   else:
-    s1_file_form = beeswax.forms.CreateByImportFileForm()
+    s1_file_form = hcatalog.forms.CreateByImportFileForm()
 
   return render('choose_file.mako', request, dict(
     action=urlresolvers.reverse(import_wizard),
@@ -247,7 +252,7 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load):
   else:
     on_success_url = urlresolvers.reverse(describe_table, kwargs={'table': table_name})
 
-  query_msg = make_beeswax_query(request, create_hql)
+  query_msg = make_hcatalog_query(request, create_hql)
   return execute_directly(request, query_msg,
                           on_success_url=on_success_url,
                           on_success_params=on_success_params)
@@ -276,7 +281,7 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters):
 
   n_cols = max([ len(row) for row in fields_list ])
   # ``delimiter`` is a MultiValueField. delimiter_0 and delimiter_1 are the sub-fields.
-  delim_form = beeswax.forms.CreateByImportDelimForm(dict(delimiter_0=delim,
+  delim_form = hcatalog.forms.CreateByImportDelimForm(dict(delimiter_0=delim,
                                                           delimiter_1='',
                                                           file_type=file_type,
                                                           n_cols=n_cols))
@@ -427,7 +432,7 @@ def load_after_create(request):
 
   LOG.debug("Auto loading data from %s into table %s" % (path, tablename))
   hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, tablename)
-  query_msg = make_beeswax_query(request, hql)
+  query_msg = make_hcatalog_query(request, hql)
   on_success_url = urlresolvers.reverse(describe_table, kwargs={'table': tablename})
 
   return execute_directly(request, query_msg, on_success_url=on_success_url)

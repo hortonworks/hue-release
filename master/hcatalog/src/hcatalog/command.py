@@ -1,40 +1,32 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 from subprocess import Popen, PIPE
 
 class Command:
-
-    file_path = ''
-    shell_path = ''
+    
     last_error = ''
 
-    #def __init__(self, shell_path=""):
-        #self.shell_path = shell_path.split()
-        #self.file_path = self.shell_path[-1]
-
-    def executeOld(self, what=''):
-        if what:
-            self.commandOld(what)
-        p = Popen(self.shell_path, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
-        answer, error = p.communicate()
-        if not answer:
-            self.last_error = error
-            return False
-        else:
-            return answer
-
-    def commandOld(self, command):
-        fl = open(self.file_path, 'a')
-        fl.writelines(command)
-        fl.close()
-            
     def execute(self, what):
         if not what:
             self.last_error = ""
             return False
-        #p = Popen("hcat -e " + what, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
-        #answer, error = p.communicate()
-        p = Popen(["ssh -t centos@192.168.56.101"], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
-        #answer, error = p.communicate(input="ls")
-        answer, error = p.communicate(input="hcat -e '" + what + "'")
+        p = Popen("hcat -e '" + what + "'", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+        answer, error = p.communicate()
         if not answer:
             self.last_error = error
             return False
@@ -45,7 +37,7 @@ class Command:
         if not what:
             self.last_error = ""
             return False
-        p = Popen("hcat -f " + what, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+        p = Popen("hcat -f " + what, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
         answer, error = p.communicate()
         if not answer:
             self.last_error = error
