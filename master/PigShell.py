@@ -5,18 +5,27 @@ class PigShell(CommandPy):
     commandOutput = ('DESCRIBE', 'EXPLAIN', 'DUMP',
                      'ILLUSTRATE', 'STORE', 'CAT')
 
-    def ShowCommands(self, command = 'EXPLAIN'):
+    def ShowCommands(self, command, limit = None):
         """
           This method get 1 parameter. (EXPLAIN or DESCRIBE)
           Return code with one of this commands
           return False - means that in file no variables
         """
+        if command not in self.commandOutput:
+            return False
+            
         last_variable = self.getLastVariable()
         if not last_variable:
             return False
 
         fl = open(self.file_path, 'r')
         code = self.validate(fl.readlines())
+        if limit:
+            from random import randint
+            new_var = [randint(65,122) for x in range(1, 11)]
+            code = code.append('%s = LIMIT %s %d;\n' % (new_var, last_variable, limit))
+            last_variable = new_var
+        code = code.append('%s %s;\n' % (command, last_variable))
         fl.close()
 
         # Create temporary file
