@@ -1,3 +1,20 @@
+## Licensed to the Apache Software Foundation (ASF) under one
+## or more contributor license agreements.  See the NOTICE file
+## distributed with this work for additional information
+## regarding copyright ownership.  The ASF licenses this file
+## to you under the Apache License, Version 2.0 (the
+## "License"); you may not use this file except in compliance
+## with the License.  You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+
+## Unless required by applicable law or agreed to in writing,
+## software distributed under the License is distributed on an
+## "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+## KIND, either express or implied.  See the License for the
+## specific language governing permissions and limitations
+## under the License.
+
 <%!from desktop.views import commonheader, commonfooter %>
 <%namespace name="shared" file="shared_components.mako" />
 
@@ -24,6 +41,7 @@ ${shared.menubar(section='mytab')}
       </li>
       % endfor
 	</ul>
+    <a class="btn" href="${url('root_pig')}">New script</a>
       </div>
     </div>
     <div class="span9" style="float: left; width: 70%;">
@@ -34,10 +52,10 @@ ${shared.menubar(section='mytab')}
 	    <div class="actions">
 	      <input class="btn primary" type="submit" name="submit" value="Save" >
 	      <input class="btn primary" type="submit" name="submit" value="Execute" />
-	      <a class="btn" href="${url('pig.views.command', instance.id, 'EXPLAIN')}">Explain</a>
-	      <a class="btn" href="${url('pig.views.command', instance.id, 'DESCRIBE')}">Describe</a>
+	      <input class="btn primary" type="submit" name="submit" value="Explain" />
+	      <input class="btn primary" type="submit" name="submit" value="Describe" />
+	      <input class="btn primary" type="submit" name="submit" value="Dump" />
           <a class="btn" href="${url('pig.views.delete', instance.id)}">Delete</a>
-	      &nbsp; or create a &nbsp;<a class="btn" href="#">New query</a>
 	    </div>
 	  </form>
 	</div>
