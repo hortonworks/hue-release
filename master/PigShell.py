@@ -22,7 +22,7 @@ class PigShell(CommandPy):
         code = self.validate(fl.readlines())
         if limit:
             from random import randint
-            new_var = [randint(65,122) for x in range(1, 11)]
+            new_var = ''.join([chr(randint(65,90)) for x in range(1, 11)])
             code = code.append('%s = LIMIT %s %d;\n' % (new_var, last_variable, limit))
             last_variable = new_var
         code = code.append('%s %s;\n' % (command, last_variable))
