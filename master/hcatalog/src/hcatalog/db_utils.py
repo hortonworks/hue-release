@@ -80,10 +80,10 @@ def meta_client():
       return res
   
     def get_tables(self, dbname, tbl_name):
-      res = self._client.get_tables(dbname, tbl_name)
+      tables, isError, error = self._client.get_tables(dbname, tbl_name)
       #self._decode_storage_descriptor(res.sd)
       #self._decode_map(res.parameters)
-      return res  
+      return (tables, isError, error)  
 
     def get_table(self, *args, **kwargs):
       res = self._client.get_table(*args, **kwargs)

@@ -72,8 +72,8 @@ class HiveIdentifierField(forms.RegexField):
 class HiveTableChoiceField(forms.ChoiceField):
   """To choose from a defined table"""
   def __init__(self, *args, **kwargs):
-    table_names = db_utils.meta_client().get_tables("default", ".*")
-    kwargs['choices'] = to_choices([''] + table_names)
+    tables, isError, error = db_utils.meta_client().get_tables("default", ".*")
+    kwargs['choices'] = to_choices([''] + tables)
     forms.ChoiceField.__init__(self, *args, **kwargs)
 
 

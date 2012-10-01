@@ -57,9 +57,11 @@ def index(request):
   return render('index.mako', request, dict(date=datetime.datetime.now()))
   
 def show_tables(request):
-  tables = db_utils.meta_client().get_tables("default", ".*")
-  return render("show_tables.mako", request, dict(tables=tables, tbl_name=""))
-
+  tables, isError, error = db_utils.meta_client().get_tables("default", ".*")
+  errorMsg = ""
+  if isError:
+      errorMsg = error
+  return render("show_tables.mako", request, dict(tables=tables, debug_info=""))
 
 def describe_table(request, table):
   table_obj = ""
@@ -141,8 +143,11 @@ def confirm_query(request, query, on_success_url=None):
 #  mform.bind()
 #  mform.query.initial = dict(query=query)
   
-  tables = db_utils.meta_client().get_tables("default", ".*")
-  return render("show_tables.mako", request, dict(tables=tables, tbl_name=""))
+  tables, isError, error = db_utils.meta_client().get_tables("default", ".*")
+  errorMsg = ""
+  if isError:
+      errorMsg = error
+  return render("show_tables.mako", request, dict(tables=tables, debug_info=""))
 #  return render('execute.mako', request, {
 #    'form': mform,
 #    'action': urlresolvers.reverse(execute_query),
@@ -183,8 +188,7 @@ def make_hcatalog_query(request, hql, query_form=None):
 
   if query_form is not None:
     for f in query_form.settings.forms:
-      query_msg.configuration.append(django_mako.render_to_string(
-                                          "hql_set.mako", f.cleaned_data))
+      query_msg.configuration.append(django_mako.render_to_string("hql_set.mako", f.cleaned_data))
     for f in query_form.file_resources.forms:
       type = f.cleaned_data["type"]
       # Perhaps we should have fully-qualified URIs here already?

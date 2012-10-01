@@ -18,31 +18,50 @@
 from command import Command
 from tempfile import NamedTemporaryFile
 import os
+from time import time
 
 class HCatClient(Command):
 
     def get_tables(self, dbname, tbl_name):
         result = []
+        isError = False
+        error   = "No errors"
+        
+        # execute command
         command = Command()
         ret = command.execute('SHOW TABLES')
         if ret != False:
             result = ret.splitlines()
-        #answer = command.last_error
-        #answer = ret
-        return result
+        else:
+            isError = True
+            error = command.last_error
+            
+        return (result, isError, error)
        
     def create_table(self, dbname, query):
         result = []
-        f = NamedTemporaryFile(delete=False)
-        f.writelines(query)
-        f.close()
+        isError = False
+        error   = "No errors"
+        
+        # create tmp file
+        #query_file = NamedTemporaryFile()
+        tmp_file_name = '/tmp/create_table_%d.hcat' % (int(time()))
+        query_file = open(tmp_file_name, "w")
+        query_file.writelines(query)
+        query_file.close()
  
+        # execute command
         command = Command()
-        ret = command.executeFromFile(f.name)
+        ret = command.executeFromFile(query_file.name)
         if ret != False:
             result = ret.splitlines()
-        #answer = command.last_error
-        #answer = ret
-        os.unlink(f.name)
-        os.path.exists(f.name)
-        return result
+        else:
+            isError = True
+            error = command.last_error
+         
+        # remove tmp file
+        os.remove(query_file.name)
+        #if os.path.exists(query_file.name):
+        #    os.unlink(query_file.name)
+            
+        return (result, isError, error)
