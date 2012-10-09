@@ -36,3 +36,15 @@ class PigScript(models.Model):
 
     def __unicode__(self):
         return u'%s' % self.title
+
+class Logs(models.Model):
+    start_time = models.IntegerField(max_length = 20)
+    end_time = models.IntegerField(max_length = 20)
+    stastus = models.IntegerField(max_length = 1)
+    script_name = models.CharFiled(max_lengs = 50)
+
+    class Meta:
+        ordering = ['-start_time']
+
+    def __unicode__(self):
+        return u'%s' % self.script_name

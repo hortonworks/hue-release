@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            .step-block { padding: 10px; }
+            .arrows { width: 30px; margin-bottom: -10px; }
+            .step-block a { color: #00B5E1; }
+        </style>
+    </head>
+    <body>
+        <div>
+            % if step.order + 1 < max:
+            <a href="/lessons/lesson/${step.section.id}/${step.order+1}" id="arrow-next">
+                Next<img src="/static/forward.png" class="arrows" />
+            </a>
+            <br>
+            % endif
+        </div>
+    </body>
+</html>

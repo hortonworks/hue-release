@@ -29,7 +29,7 @@ from django.shortcuts import render_to_response, redirect
 from django.http import HttpResponse
 from django import forms
 
-from pig.models import PigScript
+from pig.models import PigScript, Logs
 from django.contrib.auth.models import User
 from CommandPy import CommandPy
 from PigShell import PigShell
@@ -75,8 +75,25 @@ def one_script(request, obj_id, text = False):
                 pig = PigShell('pig -x local pig.pig')
                 text = pig.ShowCommands(command=command) or pig.last_error
     form = PigScriptForm(instance.values('title', 'text')[0])
-    return render('edit_script.mako', request, dict(form=form, instance=instance[0], pig_script=pig_script, text=text))
+    return render('edit_script.mako', request, dict(form=form, instance=instance[0], 
+                                                    pig_script=pig_script, text=text))
 
+def show_logs(request):
+    from datetime import datetime
+    logs = Logs.objects.all()
+    return_logs = {}
+    for i, l in enumerate(logs):
+        return_logs[i] = {}
+        return_logs[i]['including_time'] = l['start_time']
+        return_logs[i]['duration'] = str(datetime.strptime(end_time,'%Y-%m-%d %H:%M:%S') - 
+                                         datetime.strptime(start_time,'%Y-%m-%d %H:%M:%S'))
+        if l['status'] == '0':
+            return_logs[i]['status'] = 'failer'
+        else:
+            return_logs[i]['status'] = 'success'
+        return_logs[i]['script_name'] = l['script_name']
+
+    return render('logs.mako', request, {'logs' : return_logs})
 
 def delete(request, obj_id):
     instance = PigScript.objects.get(id=obj_id)

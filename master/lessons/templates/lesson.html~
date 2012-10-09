@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lessons</title>
+  <link href="/static/jquery-ui.css" rel="stylesheet" type="text/css"/>
+  <link href="/static/style.css" rel="stylesheet" type="text/css"/>
+  <script src="/static/jquery.min.js"></script>
+  <script src="/static/jquery-ui.min.js"></script>
+
+  <script>
+  $(document).ready(function() {
+    $("#accordion").accordion();
+  });
+  </script>
+
+</head>
+    <body>
+        Steps:
+        <ul id='accordion'>
+        % for x in steps:
+          <li><a href="/lessons/lesson/${x.section.id}/${x.order}">${x.name}</a>
+        </li>
+        % endfor
+        </ul>
+    </body>
+</html>
