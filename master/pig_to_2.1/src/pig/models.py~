@@ -40,8 +40,8 @@ class PigScript(models.Model):
 class Logs(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    stastus = models.CharField(max_length = 1)
-    script_name = models.CharField(max_lengs = 50)
+    status = models.CharField(max_length = 1)
+    script_name = models.CharField(max_length = 50)
 
     class Meta:
         ordering = ['-start_time']

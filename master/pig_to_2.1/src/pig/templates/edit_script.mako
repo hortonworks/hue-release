@@ -19,7 +19,7 @@
 <%!from desktop.views import commonheader, commonfooter %>
 <%namespace name="shared" file="shared_components.mako" />
 
-${commonheader("Pig", "pig", "100px")}
+${commonheader("Pig", "pig", user, "100px")}
 ${shared.menubar(section='My Scripts')}
 
 ## Use double hashes for a mako template comment
@@ -61,6 +61,20 @@ ${shared.menubar(section='My Scripts')}
 	<li>
 	<input class="email" type="checkbox" />
 	</li>
+	<li  class="nav-header"><a id="displayText" href='#'>User-defined Functions</a></li>
+	<div id="toggleText" style="display: none">
+	% for udf in udfs:
+	<li>
+	${udf}
+	</li>
+	% endfor
+	</div>
+	<li>
+	    <form id="udfs" enctype="multipart/form-data" action="${url('pig.views.piggybank', instance.id)}" method="post">
+    	       ${udf_form}
+      	      <input class="btn" type="submit" name="submit" value="Add" />
+	    </form>
+        </li>
 	</ul>
       </div>
     </div>
@@ -108,5 +122,16 @@ ${shared.menubar(section='My Scripts')}
 	else
 	    {$('.intoemail').attr('value', 'no checked')};
       });
+       $("#displayText").click(function() {
+ var ele = document.getElementById("toggleText");
+ var text = document.getElementById("displayText");
+ if(ele.style.display == "block") {
+      ele.style.display = "none";
+   }
+ else {
+  ele.style.display = "block";
+ }
+ });
     </script>
+
 ${commonfooter()}

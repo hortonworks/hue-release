@@ -1,0 +1,60 @@
+/* 
+	pig styles
+	important: these should be namespaced
+	example:
+		let's say you are creating an app called "calculator"; you should prefix all your styles with your application's name like so
+		
+		.calculator img {
+			border: 1px solid #000;
+		}
+		.calculator p {
+			margin: 10px 0px;
+		}
+		etc...
+
+	other notes:
+	* don't use ids - there may be more than one of your apps open; use classes!
+	* the toolbar element is absolutely positioned and 100% wide (and therefor 0px high);
+	  any elements inside it should also be absolutely positioned
+*/
+
+.pig img.pig_icon {
+	width: 55px;
+	height: 55px;
+	position: absolute;
+	top: 27px;
+	left: 3px;
+
+#headerDiv, #contentDiv {
+float: left;
+width: 510px;
+}
+#titleText {
+float: left;
+font-size: 1.1em;
+font-weight: bold;
+margin: 5px;
+}
+#myHeader {
+font-size: 1.1em;
+font-weight: bold;
+margin: 5px;
+}
+#headerDiv {
+background-color: #0037DB;
+color: #9EB6FF;
+}
+#contentDiv {
+background-color: #FFE694;
+}
+#myContent {
+margin: 5px 10px;
+}
+#headerDiv a {
+float: right;
+margin: 10px 10px 5px 5px;
+}
+#headerDiv a:hover {
+color: #FFFFFF;
+}
+}

@@ -48,3 +48,15 @@ class Logs(models.Model):
 
     def __unicode__(self):
         return u'%s' % self.script_name
+
+class UDF(models.Model):
+    url = models.CharField(max_length=255)
+    file_name = models.CharField(max_length=55)
+    description = models.TextField()
+    owner = models.ForeignKey(User, verbose_name='Owner')
+
+    class Meta:
+        ordering = ['file_name']
+
+    def __unicode__(self):
+        return u'%s' % self.file_name
