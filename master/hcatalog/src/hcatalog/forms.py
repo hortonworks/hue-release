@@ -325,16 +325,14 @@ class LoadDataForm(forms.Form):
     label="Overwrite?")
 
   def __init__(self, table_obj, *args, **kwargs):
-    """
-    @param table_obj is a hive_metastore.thrift Table object,
-    used to add fields corresopnding to partition keys.
-    """
-    super(LoadDataForm, self).__init__(*args, **kwargs)
-    self.partition_columns = dict()
-    for i, column in enumerate(table_obj.partitionKeys):
-      # We give these numeric names because column names
-      # may be unpleasantly arbitrary.
-      name = "partition_%d" % i
-      char_field = forms.CharField(required=True, label="%s (partition key with type %s)" % (column.name, column.type))
-      self.fields[name] = char_field
-      self.partition_columns[name] = column.name
+
+      tmp = 0
+#    super(LoadDataForm, self).__init__(*args, **kwargs)
+#    self.partition_columns = dict()
+#    for i, column in enumerate(table_obj.partitionKeys):
+#      # We give these numeric names because column names
+#      # may be unpleasantly arbitrary.
+#      name = "partition_%d" % i
+#      char_field = forms.CharField(required=True, label="%s (partition key with type %s)" % (column.name, column.type))
+#      self.fields[name] = char_field
+#      self.partition_columns[name] = column.name

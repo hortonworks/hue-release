@@ -45,7 +45,7 @@ class HCatClient(Command):
         
         # create tmp file
         #query_file = NamedTemporaryFile()
-        tmp_file_name = '/tmp/create_table_%d.hcat' % (int(time()))
+        tmp_file_name = '/tmp/create_table_%d.hcatalog' % (int(time()))
         query_file = open(tmp_file_name, "w")
         query_file.writelines(query)
         query_file.close()

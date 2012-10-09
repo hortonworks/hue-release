@@ -20,7 +20,7 @@
   from desktop.views import commonheader, commonfooter
 %>
 <%namespace name="layout" file="layout.mako" />
-${commonheader("HCatalog Table Partitions: " + table.tableName, "hcatalog", "100px")}
+${commonheader("HCatalog Table Partitions: " + table.tableName, "hcatalog", user, "100px")}
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">

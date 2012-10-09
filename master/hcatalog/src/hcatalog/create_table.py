@@ -25,7 +25,8 @@ import gzip
 from django.core import urlresolvers
 
 from desktop.lib import django_mako, i18n
-from desktop.lib.django_util import render, PopupException
+from desktop.lib.django_util import render 
+from desktop.lib.exceptions import PopupException
 from desktop.lib.django_forms import MultiForm
 from hadoop.fs import hadoopfs
 
@@ -69,7 +70,7 @@ def create_table(request):
       if isError2:
           errorMsg += "Error executing show table query:" + error2
       
-      return render("show_tables.mako", request, dict(tables=tables, debug_info=""))
+      return render("show_tables.mako", request, dict(tables=tables, debug_info=errorMsg))
       # Mako outputs bytestring in utf8
       proposed_query = proposed_query.decode('utf-8')
       tablename = form.table.cleaned_data['name']
@@ -268,7 +269,7 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load):
   errorMsg = ""
   if isError:
       errorMsg = error
-  return render("show_tables.mako", request, dict(tables=tables, debug_info=""))
+  return render("show_tables.mako", request, dict(tables=tables, debug_info=errorMsg))
 
 
 def _delim_preview(fs, file_form, encoding, file_types, delimiters):
