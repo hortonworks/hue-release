@@ -61,9 +61,15 @@ def create_table(request):
         }
       )
 
-      db_utils.meta_client().create_table("default", proposed_query)
-      tables = db_utils.meta_client().get_tables("default", ".*")
-      return render("show_tables.mako", request, dict(tables=tables, tbl_name=""))
+      result, isError1, error1 = db_utils.meta_client().create_table("default", proposed_query)
+      tables, isError2, error2 = db_utils.meta_client().get_tables("default", ".*")
+      errorMsg = ""
+      if isError1:
+          errorMsg += "Error executing create table query:" + error1 + "\n"
+      if isError2:
+          errorMsg += "Error executing show table query:" + error2
+      
+      return render("show_tables.mako", request, dict(tables=tables, debug_info=""))
       # Mako outputs bytestring in utf8
       proposed_query = proposed_query.decode('utf-8')
       tablename = form.table.cleaned_data['name']
@@ -253,9 +259,16 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load):
     on_success_url = urlresolvers.reverse(describe_table, kwargs={'table': table_name})
 
   query_msg = make_hcatalog_query(request, create_hql)
-  return execute_directly(request, query_msg,
-                          on_success_url=on_success_url,
-                          on_success_params=on_success_params)
+#  return execute_directly(request, query_msg,
+#                          on_success_url=on_success_url,
+#                          on_success_params=on_success_params)
+  
+  db_utils.meta_client().create_table("default", create_hql)
+  tables, isError, error = db_utils.meta_client().get_tables("default", ".*")
+  errorMsg = ""
+  if isError:
+      errorMsg = error
+  return render("show_tables.mako", request, dict(tables=tables, debug_info=""))
 
 
 def _delim_preview(fs, file_form, encoding, file_types, delimiters):
