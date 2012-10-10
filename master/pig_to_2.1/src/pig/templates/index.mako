@@ -18,7 +18,7 @@
 <%!from desktop.views import commonheader, commonfooter %>
 <%namespace name="shared" file="shared_components.mako" />
 
-${commonheader("Pig", "pig", "100px")}
+${commonheader("Pig", "pig", user, "100px")}
 ${shared.menubar(section='My Scripts')}
 
 ## Use double hashes for a mako template comment

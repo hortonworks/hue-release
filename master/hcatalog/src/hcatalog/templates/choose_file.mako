@@ -19,7 +19,7 @@ from desktop.views import commonheader, commonfooter
 %>
 <%namespace name="layout" file="layout.mako" />
 <%namespace name="comps" file="hcatalog_components.mako" />
-${commonheader("HCatalog: Create table from file", "hcatalog", "100px")}
+${commonheader("HCatalog: Create table from file", "hcatalog", user, "100px")}
 ${layout.menubar(section='create table')}
 
 

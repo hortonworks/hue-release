@@ -60,7 +60,7 @@
 </%def>
 
 
-${commonheader("Hive Query", "hcatalog", "100px")}
+${commonheader("Hive Query", "hcatalog", user, "100px")}
 ${layout.menubar(section='query')}
 
 <div class="container-fluid">

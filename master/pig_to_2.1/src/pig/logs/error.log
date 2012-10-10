@@ -1,0 +1,20 @@
+[09/Oct/2012 14:16:29 +0000] upload       ERROR    Failed to remove temporary upload file "/tmp/hue-uploads/tmp.93.180.198.35.7444402123417560915". Please cleanup manually: Delete failed: /tmp/hue-uploads/tmp.93.180.198.35.7444402123417560915
+Traceback (most recent call last):
+  File "/home/hue/hue/desktop/libs/hadoop/src/hadoop/fs/upload.py", line 96, in remove
+    self._fs.remove(self._path)
+  File "/home/hue/hue/desktop/libs/hadoop/src/hadoop/fs/webhdfs.py", line 226, in remove
+    self._delete(path, recursive=False)
+  File "/home/hue/hue/desktop/libs/hadoop/src/hadoop/fs/webhdfs.py", line 222, in _delete
+    raise IOError('Delete failed: %s' % (smart_str(path),))
+IOError: Delete failed: /tmp/hue-uploads/tmp.93.180.198.35.7444402123417560915
+[09/Oct/2012 14:22:40 +0000] upload       ERROR    Failed to remove temporary upload file "/tmp/hue-uploads/tmp.93.180.198.35.7944233665823993527". Please cleanup manually: Delete failed: /tmp/hue-uploads/tmp.93.180.198.35.7944233665823993527
+Traceback (most recent call last):
+  File "/home/hue/hue/desktop/libs/hadoop/src/hadoop/fs/upload.py", line 96, in remove
+    self._fs.remove(self._path)
+  File "/home/hue/hue/desktop/libs/hadoop/src/hadoop/fs/webhdfs.py", line 226, in remove
+    self._delete(path, recursive=False)
+  File "/home/hue/hue/desktop/libs/hadoop/src/hadoop/fs/webhdfs.py", line 222, in _delete
+    raise IOError('Delete failed: %s' % (smart_str(path),))
+IOError: Delete failed: /tmp/hue-uploads/tmp.93.180.198.35.7944233665823993527
+[09/Oct/2012 14:22:41 +0000] upload       ERROR    Left-over upload file is not cleaned up: /tmp/hue-uploads/tmp.93.180.198.35.7944233665823993527
+[09/Oct/2012 14:43:20 +0000] upload       ERROR    Left-over upload file is not cleaned up: /tmp/hue-uploads/tmp.93.180.198.35.7444402123417560915

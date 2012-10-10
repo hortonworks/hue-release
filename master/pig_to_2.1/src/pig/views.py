@@ -32,15 +32,20 @@ from django.http import HttpResponse
 from django.conf import settings
 from django import forms
 
-from pig.models import PigScript, Logs
+from pig.models import PigScript, Logs, UDF
 from django.contrib.auth.models import User
 from CommandPy import CommandPy
 from PigShell import PigShell
+from filebrowser.forms import UploadForm
+from filebrowser.views import _upload, _massage_stats
+
 
 class PigScriptForm(forms.Form):
     title = forms.CharField(max_length=100, required=False)
     text = forms.CharField(widget=forms.Textarea, required=False)
 
+class UDFForm(forms.Form):
+    UDF = forms.FileField(required=False)
 
 def index(request):
     pig_script = PigScript.objects.filter(creater=request.user)
@@ -64,6 +69,8 @@ def new_script(request, text = False):
 def one_script(request, obj_id, text = False):
     pig_script = PigScript.objects.filter(creater=request.user)
     instance = PigScript.objects.filter(id=obj_id)
+    udfs = UDF.objects.filter(owner=request.user)
+    udf_form = UploadForm()
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if form.is_valid():
@@ -81,14 +88,14 @@ def one_script(request, obj_id, text = False):
 
             start = datetime.now()
             if request.POST.get('submit') == 'Execute':
-                pig = CommandPy('pig -x local %s' % script_path, LogModel=Logs)
+                pig = CommandPy('pig %s' % script_path, LogModel=Logs)
                 text = pig.returnCode()
 
             if request.POST.get('submit') in ['Explain', 'Describe',
                                               'Dump', 'Illustrate']:
                 command = request.POST.get('submit').upper()
                 limit = request.POST.get('limit') or 0
-                pig = PigShell('pig -x local %s' % script_path, LogModel=Logs)
+                pig = PigShell('pig %s' % script_path, LogModel=Logs)
                 text = pig.ShowCommands(command=command,
                                         limit=int(limit)) or pig.last_error
             finish = datetime.now()
@@ -101,7 +108,8 @@ def one_script(request, obj_id, text = False):
     return render('edit_script.mako', request, dict(form=form,
                                                     instance=instance[0],
                                                     pig_script=pig_script,
-                                                    text=text))
+                                                    text=text, udfs=udfs,
+                                                    udf_form = udf_form))
 
 def delete(request, obj_id):
     pig_script = PigScript.objects.all().order_by('id')[0]
@@ -135,3 +143,73 @@ def script_clone(request, obj_id):
         del pig_script['date_created']
         p1 = PigScript.objects.create(**pig_script)
     return redirect(one_script, p1.id)
+
+
+def piggybank(request, obj_id):
+    import posixpath
+    from desktop.lib.exceptions import PopupException
+    from django.utils.translation import ugettext as _
+
+    if request.method == 'POST':
+        form = UploadForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            uploaded_file = request.FILES['hdfs_file']
+            dest = form.cleaned_data['dest']
+            print dest
+            if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
+                raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))
+
+            dest = request.fs.join(dest, uploaded_file.name)
+            tmp_file = uploaded_file.get_temp_path()
+            username = request.user.username
+
+            try:
+                # Temp file is created by superuser. Chown the file.
+                request.fs.do_as_superuser(request.fs.chmod, tmp_file, 0644)
+                request.fs.do_as_superuser(request.fs.chown, tmp_file, username, username)
+
+                # Move the file to where it belongs
+                request.fs.rename(uploaded_file.get_temp_path(), dest)
+            except IOError, ex:
+                already_exists = False
+                try:
+                    already_exists = request.fs.exists(dest)
+                except Exception:
+                    pass
+                if already_exists:
+                    msg = _('Destination %(name)s already exists.' % {'name': dest})
+                else:
+                    msg = _('Copy to "%(name)s failed: %(error)s') % {'name': dest, 'error': ex}
+                raise PopupException(msg)
+
+            UDF.objects.create(url=dest, file_name=uploaded_file.name,
+                               owner=request.user, description='111')
+            return redirect(one_script, obj_id)
+
+            # return {
+            #     'status': 0,
+            #     'path': dest,
+            #     'result': _massage_stats(request, request.fs.stats(dest)),
+            #     'next': request.GET.get("next")}
+        else:
+            raise PopupException(_("Error in upload form: %s") % (form.errors, ))
+
+#    if request.method == 'POST':
+#        form = UDFForm(request.POST, request.FILES)
+
+#        if form.is_valid():
+#            f = form.cleaned_data['UDF']
+#            text = f.file.read()
+#            script_path = 'piggybank/%s' % f.name
+#            dirname = os.path.dirname(script_path)
+#            try:
+#                os.stat(dirname)
+#            except:
+#                os.mkdir(dirname)
+#            f1 = open(script_path, 'w+b')
+#            f1.write(text)
+#            f1.close()
+#            UDF.objects.create(url=script_path, file_name=f.name,
+#                               owner=request.user, description='111')
+#            return redirect(one_script, obj_id)

@@ -20,12 +20,12 @@ from desktop.views import commonheader, commonfooter
 <%namespace name="layout" file="layout.mako" />
 <%namespace name="comps" file="hcatalog_components.mako" />
 <%
-  if is_view:
-    view_or_table_noun = "View"
-  else:
+##  if is_view:
+##    view_or_table_noun = "View"
+##  else:
     view_or_table_noun = "Table"
 %>
-${commonheader("HCatalog %s Metadata: %s" % (view_or_table_noun, table.tableName), "hcatalog", "100px")}
+${commonheader("HCatalog %s Metadata: %s" % (view_or_table_noun, table.tableName), "hcatalog", user, "100px")}
 ${layout.menubar(section='tables')}
 <%def name="column_table(cols)">
 
@@ -60,62 +60,31 @@ ${layout.menubar(section='tables')}
 					<li><a href="#importData" data-toggle="modal">Import Data</a></li>
 					<li><a href="${ url("hcatalog.views.read_table", table=table_name) }">Browse Data</a></li>
 			        <li><a href="#dropTable" data-toggle="modal">Drop ${view_or_table_noun}</a></li>
-			        <li><a href="${hdfs_link}" rel="${ table.sd.location }">View File Location</a></li>
 				</ul>
 			</div>
 		</div>
 		<div class="span9">
-			% if table.parameters.get("comment", False):
-		    <h5>${ table.parameters.get("comment") }</h5>
-			% endif
-
 			<ul class="nav nav-tabs">
 				<li class="active"><a href="#columns" data-toggle="tab">Columns</a></li>
-		        % if len(table.partitionKeys) > 0:
-					<li><a href="#partitionColumns" data-toggle="tab">Partition Columns</a></li>
-		        % endif
-				% if top_rows is not None:
-					<li><a href="#sample" data-toggle="tab">Sample</a></li>
-				% endif
+##		        % if len(table.partitionKeys) > 0:
+##					<li><a href="#partitionColumns" data-toggle="tab">Partition Columns</a></li>
+##		        % endif
 			</ul>
 
 			<div class="tab-content">
 				<div class="active tab-pane" id="columns">
-					${column_table(table.sd.cols)}
+##					${column_table(table.sd.cols)}
 				</div>
-		        % if len(table.partitionKeys) > 0:
-		          <div class="tab-pane" id="partitionColumns">
-		            ${column_table(table.partitionKeys)}
-		            <a href="${ url("hcatalog.views.describe_partitions", table=table_name) }">Show Partitions</a>
-		          </div>
-		        % endif
-				% if top_rows is not None:
-					<div class="tab-pane" id="sample">
-						<table class="table table-striped table-condensed datatables">
-			              <thead>
-			                <tr>
-			                  % for col in table.sd.cols:
-			                    <th>${col.name}</th>
-			                  % endfor
-			                </tr>
-			              </thead>
-			              <tbody>
-			                % for i, row in enumerate(top_rows):
-			                  <tr>
-			                    % for item in row:
-			                      <td>${ item }</td>
-			                    % endfor
-			                  </tr>
-			                % endfor
-			              </tbody>
-			            </table>
-		        	</div>
-				% endif
+##		        % if len(table.partitionKeys) > 0:
+##		          <div class="tab-pane" id="partitionColumns">
+##		            ${column_table(table.partitionKeys)}
+##		            <a href="${ url("hcatalog.views.describe_partitions", table=table_name) }">Show Partitions</a>
+##		          </div>
+##		        % endif
 			</div>
 		</div>
 	</div>
 </div>
-
 
 
 
@@ -152,27 +121,27 @@ ${layout.menubar(section='tables')}
 
 
 
-	  <div class="clearfix">
-	  ${comps.label(load_form["path"], title_klass='loadPath', attrs=dict(
-        ))}
-    	<div class="input">
-		     ${comps.field(load_form["path"], title_klass='loadPath', attrs=dict(
-		       klass='loadPath input-xlarge'
-		       ))}
-		</div>
-		</div>
-
-      % for pf in load_form.partition_columns:
-		<div class="clearfix">
-			${comps.label(load_form[pf], render_default=True)}
-	    	<div class="input">
-	        	${comps.field(load_form[pf], render_default=True, attrs=dict(
-			       klass='input-xlarge'
-			       ))}
-			</div>
-		</div>
-
-      % endfor
+##	  <div class="clearfix">
+##	  ${comps.label(load_form["path"], title_klass='loadPath', attrs=dict(
+##        ))}
+##    	<div class="input">
+##		     ${comps.field(load_form["path"], title_klass='loadPath', attrs=dict(
+##		       klass='loadPath input-xlarge'
+##		       ))}
+##		</div>
+##		</div>
+##
+##      % for pf in load_form.partition_columns:
+##		<div class="clearfix">
+##			${comps.label(load_form[pf], render_default=True)}
+##	    	<div class="input">
+##	        	${comps.field(load_form[pf], render_default=True, attrs=dict(
+##			       klass='input-xlarge'
+##			       ))}
+##			</div>
+##		</div>
+##
+##      % endfor
 
 		<div class="clearfix">
 			<div class="input">

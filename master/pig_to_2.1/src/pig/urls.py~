@@ -22,5 +22,6 @@ urlpatterns = patterns('pig.views',
     url(r'delete/(?P<obj_id>\d+)/$', 'delete', name='delete'),
     url(r'clone/(?P<obj_id>\d+)/$', 'script_clone', name='clone'),
     url(r'(?P<obj_id>\d+)/$', 'one_script', name='one_script'),
+    url(r'new/$', 'new_script', name='new_script'),
     url(r'$', 'index', name='root_pig'),
 )

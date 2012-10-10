@@ -41,6 +41,8 @@ class PigScriptForm(forms.Form):
     title = forms.CharField(max_length=100, required=False)
     text = forms.CharField(widget=forms.Textarea, required=False)
 
+class UDFForm(forms.Form):
+    UDF = forms.FileField(required=False)
 
 def index(request):
     pig_script = PigScript.objects.filter(creater=request.user)
@@ -64,6 +66,8 @@ def new_script(request, text = False):
 def one_script(request, obj_id, text = False):
     pig_script = PigScript.objects.filter(creater=request.user)
     instance = PigScript.objects.filter(id=obj_id)
+    udfs = UDF.objects.filter(owner=request.user)
+    udf_form = UDFForm()
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if form.is_valid():
@@ -101,7 +105,8 @@ def one_script(request, obj_id, text = False):
     return render('edit_script.mako', request, dict(form=form,
                                                     instance=instance[0],
                                                     pig_script=pig_script,
-                                                    text=text))
+                                                    text=text, udfs=udfs,
+                                                    udf_form = udf_form))
 
 def delete(request, obj_id):
     pig_script = PigScript.objects.all().order_by('id')[0]
@@ -135,3 +140,24 @@ def script_clone(request, obj_id):
         del pig_script['date_created']
         p1 = PigScript.objects.create(**pig_script)
     return redirect(one_script, p1.id)
+
+
+def piggybank(request, obj_id):
+    if request.method == 'POST':
+        form = UDFForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            f = form.cleaned_data['UDF']
+            text = f.file.read()
+            script_path = 'piggybank/%s' % f.name
+            dirname = os.path.dirname(script_path)
+            try:
+                os.stat(dirname)
+            except:
+                os.mkdir(dirname)
+            f1 = open(script_path, 'w+b')
+            f1.write(text)
+            f1.close()
+            UDF.objects.create(url=script_path, file_name=f.name,
+                               owner=request.user, description='111')
+            return redirect(one_script, obj_id)

@@ -18,7 +18,7 @@
 from desktop.views import commonheader, commonfooter
 %>
 <%namespace name="layout" file="layout.mako" />
-${commonheader("HCatalog: Create Table", "hcatalog", "100px")}
+${commonheader("HCatalog: Create Table", "hcatalog", user, "100px")}
 ${layout.menubar(section='create table')}
 <div class="container-fluid">
 <h1> How Do You Want to Create Your Table? </h1>

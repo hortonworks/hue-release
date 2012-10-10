@@ -34,7 +34,8 @@ from desktop.lib import django_mako
 from desktop.lib.paginator import Paginator
 from desktop.lib.django_util import copy_query_dict, format_preserving_redirect, render
 from desktop.lib.django_util import login_notrequired, get_desktop_uri_prefix
-from desktop.lib.django_util import render_injected, PopupException
+from desktop.lib.django_util import render_injected
+from desktop.lib.exceptions import PopupException
 
 from hadoop.fs.exceptions import WebHdfsException
 
@@ -61,66 +62,45 @@ def show_tables(request):
   errorMsg = ""
   if isError:
       errorMsg = error
-  return render("show_tables.mako", request, dict(tables=tables, debug_info=""))
+  return render("show_tables.mako", request, dict(tables=tables, debug_info=errorMsg))
+  
+class TableDescription:
+    def __init__(self, **kwds):
+        self.__dict__.update(kwds)
+
 
 def describe_table(request, table):
-  table_obj = ""
   #table_obj = db_utils.meta_client().get_table("default", table)
-  sample_results = None
-  is_view = table_obj.tableType == 'VIRTUAL_VIEW'
-
-  # Don't show samples if it's a view (HUE-526).
-  if not is_view:
-    # Show the first few rows
-    hql = "SELECT * FROM `%s` %s" % (table, _get_browse_limit_clause(table_obj))
-    query_msg = make_hcatalog_query(request, hql)
-    try:
-      sample_results = []#db_utils.execute_and_wait(request.user, query_msg, timeout_sec=5.0)
-    except:
-      # Gracefully degrade if we're unable to load the results.
-      logging.exception("Failed to read table '%s'" % table)
-      sample_results = None
-
-  hdfs_link = location_to_url(request, table_obj.sd.location)
-  load_form = hcatalog.forms.LoadDataForm(table_obj)
+#  table_obj = { 'tableName':table, 'partitionKeys':[1,2] }
+  table_obj = TableDescription(tableName=table, partitionKeys=[]);
+#  load_form = hcatalog.forms.LoadDataForm(table_obj)
+  load_form=""
   return render("describe_table.mako", request, dict(
       table=table_obj,
       table_name=table,
-      top_rows=sample_results and list(parse_results(sample_results.data)) or None,
-      hdfs_link=hdfs_link,
       load_form=load_form,
-      is_view=is_view
+#      is_view=is_view
   ))
 
 def drop_table(request, table):
-  table_obj = db_utils.meta_client().get_table("default", table)
-  is_view = table_obj.tableType == 'VIRTUAL_VIEW'
 
   if request.method == 'GET':
-    # It may be possible to determine whether the table is
-    # external by looking at db_utils.meta_client().get_table("default", table).tableType,
-    # but this was introduced in Hive 0.5, and therefore may not be available
-    # with older metastores.
-    if is_view:
-      title = "Do you really want to drop the view '%s'?" % (table,)
-    else:
-      title = "This may delete the underlying data as well as the metadata.  Drop table '%s'?" % table
+    title = "This may delete the underlying data as well as the metadata.  Drop table '%s'?" % table
     return render('confirm.html', request, dict(url=request.path, title=title))
   elif request.method == 'POST':
-    if is_view:
-      hql = "DROP VIEW `%s`" % (table,)
-    else:
-      hql = "DROP TABLE `%s`" % (table,)
-    query_msg = make_hcatalog_query(request, hql)
-    try:
-      return execute_directly(request,
-                               query_msg,
-                               on_success_url=urlresolvers.reverse(show_tables))
-    except BeeswaxException, ex:
-      # Note that this state is difficult to get to.
-#      error_message, log = expand_exception(ex)
-      error = "Failed to remove %s.  Error: %s" % (table, "error_message")
-      raise PopupException(error, title="Beeswax Error", detail=log)
+    
+    import urllib2
+    opener = urllib2.build_opener(urllib2.HTTPHandler)
+    drop_request = urllib2.Request('http://ec2-75-101-199-141.compute-1.amazonaws.com:50111/templeton/v1/ddl/database/default/table/%s?user.name=hdfs' % table)
+    drop_request.get_method = lambda: 'DELETE'
+    url = opener.open(drop_request)
+    
+    #handle here exceptions
+    tables, isError, error = db_utils.meta_client().get_tables("default", ".*")
+    errorMsg = ""
+    if isError:
+      errorMsg = error
+    return render("show_tables.mako", request, dict(tables=tables, debug_info=errorMsg))
 
 
 def read_table(request, table):

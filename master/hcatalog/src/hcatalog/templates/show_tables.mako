@@ -18,7 +18,7 @@
 from desktop.views import commonheader, commonfooter
 %>
 <%namespace name="layout" file="layout.mako" />
-${commonheader("HCatalog: Table List", "hcatalog", "100px")}
+${commonheader("HCatalog: Table List", "hcatalog", user, "100px")}
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
@@ -45,9 +45,9 @@ ${layout.menubar(section='tables')}
 				<tbody>
 				% for table in tables:
 					<tr>
-						##<td><a href="${ url("hcatalog.views.describe_table", table=table) }" data-row-selector="true">${ table }</a></td>
+						<td><a href="${ url("hcatalog.views.describe_table", table=table) }" data-row-selector="true">${ table }</a></td>
 						##<td><a href="${ url("hcatalog.views.read_table", table=table) }" class="btn">Browse Data</a></td>
-						<td><a href="#" data-row-selector="true">${ table }</a></td>
+						##<td><a href="#" data-row-selector="true">${ table }</a></td>
 						<td><a href="#" class="btn">Browse Data</a></td>
 					</tr>				
 				% endfor

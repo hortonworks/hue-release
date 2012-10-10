@@ -19,7 +19,7 @@ from desktop.views import commonheader, commonfooter
 %>
 <%namespace name="layout" file="layout.mako" />
 <%namespace name="util" file="util.mako" />
-${commonheader("Beeswax: Load Data into " + table, "beeswax", "100px")}
+${commonheader("HCatalog: Load Data into " + table, "hcatalog", user, "100px")}
 ${layout.menubar()}
 <div class="container-fluid">
   <h1>Load Data into <tt>${table}</tt></h1>
