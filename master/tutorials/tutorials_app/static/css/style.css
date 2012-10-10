@@ -1,0 +1,16 @@
+body { font-family: "Helvetica Neue",Helvetica,Arial,sans-serif; font-size: 85%; }
+
+.steps { padding: 0; margin: 0; }
+.steps li { list-style-type: none; padding: 6px 16px 6px;}
+.steps li:hover { background: #F3F3F3; }
+.sub_list { overflow:hidden; }
+
+.step-block { padding: 10px; }
+.arrows { width: 30px; margin-bottom: -10px; }
+.step-block a { color: #00B5E1; }
+.left { float : left; }
+.right { float : right; }
+.next { margin-right: 6px; }
+.back { margin-left: 6px; }
+.description { padding: 20px; }
+.lesson-title { font-weight: bold; font-size: 120%; }

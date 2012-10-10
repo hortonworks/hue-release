@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lesson</title>
+        <link href="/static/css/style.css" rel="stylesheet" type="text/css"/>
+        <link href="/static/css/minimalist.css" rel="stylesheet" type="text/css" />
+        <script src="/static/js/jquery.min.js" type="text/javascript"></script>
+        <script src="/static/js/flowplayer.min.js" type="text/javascript"></script>
+    </head>
+    <body>
+        <div class="step-block">
+            <a href="/lesson"><img src="/static/img/back.png" class="arrows">
+                Back to lessons
+            </a><br><br>
+            <div class="lesson-title">${step.name} (Step ${step.order})</div>
+        </div>
+        <div class="description">${step_html}</div>
+        <div class="step-block">
+            % if step.order > 1:
+            <span class="left">
+                <a href="/lesson/${step.section.id}/${step.order - 1}" id="arrow-next">
+                    <img src="/static/img/back_arrow.png" class="arrows" /><span class="back">Back</span>
+                </a>
+            </span>
+            % endif
+            % if step.order < max:
+            <span class="right">
+                <a href="/lesson/${step.section.id}/${step.order + 1}" id="arrow-next">
+                    <span class="next">Next</span><img src="/static/img/forward.png" class="arrows" />
+                </a>
+            </span>
+            <br>
+            % endif
+        </div>
+    </body>
+</html>

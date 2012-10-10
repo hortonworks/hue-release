@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lessons</title>
+        <link href="/static/css/jquery-ui.css" rel="stylesheet" type="text/css"/>
+        <link href="/static/css/style.css" rel="stylesheet" type="text/css"/>
+        <script src="/static/js/jquery.min.js" type="text/javascript"></script>
+        <script src="/static/js/jquery-ui.min.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+              $("#accordion").accordion();
+            });
+        </script>
+    </head>
+    <body>
+        <div id="accordion">
+            <% i = 0 %>
+            % for lesson in lessons:
+                <h3>
+                    <a href="#">${lesson.name}
+                    %if now < lesson.add_time:
+                        <b><span class="new">new!</span></b>
+                    %endif
+                    </a>
+                </h3>
+                <div class="sub_list">
+                    <ul class="steps">
+                    % for step in steps[i]:
+                        <li><a href="${lesson.id}/${step.order}">${step.name}</a></li>
+                    % endfor
+                    </ul>
+                </div>
+                <% i += 1 %>
+            %endfor
+        </div>
+    </body>
+</html>

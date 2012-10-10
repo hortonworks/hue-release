@@ -1,0 +1,16 @@
+{
+  "venv": "", 
+  "name": "tutorials", 
+  "license": "GNU General Public License v3", 
+  "supported-extensions": [
+    ".py", 
+    ".html", 
+    ".jpg", 
+    ".png", 
+    ".css", 
+    ".json", 
+    ".js"
+  ], 
+  "project-type": "Django App", 
+  "description": ""
+}
