@@ -38,6 +38,7 @@ from CommandPy import CommandPy
 from PigShell import PigShell
 from filebrowser.forms import UploadForm
 from filebrowser.views import _upload, _massage_stats
+from pig.templeton import Templeton
 
 
 class PigScriptForm(forms.Form):
@@ -98,8 +99,13 @@ def one_script(request, obj_id, text = False):
                 pig = PigShell('pig %s' % script_path, LogModel=Logs)
                 text = pig.ShowCommands(command=command,
                                         limit=int(limit)) or pig.last_error
-            finish = datetime.now()
 
+            if request.POST.get('submit') == 'Schedule':
+                te = Templeton()
+                statusdir = '/tmp/{u}{t}'.format(
+                    u=request.user.username, t=datetime.now().strftime("%s"))
+                text = te.pig_query(execute=instance[0].text, statusdir=statusdir)
+            finish = datetime.now()
             request.POST.get('email') == 'checked' and send_email(start, finish,
                                                                   instance[0].text,
                                                                   user, text)
@@ -194,22 +200,3 @@ def piggybank(request, obj_id):
             #     'next': request.GET.get("next")}
         else:
             raise PopupException(_("Error in upload form: %s") % (form.errors, ))
-
-#    if request.method == 'POST':
-#        form = UDFForm(request.POST, request.FILES)
-
-#        if form.is_valid():
-#            f = form.cleaned_data['UDF']
-#            text = f.file.read()
-#            script_path = 'piggybank/%s' % f.name
-#            dirname = os.path.dirname(script_path)
-#            try:
-#                os.stat(dirname)
-#            except:
-#                os.mkdir(dirname)
-#            f1 = open(script_path, 'w+b')
-#            f1.write(text)
-#            f1.close()
-#            UDF.objects.create(url=script_path, file_name=f.name,
-#                               owner=request.user, description='111')
-#            return redirect(one_script, obj_id)

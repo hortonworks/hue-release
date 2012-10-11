@@ -4,3 +4,12 @@
 [09/Oct/2012 15:07:13 +0000] upload       ERROR    Left-over upload file is not cleaned up: /tmp/hue-uploads/tmp.93.180.198.35.15651906352310658627
 [09/Oct/2012 15:07:40 +0000] upload       ERROR    Left-over upload file is not cleaned up: /tmp/hue-uploads/tmp.93.180.198.35.15347325610047412435
 [09/Oct/2012 15:16:11 +0000] upload       ERROR    Left-over upload file is not cleaned up: /tmp/hue-uploads/tmp.93.180.198.35.15058775165851151244
+[09/Oct/2012 16:10:15 +0000] _internal    ERROR    Error on request:
+Traceback (most recent call last):
+  File "/home/hue/hue/build/env/lib/python2.6/site-packages/werkzeug/serving.py", line 159, in run_wsgi
+    execute(app)
+  File "/home/hue/hue/build/env/lib/python2.6/site-packages/werkzeug/serving.py", line 148, in execute
+    for data in application_iter:
+  File "/home/hue/hue/build/env/lib/python2.6/site-packages/werkzeug/debug/__init__.py", line 113, in debug_application
+    'Debugging middleware caught exception in streamed '
+IOError: [Errno 32] Broken pipe

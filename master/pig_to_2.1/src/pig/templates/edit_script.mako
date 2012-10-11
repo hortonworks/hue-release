@@ -92,6 +92,7 @@ ${shared.menubar(section='My Scripts')}
 	      <input class="btn primary" type="submit" name="submit" value="Describe" />
 	      <input class="btn primary" type="submit" name="submit" value="Dump" />
 	      <input class="btn primary" type="submit" name="submit" value="Illustrate" />
+	      <input class="btn primary" type="submit" name="submit" value="Schedule" />
 	    </div>
 	  </form>
 	</div>
