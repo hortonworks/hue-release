@@ -65,9 +65,9 @@ ${shared.menubar(section='My Scripts')}
 	<div id="toggleText" style="display: none">
 	% for udf in udfs:
 	<li>
-	${udf}
+	<a class="udf_register" href="#" value="${udf.url}">${udf.file_name}</a>
 	</li>
-	% endfor
+        % endfor
 	</div>
 	<li>
 	    <form id="udfs" enctype="multipart/form-data" action="${url('pig.views.piggybank', instance.id)}" method="post">
@@ -124,15 +124,26 @@ ${shared.menubar(section='My Scripts')}
 	    {$('.intoemail').attr('value', 'no checked')};
       });
        $("#displayText").click(function() {
- var ele = document.getElementById("toggleText");
- var text = document.getElementById("displayText");
- if(ele.style.display == "block") {
-      ele.style.display = "none";
-   }
- else {
-  ele.style.display = "block";
- }
- });
+          var ele = document.getElementById("toggleText");
+          var text = document.getElementById("displayText");
+          if(ele.style.display == "block") {
+              ele.style.display = "none";
+          }
+          else {
+              ele.style.display = "block";
+          }
+      });
+      $(".udf_register").click(function() {
+	  $('#id_text').text('REGISTER ' + $(this).attr('value') + '\n' + $('#id_text').val());
+	  $('.CodeMirror').hide()
+	  var editor = CodeMirror.fromTextArea(document.getElementById("id_text"), {
+          lineNumbers: true,
+          matchBrackets: true,
+          indentUnit: 4,
+          mode: "text/x-pig"
+          });
+      });
+
     </script>
 
 ${commonfooter()}

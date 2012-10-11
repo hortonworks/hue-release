@@ -36,8 +36,8 @@ from pig.models import PigScript, Logs, UDF
 from django.contrib.auth.models import User
 from CommandPy import CommandPy
 from PigShell import PigShell
-from filebrowser.forms import UploadForm
-from filebrowser.views import _upload, _massage_stats
+from filebrowser.forms import UploadFileForm
+#from filebrowser.views import _upload, _massage_stats
 from pig.templeton import Templeton
 
 
@@ -71,7 +71,7 @@ def one_script(request, obj_id, text = False):
     pig_script = PigScript.objects.filter(creater=request.user)
     instance = PigScript.objects.filter(id=obj_id)
     udfs = UDF.objects.filter(owner=request.user)
-    udf_form = UploadForm()
+    udf_form = UploadFileForm()
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if form.is_valid():
@@ -104,7 +104,29 @@ def one_script(request, obj_id, text = False):
                 te = Templeton()
                 statusdir = '/tmp/{u}{t}'.format(
                     u=request.user.username, t=datetime.now().strftime("%s"))
-                text = te.pig_query(execute=instance[0].text, statusdir=statusdir)
+                job = te.pig_query(execute=instance[0].text, statusdir=statusdir)
+                import time
+                completed, i, f1_r = False, 0, 'oops'
+                while not completed:
+                    sleep_time = 5
+                    time.sleep(sleep_time)
+                    jobb = te.check_job(job['id'])
+                    completed = jobb.get('completed')
+                    i += 1
+                    if i > 11:
+                        break
+
+                try:
+                    f1 =request.fs.open(statusdir + "/stdout")
+                    f1_r = f1.read()
+                    f1.close()
+                except:
+                    f1 =request.fs.open(statusdir + "/stderr")
+                    f1_r = f1.read()
+                    f1.close()
+
+                text = str(job) + '\n' + f1_r
+
             finish = datetime.now()
             request.POST.get('email') == 'checked' and send_email(start, finish,
                                                                   instance[0].text,
@@ -157,7 +179,7 @@ def piggybank(request, obj_id):
     from django.utils.translation import ugettext as _
 
     if request.method == 'POST':
-        form = UploadForm(request.POST, request.FILES)
+        form = UploadFileForm(request.POST, request.FILES)
 
         if form.is_valid():
             uploaded_file = request.FILES['hdfs_file']

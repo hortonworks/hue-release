@@ -1,0 +1,13 @@
+Error before Pig is launched
+----------------------------
+ERROR 2999: Unexpected internal error. Encountered unexpected arguments on command line - please check the command line.
+
+java.lang.RuntimeException: Encountered unexpected arguments on command line - please check the command line.
+	at org.apache.pig.Main.run(Main.java:500)
+	at org.apache.pig.Main.main(Main.java:111)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.apache.hadoop.util.RunJar.main(RunJar.java:156)
+================================================================================
