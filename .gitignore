@@ -1,0 +1,16 @@
+*.log
+*.pot
+*.pyc
+*.py[cod]
+
+# C extensions
+*.so
+
+# Translations
+*.mo
+
+#emacs temp files
+*~
+\#*\#
+.\#*
+*_flymake.py
