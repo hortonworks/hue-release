@@ -19,6 +19,7 @@ from desktop.lib.django_util import render
 
 import os
 from datetime import date, datetime
+import simplejson as json
 
 #from django.test.client import Client
 from django.template import RequestContext
@@ -27,22 +28,27 @@ from django.contrib.auth.decorators import login_required
 #from django.core.files.uploadedfile import SimpleUploadedFile
 #from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.mail import send_mail
+from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
 from django.http import HttpResponse
 from django.conf import settings
 from django import forms
 
-from pig.models import PigScript, Logs, UDF
+from filebrowser.views import _do_newfile_save
+from pig.models import PigScript, Logs, UDF, Job
 from django.contrib.auth.models import User
 from CommandPy import CommandPy
 from PigShell import PigShell
-from filebrowser.forms import UploadForm
-from filebrowser.views import _upload, _massage_stats
+from filebrowser.forms import UploadFileForm
+#from filebrowser.views import _upload, _massage_stats
+from pig.templeton import Templeton
 
 
 class PigScriptForm(forms.Form):
     title = forms.CharField(max_length=100, required=False)
     text = forms.CharField(widget=forms.Textarea, required=False)
+
+
 
 class UDFForm(forms.Form):
     UDF = forms.FileField(required=False)
@@ -70,7 +76,7 @@ def one_script(request, obj_id, text = False):
     pig_script = PigScript.objects.filter(creater=request.user)
     instance = PigScript.objects.filter(id=obj_id)
     udfs = UDF.objects.filter(owner=request.user)
-    udf_form = UploadForm()
+    udf_form = UploadFileForm()
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if form.is_valid():
@@ -98,8 +104,35 @@ def one_script(request, obj_id, text = False):
                 pig = PigShell('pig %s' % script_path, LogModel=Logs)
                 text = pig.ShowCommands(command=command,
                                         limit=int(limit)) or pig.last_error
-            finish = datetime.now()
 
+            if request.POST.get('submit') == 'Schedule':
+                te = Templeton()
+                statusdir = '/tmp/{u}{t}'.format(
+                    u=request.user.username, t=datetime.now().strftime("%s"))
+                job = te.pig_query(execute=instance[0].text, statusdir=statusdir)
+                import time
+                completed, i, f1_r = False, 0, 'oops'
+                while not completed:
+                    sleep_time = 5
+                    time.sleep(sleep_time)
+                    jobb = te.check_job(job['id'])
+                    completed = jobb.get('completed')
+                    i += 1
+                    if i > 11:
+                        break
+
+                try:
+                    f1 =request.fs.open(statusdir + "/stdout")
+                    f1_r = f1.read()
+                    f1.close()
+                except:
+                    f1 =request.fs.open(statusdir + "/stderr")
+                    f1_r = f1.read()
+                    f1.close()
+
+                text = str(job) + '\n' + f1_r
+
+            finish = datetime.now()
             request.POST.get('email') == 'checked' and send_email(start, finish,
                                                                   instance[0].text,
                                                                   user, text)
@@ -145,13 +178,13 @@ def script_clone(request, obj_id):
     return redirect(one_script, p1.id)
 
 
-def piggybank(request, obj_id):
+def piggybank(request, obj_id = False):
     import posixpath
     from desktop.lib.exceptions import PopupException
     from django.utils.translation import ugettext as _
 
     if request.method == 'POST':
-        form = UploadForm(request.POST, request.FILES)
+        form = UploadFileForm(request.POST, request.FILES)
 
         if form.is_valid():
             uploaded_file = request.FILES['hdfs_file']
@@ -185,7 +218,10 @@ def piggybank(request, obj_id):
 
             UDF.objects.create(url=dest, file_name=uploaded_file.name,
                                owner=request.user, description='111')
-            return redirect(one_script, obj_id)
+            if obj_id:
+                return redirect(one_script, obj_id)
+            else:
+                return redirect(piggybank_index)
 
             # return {
             #     'status': 0,
@@ -195,21 +231,59 @@ def piggybank(request, obj_id):
         else:
             raise PopupException(_("Error in upload form: %s") % (form.errors, ))
 
-#    if request.method == 'POST':
-#        form = UDFForm(request.POST, request.FILES)
+def piggybank_index(request):
+    udfs = UDF.objects.filter(owner=request.user)
+    pig_script = PigScript.objects.filter(creater=request.user)
+    udf_form = UploadFileForm()
+    return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, udf_form = udf_form))
+    
+def udf_del(request, obj_id):
+    pig_script = PigScript.objects.filter(creater=request.user)
+    udf = UDF.objects.get(id=obj_id)
+    udf.delete()
+    return redirect(piggybank_index)
+    
+def start_job(request):
+    t = Templeton(request.user.username)
+    statusdir = "/tmp/.pigjobs/%s" % datetime.now().strftime("%s")
+    script_file = statusdir + "/script.pig"
+    _do_newfile_save(request.fs, script_file, request.POST['script'], "utf-8")
+    job = t.pig_query(pig_file=script_file, statusdir=statusdir)
+    #job = t.pig_query(execute=request.POST['script'], statusdir=statusdir)
+    script = PigScript.objects.get(pk=request.POST['script_id'])
+    job_object = Job.objects.create(job_id=job['id'], statusdir=statusdir, script=script)
+    return HttpResponse(json.dumps(
+        {"job_id": job['id'],
+         "text": "The Job has been started successfully.\
+         You can check job status on the following <a href='%s'>link</a>" % reverse("single_job", args=[job['id']])}))
 
-#        if form.is_valid():
-#            f = form.cleaned_data['UDF']
-#            text = f.file.read()
-#            script_path = 'piggybank/%s' % f.name
-#            dirname = os.path.dirname(script_path)
-#            try:
-#                os.stat(dirname)
-#            except:
-#                os.mkdir(dirname)
-#            f1 = open(script_path, 'w+b')
-#            f1.write(text)
-#            f1.close()
-#            UDF.objects.create(url=script_path, file_name=f.name,
-#                               owner=request.user, description='111')
-#            return redirect(one_script, obj_id)
+
+def kill_job(request):
+    t = Templeton(request.user.username)
+    try:
+        job_id = request.POST['job_id']
+        t.kill_job(job_id)
+        return HttpResponse(json.dumps({"text": "Job %s was killed" % job_id}))
+    except:
+        return HttpResponse(json.dumps({"text": "An error was occured"}))
+
+
+def get_job_result(request):
+    job = Job.objects.get(job_id=request.POST['job_id'])
+    statusdir = job.statusdir
+    result = {}
+    try:
+        error = request.fs.open(statusdir + "/stderr", "r")
+        result['error'] = error.read()
+        error.close()
+        stdout = request.fs.open(statusdir + "/stdout", "r")
+        result['stdout'] = stdout.read()
+        stdout.close()
+        exit_code = request.fs.open(statusdir + "/exit", "r")
+        result['exit'] = exit_code.read()
+        exit_code.close()
+    except:
+        result['error'] = ""
+        result['stdout'] = ""
+        result['exit'] = ""
+    return HttpResponse(json.dumps(result))

@@ -36,7 +36,8 @@ class PigScript(models.Model):
 
     def __unicode__(self):
         return u'%s' % self.title
-        
+
+
 class Logs(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
@@ -49,6 +50,7 @@ class Logs(models.Model):
     def __unicode__(self):
         return u'%s' % self.script_name
 
+
 class UDF(models.Model):
     url = models.CharField(max_length=255)
     file_name = models.CharField(max_length=55)
@@ -60,3 +62,12 @@ class UDF(models.Model):
 
     def __unicode__(self):
         return u'%s' % self.file_name
+
+
+class Job(models.Model):
+    job_id = models.CharField(max_length=50, primary_key=True)
+    statusdir = models.CharField(max_length=100)
+    script = models.ForeignKey(PigScript)
+
+    def __unicode__(self):
+        return u"%s" % self.job_id

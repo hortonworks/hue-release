@@ -1,4 +1,4 @@
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 import os
@@ -58,13 +58,14 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'tutorials_app.urls'
 
-STATIC_ROOT = os.path.join(PROJECT_PATH, 'static_root')
-
-STATICFILES_DIRS = (
-    os.path.join(PROJECT_PATH, 'static'),
-)
+STATIC_ROOT = os.path.join(PROJECT_PATH, 'static')
 
 STATIC_URL = "/static/"
+
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+]
 
 TEMPLATE_DIRS = (
     os.path.join(PROJECT_PATH, 'templates'),
@@ -77,5 +78,9 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD
+=======
+    'gunicorn',
+>>>>>>> fabb9b16b81643327cdad5b2835cf60b5eb2861a
     'tutorials_app',
 )
