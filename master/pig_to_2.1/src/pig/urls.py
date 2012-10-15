@@ -24,5 +24,8 @@ urlpatterns = patterns('pig.views',
     url(r'piggybank/(?P<obj_id>\d+)/$', 'piggybank', name='piggybank'),
     url(r'(?P<obj_id>\d+)/$', 'one_script', name='one_script'),
     url(r'new/$', 'new_script', name='new_script'),
+    url(r'start_job/$', 'start_job', name="start_job"),
+    url(r'kill_job/$', 'kill_job', name='kill_job'),
+    url(r'get_job_result/$', 'get_job_result', name='get_job_result'),
     url(r'$', 'index', name='root_pig'),
 )

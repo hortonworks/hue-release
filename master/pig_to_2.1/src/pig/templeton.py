@@ -4,7 +4,7 @@ import urllib2
 import simplejson as json
 
 
-TEMPLETON_URL = " http://ec2-75-101-213-8.compute-1.amazonaws.com:50111/templeton/v1/"
+TEMPLETON_URL = "http://ec2-75-101-213-8.compute-1.amazonaws.com:50111/templeton/v1/"
 
 
 class Templeton(object):
@@ -37,6 +37,21 @@ class Templeton(object):
         response = urllib2.urlopen(req)
         return json.loads(response.read())
 
+    def delete(self, url, data=None):
+        """
+        Make DELETE query to templeton url.
+        """
+        if data is not None:
+            data['user.name'] = self.user
+        else:
+            data = {"user.name": self.user}
+        data = urllib.urlencode(data)
+        opener = urllib2.build_opener(urllib2.HTTPHandler)
+        req = urllib2.Request(TEMPLETON_URL + url + "?" + data)
+        req.get_method = lambda: 'DELETE'
+        response = opener.open(req)
+        return json.loads(response.read())
+
 
     def pig_query(self, execute=None, pig_file=None, statusdir=None, callback=None):
         """
@@ -55,7 +70,7 @@ class Templeton(object):
         Returns dict:
         id -- A string containing the job ID similar to "job_201110132141_0001".
         info -- A JSON object containing the information returned when the job was queued.
-        """
+        """        
         if not any([execute, pig_file]):
             raise Exception("""One of either "execcute" or "file" is required""")
         data = {}
@@ -75,3 +90,8 @@ class Templeton(object):
         """
         return self.get("queue/%s" % job_id)
 
+    def kill_job(self, job_id):
+        """
+        Kill a job given its job ID.
+        """
+        return self.delete("queue/%s" % job_id)

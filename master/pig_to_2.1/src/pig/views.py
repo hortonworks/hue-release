@@ -19,6 +19,7 @@ from desktop.lib.django_util import render
 
 import os
 from datetime import date, datetime
+import simplejson as json
 
 #from django.test.client import Client
 from django.template import RequestContext
@@ -27,12 +28,14 @@ from django.contrib.auth.decorators import login_required
 #from django.core.files.uploadedfile import SimpleUploadedFile
 #from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.mail import send_mail
+from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
 from django.http import HttpResponse
 from django.conf import settings
 from django import forms
 
-from pig.models import PigScript, Logs, UDF
+from filebrowser.views import _do_newfile_save
+from pig.models import PigScript, Logs, UDF, Job
 from django.contrib.auth.models import User
 from CommandPy import CommandPy
 from PigShell import PigShell
@@ -44,6 +47,8 @@ from pig.templeton import Templeton
 class PigScriptForm(forms.Form):
     title = forms.CharField(max_length=100, required=False)
     text = forms.CharField(widget=forms.Textarea, required=False)
+
+
 
 class UDFForm(forms.Form):
     UDF = forms.FileField(required=False)
@@ -222,3 +227,50 @@ def piggybank(request, obj_id):
             #     'next': request.GET.get("next")}
         else:
             raise PopupException(_("Error in upload form: %s") % (form.errors, ))
+
+
+
+def start_job(request):
+    t = Templeton(request.user.username)
+    statusdir = "/tmp/.pigjobs/%s" % datetime.now().strftime("%s")
+    script_file = statusdir + "/script.pig"
+    _do_newfile_save(request.fs, script_file, request.POST['script'], "utf-8")
+    job = t.pig_query(pig_file=script_file, statusdir=statusdir)
+    #job = t.pig_query(execute=request.POST['script'], statusdir=statusdir)
+    script = PigScript.objects.get(pk=request.POST['script_id'])
+    job_object = Job.objects.create(job_id=job['id'], statusdir=statusdir, script=script)
+    return HttpResponse(json.dumps(
+        {"job_id": job['id'],
+         "text": "The Job has been started successfully.\
+         You can check job status on the following <a href='%s'>link</a>" % reverse("single_job", args=[job['id']])}))
+
+
+def kill_job(request):
+    t = Templeton(request.user.username)
+    try:
+        job_id = request.POST['job_id']
+        t.kill_job(job_id)
+        return HttpResponse(json.dumps({"text": "Job %s was killed" % job_id}))
+    except:
+        return HttpResponse(json.dumps({"text": "An error was occured"}))
+
+
+def get_job_result(request):
+    job = Job.objects.get(job_id=request.POST['job_id'])
+    statusdir = job.statusdir
+    result = {}
+    try:
+        error = request.fs.open(statusdir + "/stderr", "r")
+        result['error'] = error.read()
+        error.close()
+        stdout = request.fs.open(statusdir + "/stdout", "r")
+        result['stdout'] = stdout.read()
+        stdout.close()
+        exit_code = request.fs.open(statusdir + "/exit", "r")
+        result['exit'] = exit_code.read()
+        exit_code.close()
+    except:
+        result['error'] = ""
+        result['stdout'] = ""
+        result['exit'] = ""
+    return HttpResponse(json.dumps(result))
