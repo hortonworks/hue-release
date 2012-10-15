@@ -178,7 +178,7 @@ def script_clone(request, obj_id):
     return redirect(one_script, p1.id)
 
 
-def piggybank(request, obj_id):
+def piggybank(request, obj_id = False):
     import posixpath
     from desktop.lib.exceptions import PopupException
     from django.utils.translation import ugettext as _
@@ -218,7 +218,10 @@ def piggybank(request, obj_id):
 
             UDF.objects.create(url=dest, file_name=uploaded_file.name,
                                owner=request.user, description='111')
-            return redirect(one_script, obj_id)
+            if obj_id:
+                return redirect(one_script, obj_id)
+            else:
+                return redirect(piggybank_index)
 
             # return {
             #     'status': 0,
@@ -228,8 +231,18 @@ def piggybank(request, obj_id):
         else:
             raise PopupException(_("Error in upload form: %s") % (form.errors, ))
 
-
-
+def piggybank_index(request):
+    udfs = UDF.objects.filter(owner=request.user)
+    pig_script = PigScript.objects.filter(creater=request.user)
+    udf_form = UploadFileForm()
+    return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, udf_form = udf_form))
+    
+def udf_del(request, obj_id):
+    pig_script = PigScript.objects.filter(creater=request.user)
+    udf = UDF.objects.get(id=obj_id)
+    udf.delete()
+    return redirect(piggybank_index)
+    
 def start_job(request):
     t = Templeton(request.user.username)
     statusdir = "/tmp/.pigjobs/%s" % datetime.now().strftime("%s")

@@ -28,6 +28,7 @@ def is_selected(section, matcher):
     <div class="container-fluid">
       <ul class="nav nav-pills">
         <li class="${is_selected(section, 'My Scripts')}"><a href="${url('pig.views.index')}">My Scripts</a></li>
+        <li class="${is_selected(section, 'PiggyBank')}"><a href="${url('pig.views.piggybank_index')}">PiggyBank</a></li>
         <li class="${is_selected(section, 'Logs')}"><a href="${url('pig.views.show_logs')}">Logs</a></li>
       </ul>
     </div>
