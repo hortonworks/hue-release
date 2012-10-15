@@ -1,0 +1,5 @@
+Sync Auth with Tutorials manual:
+1) Go to file settings.py and change 'auth_db' in DATABASES:
+
+2) Go to file <path>/tutorials/tutorials_app/templates/lessons.html and change second frame param SRC
+

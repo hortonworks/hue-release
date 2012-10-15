@@ -7,40 +7,59 @@ app = string.join(dirs[:-2],os.path.sep)
 sys.path.append(app)
 os.environ['DJANGO_SETTINGS_MODULE'] = "tutorials_app.settings"
 
-#import settings
 from tutorials_app.models import Section, Step
 
+def listfolders(folder):
+    return [f for f in os.listdir(folder)
+              if os.path.isdir(os.path.join(folder,f)) and f[0]!='.']
+
 current_dir = os.path.join(os.path.abspath(os.curdir), 'git_files')
-files = os.listdir(current_dir)
-for fl in files:
-    file_name = fl[:-5]
-    print file_name
-    if fl[-5:] == '.html':
-        file_name_parse = file_name.split('_')
-        order = None
-        for fp in file_name_parse:
-            try:
-                order = int(fp)
-                break
-            except:
-                pass
-        if order:
-            section_name, step_name = file_name.split('_%d_' % order)
-            section_name = section_name.replace('_', ' ').capitalize()
+sections = listfolders(current_dir)
+
+all_sections = list(Section.objects.all())
+
+for section_name in sections:
+    section_dir = os.path.join(current_dir, section_name)
+    section_name = section_name.replace('_', ' ').capitalize()
+    
+    try:
+        del all_sections[map(lambda x:x.name, all_sections).\
+                     index(section_name)]
+    except ValueError:
+        pass
+
+    try:
+        section = Section.objects.get(name = section_name)
+    except Section.DoesNotExist:
+        section = Section(name = section_name, order = 100,
+                          description = '', section_level = 1,
+                          section_user_type = 1, lesson_name = '',
+                          add_time = int(time()))
+        section.save()
+    
+    all_steps = list(Step.objects.filter(section=section))
+
+    orders = listfolders(section_dir)
+    for order in orders:
+        order_dir = os.path.join(section_dir, order)
+        files = os.listdir(order_dir)
+        for f in filter(lambda x:x.endswith(".html"), files):
+            fl = os.path.join(order_dir, f)
+            step_name = f[:f.rfind('.')]
             step_name = step_name.replace('_', ' ').capitalize()
+    
             try:
-                section = Section.objects.get(name = section_name)
-            except Section.DoesNotExist:
-                section = Section(name = section_name, order = 100,
-                                  description = '', section_level = 1,
-                                  section_user_type = 1, lesson_name = '',
-                                  add_time = int(time()))
-                section.save()
+                del all_steps[map(lambda x:x.name, all_steps).\
+                        index(step_name)]
+            except ValueError:
+                pass
+
+            print step_name, order, section_name
 
             try:
-                step = Step.objects.get(name = step_name,
+                step = Step.objects.get(order = order,
                                        section = section)
-                step.order = order
+                step.name = step_name
                 step.file_path = fl
                 step.save()
             except Step.DoesNotExist:
@@ -48,3 +67,6 @@ for fl in files:
                             file_path = fl, add_time = int(time()),
                             section = section)
                 step.save()
+    map(lambda x:x.delete(), all_steps)
+
+map(lambda x:x.delete(), all_sections)

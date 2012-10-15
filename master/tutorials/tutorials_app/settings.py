@@ -12,8 +12,16 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(PROJECT_PATH, 'db/lessons.db'),
+    },
+    'auth_db': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': '/home/roma/1.db',
     }
 }
+
+DATABASE_ROUTERS = ['tutorials_app.db_routers.AuthRouter']
+
+SESSION_ENGINE = 'tutorials_app.sessions_backend'
 
 TIME_ZONE = 'America/Chicago'
 
@@ -34,10 +42,15 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.app_directories.Loader',
 )
 
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    'tutorials_app.readonly_sessions_middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'djangomako.middleware.MakoMiddleware',
@@ -63,6 +76,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
-    'staticfiles',
+    'django.contrib.staticfiles',
     'tutorials_app',
 )

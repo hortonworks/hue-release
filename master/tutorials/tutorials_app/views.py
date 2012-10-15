@@ -16,7 +16,9 @@ def lesson_list(request):
     now = int(time.time()) - 172800
     return render_to_response("lesson_list.html",{'lessons':sections,
                                                   'steps':steps,
-                                                  'now':now})
+                                                  'now':now,
+												  'x':request.user,
+												  })
 
 def lesson(request, section_id, step):
     section = Section.objects.get(id = section_id)
