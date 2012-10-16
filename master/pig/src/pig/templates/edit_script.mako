@@ -88,7 +88,37 @@ udfs = UDF.objects.all()
                         <li><a href="#">SUM</a></li>
                         <li><a href="#">MAX</a></li>
                         <li><a href="#">MIN</a></li>
-                        <li><a href="#">CLUSTERED</a></li>
+                        <li><a href="#">COUNT</a></li>
+                        
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Data processing functions</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">FOREACH %DATA%</a></li>
+                        <li><a href="#">GENERATE</a></li>
+                        <li><a href="#">FILTER %VAR% BY</a></li>
+                        <li><a href="#">GROUP %VARIABLE% BY </a></li>
+                        <li><a href="#">COGROUP %VARIABLE% BY </a></li>
+                        <li><a href="#">JOIN %VARIABLE% BY </a></li>
+                        <li><a href="#">LIMIT</a></li>
+                      </ul>
+                    </li>
+
+                    <li class="dropdown-submenu">
+                      <a href="#">I/0</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">A = LOAD '__';</a></li>
+                        <li><a href="#">DUMP</a></li>
+                        <li><a href="#">STORE %VAR% INTO %PATH%</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Debug</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">EXPLAINE</a></li>
+                        <li><a href="#">ILUSTRATE</a></li>
+                        <li><a href="#">DESCRIBE</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
@@ -116,10 +146,7 @@ udfs = UDF.objects.all()
             % else:
             <div style="display:none;" id="python_textarea">
                  <label>Python UDF</label>
-                 <textarea id="python_code"
-                 name="python_script">@outputSchema("word:chararray")
-def helloworld():
-    return 'Hello, World'</textarea>
+                 <textarea id="python_code" name="python_script"></textarea>
             </div>
             % endif
 	<input type="hidden" name="limit" class='intolimit' />
