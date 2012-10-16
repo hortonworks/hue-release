@@ -23,32 +23,18 @@ from django.contrib.auth.models import User
 
 class PigScript(models.Model):
 
-    title = models.CharField(max_length=200, verbose_name='Title')
-    text = models.TextField(blank=True, verbose_name='Text')
-    creater = models.ForeignKey(User, verbose_name='User')
-    date_created = models.DateField(verbose_name='Date', auto_now_add=True)
-#    pig_script = models.FileField(
-#        upload_to='pig_script/{t}'.format(t=date.today().isoformat()),
-#        verbose_name='Script file')
+    title = models.CharField('Title', max_length=200)
+    pig_script = models.TextField('Pig script')
+    user = models.ForeignKey(User)
+    python_script = models.TextField(null=True,blank=True)
+    date_created = models.DateTimeField('Date', auto_now_add=True)
+    saved = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-date_created']
 
     def __unicode__(self):
         return u'%s' % self.title
-
-
-class Logs(models.Model):
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    status = models.CharField(max_length = 1)
-    script_name = models.CharField(max_length = 50)
-
-    class Meta:
-        ordering = ['-start_time']
-
-    def __unicode__(self):
-        return u'%s' % self.script_name
 
 
 class UDF(models.Model):
@@ -65,9 +51,16 @@ class UDF(models.Model):
 
 
 class Job(models.Model):
+    JOB_STATUSES = (
+        (1, "Submited"),
+        (2, "Complited"),
+        (3, "Failed")
+    )
     job_id = models.CharField(max_length=50, primary_key=True)
     statusdir = models.CharField(max_length=100)
     script = models.ForeignKey(PigScript)
+    status = models.SmallIntegerField(choices=JOB_STATUSES, default=2)
+    email_notification = models.BooleanField(default=True)
 
     def __unicode__(self):
         return u"%s" % self.job_id

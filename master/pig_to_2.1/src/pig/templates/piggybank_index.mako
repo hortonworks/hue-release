@@ -38,7 +38,7 @@ ${shared.menubar(section='PiggyBank')}
     <a href="${url('clone', v.id)}">
 	<img src="/pig/static/art/clone.png" alt="Delete" height="14" width="14">
 	</a>
-	<a href="${url('one_script', v.id)}">
+	<a href="${url('view_script', v.id)}">
 	    % if v.title: 
 	         ${v.title}
             % else:
@@ -49,7 +49,7 @@ ${shared.menubar(section='PiggyBank')}
       </li>
       % endfor
 	</ul>
-    <a class="btn" href="${url('new_script')}">New script</a>
+    <a class="btn" href="${url('root_pig')}">New script</a>
       </div>
     </div>
     <div class="span9" style="float: left; width: 70%;">

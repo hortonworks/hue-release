@@ -24,61 +24,54 @@ import simplejson as json
 #from django.test.client import Client
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from django.contrib.auth.decorators import login_required
-#from django.core.files.uploadedfile import SimpleUploadedFile
-#from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.conf import settings
-from django import forms
-
-from filebrowser.views import _do_newfile_save
-from pig.models import PigScript, Logs, UDF, Job
 from django.contrib.auth.models import User
-from CommandPy import CommandPy
-from PigShell import PigShell
+
+from desktop.lib.exceptions import PopupException
+from filebrowser.views import _do_newfile_save
 from filebrowser.forms import UploadFileForm
-#from filebrowser.views import _upload, _massage_stats
+from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
+from pig.forms import PigScriptForm, UDFForm
 
 
-class PigScriptForm(forms.Form):
-    title = forms.CharField(max_length=100, required=False)
-    text = forms.CharField(widget=forms.Textarea, required=False)
-
-
-
-class UDFForm(forms.Form):
-    UDF = forms.FileField(required=False)
-
-def index(request):
-    pig_script = PigScript.objects.filter(creater=request.user)
-    return render('index.mako', request, dict(pig_script = pig_script))
-
-def new_script(request, text = False):
-    pig_script = PigScript.objects.filter(creater=request.user)
-
-    form = PigScriptForm()
+def index(request, obj_id=None):
+    result = {}
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            data['creater'] = request.user
-            ps = PigScript.objects.create(**data)
-            return redirect(one_script, ps.id)
+        if not form.is_valid():
+            raise PopupException(
+                "".join(["%s: %s" % (field, error) for field, error in form.errors.iteritems()])
+            )
+        if request.POST.get("script_id"):
+            instance = PigScript.objects.get(pk=request.POST['script_id'])
+            form.instance = instance
+            form.save()
+        else:
+            instance = PigScript(**form.cleaned_data)
+            instance.user = request.user
+            instance.saved = True
+            instance.save()
+            result['script_id'] = instance.pk
+        return redirect("view_script", obj_id=instance.pk)
+    if obj_id:
+        instance = PigScript.objects.get(pk=obj_id)
+        for field in instance._meta.fields:
+            result[field.name] = getattr(instance, field.name)
+    return render('edit_script.mako', request, dict(result=result))
 
-    return render('new_script.mako', request, dict(form = form, pig_script = pig_script, text = text))
 
-
-def one_script(request, obj_id, text = False):
-    pig_script = PigScript.objects.filter(creater=request.user)
+def one_script(request, obj_id, text=False):
+    pig_script = PigScript.objects.filter(user=request.user)
     instance = PigScript.objects.filter(id=obj_id)
     udfs = UDF.objects.filter(owner=request.user)
     udf_form = UploadFileForm()
+    form = PigScriptForm(request.POST)
     if request.method == 'POST':
-        form = PigScriptForm(request.POST)
         if form.is_valid():
             instance.update(**form.cleaned_data)
             user = request.user
@@ -142,6 +135,7 @@ def one_script(request, obj_id, text = False):
                                                     instance=instance[0],
                                                     pig_script=pig_script,
                                                     text=text, udfs=udfs,
+                                                    result={},
                                                     udf_form = udf_form))
 
 def delete(request, obj_id):
@@ -159,10 +153,8 @@ def send_email(start, finish, query, user, result):
                                 'finish': finish, 'result': result})
     from_email = settings.DEFAULT_FROM_EMAIL
     send_mail(subject, message, from_email, [user.email])
-    
-def show_logs(request):
-    return render('logs.mako', request, dict(logs=Logs.objects.all()))
-    
+
+
 def script_clone(request, obj_id):
     pig_script = PigScript.objects.filter(id=obj_id).values()[0]
     check = 0
@@ -180,7 +172,7 @@ def script_clone(request, obj_id):
 
 def piggybank(request, obj_id = False):
     import posixpath
-    from desktop.lib.exceptions import PopupException
+    
     from django.utils.translation import ugettext as _
 
     if request.method == 'POST':
@@ -233,25 +225,36 @@ def piggybank(request, obj_id = False):
 
 def piggybank_index(request):
     udfs = UDF.objects.filter(owner=request.user)
-    pig_script = PigScript.objects.filter(creater=request.user)
+    pig_script = PigScript.objects.filter(user=request.user)
     udf_form = UploadFileForm()
     return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, udf_form = udf_form))
     
 def udf_del(request, obj_id):
-    pig_script = PigScript.objects.filter(creater=request.user)
+    pig_script = PigScript.objects.filter(user=request.user)
     udf = UDF.objects.get(id=obj_id)
     udf.delete()
     return redirect(piggybank_index)
-    
+
+
 def start_job(request):
     t = Templeton(request.user.username)
     statusdir = "/tmp/.pigjobs/%s" % datetime.now().strftime("%s")
     script_file = statusdir + "/script.pig"
-    _do_newfile_save(request.fs, script_file, request.POST['script'], "utf-8")
-    job = t.pig_query(pig_file=script_file, statusdir=statusdir)
-    #job = t.pig_query(execute=request.POST['script'], statusdir=statusdir)
-    script = PigScript.objects.get(pk=request.POST['script_id'])
-    job_object = Job.objects.create(job_id=job['id'], statusdir=statusdir, script=script)
+    #_do_newfile_save(request.fs, script_file, request.POST['pig_script'], "utf-8")
+    #job = t.pig_query(pig_file=script_file, statusdir=statusdir)
+    job = t.pig_query(execute=request.POST['pig_script'], statusdir=statusdir)
+
+    if request.POST.get("script_id"):
+        script = PigScript.objects.get(pk=request.POST['script_id'])
+    else:
+        script = PigScript(user=request.user, saved=False)
+    script.pig_script = request.POST['pig_script']
+    script.python_script = request.POST['python_script']
+    script.save()
+    job_object = Job.objects.create(job_id=job['id'],
+                                    statusdir=statusdir,
+                                    script=script,
+                                    email_notification=bool(request.POST['email']))
     return HttpResponse(json.dumps(
         {"job_id": job['id'],
          "text": "The Job has been started successfully.\
@@ -275,15 +278,57 @@ def get_job_result(request):
     try:
         error = request.fs.open(statusdir + "/stderr", "r")
         result['error'] = error.read()
-        error.close()
         stdout = request.fs.open(statusdir + "/stdout", "r")
         result['stdout'] = stdout.read()
-        stdout.close()
         exit_code = request.fs.open(statusdir + "/exit", "r")
         result['exit'] = exit_code.read()
         exit_code.close()
+        stdout.close()
+        error.close()
     except:
         result['error'] = ""
         result['stdout'] = ""
         result['exit'] = ""
     return HttpResponse(json.dumps(result))
+
+
+def query_history(request):
+    return render("query_history.mako", request, dict(jobs=Job.objects.all()))
+
+
+def show_job_result(request, job_id):
+    try:
+        job = Job.objects.get(job_id=job_id)
+    except:
+        raise Http404("This job doesn't exist.'")
+    statusdir = job.statusdir
+    result = {}
+    try:
+        error = request.fs.open(statusdir + "/stderr", "r")
+        result['error'] = error.read()
+        stdout = request.fs.open(statusdir + "/stdout", "r")
+        result['stdout'] = stdout.read()
+        error.close()
+        stdout.close()
+        instance = job.script
+        for field in instance._meta.fields:
+            result[field.name] = getattr(instance, field.name)
+    except:
+        raise Http404("Script data has been deleted.")
+
+    return render('edit_script.mako', request, dict(result=result))
+
+
+def delete_job_object(request, job_id):
+    try:
+        job = Job.objects.get(job_id=job_id)
+    except:
+        raise Http404("This job doesn't exist.'")
+    else:
+        request.fs.rmtree(job.statusdir)
+        job.delete()
+    return HttpResponseRedirect(reverse("query_history"))
+
+
+
+    
