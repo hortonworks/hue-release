@@ -1,9 +1,4 @@
-<%!
-from pig.models import PigScript
-pig_scripts = PigScript.objects.filter(saved=True).all()
-%>
-
-<%def name="my_scripts()">
+<%def name="my_scripts(pig_scripts)">
 <h2>My scripts</h2>
 <ul class="nav nav-list">
   % for v in pig_scripts:
@@ -27,4 +22,12 @@ pig_scripts = PigScript.objects.filter(saved=True).all()
   % endfor
 </ul>
 <a class="btn" href="${url('root_pig')}">New script</a>
+</%def>
+
+<%def name="udfs(udfs)">
+  % for udf in udfs:
+<li>
+  <a class="udf_register" href="#" value="${udf.url}">${udf.file_name}</a>
+</li>
+% endfor
 </%def>
