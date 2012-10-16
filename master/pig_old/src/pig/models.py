@@ -23,12 +23,13 @@ from django.contrib.auth.models import User
 
 class PigScript(models.Model):
 
-    title = models.CharField('Title', max_length=200)
-    pig_script = models.TextField('Pig script')
-    user = models.ForeignKey(User)
-    python_script = models.TextField(null=True,blank=True)
-    date_created = models.DateTimeField('Date', auto_now_add=True)
-    saved = models.BooleanField(default=False)
+    title = models.CharField(max_length=200, verbose_name='Title')
+    text = models.TextField(blank=True, verbose_name='Text')
+    creater = models.ForeignKey(User, verbose_name='User')
+    date_created = models.DateField(verbose_name='Date', auto_now_add=True)
+#    pig_script = models.FileField(
+#        upload_to='pig_script/{t}'.format(t=date.today().isoformat()),
+#        verbose_name='Script file')
 
     class Meta:
         ordering = ['-date_created']
@@ -36,31 +37,14 @@ class PigScript(models.Model):
     def __unicode__(self):
         return u'%s' % self.title
 
-
-class UDF(models.Model):
-    url = models.CharField(max_length=255)
-    file_name = models.CharField(max_length=55)
-    description = models.TextField()
-    owner = models.ForeignKey(User, verbose_name='Owner')
+class Logs(models.Model):
+    start_time = models.IntegerField(max_length = 20)
+    end_time = models.IntegerField(max_length = 20)
+    stastus = models.IntegerField(max_length = 1)
+    script_name = models.CharFiled(max_lengs = 50)
 
     class Meta:
-        ordering = ['file_name']
+        ordering = ['-start_time']
 
     def __unicode__(self):
-        return u'%s' % self.file_name
-
-
-class Job(models.Model):
-    JOB_STATUSES = (
-        (1, "Submited"),
-        (2, "Complited"),
-        (3, "Failed")
-    )
-    job_id = models.CharField(max_length=50, primary_key=True)
-    statusdir = models.CharField(max_length=100)
-    script = models.ForeignKey(PigScript)
-    status = models.SmallIntegerField(choices=JOB_STATUSES, default=2)
-    email_notification = models.BooleanField(default=True)
-
-    def __unicode__(self):
-        return u"%s" % self.job_id
+        return u'%s' % self.script_name

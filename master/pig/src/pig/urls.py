@@ -17,8 +17,20 @@
 
 from django.conf.urls.defaults import patterns, url
 
-urlpatterns = patterns('pig',
-    url(r'delete/(?P<obj_id>\d+)/$', 'views.delete', name='delete'),
-    url(r'(?P<obj_id>\d+)/$', 'views.one_script', name='one_script'),
-    url(r'$', 'views.index', name='root_pig'),
+urlpatterns = patterns('pig.views',  
+    url(r'delete/(?P<obj_id>\d+)/$', 'delete', name='delete'),
+    url(r'clone/(?P<obj_id>\d+)/$', 'script_clone', name='clone'),
+    url(r'piggybank/(?P<obj_id>\d+)/$', 'piggybank', name='piggybank'),
+    url(r'piggybank/new/$', 'piggybank', name='piggybank_new'),
+    url(r'piggybank_index/$', 'piggybank_index', name='piggybank_index'),
+    url(r'udf_del/(?P<obj_id>\d+)/$', 'udf_del', name='udf_del'), 
+    
+    url(r'start_job/$', 'start_job', name="start_job"),
+    url(r'kill_job/$', 'kill_job', name='kill_job'),
+    url(r'get_job_result/$', 'get_job_result', name='get_job_result'),
+    url(r'query_history/$', 'query_history', name='query_history'),
+    url(r'show_job_result/(?P<job_id>\w+)/$', 'show_job_result', name='show_job_result'),
+    url(r'delete_job/(?P<job_id>\w+)/$', 'delete_job_object', name='delete_job_object'),
+    url('(?P<obj_id>\d+)?/', 'index', name="view_script"),
+    url(r'$', 'index', name='root_pig'),
 )

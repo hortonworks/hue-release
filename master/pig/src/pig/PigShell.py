@@ -18,49 +18,72 @@ from CommandPy import CommandPy
 
 class PigShell(CommandPy):
 
-    def ShowCommands(self, command = 'EXPLAIN'):
+    commandOutput = ('DESCRIBE', 'EXPLAIN', 'DUMP',
+                     'ILLUSTRATE', 'STORE', 'CAT')
+
+    def ShowCommands(self, command, limit = None):
         """
         This method get 1 parameter. (EXPLAIN or DESCRIBE)
         Return code with one of this commands
         return False - means that in file no variables
         """
+        if command not in self.commandOutput:
+            return False
+            
         last_variable = self.getLastVariable()
         if not last_variable:
             return False
-        fl = open(self.file_path, 'a+')
-        code = fl.readlines()
-        fl.writelines('%s %s;' % (command, last_variable))
-        fl.close()
 
+        fl = open(self.file_path, 'r')
+        code = self.validate(fl.readlines())
+        fl.close()
+        if limit:
+            from random import randint
+            new_var = ''.join([chr(randint(65,90)) for x in range(1, 11)])
+            code.append('%s = LIMIT %s %d;\n' % (new_var, last_variable, limit))
+            last_variable = new_var
+        code.append('%s %s;\n' % (command, last_variable))
+        code = '\n'.join(code)
+
+        # Create temporary file
+        file_name = self.createPigFile(self.file_path, code)
+        temp_path = self.shell_path[:-1]
+        temp_path.append(file_name)
+        self.shell_path = temp_path
         returnCommand = self.returnCode()
-        if returnCommand:
-            if command.upper() == 'DESCRIBE':
-                returnCommand = returnCommand.split('\n')[-1]
-            elif command.upper() == 'EXPLAIN':
-                returnCommand = '%s\n%s\n%s' % ('-' * 47, 'Logical Plan:',
-                                                returnCommand.split('Logical Plan:')[1])
-            elif command.upper() == 'DUMP':
-                dump = returnCommand.split('\n')[::-1]
-                i = 0
-                for d in dump:
-                    try:
-                        if d[0] != '(' or d[-1] != ')':
-                            break
-                    except IndexError:
-                        pass
-                    i += 1
-                returnCommand = dump[:i + 1][::-1]
-            else:
-                return False
 
-        fl = open(self.file_path, 'w')
-        fl.write(''.join(code))
-        fl.close()
+        # delete temporary file
+        self.deletePigFile(file_name)
 
         return returnCommand
 
-    def DUMPlimit(self):
-        pass
+    def validate(self, text):
+        """
+        This method delete all output command
+        Return filter text
+        """
+        return [t for t in text if t.split(' ')[0].upper() not in self.commandOutput]
+
+
+    def createPigFile(self, name, text):
+        """
+        Create temporary pig script file
+        Return temporary file name
+        """
+        from time import time
+        file_name = self.file_path[:-4]
+        new_file = '%s_%d.pig' % (file_name, int(time()))
+        a = open(new_file, 'w')
+        a.write(text)
+        a.close()
+        return new_file
+
+    def deletePigFile(self, name):
+        """
+        Delete pig script file
+        """
+        from os import remove
+        remove(name)
 
     def getLastVariable(self):
         """
@@ -71,9 +94,10 @@ class PigShell(CommandPy):
         last_variable = ''
         for c in code:
             try:
-                variable_index = c.index('=')
-                last_variable = c[:variable_index - 1].strip()
-                break
+                var_index = c.index('=')
+                if c[var_index - 1] not in ['<', '!', '>'] and c[var_index + 1] not in ['=']:
+                    last_variable = c[:var_index - 1].strip()
+                    break
             except ValueError:
                 continue
 

@@ -15,22 +15,10 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-<%!
-def is_selected(section, matcher):
-  if section == matcher:
-    return "active"
-  else:
-    return ""
-%>
+from django.conf.urls.defaults import patterns, url
 
-<%def name="menubar(section='')">
-  <div class="subnav subnav-fixed">
-    <div class="container-fluid">
-      <ul class="nav nav-pills">
-        <li class="${is_selected(section, 'My Scripts')}"><a href="${url('pig.views.index')}">My Scripts</a></li>
-        <li class="${is_selected(section, 'PiggyBank')}"><a href="${url('pig.views.piggybank_index')}">PiggyBank</a></li>
-        <li class="${is_selected(section, 'Query history')}"><a href="${url('query_history')}">Query history</a></li>
-      </ul>
-    </div>
-  </div>
-</%def>
+urlpatterns = patterns('pig',
+    url(r'delete/(?P<obj_id>\d+)/$', 'views.delete', name='delete'),
+    url(r'(?P<obj_id>\d+)/$', 'views.one_script', name='one_script'),
+    url(r'$', 'views.index', name='root_pig'),
+)

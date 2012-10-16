@@ -27,9 +27,8 @@ def is_selected(section, matcher):
   <div class="subnav subnav-fixed">
     <div class="container-fluid">
       <ul class="nav nav-pills">
-        <li class="${is_selected(section, 'My Scripts')}"><a href="${url('pig.views.index')}">My Scripts</a></li>
-        <li class="${is_selected(section, 'PiggyBank')}"><a href="${url('pig.views.piggybank_index')}">PiggyBank</a></li>
-        <li class="${is_selected(section, 'Query history')}"><a href="${url('query_history')}">Query history</a></li>
+        <li class="${is_selected(section, 'mytab')}"><a href="#">Tab 1</a></li>
+        <li class="${is_selected(section, 'mytab2')}"><a href="#">Tab 2</a></li>
       </ul>
     </div>
   </div>

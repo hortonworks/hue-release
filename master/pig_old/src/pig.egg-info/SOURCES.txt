@@ -1,6 +1,4 @@
 setup.py
-src/pig/CommandPy.py
-src/pig/PigShell.py
 src/pig/__init__.py
 src/pig/forms.py
 src/pig/models.py
@@ -14,8 +12,3 @@ src/pig.egg-info/entry_points.txt
 src/pig.egg-info/not-zip-safe
 src/pig.egg-info/requires.txt
 src/pig.egg-info/top_level.txt
-src/pig/migrations/0001_initial.py
-src/pig/migrations/0002_auto__add_logs.py
-src/pig/migrations/0003_auto__del_field_logs_stastus__add_field_logs_status.py
-src/pig/migrations/0004_auto__add_udf.py
-src/pig/migrations/__init__.py

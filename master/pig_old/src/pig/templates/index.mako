@@ -18,8 +18,8 @@
 <%!from desktop.views import commonheader, commonfooter %>
 <%namespace name="shared" file="shared_components.mako" />
 
-${commonheader("Pig", "pig", user, "100px")}
-${shared.menubar(section='My Scripts')}
+${commonheader("Pig", "pig", "100px")}
+${shared.menubar(section='mytab')}
 
 ## Use double hashes for a mako template comment
 ## Main body
@@ -31,33 +31,43 @@ ${shared.menubar(section='My Scripts')}
 	<ul class="nav nav-list">
       % for v in pig_script:
       <li>
-        <p>
-    <a href="${url('pig.views.delete', v.id)}">
-    <img src="/pig/static/art/delete.gif" alt="Delete" height="12" width="12">
-    </a>
-    <a href="${url('pig.views.script_clone', v.id)}">
-	<img src="/pig/static/art/clone.png" alt="Delete" height="14" width="14">
-	</a>
 	<a href="${url('pig.views.one_script', v.id)}">
 	    % if v.title: 
 	         ${v.title}
             % else:
                  no title
             % endif
-    </a>
-        </p>
+        </a>
       </li>
       % endfor
 	</ul>
-    <a class="btn" href="${url('new_script')}">New script</a>
       </div>
     </div>
     <div class="span9" style="float: left; width: 70%;">
       <div class="clearfix">
-        <h3>Welcome to pig</h3>
-        To get started with pig you'll first need create script: <a class="btn" href="${url('new_script')}">New script</a>
+	<div class="div_conteiner">
+      % if text:
+      <pre>${text}</pre>
+      % endif
+    </div>
+        <div class="input">
+	  <form action="${url('pig.views.index')}" method="post">
+        ${form}
+	    <div class="actions">
+	      <input class="btn primary" type="submit" name="submit" value="Save" >
+	    </div>
+	  </form>
+	</div>
       </div>
     </div>
   </div>
 </div>
+    <script type="text/javascript" >
+      var editor = CodeMirror.fromTextArea(document.getElementById("id_text"), {
+        lineNumbers: true,
+        matchBrackets: true,
+        indentUnit: 4,
+        mode: "text/x-pig"
+      });
+    </script>
 ${commonfooter()}
