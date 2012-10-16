@@ -17,7 +17,7 @@
 
 <%!from desktop.views import commonheader, commonfooter %>
 <%namespace name="shared" file="shared_components.mako" />
-
+<%namespace name="my_scripts" file="my_scripts.mako" />
 ${commonheader("Pig", "pig", user, "100px")}
 ${shared.menubar(section='PiggyBank')}
 
@@ -27,29 +27,7 @@ ${shared.menubar(section='PiggyBank')}
   <div class="row-fluid">
     <div class="span3" style="float: left; width: 20%;">
       <div class="well sidebar-nav">
-	<h2>My scripts</h2>
-	<ul class="nav nav-list">
-      % for v in pig_script:
-      <li>
-        <p>
-    <a href="${url('delete', v.id)}">
-    <img src="/pig/static/art/delete.gif" alt="Delete" height="12" width="12">
-    </a>
-    <a href="${url('clone', v.id)}">
-	<img src="/pig/static/art/clone.png" alt="Delete" height="14" width="14">
-	</a>
-	<a href="${url('view_script', v.id)}">
-	    % if v.title: 
-	         ${v.title}
-            % else:
-                 no title
-            % endif
-    </a>
-        </p>
-      </li>
-      % endfor
-	</ul>
-    <a class="btn" href="${url('root_pig')}">New script</a>
+        ${my_scripts.my_scripts()}
       </div>
     </div>
     <div class="span9" style="float: left; width: 70%;">
