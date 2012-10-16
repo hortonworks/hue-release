@@ -41,6 +41,8 @@ from pig.forms import PigScriptForm, UDFForm
 
 def index(request, obj_id=None):
     result = {}
+    result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
+    result['udfs'] = UDF.objects.all()
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if not form.is_valid():
@@ -49,14 +51,14 @@ def index(request, obj_id=None):
             )
         if request.POST.get("script_id"):
             instance = PigScript.objects.get(pk=request.POST['script_id'])
-            form.instance = instance
+            form = PigScriptForm(request.POST, instance=instance)
             form.save()
         else:
             instance = PigScript(**form.cleaned_data)
             instance.user = request.user
             instance.saved = True
             instance.save()
-            result['script_id'] = instance.pk
+            result['id'] = instance.pk
         return redirect("view_script", obj_id=instance.pk)
     if obj_id:
         instance = PigScript.objects.get(pk=obj_id)
@@ -210,9 +212,9 @@ def piggybank(request, obj_id = False):
             UDF.objects.create(url=dest, file_name=uploaded_file.name,
                                owner=request.user, description='111')
             if obj_id:
-                return redirect(one_script, obj_id)
+                return redirect('pig_root', obj_id)
             else:
-                return redirect(piggybank_index)
+                return redirect('piggybank_index')
 
             # return {
             #     'status': 0,
@@ -302,6 +304,8 @@ def show_job_result(request, job_id):
         raise Http404("This job doesn't exist.'")
     statusdir = job.statusdir
     result = {}
+    result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
+    result['udfs'] = UDF.objects.all()
     try:
         error = request.fs.open(statusdir + "/stderr", "r")
         result['error'] = error.read()

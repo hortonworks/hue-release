@@ -35,7 +35,7 @@ udfs = UDF.objects.all()
   <div class="row-fluid">
     <div class="span3" style="float: left;">
       <div class="well sidebar-nav">
-        ${my_scripts.my_scripts()}
+        ${my_scripts.my_scripts(result['scripts'])}
         
         <h2>Settings</h2>
 	<ul class="nav nav-list">
@@ -49,11 +49,7 @@ udfs = UDF.objects.all()
 	  </li>
 	  <li  class="nav-header"><a id="displayText" href='#'>User-defined Functions</a></li>
 	  <div id="toggleText" style="display: none">
-	    % for udf in udfs:
-	    <li>
-	      <a class="udf_register" href="#" value="${udf.url}">${udf.file_name}</a>
-	    </li>
-            % endfor
+	  ${my_scripts.udfs(result['udfs'])}
 	  </div>
 	  <li>
 	    <form id="udfs" enctype="multipart/form-data" action="${url('pig.views.piggybank')}" method="post">
@@ -68,7 +64,7 @@ udfs = UDF.objects.all()
       <div class="clearfix">
         <div class="input">
 	  <form action="#" method="post" id="pig_script_form">
-            <input type="hidden" name="script_id"  value="${result.get('script_id','')}" >
+            <input type="hidden" name="script_id"  value="${result.get('id','')}" >
             <label for="id_title">Title:</label>
             <input id="id_title" type="text" name="title"
                    maxlength="200" value="${result.get('title',"")}">

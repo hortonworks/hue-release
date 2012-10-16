@@ -14,3 +14,15 @@
 ## KIND, either express or implied.  See the License for the
 ## specific language governing permissions and limitations
 ## under the License.
+from django import forms
+from pig.models import PigScript
+
+
+class PigScriptForm(forms.ModelForm):
+    class Meta:
+        model = PigScript
+        exclude = ("date_created", "saved", "user")
+
+
+class UDFForm(forms.Form):
+    UDF = forms.FileField(required=False)

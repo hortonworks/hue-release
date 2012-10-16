@@ -64,5 +64,11 @@ $(document).ready(function(){
         var cur_val = pig_editor.getValue();
         if (cur_val) cur_val += "\n";
         pig_editor.setValue(cur_val+$(this).text());
+        return false;
+    });
+    
+    $("#pig_script_form").submit(function(){
+        pig_editor.toTextArea();
+        return true;
     });
 });
