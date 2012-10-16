@@ -139,12 +139,11 @@ def one_script(request, obj_id, text=False):
                                                     udf_form = udf_form))
 
 def delete(request, obj_id):
-    pig_script = PigScript.objects.all().order_by('id')[0]
     instance = PigScript.objects.get(id=obj_id)
-    text = instance.title + ' Deleted'
+#    text = instance.title + ' Deleted'
     instance.delete()
 #    return index(request, text = text)
-    return redirect(one_script, pig_script.id)
+    return redirect(index)
 
 def send_email(start, finish, query, user, result):
     subject = 'Query result'
