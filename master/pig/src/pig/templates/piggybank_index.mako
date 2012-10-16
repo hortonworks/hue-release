@@ -21,13 +21,20 @@
 ${commonheader("Pig", "pig", user, "100px")}
 ${shared.menubar(section='PiggyBank')}
 
+<%!
+from pig.models import UDF
+from pig.forms import UDFForm
+udf_form = UDFForm()
+udfs = UDF.objects.all()
+%>
+
 ## Use double hashes for a mako template comment
 ## Main body
 <div class="container-fluid">
   <div class="row-fluid">
     <div class="span3" style="float: left; width: 20%;">
       <div class="well sidebar-nav">
-        ${my_scripts.my_scripts()}
+        ${my_scripts.my_scripts(pig_script)}
       </div>
     </div>
     <div class="span9" style="float: left; width: 70%;">

@@ -43,9 +43,9 @@ $("#displayText").click(function() {
     }
 });
 $(".udf_register").click(function() {
-    $('#id_text').text('REGISTER ' + $(this).attr('value') + '\n' + $('#id_text').val());
+    $('#id_pig_script').text('REGISTER ' + $(this).attr('value') + '\n' + $('#id_pig_script').val());
     $('.CodeMirror').hide()
-    var editor = CodeMirror.fromTextArea(document.getElementById("id_text"), {
+    var editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
         lineNumbers: true,
         matchBrackets: true,
         indentUnit: 4,

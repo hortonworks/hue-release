@@ -226,7 +226,7 @@ def piggybank(request, obj_id = False):
 
 def piggybank_index(request):
     udfs = UDF.objects.filter(owner=request.user)
-    pig_script = PigScript.objects.filter(user=request.user)
+    pig_script = PigScript.objects.filter(saved=True, user=request.user)
     udf_form = UploadFileForm()
     return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, udf_form = udf_form))
     
