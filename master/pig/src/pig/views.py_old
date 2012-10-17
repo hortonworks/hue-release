@@ -37,8 +37,6 @@ from filebrowser.forms import UploadFileForm
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm, UDFForm
-from pig.CommandPy import CommandPy
-from pig.PigShell import PigShell
 
 
 def index(request, obj_id=None):
@@ -61,31 +59,7 @@ def index(request, obj_id=None):
             instance.saved = True
             instance.save()
             result['id'] = instance.pk
-
-	script_path = 'pig_scripts/%s.pig' % instance.title
-        dir = os.path.dirname(script_path)
-        try:
-            os.stat(dir)
-        except:
-            os.mkdir(dir)
-        f1 = open(script_path, 'w')
-        f1.write(instance.pig_script)
-        f1.close()
-
-        if request.POST.get('submit') == 'Execute':
-            pig = CommandPy('pig %s' % script_path)
-            result['stdout'] = pig.returnCode()
-
-        if request.POST.get('submit') in ['Explain', 'Describe',
-                                          'Dump', 'Illustrate']:
-            command = request.POST.get('submit').upper()
-            limit = request.POST.get('limit') or 0
-            pig = PigShell('pig %s' % script_path)
-            result['stdout'] = pig.ShowCommands(
-		command=command, limit=int(limit)) or pig.last_error
-
-        obj_id = instance.pk
-        #return redirect("view_script", obj_id=instance.pk)
+        return redirect("view_script", obj_id=instance.pk)
     if obj_id:
         instance = PigScript.objects.get(pk=obj_id)
         for field in instance._meta.fields:
