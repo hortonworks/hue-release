@@ -168,7 +168,7 @@ def script_clone(request, obj_id):
         del pig_script['id']
         del pig_script['date_created']
         p1 = PigScript.objects.create(**pig_script)
-    return redirect(one_script, p1.id)
+    return redirect(index, p1.id)
 
 
 def piggybank(request, obj_id = False):
@@ -177,12 +177,11 @@ def piggybank(request, obj_id = False):
     from django.utils.translation import ugettext as _
 
     if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
+        form = UDFForm(request.POST, request.FILES)
 
         if form.is_valid():
             uploaded_file = request.FILES['hdfs_file']
-            dest = form.cleaned_data['dest']
-            print dest
+            dest = '/tmp'
             if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
                 raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))
 
@@ -227,11 +226,10 @@ def piggybank(request, obj_id = False):
 def piggybank_index(request):
     udfs = UDF.objects.filter(owner=request.user)
     pig_script = PigScript.objects.filter(saved=True, user=request.user)
-    udf_form = UploadFileForm()
+    udf_form = UDFForm(request.POST, request.FILES)
     return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, udf_form = udf_form))
     
 def udf_del(request, obj_id):
-    pig_script = PigScript.objects.filter(user=request.user)
     udf = UDF.objects.get(id=obj_id)
     udf.delete()
     return redirect(piggybank_index)

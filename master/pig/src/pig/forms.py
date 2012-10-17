@@ -16,6 +16,7 @@
 ## under the License.
 from django import forms
 from pig.models import PigScript
+from django.utils.translation import ugettext_lazy as _
 
 
 class PigScriptForm(forms.ModelForm):
@@ -25,4 +26,4 @@ class PigScriptForm(forms.ModelForm):
 
 
 class UDFForm(forms.Form):
-    UDF = forms.FileField(required=False)
+    hdfs_file = forms.FileField(required=False, label=_("File to Upload"))

@@ -21,12 +21,12 @@
 ${commonheader("Pig", "pig", user, "100px")}
 ${shared.menubar(section='PiggyBank')}
 
-<%!
-from pig.models import UDF
-from pig.forms import UDFForm
-udf_form = UDFForm()
-udfs = UDF.objects.all()
-%>
+##<%!
+##from pig.models import UDF
+##from pig.forms import UDFForm
+##udf_form = UDFForm()
+##udfs = UDF.objects.all()
+##%>
 
 ## Use double hashes for a mako template comment
 ## Main body
