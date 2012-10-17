@@ -136,9 +136,7 @@ udfs = UDF.objects.all()
             % if result.get("python_script"):
             <label>Python UDF</label>
                  <textarea id="python_code" name="python_script"
-                           rows="4" >
-                   ${result['python_script']}
-            </textarea>
+                           rows="4" >${result['python_script']}</textarea>
             % else:
             <div style="display:none;" id="python_textarea">
                  <label>Python UDF</label>
@@ -279,11 +277,13 @@ var job_id = null;
         $("#id_text").attr("disabled", "disabled");
         percent = 2;
         $(".bar").css("width", percent+"%");
+        pig_editor.save();
+        python_editor.save()                                
         $.ajax({
             url: "${url("start_job")}",
             dataType: "json",
             type: "POST",
-            data: $("#pig_script_form").serialize()+"&pig_script="+escape(pig_editor.getValue()),
+            data: $("#pig_script_form").serialize(),
             success: function(data){
                 $("#kill_job").show();
                 $("#job_info").append(data.text);

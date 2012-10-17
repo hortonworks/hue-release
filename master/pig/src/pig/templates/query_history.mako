@@ -23,7 +23,13 @@ ${shared.menubar(section='Query history')}
       <td><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.pig_script}</a></td>
       <td>
         <span class="label label-success-warning">
-                      <i class="icon-briefcase icon-white" title="Retired"></i> succeeded
+          % if job.status == job.JOB_SUBMITED:
+          <i class="icon-refresh icon-red" title="Retired"></i>
+          running
+          % else:
+          <i class="icon-briefcase icon-green" title="Retired"></i>
+          succeeded
+          % endif
         </span>
       </td>
       <td><a href="${url("delete_job_object", job_id=job.job_id)}" onClick="return confirm('Are you sure you want to delete job result?');"><i class="icon-trash"></i> Delete</a></td>

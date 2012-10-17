@@ -51,15 +51,18 @@ class UDF(models.Model):
 
 
 class Job(models.Model):
+    JOB_SUBMITED = 1
+    JOB_COMPLETED = 2
+
     JOB_STATUSES = (
-        (1, "Submited"),
-        (2, "Complited"),
-        (3, "Failed")
+        (JOB_SUBMITED, "Submited"),
+        (JOB_COMPLETED, "Complited"),
+        (3, "Failed"),
     )
     job_id = models.CharField(max_length=50, primary_key=True)
     statusdir = models.CharField(max_length=100)
     script = models.ForeignKey(PigScript)
-    status = models.SmallIntegerField(choices=JOB_STATUSES, default=2)
+    status = models.SmallIntegerField(choices=JOB_STATUSES, default=1)
     email_notification = models.BooleanField(default=True)
 
     def __unicode__(self):

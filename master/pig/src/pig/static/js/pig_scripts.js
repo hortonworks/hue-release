@@ -68,7 +68,8 @@ $(document).ready(function(){
     });
     
     $("#pig_script_form").submit(function(){
-        pig_editor.toTextArea();
+        pig_editor.save();
+        python_editor.save();
         return true;
     });
 });
