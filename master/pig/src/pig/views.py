@@ -101,7 +101,11 @@ def delete(request, obj_id):
 
 
 def script_clone(request, obj_id):
-    pig_script = PigScript.objects.filter(id=obj_id).values()[0]
+    pig_script = PigScript.objects.filter(id=obj_id).values()
+    if pig_script:
+        pig_script = pig_script[0]
+    else:
+        return http404()
     check = 0
     if '(copy)' in pig_script['title'] or PigScript.objects.filter(title__icontains=pig_script['title'] + '(copy)'):
         check = PigScript.objects.filter(title__icontains=pig_script['title'])
