@@ -105,7 +105,7 @@ def script_clone(request, obj_id):
     if pig_script:
         pig_script = pig_script[0]
     else:
-        return http404()
+        raise Http404
     check = 0
     if '(copy)' in pig_script['title'] or PigScript.objects.filter(title__icontains=pig_script['title'] + '(copy)'):
         check = PigScript.objects.filter(title__icontains=pig_script['title'])
