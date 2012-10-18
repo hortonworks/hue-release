@@ -76,7 +76,7 @@ udfs = UDF.objects.all()
                   <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                     PIG helper<b class="caret"></b>
                   </a>
-                  <ul class="dropdown-menu">
+                  <ul class="dropdown-menu" id="pig_helper">
                     <li class="dropdown-submenu">
                       <a href="#">Aggregation functions</a>
                       <ul class="dropdown-menu">
@@ -120,7 +120,7 @@ udfs = UDF.objects.all()
                     <li class="dropdown-submenu">
                       <a href="#">HCatalog</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">A = LOAD '__' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
+                        <li><a href="#">A = LOAD '%__%' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
@@ -164,7 +164,7 @@ udfs = UDF.objects.all()
         
         <div class="alert alert-success" id="job_info">
           % if 'stdout' in result:
-          ${result['stdout']}
+          ${result['stdout'].replace("\n", "<br>")}
           % endif
         </div>
         
@@ -181,7 +181,7 @@ udfs = UDF.objects.all()
             <div id="collapseOne" class="accordion-body collapse in">
               <div class="accordion-inner" id="log_info">
                 % if 'error' in result:
-                ${result['error']}
+                ${result['error'].replace("\n", "<br>")}
                 % endif
               </div>
             </div>
@@ -208,8 +208,8 @@ function get_job_result(job_id)
             get_job_res_timer = window.setTimeout("get_job_result('"+job_id+"');", 3000);
             return;
         }
-        $("#log_info").html(data.error);
-        $("#job_info").append("<br>"+data.stdout.replace("\n", "<br>"));
+        $("#log_info").html(data.error.replace(/\n/g, "<br>"));
+        $("#job_info").html(data.stdout.replace(/\n/g, "<br>"));
         percent = 100;
         $("#start_job").show();
         $("#kill_job").hide();

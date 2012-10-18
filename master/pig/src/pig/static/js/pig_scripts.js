@@ -54,7 +54,7 @@ $(".udf_register").click(function() {
 });
 
 $(document).ready(function(){
-    $(".dropdown-menu>li>a").live('click', function(){
+    $("#pig_helper>li>a").live('click', function(){
         if($(this).data("python"))
             {
                 $("#python_textarea").show();

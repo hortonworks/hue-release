@@ -20,7 +20,7 @@ ${shared.menubar(section='Query history')}
 % for job in jobs:
     <tr>
       <td>${job.script.date_created}</td>
-      <td><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.pig_script}</a></td>
+      <td><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.pig_script.replace("\n", "<br>")}</a></td>
       <td>
         <span class="label label-success-warning">
           % if job.status == job.JOB_SUBMITED:

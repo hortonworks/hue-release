@@ -199,7 +199,7 @@ def start_job(request):
     if request.POST.get("python_script"):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
-    job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId"))
+    job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"))
     #job = t.pig_query(execute=request.POST['pig_script'], statusdir=statusdir)
 
     if request.POST.get("script_id"):
@@ -296,7 +296,7 @@ def notify_job_complited(request, job_id):
     job.status = job.JOB_COMPLETED
     job.save()
     job_result = _job_result(request, job)
-    if (job.notify_job_complited):
+    if job.email_notification:
         subject = 'Query result'
         message = render_to_string(
             'mail/approved.html',
@@ -307,6 +307,7 @@ def notify_job_complited(request, job_id):
         )
         from_email = settings.DEFAULT_FROM_EMAIL
         send_mail(subject, message, from_email, [job.script.user.email])
+    return HttpResponse("Done")
 
 
     
