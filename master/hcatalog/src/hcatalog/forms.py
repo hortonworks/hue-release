@@ -21,7 +21,6 @@ from django import forms
 from desktop.lib.django_forms import simple_formset_factory, DependencyAwareForm
 from desktop.lib.django_forms import ChoiceOrOtherField, MultiForm, SubmitButton
 from hcatalog import common
-from hcatalog import db_utils
 from hcatalog import models
 
 import filebrowser.forms
@@ -63,7 +62,7 @@ class SaveForm(forms.Form):
     save = self.cleaned_data.get('save')
     name = self.cleaned_data.get('name')
     if save and len(name) == 0:
-      # Bother with name iff we're saving
+      # Bother with name if we're saving
       raise forms.ValidationError('Please enter a name')
     return self.cleaned_data
 
@@ -99,7 +98,7 @@ class SaveResultsForm(DependencyAwareForm):
     tbl = self.cleaned_data.get('target_table')
     if tbl:
       try:
-        db_utils.meta_client().get_table("default", tbl)
+        hcat_client().get_table("default", tbl)
         raise forms.ValidationError('Table already exists')
       except hive_metastore.ttypes.NoSuchObjectException:
         pass
@@ -321,18 +320,17 @@ PartitionTypeFormSet = simple_formset_factory(PartitionTypeForm, add_label="add 
 class LoadDataForm(forms.Form):
   """Form used for loading data into an existing table."""
   path = filebrowser.forms.PathField(label="Path")
-  overwrite = forms.BooleanField(required=False, initial=False,
-    label="Overwrite?")
+  overwrite = forms.BooleanField(required=False, initial=False, label="Overwrite?")
+
 
   def __init__(self, table_obj, *args, **kwargs):
+    super(LoadDataForm, self).__init__(*args, **kwargs)
+    self.partition_columns = dict()
+    for i, column in enumerate(table_obj['partitionKeys']):
+      # We give these numeric names because column names
+      # may be unpleasantly arbitrary.
+      name = "partition_%d" % i
+      char_field = forms.CharField(required=True, label="%s (partition key with type %s)" % (column['name'], column['type']))
+      self.fields[name] = char_field
+      self.partition_columns[name] = column['name']
 
-      tmp = 0
-#    super(LoadDataForm, self).__init__(*args, **kwargs)
-#    self.partition_columns = dict()
-#    for i, column in enumerate(table_obj.partitionKeys):
-#      # We give these numeric names because column names
-#      # may be unpleasantly arbitrary.
-#      name = "partition_%d" % i
-#      char_field = forms.CharField(required=True, label="%s (partition key with type %s)" % (column.name, column.type))
-#      self.fields[name] = char_field
-#      self.partition_columns[name] = column.name

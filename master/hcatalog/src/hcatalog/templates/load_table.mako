@@ -42,6 +42,7 @@ ${layout.menubar()}
       Note that loading data will move data from its location
       into the table's storage location.
       </p>
+
       <input type="submit">
     </form>
   </div>

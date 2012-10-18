@@ -46,9 +46,8 @@ ${layout.menubar(section='tables')}
 				% for table in tables:
 					<tr>
 						<td><a href="${ url("hcatalog.views.describe_table", table=table) }" data-row-selector="true">${ table }</a></td>
-						##<td><a href="${ url("hcatalog.views.read_table", table=table) }" class="btn">Browse Data</a></td>
+						<td><a href="${ url("hcatalog.views.read_table", table=table) }" class="btn">Browse Data</a></td>
 						##<td><a href="#" data-row-selector="true">${ table }</a></td>
-						<td><a href="#" class="btn">Browse Data</a></td>
 					</tr>				
 				% endfor
 				</tbody>

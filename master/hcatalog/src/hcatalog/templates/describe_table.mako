@@ -25,7 +25,7 @@ from desktop.views import commonheader, commonfooter
 ##  else:
     view_or_table_noun = "Table"
 %>
-${commonheader("HCatalog %s Metadata: %s" % (view_or_table_noun, table.tableName), "hcatalog", user, "100px")}
+${commonheader("HCatalog %s Metadata: %s" % (view_or_table_noun, table['tableName']), "hcatalog", user, "100px")}
 ${layout.menubar(section='tables')}
 <%def name="column_table(cols)">
 
@@ -40,9 +40,10 @@ ${layout.menubar(section='tables')}
       <tbody>
         % for column in cols:
           <tr>
-            <td>${ column.name }</td>
-            <td>${ column.type }</td>
-            <td>${ column.comment or "" }</td>
+            <td>${ column['name'] }</td>
+            <td>${ column['type'] }</td>
+            <td>${ "" }</td>
+            ##<td>${ column['comment'] or "" }</td>
           </tr>
         % endfor
       </tbody>
@@ -51,7 +52,7 @@ ${layout.menubar(section='tables')}
 </%def>
 
 <div class="container-fluid">
-	<h1>HCatalog Table Metadata: ${table.tableName}</h1>
+	<h1>HCatalog Table Metadata: ${table['tableName']}</h1>
 	<div class="row-fluid">
 		<div class="span3">
 			<div class="well sidebar-nav">
@@ -66,21 +67,55 @@ ${layout.menubar(section='tables')}
 		<div class="span9">
 			<ul class="nav nav-tabs">
 				<li class="active"><a href="#columns" data-toggle="tab">Columns</a></li>
-##		        % if len(table.partitionKeys) > 0:
-##					<li><a href="#partitionColumns" data-toggle="tab">Partition Columns</a></li>
-##		        % endif
+		        % if len(table['partitionKeys']) > 0:
+					<li><a href="#partitionColumns" data-toggle="tab">Partition Columns</a></li>
+		        % endif
+		        % if len(table['partitions']) > 0:
+					<li><a href="#partitions" data-toggle="tab">Partitions</a></li>
+		        % endif
 			</ul>
 
 			<div class="tab-content">
 				<div class="active tab-pane" id="columns">
-##					${column_table(table.sd.cols)}
+					${column_table(table['columns'])}
 				</div>
-##		        % if len(table.partitionKeys) > 0:
-##		          <div class="tab-pane" id="partitionColumns">
-##		            ${column_table(table.partitionKeys)}
-##		            <a href="${ url("hcatalog.views.describe_partitions", table=table_name) }">Show Partitions</a>
-##		          </div>
-##		        % endif
+		        % if len(table['partitionKeys']) > 0:
+		          <div class="tab-pane" id="partitionColumns">
+		            ${column_table(table['partitionKeys'])}
+		          </div>
+		        % endif
+		        ## start of partitions
+		        <div class="tab-pane" id="partitions">
+		        <table>
+                <tr>
+                    % for field in table['partitionKeys']:
+                      <th>${field['name']}</th>
+                    % endfor
+##                    <th></th>## Extra column for command links.
+                </tr>
+                % if len(table['partitions']) > 0:
+                  % for partition in table['partitions']:
+                    <tr>
+                    % for key in partition['name']:
+                      <td>${key}</td>
+                    % endfor
+                    <td>
+##                    ##<% url = location_to_url(request, partition['location']) %>
+##                    <% url = "#" %>
+##                    % if url:
+##                      <a href="${url}">${partition.['location']}</a>
+##                    % else:
+##                      ${partition['location']}
+##                    % endif
+                    </td>
+                    </tr>
+                  % endfor
+                % else:
+                  <tr><td>Table has no partitions.</td></tr>
+                % endif
+				</table>
+                </div>
+		        ## end of partitions
 			</div>
 		</div>
 	</div>
@@ -107,7 +142,6 @@ ${layout.menubar(section='tables')}
 </div>
 
 
-
 <div id="importData" class="modal hide fade">
 	<form method="POST" action="${ url("hcatalog.views.load_table", table=table_name) }" class="form-stacked">
 	<div class="modal-header">
@@ -120,28 +154,27 @@ ${layout.menubar(section='tables')}
 	  </div>
 
 
+	  <div class="clearfix">
+	  ${comps.label(load_form["path"], title_klass='loadPath', attrs=dict(
+        ))}
+    	<div class="input">
+		     ${comps.field(load_form["path"], title_klass='loadPath', attrs=dict(
+		       klass='loadPath input-xlarge'
+		       ))}
+		</div>
+		</div>
 
-##	  <div class="clearfix">
-##	  ${comps.label(load_form["path"], title_klass='loadPath', attrs=dict(
-##        ))}
-##    	<div class="input">
-##		     ${comps.field(load_form["path"], title_klass='loadPath', attrs=dict(
-##		       klass='loadPath input-xlarge'
-##		       ))}
-##		</div>
-##		</div>
-##
-##      % for pf in load_form.partition_columns:
-##		<div class="clearfix">
-##			${comps.label(load_form[pf], render_default=True)}
-##	    	<div class="input">
-##	        	${comps.field(load_form[pf], render_default=True, attrs=dict(
-##			       klass='input-xlarge'
-##			       ))}
-##			</div>
-##		</div>
-##
-##      % endfor
+      % for pf in load_form.partition_columns:
+		<div class="clearfix">
+			${comps.label(load_form[pf], render_default=True)}
+	    	<div class="input">
+	        	${comps.field(load_form[pf], render_default=True, attrs=dict(
+			       klass='input-xlarge'
+			       ))}
+			</div>
+		</div>
+
+      % endfor
 
 		<div class="clearfix">
 			<div class="input">
@@ -153,6 +186,7 @@ ${layout.menubar(section='tables')}
 	<div id="filechooser">
 	</div>
 	</div>
+
 	<div class="modal-footer">
 		<input type="submit" class="btn primary" value="Submit"/>
 		<a href="#" class="btn secondary" data-dismiss="modal">Cancel</a>
@@ -160,6 +194,8 @@ ${layout.menubar(section='tables')}
 	</form>
 </div>
 </div>
+
+   
 <style>
 	#filechooser {
 		display:none;

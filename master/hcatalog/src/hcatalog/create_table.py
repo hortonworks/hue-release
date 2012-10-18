@@ -32,9 +32,8 @@ from hadoop.fs import hadoopfs
 
 import hcatalog.common
 import hcatalog.forms
-from hcatalog.views import describe_table, confirm_query, execute_directly
-from hcatalog.views import make_hcatalog_query
-from hcatalog import db_utils
+from hcatalog.views import describe_table, do_load_table
+from hcat_client import hcat_client
 
 LOG = logging.getLogger(__name__)
 
@@ -62,20 +61,15 @@ def create_table(request):
         }
       )
 
-      result, isError1, error1 = db_utils.meta_client().create_table("default", proposed_query)
-      tables, isError2, error2 = db_utils.meta_client().get_tables("default", ".*")
+      result, isError1, error1 = hcat_client().create_table("default", proposed_query)
+      tables, isError2, error2 = hcat_client().get_tables()
       errorMsg = ""
       if isError1:
           errorMsg += "Error executing create table query:" + error1 + "\n"
       if isError2:
           errorMsg += "Error executing show table query:" + error2
       
-      return render("show_tables.mako", request, dict(tables=tables, debug_info=errorMsg))
-      # Mako outputs bytestring in utf8
-      proposed_query = proposed_query.decode('utf-8')
-      tablename = form.table.cleaned_data['name']
-      on_success_url = urlresolvers.reverse(describe_table, kwargs={'table': tablename})
-      return confirm_query(request, proposed_query, on_success_url)
+      return render("show_tables.mako", request, dict(tables=tables, debug_info=''))
   else:
     form.bind()
     
@@ -84,7 +78,6 @@ def create_table(request):
     table_form=form.table,
     columns_form=form.columns,
     partitions_form=form.partitions,
-    ##has_tables=len(db_utils.meta_client().get_tables("default", ".*")) > 0
   ))
 
 
@@ -251,25 +244,17 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load):
   """
   Submit the table creation, and setup the load to happen (if ``do_load``).
   """
-  on_success_params = { }
+  hcat_client().create_table("default", create_hql)
+  tables, isError, error = hcat_client().get_tables()
   if do_load:
-    on_success_params['table'] = table_name
-    on_success_params['path'] = path
-    on_success_url = urlresolvers.reverse(hcatalog.create_table.load_after_create)
-  else:
-    on_success_url = urlresolvers.reverse(describe_table, kwargs={'table': table_name})
-
-  query_msg = make_hcatalog_query(request, create_hql)
-#  return execute_directly(request, query_msg,
-#                          on_success_url=on_success_url,
-#                          on_success_params=on_success_params)
-  
-  db_utils.meta_client().create_table("default", create_hql)
-  tables, isError, error = db_utils.meta_client().get_tables("default", ".*")
-  errorMsg = ""
-  if isError:
-      errorMsg = error
-  return render("show_tables.mako", request, dict(tables=tables, debug_info=errorMsg))
+    if not table_name or not path:
+      msg = 'Internal error: Missing needed parameter to load data into table'
+      LOG.error(msg)
+      raise PopupException(msg)
+    LOG.debug("Auto loading data from %s into table %s" % (path, table_name))
+    hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
+    hcatalog.views.do_load_table(request, hql)    
+  return render("show_tables.mako", request, dict(tables=tables, debug_info=''))
 
 
 def _delim_preview(fs, file_form, encoding, file_types, delimiters):
@@ -428,25 +413,3 @@ class TextFileReader(object):
       return None
 
 FILE_READERS.append(TextFileReader)
-
-
-def load_after_create(request):
-  """
-  Automatically load data into a newly created table.
-
-  We get here from the create's on_success_url, and expect to find
-  ``table`` and ``path`` from the parameters.
-  """
-  tablename = request.REQUEST.get('table')
-  path = request.REQUEST.get('path')
-  if not tablename or not path:
-    msg = 'Internal error: Missing needed parameter to load data into table'
-    LOG.error(msg)
-    raise PopupException(msg)
-
-  LOG.debug("Auto loading data from %s into table %s" % (path, tablename))
-  hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, tablename)
-  query_msg = make_hcatalog_query(request, hql)
-  on_success_url = urlresolvers.reverse(describe_table, kwargs={'table': tablename})
-
-  return execute_directly(request, query_msg, on_success_url=on_success_url)

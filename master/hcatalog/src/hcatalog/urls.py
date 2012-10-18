@@ -17,22 +17,14 @@
 
 from django.conf.urls.defaults import patterns, url
 
-#urlpatterns = patterns('hcatalog',
-#  url(r'^$', 'views.index'),
-#)
-
 urlpatterns = patterns('hcatalog',
   url(r'^$', 'create_table.index'),
   url(r'^tables$', 'views.show_tables'),
   url(r'^table/(?P<table>\w+)$', 'views.describe_table'),
-  url(r'^table/(?P<table>\w+)/partitions$', 'views.describe_partitions'),
   url(r'^table/(?P<table>\w+)/load$', 'views.load_table'),
   url(r'^table/(?P<table>\w+)/read$', 'views.read_table'),
   url(r'^table/(?P<table>\w+)/drop$', 'views.drop_table'),
   url(r'^create$', 'create_table.index'),
   url(r'^create/create_table$', 'create_table.create_table'),
   url(r'^create/import_wizard$', 'create_table.import_wizard'),
-  url(r'^create/auto_load$', 'create_table.load_after_create'),
-#  url(r'^execute$', 'views.execute_query'),
-#  url(r'^execute/(?P<design_id>\d+)$', 'views.execute_query'),
 )

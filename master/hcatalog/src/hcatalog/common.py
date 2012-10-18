@@ -22,8 +22,7 @@ Common utils for hcatalog.
 import re
 
 from django import forms
-from hcatalog import db_utils
-
+from hcat_client import hcat_client
 
 HIVE_IDENTIFER_REGEX = re.compile("^[a-zA-Z0-9]\w*$")
 
@@ -72,7 +71,7 @@ class HiveIdentifierField(forms.RegexField):
 class HiveTableChoiceField(forms.ChoiceField):
   """To choose from a defined table"""
   def __init__(self, *args, **kwargs):
-    tables, isError, error = db_utils.meta_client().get_tables("default", ".*")
+    tables = hcat_client.get_tables()
     kwargs['choices'] = to_choices([''] + tables)
     forms.ChoiceField.__init__(self, *args, **kwargs)
 

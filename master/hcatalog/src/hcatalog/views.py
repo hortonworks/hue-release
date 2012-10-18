@@ -15,12 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from desktop.lib.django_util import render
-import datetime
-from hcatalog import db_utils
-
-import logging
-import re
 
 from django import forms
 from django.core import urlresolvers
@@ -36,21 +30,27 @@ from desktop.lib.django_util import copy_query_dict, format_preserving_redirect,
 from desktop.lib.django_util import login_notrequired, get_desktop_uri_prefix
 from desktop.lib.django_util import render_injected
 from desktop.lib.exceptions import PopupException
+from desktop.lib.django_util import render
 
 from hadoop.fs.exceptions import WebHdfsException
+from filebrowser.views import _do_newfile_save
 
-from beeswaxd import BeeswaxService
-from beeswaxd.ttypes import QueryHandle, BeeswaxException, QueryNotFoundException
+from beeswax.views import read_table as beeswax_read_table
 
 import hcatalog.forms
 from hcatalog import common
-from hcatalog import db_utils
 from hcatalog import models
+from hcat_client import hcat_client
+from templeton import Templeton
 
 from jobsub.parameterization import find_variables, substitute_variables
-
 from filebrowser.views import location_to_url
 
+import time
+from datetime import date, datetime
+
+import logging
+import os
 
 LOG = logging.getLogger(__name__)
 
@@ -58,28 +58,24 @@ def index(request):
   return render('index.mako', request, dict(date=datetime.datetime.now()))
   
 def show_tables(request):
-  tables, isError, error = db_utils.meta_client().get_tables("default", ".*")
-  errorMsg = ""
-  if isError:
-      errorMsg = error
-  return render("show_tables.mako", request, dict(tables=tables, debug_info=errorMsg))
+  tables, isError, error = hcat_client().get_tables()
+  return render("show_tables.mako", request, dict(tables=tables, debug_info=''))
   
-class TableDescription:
-    def __init__(self, **kwds):
-        self.__dict__.update(kwds)
-
 
 def describe_table(request, table):
-  #table_obj = db_utils.meta_client().get_table("default", table)
-#  table_obj = { 'tableName':table, 'partitionKeys':[1,2] }
-  table_obj = TableDescription(tableName=table, partitionKeys=[]);
-#  load_form = hcatalog.forms.LoadDataForm(table_obj)
-  load_form=""
+  try:
+      table_desc_extended = hcat_client().describe_table_extended(table)
+      partitions = [{"values":[{"columnName":"p1","columnValue":"a"},{"columnName":"p2","columnValue":"a"}],"name":"p1='a',p2='a'"},{"values":[{"columnName":"p1","columnValue":"aaa"},{"columnName":"p2","columnValue":"bbb"}],"name":"p1='aaa',p2='bbb'"}]
+      table_obj = {'tableName':table, 'columns':table_desc_extended['columns'], 'partitionKeys':table_desc_extended['partitionColumns'], 'partitions':partitions}
+  except Exception:
+    import traceback
+    error = traceback.format_exc()
+    raise PopupException('Error getting table description', title="Error getting table description", detail=error)
+  load_form = hcatalog.forms.LoadDataForm(table_obj)
   return render("describe_table.mako", request, dict(
       table=table_obj,
       table_name=table,
       load_form=load_form,
-#      is_view=is_view
   ))
 
 def drop_table(request, table):
@@ -87,126 +83,30 @@ def drop_table(request, table):
   if request.method == 'GET':
     title = "This may delete the underlying data as well as the metadata.  Drop table '%s'?" % table
     return render('confirm.html', request, dict(url=request.path, title=title))
-  elif request.method == 'POST':
-    
-    import urllib2
-    opener = urllib2.build_opener(urllib2.HTTPHandler)
-    drop_request = urllib2.Request('http://ec2-75-101-199-141.compute-1.amazonaws.com:50111/templeton/v1/ddl/database/default/table/%s?user.name=hdfs' % table)
-    drop_request.get_method = lambda: 'DELETE'
-    url = opener.open(drop_request)
-    
-    #handle here exceptions
-    tables, isError, error = db_utils.meta_client().get_tables("default", ".*")
-    errorMsg = ""
-    if isError:
-      errorMsg = error
-    return render("show_tables.mako", request, dict(tables=tables, debug_info=errorMsg))
+  elif request.method == 'POST':  
+    hcat_client().drop_table(table)
+    tables, isError, error = hcat_client().get_tables()
+    return render("show_tables.mako", request, dict(tables=tables, debug_info=''))
 
 
 def read_table(request, table):
-  """View function for select * from table"""
-  table_obj = db_utils.meta_client().get_table("default", table)
-  hql = "SELECT * FROM `%s` %s" % (table, _get_browse_limit_clause(table_obj))
-  query_msg = make_hcatalog_query(request, hql)
-  try:
-    return execute_directly(request, query_msg, tablename=table)
-  except BeeswaxException, e:
-    # Note that this state is difficult to get to.
-#    error_message, log = expand_exception(e)
-    error = "Failed to read table.  Error: " + "error_message"
-    raise PopupException(error, title="HCatalog Error", detail=log)
-
-
-def confirm_query(request, query, on_success_url=None):
-
-#  mform = hcatalog.forms.query_form()
-#  mform.bind()
-#  mform.query.initial = dict(query=query)
-  
-  tables, isError, error = db_utils.meta_client().get_tables("default", ".*")
-  errorMsg = ""
-  if isError:
-      errorMsg = error
-  return render("show_tables.mako", request, dict(tables=tables, debug_info=""))
-#  return render('execute.mako', request, {
-#    'form': mform,
-#    'action': urlresolvers.reverse(execute_query),
-#    'error_message': "None",
-#    'design': None,
-#    'on_success_url': on_success_url,
-#  })
-
-def _get_browse_limit_clause(table_obj):
-  """Get the limit clause when browsing a partitioned table"""
-  if table_obj.partitionKeys:
-    limit = conf.BROWSE_PARTITIONED_TABLE_LIMIT.get()
-    if limit > 0:
-      return "LIMIT %d" % (limit,)
-  return ""
-
-
-_SEMICOLON_WHITESPACE = re.compile(";\s*$")
-def _strip_trailing_semicolon(query):
-  """As a convenience, we remove trailing semicolons from queries."""
-  s = _SEMICOLON_WHITESPACE.split(query, 2)
-  if len(s) > 1:
-    assert len(s) == 2
-    assert s[1] == ''
-  return s[0]
-
-
-def make_hcatalog_query(request, hql, query_form=None):
-  """
-  make_hcatalog_query(request, hql, query_type, query_form=None) -> BeeswaxService.Query object
-
-  It sets the various configuration (file resources, fuctions, etc) as well.
-  """
-  query_msg = BeeswaxService.Query(query=hql, configuration=[])
-
-  # Configure running user and group.
-  query_msg.hadoop_user = request.user.username
-
-  if query_form is not None:
-    for f in query_form.settings.forms:
-      query_msg.configuration.append(django_mako.render_to_string("hql_set.mako", f.cleaned_data))
-    for f in query_form.file_resources.forms:
-      type = f.cleaned_data["type"]
-      # Perhaps we should have fully-qualified URIs here already?
-      path = request.fs.fs_defaultfs + f.cleaned_data["path"]
-      query_msg.configuration.append(
-        django_mako.render_to_string("hql_resource.mako", dict(type=type, path=path)))
-    for f in query_form.functions.forms:
-      query_msg.configuration.append(
-        django_mako.render_to_string("hql_function.mako", f.cleaned_data))
-  return query_msg
-
-
-def execute_directly(request, query_msg, design=None, tablename=None,
-                     on_success_url=None, on_success_params=None, **kwargs):
-
-  return None
-
-def parse_results(data):
-  """
-  Results come back tab-delimited, and this splits
-  them back up into reasonable things.
-  """
-  def parse_result_row(row):
-    return row.split("\t")
-  for row in data:
-    yield parse_result_row(row)
-
-
+  return beeswax_read_table(request, table)
+ 
 def load_table(request, table):
   """
   Loads data into a table.
   """
-  table_obj = db_utils.meta_client().get_table("default", table)
+  try:
+    table_desc_extended = hcat_client().describe_table_extended(table)
+    table_obj = {'tableName':table, 'columns':table_desc_extended['columns'], 'partitionKeys':table_desc_extended['partitionColumns']}
+  except Exception:
+    import traceback
+    error = traceback.format_exc()
+    raise PopupException('Error getting table description', title="Error getting table description", detail=error)
   if request.method == "POST":
     form = hcatalog.forms.LoadDataForm(table_obj, request.POST)
+    out_hql = ''
     if form.is_valid():
-      # TODO(philip/todd): When PathField might refer to non-HDFS,
-      # we need a pathfield.is_local function.
       hql = "LOAD DATA INPATH"
       hql += " '%s'" % form.cleaned_data['path']
       if form.cleaned_data['overwrite']:
@@ -220,18 +120,37 @@ def load_table(request, table):
           vals.append("%s='%s'" % (column_name, form.cleaned_data[key]))
         hql += ", ".join(vals)
         hql += ")"
-
-      on_success_url = urlresolvers.reverse(describe_table, kwargs={'table': table})
-      return confirm_query(request, hql, on_success_url)
+      hql += ";" 
+    try:
+      do_load_table(request, hql)
+    except Exception:
+      import traceback
+      error = traceback.format_exc()
+      raise PopupException('Error loading data into the table', title="Error loading data into the table", detail=error)
+    return beeswax_read_table(request, table)
   else:
     form = hcatalog.forms.LoadDataForm(table_obj)
     return render("load_table.mako", request, dict(form=form, table=table, action=request.get_full_path()))
 
-def describe_partitions(request, table):
-  table_obj = db_utils.meta_client().get_table("default", table)
-  if len(table_obj.partitionKeys) == 0:
-    raise PopupException("Table '%s' is not partitioned." % table)
-  partitions = db_utils.meta_client().get_partitions("default", table, max_parts= -1)
-  return render("describe_partitions.mako", request,
-                dict(table=table_obj, partitions=partitions, request=request))
+def do_load_table(request, create_hql):
+    # start_job(request, out_hql)
+    script_file = "/tmp/hive_%s.hcat" % datetime.now().strftime("%s")
+    file = open(script_file, 'w+')
+    file.write(create_hql)
+    file.close()
+    hcat_client().hive_cli(file=script_file)
+    if os.path.exists(script_file):
+        os.remove(script_file)
 
+def start_job(request, script_query):
+    t = Templeton(request.user.username)
+    statusdir = "/tmp/.hcatjobs/%s" % datetime.now().strftime("%s")
+    script_file = statusdir + "/script.hcat"
+#    _do_newfile_save(request.fs, script_file, script_query, "utf-8")
+#    job = t.hive_query(file=script_file, statusdir=statusdir)
+    job = t.hive_query(execute=script_query, statusdir=statusdir)
+
+#    return HttpResponse(json.dumps(
+#        {"job_id": job['id'],
+#         "text": "The Job has been started successfully.\
+#You can check job status on the following <a href='%s'>link</a>" % reverse("single_job", args=[job['id']])}))
