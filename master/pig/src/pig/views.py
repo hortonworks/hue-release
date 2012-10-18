@@ -93,10 +93,8 @@ def index(request, obj_id=None):
 
 
 def delete(request, obj_id):
-    instance = PigScript.objects.get(id=obj_id)
-#    text = instance.title + ' Deleted'
+    instance = get_object_or_404(PigScript, pk=obj_id)
     instance.delete()
-#    return index(request, text = text)
     return redirect(index)
 
 
