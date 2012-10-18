@@ -10,14 +10,41 @@
             $(document).ready(function() {
               $("#accordion").accordion();
             });
+
+            function getCookie(c_name)
+            {
+            var i,x,y,ARRcookies=document.cookie.split(";");
+            for (i=0;i<ARRcookies.length;i++)
+            {
+              x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+              y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+              x=x.replace(/^\s+|\s+$/g,"");
+              if (x==c_name)
+                {
+                return unescape(y);
+                }
+              }
+            }
+
+            old_sid = getCookie("sessionid")
+            function check_cookies() {
+                new_sid = getCookie("sessionid")
+                if (old_sid != new_sid) {
+                    window.location.reload()
+                }
+            }
+
+            setInterval(check_cookies, 1000);
         </script>
     </head>
     <body>
+        Hello, ${x} <br>
+        Hue location: ${loc} <br>
         <div id="accordion">
             <% i = 0 %>
             % for lesson in lessons:
                 <h3>
-                    <a href="#">${lesson.name}
+                    <a href="#">${lesson.lesson_name}: Lesson ${lesson.order}
                     %if now < lesson.add_time:
                         <b><span class="new">new!</span></b>
                     %endif
@@ -26,7 +53,11 @@
                 <div class="sub_list">
                     <ul class="steps">
                     % for step in steps[i]:
-                        <li><a href="${lesson.id}/${step.order}">${step.name}</a></li>
+                        <li>
+                        % if step in user_steps:
+                            <img style="width: 1.3em; float: left; margin-right: 4px;" alt="" src="/static/img/tick.png"/>
+                        % endif
+                        <a href="${lesson.id}/${step.order}/">Step ${step.order}</a></li>
                     % endfor
                     </ul>
                 </div>

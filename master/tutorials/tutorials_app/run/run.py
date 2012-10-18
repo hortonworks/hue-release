@@ -1,6 +1,7 @@
-import sys, os
-from time import time
+import sys
+import os
 import string
+from time import time
 
 dirs = os.path.abspath(os.curdir).split(os.path.sep)
 app = string.join(dirs[:-2],os.path.sep)
@@ -14,59 +15,46 @@ def listfolders(folder):
               if os.path.isdir(os.path.join(folder,f)) and f[0]!='.']
 
 current_dir = os.path.join(os.path.abspath(os.curdir), 'git_files')
-sections = listfolders(current_dir)
 
 all_sections = list(Section.objects.all())
 
-for section_name in sections:
-    section_dir = os.path.join(current_dir, section_name)
-    section_name = section_name.replace('_', ' ').capitalize()
-    
-    try:
-        del all_sections[map(lambda x:x.name, all_sections).\
-                     index(section_name)]
-    except ValueError:
-        pass
+for tutorial_name in listfolders(current_dir):
+    tutorial_dir = os.path.join(current_dir, tutorial_name)
 
-    try:
-        section = Section.objects.get(name = section_name)
-    except Section.DoesNotExist:
-        section = Section(name = section_name, order = 100,
-                          description = '', section_level = 1,
-                          section_user_type = 1, lesson_name = '',
-                          add_time = int(time()))
-        section.save()
-    
-    all_steps = list(Step.objects.filter(section=section))
+    for lesson in listfolders(tutorial_dir):
+        lesson_dir = os.path.join(tutorial_dir, lesson)
+        lesson_name = lesson.split()
+        lesson_order = int(lesson_name[-1])
+        try:
+            del all_sections[[s.order for s in all_sections].\
+                             index(lesson_order)]
+            section = Section.objects.get(order=lesson_order)
+        except ValueError:
+            section = Section(order = lesson_order,
+                              lesson_name = tutorial_name,
+                              add_time = int(time()))
+            section.save()
 
-    orders = listfolders(section_dir)
-    for order in orders:
-        order_dir = os.path.join(section_dir, order)
-        files = os.listdir(order_dir)
-        for f in filter(lambda x:x.endswith(".html"), files):
-            fl = os.path.join(order_dir, f)
-            step_name = f[:f.rfind('.')]
-            step_name = step_name.replace('_', ' ').capitalize()
-    
-            try:
-                del all_steps[map(lambda x:x.name, all_steps).\
-                        index(step_name)]
-            except ValueError:
-                pass
+        all_steps = list(Step.objects.filter(section=section))
+        for step in os.listdir(lesson_dir):
+            if step.endswith(".html"):
+                step_name = step[:-5].split()
+                step_order = int(step_name[-1])
+                
+                step_path = os.path.join(tutorial_name, lesson, step)
 
-            print step_name, order, section_name
+                try:
+                    del all_steps[[s.order for s in all_steps].\
+                                  index(step_order)]
+                    step_obj = Step.objects.get(order = step_order,
+                                                section = section)
+                    step_obj.file_path = step_path
+                    step_obj.save()
+                except ValueError:
+                    step_obj = Step(order = step_order, file_path = step_path,
+                                    add_time = int(time()), section = section)
+                    step_obj.save()
 
-            try:
-                step = Step.objects.get(order = order,
-                                       section = section)
-                step.name = step_name
-                step.file_path = fl
-                step.save()
-            except Step.DoesNotExist:
-                step = Step(name = step_name, order = order,
-                            file_path = fl, add_time = int(time()),
-                            section = section)
-                step.save()
-    map(lambda x:x.delete(), all_steps)
-
-map(lambda x:x.delete(), all_sections)
+            print '%s -> %s' % (lesson, step)
+        [s.delete() for s in all_steps]
+[s.delete() for s in all_sections]

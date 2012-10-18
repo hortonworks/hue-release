@@ -15,9 +15,11 @@ DATABASES = {
     },
     'auth_db': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/home/roma/1.db',
+        'NAME': os.path.join(PROJECT_PATH, '../../1.db'), # HUE database file
     }
 }
+
+CONTENT_FRAME_URL = "http://127.0.0.1:8081/" # HUE URL param
 
 DATABASE_ROUTERS = ['tutorials_app.db_routers.AuthRouter']
 
@@ -42,16 +44,15 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.app_directories.Loader',
 )
 
-STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+TEMPLATE_CONTEXT_PROCESSORS = (
+"django.core.context_processors.static",
 )
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'tutorials_app.readonly_sessions_middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'tutorials_app.auth_middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'djangomako.middleware.MakoMiddleware',
 )
@@ -60,12 +61,16 @@ ROOT_URLCONF = 'tutorials_app.urls'
 
 STATIC_ROOT = os.path.join(PROJECT_PATH, 'static')
 
-STATIC_URL = "/static/"
+# STATICFILES_DIRS = (
+#     os.path.join(PROJECT_PATH, 'static'),
+# )
 
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
+
+STATIC_URL = "/static/"
 
 TEMPLATE_DIRS = (
     os.path.join(PROJECT_PATH, 'templates'),
@@ -78,9 +83,6 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
-=======
-    'gunicorn',
->>>>>>> fabb9b16b81643327cdad5b2835cf60b5eb2861a
     'tutorials_app',
+    'gunicorn',
 )

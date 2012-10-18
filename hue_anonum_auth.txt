@@ -1,6 +1,6 @@
 Steps:
 1) in hue create user. User Params:
-      login : Anonumys
+      login : AnonumysUser
       password : 1
       
 2) Got to file <path_to_hue>/hue/desktop/core/src/desktop/auth/views.py
@@ -15,6 +15,6 @@ Steps:
     if request.method == 'POST':
         post_params = request.POST.copy()
         if request.POST['username'] == '' and request.POST['password'] == '':
-            post_params.update({'username' : 'Anonumys'})
+            post_params.update({'username' : 'AnonumysUser'})
             post_params.update({'password' : '1'})
         form = django.contrib.auth.forms.AuthenticationForm(data=post_params)
