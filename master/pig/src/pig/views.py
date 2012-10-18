@@ -27,7 +27,7 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -40,7 +40,6 @@ from pig.templeton import Templeton
 from pig.forms import PigScriptForm, UDFForm
 from pig.CommandPy import CommandPy
 from pig.PigShell import PigShell
-
 
 def index(request, obj_id=None):
     result = {}
@@ -163,18 +162,24 @@ def piggybank(request, obj_id = False):
         else:
             raise PopupException(_("Error in upload form: %s") % (form.errors, ))
 
-def piggybank_index(request):
+def piggybank_index(request, msg=None):
     udfs = UDF.objects.filter(owner=request.user)
     pig_script = PigScript.objects.filter(saved=True, user=request.user)
     udf_form = UDFForm(request.POST, request.FILES)
-    return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, udf_form = udf_form))
+    return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, udf_form = udf_form, msg = msg))
 
 
 def udf_del(request, obj_id):
-    udf = UDF.objects.get(id=obj_id)
-    request.fs.remove(udf.url)
-    udf.delete()
-    return redirect(piggybank_index)
+    udf = get_object_or_404(UDF, pk=obj_id)
+    try:
+        request.fs.remove(udf.url)
+        msg = "Deleted %s on HDFS." % udf.url
+    except IOError:
+        msg = "Can't delete %s on HDFS, check if it exist." % udf.url
+    finally:
+        udf.delete()
+        msg = msg + 'n\ %s deleted from database.' % udf.title
+    return redirect(piggybank_index, msg)
 
 
 python_template = re.compile(r"(\w+)\.py")

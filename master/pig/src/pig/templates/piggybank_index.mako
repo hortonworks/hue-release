@@ -21,13 +21,6 @@
 ${commonheader("Pig", "pig", user, "100px")}
 ${shared.menubar(section='PiggyBank')}
 
-##<%!
-##from pig.models import UDF
-##from pig.forms import UDFForm
-##udf_form = UDFForm()
-##udfs = UDF.objects.all()
-##%>
-
 ## Use double hashes for a mako template comment
 ## Main body
 <div class="container-fluid">
@@ -39,6 +32,9 @@ ${shared.menubar(section='PiggyBank')}
     </div>
     <div class="span9" style="float: left; width: 70%;">
       <div class="clearfix">
+      % if msg:
+      ${msg}
+      % endif
       <div class="well sidebar-nav">
       <h2>User-defined Functions</h2>
       <ul class="nav nav-list">
