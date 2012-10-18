@@ -157,7 +157,7 @@ def piggybank(request, obj_id = False):
             if obj_id:
                 return redirect('pig_root', obj_id)
             else:
-                return redirect('piggybank_index')
+                return (piggybank_index(request))
 
         else:
             raise PopupException(_("Error in upload form: %s") % (form.errors, ))
@@ -173,13 +173,13 @@ def udf_del(request, obj_id):
     udf = get_object_or_404(UDF, pk=obj_id)
     try:
         request.fs.remove(udf.url)
-        msg = "Deleted %s on HDFS." % udf.url
-    except IOError:
-        msg = "Can't delete %s on HDFS, check if it exist." % udf.url
+        msg = "<pre> Deleted %s from HDFS. </pre>" % udf.url
+    except:
+        msg = "<pre> Can't delete %s from HDFS, check if it exist. </pre>" % udf.url
     finally:
+        msg = msg + '<pre> Deleted from database %s </pre>' % udf.file_name
         udf.delete()
-        msg = msg + 'n\ %s deleted from database.' % udf.title
-    return redirect(piggybank_index, msg)
+    return (piggybank_index(request, msg))
 
 
 python_template = re.compile(r"(\w+)\.py")
