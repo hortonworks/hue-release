@@ -22,12 +22,12 @@ class Step(models.Model):
 
 
 class UserLocation(models.Model):
-    step = models.ForeignKey(Step, null=True)
     user = models.ForeignKey(User)
+    step_location = models.CharField(max_length=512, null=True)
     hue_location = models.CharField(max_length=512)
 
 
 class UserStep(models.Model):
     step = models.ForeignKey(Step, null=True)
     user = models.ForeignKey(User)
-    
+

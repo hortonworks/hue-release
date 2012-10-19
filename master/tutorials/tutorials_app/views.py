@@ -12,24 +12,37 @@ import string
 from urlparse import urlparse
 
 
+def tutorials_last_url(tutorial_view):
+    def save_user_location(request, *args):
+        if request.user.is_authenticated() \
+        and request.user.username == "AnonymousUser":
+            user_location = UserLocation.objects.get_or_create(user=request.user)[0]
+            user_location.step_location = request.build_absolute_uri()
+            user_location.save()
+        return tutorial_view(request, *args)
+    return save_user_location
+
+
 def index(request):
     location = settings.CONTENT_FRAME_URL
+    step_location = "/lesson/"
     if request.user.is_authenticated():
         try:
             ustep = UserLocation.objects.get(user=request.user)
             hue_location = ustep.hue_location
+            step_location = ustep.step_location
+            if step_location == None:
+                step_location = "/lesson/"
             if urlparse(hue_location).netloc==urlparse(location).netloc:
                 location = hue_location
         except UserLocation.DoesNotExist:
             pass
 
-    if not location.endswith("#tutorials"):
-        location += "#tutorials"
-
     return render_to_response("lessons.html",
-                    {'content' : location})
+                    {'content' : location,
+                     'step_location': step_location})
 
-
+@tutorials_last_url
 def lesson_list(request):
     sections = Section.objects.all()
     steps = map(
@@ -52,7 +65,7 @@ def lesson_list(request):
                               'user_steps': user_steps,
                               'x': request.user, 'loc': location})
 
-
+@tutorials_last_url
 def lesson(request, section_id, step_id):
     section = Section.objects.get(id=section_id)
     steps = Step.objects.filter(section=section).order_by('order')
@@ -61,7 +74,7 @@ def lesson(request, section_id, step_id):
     if request.user.is_authenticated() \
     and request.user.username != 'AnonymousUser':
         try:
-            user_step = UserStep.objects.using('default').filter(user = request.user).using('default').filter(step = step)[0]
+            UserStep.objects.get(user=request.user, step=step)
         except UserStep.DoesNotExist:
             user_step = UserStep(user = request.user)
             user_step.save(using='default')
