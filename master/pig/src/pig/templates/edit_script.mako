@@ -45,7 +45,10 @@ udfs = UDF.objects.all()
 	  </li>
 	  <li>Email notification:</li>
 	  <li>
-	    <input class="email" type="checkbox" />
+	    <input class="email" type="checkbox" 
+                   % if result.get("email_notification"):
+                   selected="selected"
+                   % endif        />
 	  </li>
 	  <li  class="nav-header"><a id="displayText" href='#'>User-defined Functions</a></li>
 	  <div id="toggleText" style="display: none">
@@ -206,6 +209,8 @@ function get_job_result(job_id)
         if (data.error==="" && data.stdout==="" && data.exit==="")
         {
             get_job_res_timer = window.setTimeout("get_job_result('"+job_id+"');", 3000);
+            percent += 1;
+            $(".bar").css("width", percent+"%");
             return;
         }
         $("#log_info").html(data.error.replace(/\n/g, "<br>"));
@@ -234,6 +239,7 @@ function ping_job(job_id){
               if (/[1-9]\d?0?\%/.test(data.percentComplete))
               {
                   var job_done = parseInt(data.percentComplete.match(/\d+/)[0]);
+                  if (job_done==100) job_done=90
                   percent = (job_done < percent)?percent:job_done;              
                   $(".bar").css("width", percent + "%");
               }
@@ -249,6 +255,11 @@ function ping_job(job_id){
 
 
 $(document).ready(function(){
+
+% if result.get("job_id") and result.get("JOB_SUBMITED"):
+percent = 10;
+ping_job("${result['job_id']}");
+% endif
 
 
 var get_job_res_timer = null;
