@@ -33,6 +33,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from desktop.lib.exceptions import PopupException
+from desktop.lib.django_util import login_notrequired
 from filebrowser.views import _do_newfile_save
 from filebrowser.forms import UploadFileForm
 from pig.models import PigScript, UDF, Job
@@ -199,7 +200,7 @@ def start_job(request):
     if request.POST.get("python_script"):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
-    job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId"))
+    job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"))
     #job = t.pig_query(execute=request.POST['pig_script'], statusdir=statusdir)
 
     if request.POST.get("script_id"):
@@ -272,7 +273,13 @@ def show_job_result(request, job_id):
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
     result['udfs'] = UDF.objects.all()
     job = Job.objects.get(job_id=job_id)
-    result.update(_job_result(request, job))
+    if job.email_notification:
+        result['email_notification'] = True
+    if job.status == job.JOB_SUBMITED:
+        result['job_id'] = job.job_id
+        result['JOB_SUBMITED'] = True
+    else:
+        result.update(_job_result(request, job))
     instance = job.script
     for field in instance._meta.fields:
         result[field.name] = getattr(instance, field.name)
@@ -291,22 +298,24 @@ def delete_job_object(request, job_id):
     return HttpResponseRedirect(reverse("query_history"))
 
 
+@login_notrequired
 def notify_job_complited(request, job_id):
     job = Job.objects.get(job_id=job_id)
     job.status = job.JOB_COMPLETED
     job.save()
     job_result = _job_result(request, job)
-    if (job.notify_job_complited):
+    if job.email_notification:
         subject = 'Query result'
         message = render_to_string(
             'mail/approved.html',
-            {'user': request.script.user.username,
+            {'user': job.script.user.username,
              'query': job.script.pig_script,
              'stdout': job_result['stdout'],
-             "stderr": job_result['stderr']}
+             "stderr": job_result['error']}
         )
         from_email = settings.DEFAULT_FROM_EMAIL
         send_mail(subject, message, from_email, [job.script.user.email])
+    return HttpResponse("Done")
 
 
     

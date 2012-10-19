@@ -45,7 +45,11 @@ udfs = UDF.objects.all()
 	  </li>
 	  <li>Email notification:</li>
 	  <li>
-	    <input class="email" type="checkbox" />
+	    <input class="email" type="checkbox" 
+                   % if result.get("email_notification"): 
+                   checked="checked"  
+                   % endif
+                   />
 	  </li>
 	  <li  class="nav-header"><a id="displayText" href='#'>User-defined Functions</a></li>
 	  <div id="toggleText" style="display: none">
@@ -76,7 +80,7 @@ udfs = UDF.objects.all()
                   <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                     PIG helper<b class="caret"></b>
                   </a>
-                  <ul class="dropdown-menu">
+                  <ul class="dropdown-menu" id="pig_helper">
                     <li class="dropdown-submenu">
                       <a href="#">Aggregation functions</a>
                       <ul class="dropdown-menu">
@@ -120,7 +124,7 @@ udfs = UDF.objects.all()
                     <li class="dropdown-submenu">
                       <a href="#">HCatalog</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">A = LOAD '__' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
+                        <li><a href="#">A = LOAD '%__%' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
@@ -164,7 +168,7 @@ udfs = UDF.objects.all()
         
         <div class="alert alert-success" id="job_info">
           % if 'stdout' in result:
-          ${result['stdout']}
+          ${result['stdout'].replace("\n", "<br>")}
           % endif
         </div>
         
@@ -181,7 +185,7 @@ udfs = UDF.objects.all()
             <div id="collapseOne" class="accordion-body collapse in">
               <div class="accordion-inner" id="log_info">
                 % if 'error' in result:
-                ${result['error']}
+                ${result['error'].replace("\n", "<br>")}
                 % endif
               </div>
             </div>
@@ -194,9 +198,17 @@ udfs = UDF.objects.all()
 </div>
 
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
+<link href="/pig/static/css/simple-hint.css" rel="stylesheet">
+<style type="text/css" media="screen">
+  .CodeMirror-focused span.CodeMirror-matchhighlight { background: #e7e4ff; !important }
+</style>
 <script src="/pig/static/js/codemirror.js"></script>
 <script src="/pig/static/js/pig.js"></script>
 <script src="/pig/static/js/python.js"></script>
+<script src="/pig/static/js/simple-hint.js"></script>
+<script src="/pig/static/js/pig-hint.js"></script>
+<script src="/pig/static/js/searchcursor.js"></script>
+<script src="/pig/static/js/match-highlighter.js"></script>
 <script src="/pig/static/js/pig_scripts.js"></script>
 <script type="text/javascript">
 var percent = 0;
@@ -206,10 +218,12 @@ function get_job_result(job_id)
         if (data.error==="" && data.stdout==="" && data.exit==="")
         {
             get_job_res_timer = window.setTimeout("get_job_result('"+job_id+"');", 3000);
+            percent += 1;
+            $(".bar").css("width", percent+"%");
             return;
         }
-        $("#log_info").html(data.error);
-        $("#job_info").append("<br>"+data.stdout.replace("\n", "<br>"));
+        $("#log_info").html(data.error.replace(/\n/g, "<br>"));
+        $("#job_info").html(data.stdout.replace(/\n/g, "<br>"));
         percent = 100;
         $("#start_job").show();
         $("#kill_job").hide();
@@ -234,6 +248,7 @@ function ping_job(job_id){
               if (/[1-9]\d?0?\%/.test(data.percentComplete))
               {
                   var job_done = parseInt(data.percentComplete.match(/\d+/)[0]);
+                  if (job_done==100) job_done=90
                   percent = (job_done < percent)?percent:job_done;              
                   $(".bar").css("width", percent + "%");
               }
@@ -249,6 +264,11 @@ function ping_job(job_id){
 
 
 $(document).ready(function(){
+
+% if result.get("job_id") and result.get("JOB_SUBMITED"):
+percent = 10;
+ping_job("${result['job_id']}");
+% endif
 
 
 var get_job_res_timer = null;
