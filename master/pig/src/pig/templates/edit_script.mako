@@ -46,9 +46,10 @@ udfs = UDF.objects.all()
 	  <li>Email notification:</li>
 	  <li>
 	    <input class="email" type="checkbox" 
-                   % if result.get("email_notification"):
-                   selected="selected"
-                   % endif        />
+                   % if result.get("email_notification"): 
+                   checked="checked"  
+                   % endif
+                   />
 	  </li>
 	  <li  class="nav-header"><a id="displayText" href='#'>User-defined Functions</a></li>
 	  <div id="toggleText" style="display: none">
@@ -197,9 +198,17 @@ udfs = UDF.objects.all()
 </div>
 
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
+<link href="/pig/static/css/simple-hint.css" rel="stylesheet">
+<style type="text/css" media="screen">
+  .CodeMirror-focused span.CodeMirror-matchhighlight { background: #e7e4ff; !important }
+</style>
 <script src="/pig/static/js/codemirror.js"></script>
 <script src="/pig/static/js/pig.js"></script>
 <script src="/pig/static/js/python.js"></script>
+<script src="/pig/static/js/simple-hint.js"></script>
+<script src="/pig/static/js/pig-hint.js"></script>
+<script src="/pig/static/js/searchcursor.js"></script>
+<script src="/pig/static/js/match-highlighter.js"></script>
 <script src="/pig/static/js/pig_scripts.js"></script>
 <script type="text/javascript">
 var percent = 0;

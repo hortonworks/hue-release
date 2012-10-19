@@ -1,8 +1,18 @@
+
+$(document).ready(function(){
+
 var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
     lineNumbers: true,
     matchBrackets: true,
     indentUnit: 4,
-    mode: "text/x-pig"
+    mode: "text/x-pig",
+    onCursorActivity: function() {
+        pig_editor.matchHighlight("CodeMirror-matchhighlight");
+    },
+    extraKeys: {"Ctrl-Space": function(cm) {CodeMirror.simpleHint(cm, CodeMirror.pigHint);  }}
+});
+
+
 });
 
 
