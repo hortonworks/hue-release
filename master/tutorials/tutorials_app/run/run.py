@@ -28,7 +28,8 @@ for tutorial_name in listfolders(current_dir):
         try:
             del all_sections[[s.order for s in all_sections].\
                              index(lesson_order)]
-            section = Section.objects.get(order=lesson_order)
+            section = Section.objects.get(order=lesson_order,
+			                              lesson_name = tutorial_name)
         except ValueError:
             section = Section(order = lesson_order,
                               lesson_name = tutorial_name,

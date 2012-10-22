@@ -15,7 +15,7 @@ from urlparse import urlparse
 def tutorials_last_url(tutorial_view):
     def save_user_location(request, *args):
         if request.user.is_authenticated() \
-        and request.user.username == "AnonymousUser":
+        and request.user.username != "AnonymousUser":
             user_location = UserLocation.objects.get_or_create(user=request.user)[0]
             user_location.step_location = request.build_absolute_uri()
             user_location.save()
@@ -26,7 +26,8 @@ def tutorials_last_url(tutorial_view):
 def index(request):
     location = settings.CONTENT_FRAME_URL
     step_location = "/lesson/"
-    if request.user.is_authenticated():
+    if request.user.is_authenticated() \
+        and request.user.username != "AnonymousUser":
         try:
             ustep = UserLocation.objects.get(user=request.user)
             hue_location = ustep.hue_location
