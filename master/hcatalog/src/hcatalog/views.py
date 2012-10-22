@@ -19,9 +19,10 @@
 from django import forms
 from django.core import urlresolvers
 from django.db.models import Q
-from django.http import HttpResponse, QueryDict
+from django.http import HttpResponse, QueryDict, Http404
 from django.shortcuts import redirect
 from django.utils.encoding import force_unicode
+from django.utils import simplejson as json
 
 from desktop.lib import django_mako
 from desktop.lib.paginator import Paginator
@@ -47,7 +48,6 @@ from filebrowser.views import location_to_url
 
 import time
 from datetime import date, datetime
-import simplejson as json
 
 import logging
 import os
@@ -197,3 +197,99 @@ def drop_partition(request, table):
     except Exception, ex:
       raise PopupException('Drop partition', title="Drop partition", detail=str(ex))
     return describe_table(request, table)
+
+
+def pig_view(request, table=None):
+    try:
+        from pig.views import index as pig_view_for_hcat
+    except:
+        raise Http404
+    table = 'A = LOAD \'{t}\';\nDUMP A;'.format(t=table)
+    return pig_view_for_hcat(request, table=table)
+
+
+from beeswax.views import (authorized_get_design, safe_get_design, save_design,
+                           _strip_trailing_semicolon, get_parameterization,
+                           make_beeswax_query, explain_directly, execute_directly,
+                           expand_exception)
+from beeswax.forms import query_form
+from beeswax import db_utils
+from beeswax.models import MetaInstall, SavedQuery
+from django.core import urlresolvers
+from beeswax.design import HQLdesign
+from beeswaxd.ttypes import BeeswaxException
+
+
+def hive_view(request, table=None):
+    tables = db_utils.meta_client().get_tables("default", ".*")
+    if not tables:
+        examples_installed = MetaInstall.get().installed_example
+        return render("index.mako", request, {'examples_installed': examples_installed})
+    else:
+        return execute_query(request, table=table)
+
+
+def execute_query(request, design_id=None, table=None):
+    authorized_get_design(request, design_id)
+    error_message, log = None, None
+    form = query_form()
+    action = request.path
+    design = safe_get_design(request, SavedQuery.HQL, design_id)
+    on_success_url = request.REQUEST.get('on_success_url')
+
+    for _ in range(1):
+        if request.method == 'POST':
+            form.bind(request.POST)
+
+            to_explain = request.POST.has_key('button-explain')
+            to_submit = request.POST.has_key('button-submit')
+            # Always validate the saveform, which will tell us whether it needs explicit saving
+            if not form.is_valid():
+                break
+            to_save = form.saveform.cleaned_data['save']
+            to_saveas = form.saveform.cleaned_data['saveas']
+            if to_saveas and not design.is_auto:
+                # Save As only affects a previously saved query
+                design = design.clone()
+            if to_submit or to_save or to_saveas or to_explain:
+                explicit_save = to_save or to_saveas
+                design = save_design(request, form, SavedQuery.HQL, design, explicit_save)
+                action = urlresolvers.reverse(execute_query, kwargs=dict(design_id=design.id))
+
+            # We're not going to process the form. Simply re-render it.
+            if not to_explain and not to_submit:
+                break
+
+            query_str = _strip_trailing_semicolon(form.query.cleaned_data["query"])
+            # (Optional) Parameterization.
+            parameterization = get_parameterization(request, query_str, form.query, design, to_explain)
+            if parameterization:
+                return parameterization
+
+            query_msg = make_beeswax_query(request, query_str, form)
+            try:
+                if to_explain:
+                    return explain_directly(request, query_str, query_msg, design)
+                else:
+                    notify = form.query.cleaned_data.get('email_notify', False)
+                    return execute_directly(request, query_msg, design,
+                                            on_success_url=on_success_url,
+                                            notify=notify)
+            except BeeswaxException, ex:
+                error_message, log = expand_exception(ex)
+                # Fall through to re-render the execute form.
+        else:
+            # GET request
+            if design.id is not None:
+                data = HQLdesign.loads(design.data).get_query_dict()
+                form.bind(data)
+                form.saveform.set_data(design.name, design.desc)
+            else:
+                # New design
+                form.bind()
+
+    table='SELECT * FROM {t}'.format(t=table)
+    return render('execute.mako', request, {
+        'action': action, 'design': design, 'error_message': error_message,
+        'form': form, 'log': log, 'on_success_url': on_success_url, 'table': table})
+
