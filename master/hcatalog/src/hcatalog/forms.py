@@ -20,8 +20,10 @@ import hive_metastore
 from django import forms
 from desktop.lib.django_forms import simple_formset_factory, DependencyAwareForm
 from desktop.lib.django_forms import ChoiceOrOtherField, MultiForm, SubmitButton
+from desktop.lib.exceptions import PopupException
 from hcatalog import common
 from hcatalog import models
+from hcat_client import hcat_client
 
 import filebrowser.forms
 
@@ -223,11 +225,13 @@ class CreateTableForm(DependencyAwareForm):
 
 
 def _clean_tablename(name):
-  try:
-    #db_utils.meta_client().get_tables("default", name)
-    #raise forms.ValidationError('Table "%s" already exists' % (name,))
-    return name
-  except hive_metastore.ttypes.NoSuchObjectException:
+    tables = []
+    try:
+      tables = hcat_client().get_tables()
+    except Exception, ex:
+      raise forms.ValidationError('Error, could not get table list: ' % (str(ex),))
+    if name in tables:
+      raise forms.ValidationError('Table "%s" already exists' % (name,))
     return name
 
 

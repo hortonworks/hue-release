@@ -25,6 +25,14 @@ from desktop.views import commonheader, commonfooter
 ##  else:
     view_or_table_noun = "Table"
 %>
+
+<%
+  if len(table['partitions']) > 0:
+    has_partitions = True
+  else:
+    has_partitions = False
+%>
+
 ${commonheader("HCatalog %s Metadata: %s" % (view_or_table_noun, table['tableName']), "hcatalog", user, "100px")}
 ${layout.menubar(section='tables')}
 <%def name="column_table(cols)">
@@ -70,9 +78,9 @@ ${layout.menubar(section='tables')}
 		        % if len(table['partitionKeys']) > 0:
 					<li><a href="#partitionColumns" data-toggle="tab">Partition Columns</a></li>
 		        % endif
-		        % if len(table['partitions']) > 0:
-					<li><a href="#partitions" data-toggle="tab">Partitions</a></li>
-		        % endif
+		        % if is_table_partitioned:
+			        <li><a href="#partitions" data-toggle="tab">Partitions</a></li>
+			    % endif
 			</ul>
 
 			<div class="tab-content">
@@ -86,41 +94,34 @@ ${layout.menubar(section='tables')}
 		        % endif
 		        ## start of partitions
 		        <div class="tab-pane" id="partitions">
-		        <table>
-                <tr>
-                    % for field in table['partitionKeys']:
-                      <th>${field['name']}</th>
-                    % endfor
-##                    <th></th>## Extra column for command links.
-                </tr>
-                % if len(table['partitions']) > 0:
-                  % for partition in table['partitions']:
-                    <tr>
-                    % for key in partition['name']:
-                      <td>${key}</td>
-                    % endfor
-                    <td>
-##                    ##<% url = location_to_url(request, partition['location']) %>
-##                    <% url = "#" %>
-##                    % if url:
-##                      <a href="${url}">${partition.['location']}</a>
-##                    % else:
-##                      ${partition['location']}
-##                    % endif
-                    </td>
+		        <table class="table table-striped table-condensed partitiontable">
+		          <thead>
+		            <tr>
+                      <th>Partitions</th>
+##				      <th>&nbsp;</th>
                     </tr>
-                  % endfor
-                % else:
-                  <tr><td>Table has no partitions.</td></tr>
-                % endif
-				</table>
+				  </thead>
+				  <tbody>
+                  % if is_table_partitioned and has_partitions:
+                    % for indx, partition in enumerate(table['partitions']):
+                      <tr>
+                        <td><a href="#" data-row-selector="true">${partition['name']}</a></td>
+                        <td><a href="#" class="btn browsePartitionLocation" partitionname=${partition['name']}>Browse</a></td>
+                        ##<td><a href="${ url("hcatalog.views.browse_partition", partition="a") }" class="btn">Browse</a></td>
+                        <td><a href="#dropPartition${indx}" data-toggle="modal" class="btn">Drop</a></td>
+                    </tr>
+                    % endfor
+                  % else:
+                    <tr><td>Table has no partitions.</td></tr>
+                  % endif
+                    </tbody>
+				  </table>
                 </div>
 		        ## end of partitions
 			</div>
 		</div>
 	</div>
 </div>
-
 
 
 <div id="dropTable" class="modal hide fade">
@@ -141,6 +142,28 @@ ${layout.menubar(section='tables')}
 	</form>
 </div>
 
+
+% if is_table_partitioned and has_partitions:
+  % for indx, part in enumerate(table['partitions']):
+<div id="dropPartition${indx}" class="modal hide fade">
+	<form id="dropPartitionForm" method="POST" action="${ url("hcatalog.views.drop_partition", table=table_name) }">
+	<input id="partition_name" type="hidden" value=${part['name']} name="partition_name"/>
+	<div class="modal-header">
+		<a href="#" class="close" data-dismiss="modal">&times;</a>
+		<h3>Drop Partition</h3>
+	</div>
+	<div class="modal-body">
+	  <div id="dropPartitionMessage" class="alert">
+	  </div>
+	</div>
+	<div class="modal-footer">
+		<input type="submit" class="btn primary submitDropPartition" value="Yes"/>
+		<a href="#" class="btn secondary hideModal">No</a>
+	</div>
+	</form>
+</div>
+  % endfor
+% endif
 
 <div id="importData" class="modal hide fade">
 	<form method="POST" action="${ url("hcatalog.views.load_table", table=table_name) }" class="form-stacked">
@@ -231,6 +254,38 @@ ${layout.menubar(section='tables')}
 		$(".loadPath").click(function(){
 			$("#filechooser").slideDown();
 		});
+		
+		
+		$(".partitiontable").dataTable({
+			"bPaginate": false,
+		    "bLengthChange": false,
+			"bInfo": false,
+			"bFilter": false,
+			"bAutoWidth": false,
+			"aoColumns": [
+				{ "sWidth": "80%", "bSortable" : false },
+             % if has_partitions:
+				{ "sWidth": "10%", "bSortable" : false },
+				{ "sWidth": "10%", "bSortable" : false },
+             % endif
+			 ]
+		});
+
+		$("a[data-row-selector='true']").jHueRowSelector();
+		
+		$.getJSON("${ url("hcatalog.views.drop_partition", table=table_name) }",function(data){
+			$("#dropPartitionMessage").text(data.title);
+		});
+		
+		$(".browsePartitionLocation").click(function(){
+            $.post("${url("hcatalog.views.browse_partition", table=table_name)}", {partition_name:$(this).attr('partitionname')}, function(data){
+            if (data.url != "")
+            {
+                window.location.href = data.url;
+                return;
+            } 
+            }, "json");
+      });
 
 	});
 </script>

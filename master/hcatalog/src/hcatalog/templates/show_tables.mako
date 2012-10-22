@@ -34,7 +34,6 @@ ${layout.menubar(section='tables')}
 			</div>
 		</div>
 		<div class="span9">
-			${debug_info}
 			<table class="table table-condensed table-striped datatables">
 				<thead>
 					<tr>

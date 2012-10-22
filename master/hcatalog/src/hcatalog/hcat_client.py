@@ -32,21 +32,28 @@ LOG = logging.getLogger(__name__)
 
 def hcat_client():
     class HCatClient(Templeton):
+
     
         def get_databases(self):
             """
             List the databases.
             """
-            return self.get("ddl/database")['databases']
-        
+            try:
+                return self.get("ddl/database")['databases']
+            except Exception, ex:
+                raise Exception("""Templeton: error on getting a list of databases: %s""" % str(ex))
+
         
         def get_tables(self, db="default"):
             """
             List the tables.
             """
-            return (self.get("ddl/database/%s/table" % db)['tables'], False, 'no errors')
-        
-        
+            try:
+                return self.get("ddl/database/%s/table" % db)['tables']
+            except Exception, ex:
+                raise Exception("""Templeton: error on getting a list of tables: %s""" % str(ex))
+
+         
         def get_columns(self, table, db="default"):
             """
             List the columns for the given table.
@@ -54,10 +61,8 @@ def hcat_client():
             columns = []
             try:
                 return self.get("ddl/database/%s/table/%s/column" % (db, table))['columns']
-            except Exception:
-                import traceback
-                error = traceback.format_exc()
-                raise PopupException('templeton hcatalog', title="templeton hcatalog", detail=error)
+            except Exception, ex:
+                raise Exception("""Templeton: error on getting a column list: %s""" % str(ex))
             return columns 
         
         
@@ -68,10 +73,8 @@ def hcat_client():
             partitions = []
             try:
                 return self.get("ddl/database/%s/table/%s/partition" % (db, table))['partitions']
-            except Exception:
-                import traceback
-                error = traceback.format_exc()
-                raise PopupException('templeton hcatalog', title="templeton hcatalog", detail=error)
+            except Exception, ex:
+                raise Exception("""Templeton: error on getting partitions: %s""" % str(ex))
             return partitions
         
         
@@ -88,14 +91,18 @@ def hcat_client():
             # "database":"default","table":"a002","group":"hdfs","permission":"rwx------"}
             result = {}
             data = {'format':'extended'}
-            resp = self.get("ddl/database/%s/table/%s" % (db, table), data)
+            resp = {}
             try:
+                resp = self.get("ddl/database/%s/table/%s" % (db, table), data)
                 result['columns'] = resp['columns']
-            except:
-                raise Exception("""Could not get table description""")
+                result['partitioned'] = resp['partitioned']
+            except Exception, ex:
+                raise Exception("""Could not get table description (extended): %s""" % str(ex))
             try:
-                result['partitionColumns'] = resp['partitionColumns']
+                if result['partitioned']:
+                    result['partitionColumns'] = resp['partitionColumns']
             except:
+                result['partitioned'] = False
                 result['partitionColumns'] = []
             return result
     
@@ -106,40 +113,87 @@ def hcat_client():
             """
             try:
                 resp = self.delete("ddl/database/%s/table/%s" % (db, table))
-            except Exception:
+            except Exception, ex:
                 import traceback
                 error = traceback.format_exc()
                 LOG.error(error)
-                raise PopupException('templeton hcatalog', title="templeton hcatalog", detail=error)
+                raise Exception("""Templeton: error on getting partitions: %s""" % str(ex))           
             
             # handling templeton errors
-            isError = False
-            error = ''
             try: 
                 error = resp['error']
                 LOG.error(error)
-                isError = True
+                raise Exception("""Templeton: error on dropping table: %s""" % str(ex))
             except KeyError:
                 pass
-            return (isError, error)         
+ 
+ 
+        def describe_partition(self, table, partition, db="default"):
+            """
+            Describe a partition.
+            """
+            # response example:
+            # {"minFileSize":60,"totalNumberFiles":1,
+            # "location":"hdfs://ip-10-191-121-144.ec2.internal:8020/apps/hive/warehouse/a002/p11=bbb/p22=b",
+            # "lastUpdateTime":1350651963556,
+            # "outputFormat":"org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+            # "lastAccessTime":1350440595100,"columns":[{"name":"a","type":"string"}],
+            # "partitionColumns":[{"name":"p11","type":"string"},{"name":"p22","type":"string"}],
+            # "maxFileSize":60,"partitioned":true,
+            # "owner":"root","inputFormat":"org.apache.hadoop.mapred.TextInputFormat","totalFileSize":60,
+            # "database":"default","table":"a002","partition":"p11='bbb',p22='b'"}
+            resp = self.get("ddl/database/%s/table/%s/partition/%s" % (db, table, partition))
+            # validating response
+            try: 
+                error = resp['error']
+                LOG.error(error)
+                raise Exception("""Templeton: error on describing partition: %s""" % error)
+            except KeyError:
+                pass
+            return resp        
+        
+
+        def drop_partition(self, table, partition, db="default"):
+            """
+            Drop a partition.
+            """
+            try:
+                resp = self.delete("ddl/database/%s/table/%s/partition/%s" % (db, table, partition))
+            except Exception, ex:
+                raise Exception("""Templeton: error on dropping partitions: %s""" % str(ex))
+            try: 
+                error = resp['error']
+                LOG.error(error)
+                raise Exception("""Templeton: error on dropping partition: %s""" % error)
+            except KeyError:
+                pass
+
+
+        def get_partition_location(self, table, partition, db="default"):
+            try: 
+                return self.describe_partition(table, partition, db)['location']
+            except KeyError:
+                raise Exception("""Templeton: error on getting partition location: attribute is missed in a response""")
 
 
         def create_table(self, dbname, query):
-            # create tmp file
-            tmp_file_name = '/tmp/create_table_%d.hcat' % (int(time()))
-            query_file = open(tmp_file_name, "w")
-            query_file.writelines(query)
-            query_file.close()
+            try:
+                # create tmp file
+                tmp_file_name = '/tmp/create_table_%d.hcat' % (int(time()))
+                query_file = open(tmp_file_name, "w")
+                query_file.writelines(query)
+                query_file.close()
  
-            # execute command
-            res, isError, error = self.hcat_cli(file=tmp_file_name)
+                # execute command
+                res, isError, error = self.hcat_cli(file=tmp_file_name)
     
-            # remove tmp file
-            if os.path.exists(query_file.name):
-                os.remove(query_file.name)
-            LOG.error(error)
-            
-            return (res, isError, error)
+                # remove tmp file
+                if os.path.exists(query_file.name):
+                    os.remove(query_file.name)
+                if isError:
+                    LOG.error(error)
+            except Exception, ex:
+                raise Exception("""HCatalog cli: error on creating table: %s""" % str(ex))
         
         
         def hcat_cli(self, execute=None, file=None):

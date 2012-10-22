@@ -60,16 +60,13 @@ def create_table(request):
           'partition_columns': partition_columns
         }
       )
-
-      result, isError1, error1 = hcat_client().create_table("default", proposed_query)
-      tables, isError2, error2 = hcat_client().get_tables()
-      errorMsg = ""
-      if isError1:
-          errorMsg += "Error executing create table query:" + error1 + "\n"
-      if isError2:
-          errorMsg += "Error executing show table query:" + error2
-      
-      return render("show_tables.mako", request, dict(tables=tables, debug_info=''))
+      tables = []
+      try:
+        hcat_client().create_table("default", proposed_query)
+        tables = hcat_client().get_tables()
+      except Exception, ex:
+        raise PopupException('Error on creating table', title="Error on creating table", detail=str(ex))    
+      return render("show_tables.mako", request, dict(tables=tables,))
   else:
     form.bind()
     
@@ -244,8 +241,12 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load):
   """
   Submit the table creation, and setup the load to happen (if ``do_load``).
   """
-  hcat_client().create_table("default", create_hql)
-  tables, isError, error = hcat_client().get_tables()
+  tables = []
+  try:
+    hcat_client().create_table("default", create_hql)
+    tables = hcat_client().get_tables()
+  except Exception, ex:
+    raise PopupException('Error on creating and loading table', title="Error on creating and loading table", detail=str(ex))
   if do_load:
     if not table_name or not path:
       msg = 'Internal error: Missing needed parameter to load data into table'
@@ -254,7 +255,7 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load):
     LOG.debug("Auto loading data from %s into table %s" % (path, table_name))
     hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
     hcatalog.views.do_load_table(request, hql)    
-  return render("show_tables.mako", request, dict(tables=tables, debug_info=''))
+  return render("show_tables.mako", request, dict(tables=tables,))
 
 
 def _delim_preview(fs, file_form, encoding, file_types, delimiters):

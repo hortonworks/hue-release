@@ -27,4 +27,6 @@ urlpatterns = patterns('hcatalog',
   url(r'^create$', 'create_table.index'),
   url(r'^create/create_table$', 'create_table.create_table'),
   url(r'^create/import_wizard$', 'create_table.import_wizard'),
+  url(r'^table/(?P<table>\w+)/browse_partition$', 'views.browse_partition'),
+  url(r'^table/(?P<table>\w+)/drop_partition$', 'views.drop_partition'),
 )
