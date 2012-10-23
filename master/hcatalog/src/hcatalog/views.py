@@ -67,7 +67,6 @@ def show_tables(request):
 def describe_table(request, table):
   try:
       table_desc_extended = hcat_client().describe_table_extended(table)
-      #partitions = [{"values":[{"columnName":"p1","columnValue":"a"},{"columnName":"p2","columnValue":"a"}],"name":"p1='a',p2='a'"},{"values":[{"columnName":"p1","columnValue":"aaa"},{"columnName":"p2","columnValue":"bbb"}],"name":"p1='aaa',p2='bbb'"}]
       is_table_partitioned = table_desc_extended['partitioned']
       partitions = []
       partitionColumns = []
@@ -89,7 +88,6 @@ def describe_table(request, table):
 
 
 def drop_table(request, table):
-
   if request.method == 'GET':
     title = "This may delete the underlying data as well as the metadata.  Drop table '%s'?" % table
     return render('confirm.html', request, dict(url=request.path, title=title))

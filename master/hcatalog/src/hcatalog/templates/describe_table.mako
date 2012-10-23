@@ -69,7 +69,7 @@ ${layout.menubar(section='tables')}
 					<li><a href="#importData" data-toggle="modal">Import Data</a></li>
 					<li><a href="${ url("hcatalog.views.read_table", table=table_name) }">Browse Data</a></li>
 			        <li><a href="#dropTable" data-toggle="modal">Drop ${view_or_table_noun}</a></li>
-
+					<br>
 					<li><a href="${url('hcatalog.views.hive_view', table=table_name)}">View in Hive</a></li>
 					<li><a href="${url('hcatalog.views.pig_view', table=table_name)}">View in Pig</a></li>
 
