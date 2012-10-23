@@ -68,6 +68,10 @@ def index(request, obj_id=None, table=None):
         
         script_path = 'pig_scripts/%s.pig' % '_'.join(request.POST['title'].split())
         pig_src = request.POST['pig_script']
+        if 'register' in pig_src.lower():
+            pig_src = reg_replace(pig_src)
+        if request.POST.get("python_script"):
+            pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
         
         if request.POST.get('submit') == 'Execute':
             pig = CommandPy('pig %s' % script_path, pig_src)
@@ -95,8 +99,20 @@ def index(request, obj_id=None, table=None):
             result[field.name] = getattr(instance, field.name)
     return render('edit_script.mako', request, dict(result=result))
 
+#Making normal path to our *.jar files
+def reg_replace(pig_src):
+    pig_split = pig_src.split('\n')
+    a = lambda x: re.findall(r'.*(.\jar)$', x)
+    pig_src_out = ''
+    for item in pig_split:
+        if 'register' in item.lower():
+            filtered_a = filter(a, item.split())
+            if filtered_a:
+                item = item.replace(filtered_a[0], 'hdfs://ip-10-4-214-110.ec2.internal:8020/tmp/' + os.path.split(filtered_a[0])[1])
+        pig_src_out += item + '\n'
+    return pig_src_out
 
-
+#Deleting PigScript objects
 def delete(request, obj_id):
     instance = get_object_or_404(PigScript, pk=obj_id)
     instance.delete()
@@ -203,6 +219,7 @@ def start_job(request):
     pig_script = request.POST['pig_script']
     if request.POST.get("python_script"):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
+    pig_script = reg_replace(pig_script)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
     job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"))
     #job = t.pig_query(execute=request.POST['pig_script'], statusdir=statusdir)
