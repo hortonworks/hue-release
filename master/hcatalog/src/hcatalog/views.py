@@ -262,7 +262,7 @@ def execute_query(request, design_id=None, table=None):
 
             query_str = _strip_trailing_semicolon(form.query.cleaned_data["query"])
             # (Optional) Parameterization.
-            parameterization = get_parameterization(request, query_str, form.query, design, to_explain)
+            parameterization = get_parameterization(request, query_str, form, design, to_explain)
             if parameterization:
                 return parameterization
 
@@ -272,7 +272,7 @@ def execute_query(request, design_id=None, table=None):
                     return explain_directly(request, query_str, query_msg, design)
                 else:
                     notify = form.query.cleaned_data.get('email_notify', False)
-                    return execute_directly(request, query_msg, design,
+                    return execute_directly(request, query_msg, design=design,
                                             on_success_url=on_success_url,
                                             notify=notify)
             except BeeswaxException, ex:
@@ -288,7 +288,7 @@ def execute_query(request, design_id=None, table=None):
                 # New design
                 form.bind()
 
-    table='SELECT * FROM {t}'.format(t=table)
+    table='SELECT * FROM `{t}`'.format(t=table)
     return render('execute.mako', request, {
         'action': action, 'design': design, 'error_message': error_message,
         'form': form, 'log': log, 'on_success_url': on_success_url, 'table': table})

@@ -42,7 +42,7 @@ from pig.forms import PigScriptForm, UDFForm
 from pig.CommandPy import CommandPy
 from pig.PigShell import PigShell
 
-def index(request, obj_id=None):
+def index(request, obj_id=None, table=None):
     result = {}
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
     result['udfs'] = UDF.objects.all()
@@ -85,6 +85,10 @@ def index(request, obj_id=None):
 
         obj_id = instance.pk
         #return redirect("view_script", obj_id=instance.pk)
+
+    if table:
+        result['pig_script'] = table
+
     if obj_id:
         instance = PigScript.objects.get(pk=obj_id)
         for field in instance._meta.fields:
