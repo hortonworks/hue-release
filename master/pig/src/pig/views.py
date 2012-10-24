@@ -301,6 +301,7 @@ def show_job_result(request, job_id):
         result['JOB_SUBMITED'] = True
     else:
         result.update(_job_result(request, job))
+    result['stdout'] = result['stdout'].decode("utf-8")
     instance = job.script
     for field in instance._meta.fields:
         result[field.name] = getattr(instance, field.name)

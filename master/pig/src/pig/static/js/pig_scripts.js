@@ -1,6 +1,4 @@
 
-$(document).ready(function(){
-
 var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
     lineNumbers: true,
     matchBrackets: true,
@@ -13,7 +11,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
 });
 
 
-});
+
 
 
 var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code"), {
@@ -64,7 +62,7 @@ $(".udf_register").click(function() {
 });
 
 $(document).ready(function(){
-    $("#pig_helper>li>a").live('click', function(){
+    $("#pig_helper").find("a").live('click', function(){
         if($(this).data("python"))
             {
                 $("#python_textarea").show();
