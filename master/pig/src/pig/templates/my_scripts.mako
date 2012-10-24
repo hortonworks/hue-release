@@ -27,7 +27,7 @@
 <%def name="udfs(udfs)">
   % for udf in udfs:
 <li>
-  <a class="udf_register" href="#" value="${udf.url}">${udf.file_name}</a>
+  <a class="udf_register" href="#" value="${udf.file_name}">${udf.file_name}</a>
 </li>
 % endfor
 </%def>

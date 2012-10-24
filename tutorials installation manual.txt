@@ -1,0 +1,41 @@
+I) Copy tutorials in some directory
+II) Chage some config files in tutorials:
+    1) Go to file settings.py and change 'auth_db' in DATABASES   
+    2) Updates tutorials
+       A) Go to directory <path>/tutorials/tutorials_app/run
+       B) in file run.sh chage variables:
+       - RUN_DIR (full path to directory RUN)
+	     - GIT_REPO (GIT repository path)
+       C) configure CRON to run run.sh file
+           a) In terminal, from root user run
+            # crontab -e
+           b) In editor add line like this for hourly updating:
+            0 * * * * bash /home/tutorials/tutorials_app/run/run.sh
+            or for daily update at 12:00 pm
+            0 0 * * * bash /home/tutorials/tutorials_app/run/run.sh
+            P.S. NO spaces before zero!
+III) Add some changes in HUE:
+    1) Create authorizetion user without login and password
+        A) in hue create user. User Params:
+          login : AnonumysUser
+          password : 1
+        B) Got to file <path_to_hue>/hue/desktop/core/src/desktop/auth/views.py
+        C) Find function dt_login
+        D) In this function find this rows:
+            if request.method == 'POST':
+                form = django.contrib.auth.forms.AuthenticationForm(data=request.POST)
+        E) Change this rows:
+            if request.method == 'POST':
+                post_params = request.POST.copy()
+                if request.POST['username'] == '' and request.POST['password'] == '':
+                    post_params.update({'username' : 'AnonumysUser'})
+                    post_params.update({'password' : '1'})
+                form = django.contrib.auth.forms.AuthenticationForm(data=post_params)
+    2) Save authorization user steps in HUE:
+        A) open file <path_to_hue>/hue/desktop/core/src/desktop/templates/common_header.mako
+        B) add this script in $(document).ready block
+        if(window.top != window) {
+        			document.createElement("img").src = "http://127.0.0.1:8080/sync/?loc=" + 
+              escape(document.location.href);
+        		}
+        P.S. change this row 127.0.0.1:8080 to the tutorials url address and port

@@ -46,57 +46,73 @@ def index(request, obj_id=None, table=None):
     result = {}
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
     result['udfs'] = UDF.objects.all()
+    disable = False
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if not form.is_valid():
             raise PopupException(
                 "".join(["%s: %s" % (field, error) for field, error in form.errors.iteritems()])
             )
-        if request.POST.get("script_id"):
-            instance = PigScript.objects.get(pk=request.POST['script_id'])
-            form = PigScriptForm(request.POST, instance=instance)
-            form.save()
-        else:
-            instance = PigScript(**form.cleaned_data)
-            instance.user = request.user
-            instance.saved = True
-            instance.save()
-
-	script_path = 'pig_scripts/%s.pig' % instance.title
-        directory = os.path.dirname(script_path)
-        try:
-            os.stat(directory)
-        except:
-            os.mkdir(directory)
-        with open(script_path, 'w') as f1:
-            f1.write(instance.pig_script)
-
+            
+        if request.POST.get('submit') == 'Save':
+            if request.POST.get("script_id"):
+                instance = PigScript.objects.get(pk=request.POST['script_id'])
+                form = PigScriptForm(request.POST, instance=instance)
+                form.save()
+            else:
+                instance = PigScript(**form.cleaned_data)
+                instance.user = request.user
+                instance.saved = True
+                instance.save()
+        
+        
+        script_path = 'pig_scripts/%s.pig' % '_'.join(request.POST['title'].split())
+        pig_src = request.POST['pig_script']
+        if 'register' in pig_src.lower():
+            pig_src = reg_replace(pig_src)
+        if request.POST.get("python_script"):
+            pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
+        
         if request.POST.get('submit') == 'Execute':
-            pig = CommandPy('pig %s' % script_path)
+            pig = CommandPy('pig %s' % script_path, pig_src)
             result['stdout'] = pig.returnCode()
 
         if request.POST.get('submit') in ['Explain', 'Describe',
                                           'Dump', 'Illustrate']:
             command = request.POST.get('submit').upper()
             limit = request.POST.get('limit') or 0
-            pig = PigShell('pig %s' % script_path)
-            result['stdout'] = pig.ShowCommands(
-		command=command, limit=int(limit)) or pig.last_error
-
-        obj_id = instance.pk
+            pig = PigShell('pig %s' % script_path, pig_src)
+            result['stdout'] = pig.ShowCommands(command=command, limit=int(limit))
+        result['title'] = request.POST['title']
+        result['pig_script'] = request.POST['pig_script']
+        if request.POST['python_script']:
+            result['python_script'] = request.POST['python_script']
+        disable = True
+        #obj_id = instance.pk
         #return redirect("view_script", obj_id=instance.pk)
 
-    if table:
-        result['pig_script'] = table
+    table and result.update({'pig_script': table})
 
-    if obj_id:
+    if obj_id and not disable:
         instance = PigScript.objects.get(pk=obj_id)
         for field in instance._meta.fields:
             result[field.name] = getattr(instance, field.name)
     return render('edit_script.mako', request, dict(result=result))
 
+#Making normal path to our *.jar files
+def reg_replace(pig_src):
+    pig_split = pig_src.split('\n')
+    a = lambda x: re.findall(r'.*(.\jar)$', x)
+    pig_src_out = ''
+    for item in pig_split:
+        if 'register' in item.lower():
+            filtered_a = filter(a, item.split())
+            if filtered_a:
+                item = item.replace(filtered_a[0], 'hdfs://ip-10-4-214-110.ec2.internal:8020/tmp/' + os.path.split(filtered_a[0])[1])
+        pig_src_out += item + '\n'
+    return pig_src_out
 
-
+#Deleting PigScript objects
 def delete(request, obj_id):
     instance = get_object_or_404(PigScript, pk=obj_id)
     instance.delete()
@@ -203,6 +219,7 @@ def start_job(request):
     pig_script = request.POST['pig_script']
     if request.POST.get("python_script"):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
+    pig_script = reg_replace(pig_script)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
     job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"))
     #job = t.pig_query(execute=request.POST['pig_script'], statusdir=statusdir)

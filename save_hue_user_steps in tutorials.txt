@@ -1,8 +1,0 @@
-1) open file <path_to_hue>/hue/desktop/core/src/desktop/templates/common_header.mako
-2) add this script in $(document).ready block
-if(window.top != window) {
-			document.createElement("img").src = "http://127.0.0.1:8080/sync/?loc=" + 
-      escape(document.location.href);
-		}
-    
-P.S. change this row 127.0.0.1:8080 to the tutorials url address 
