@@ -6,6 +6,7 @@ class Section(models.Model):
     order = models.IntegerField(max_length=2)
     lesson_name = models.CharField(max_length=30)
     add_time = models.IntegerField(max_length=20)
+    description = models.TextField()
 
     def __str__(self):
         return str(self.order)
