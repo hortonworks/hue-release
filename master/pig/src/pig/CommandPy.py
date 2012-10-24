@@ -15,6 +15,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 from subprocess import Popen, PIPE
+import os
 
 def logs(returnCode):
     def wrappen(self):
@@ -42,14 +43,15 @@ class CommandPy:
     shell_path = ''
     last_error = ''
 
-    def __init__(self, shell_path, LogModel = None):
+    def __init__(self, shell_path, pig_src=None, LogModel=None):
         self.shell_path = shell_path.split()
         self.file_path = self.shell_path[-1]
         self.LogModel = LogModel
-
+        self.pig_src = pig_src
+    
     @logs
     def returnCode(self):
-
+        self.create_pigscript_file()
         slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE,
                       stderr=PIPE, close_fds = True)
         slave.wait()
@@ -62,3 +64,12 @@ class CommandPy:
             return False
         else:
             return answer
+
+    def create_pigscript_file(self):
+        directory = os.path.dirname(self.file_path)
+        try:
+            os.stat(directory)
+        except:
+            os.mkdir(directory)
+        f1 = open(self.file_path, 'w')
+        f1.write(self.pig_src)

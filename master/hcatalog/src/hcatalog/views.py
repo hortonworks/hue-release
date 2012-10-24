@@ -23,6 +23,7 @@ from django.http import HttpResponse, QueryDict, Http404
 from django.shortcuts import redirect
 from django.utils.encoding import force_unicode
 from django.utils import simplejson as json
+from django.utils.translation import ugettext as _
 
 from desktop.lib import django_mako
 from desktop.lib.paginator import Paginator
@@ -67,7 +68,6 @@ def show_tables(request):
 def describe_table(request, table):
   try:
       table_desc_extended = hcat_client().describe_table_extended(table)
-      #partitions = [{"values":[{"columnName":"p1","columnValue":"a"},{"columnName":"p2","columnValue":"a"}],"name":"p1='a',p2='a'"},{"values":[{"columnName":"p1","columnValue":"aaa"},{"columnName":"p2","columnValue":"bbb"}],"name":"p1='aaa',p2='bbb'"}]
       is_table_partitioned = table_desc_extended['partitioned']
       partitions = []
       partitionColumns = []
@@ -89,7 +89,6 @@ def describe_table(request, table):
 
 
 def drop_table(request, table):
-
   if request.method == 'GET':
     title = "This may delete the underlying data as well as the metadata.  Drop table '%s'?" % table
     return render('confirm.html', request, dict(url=request.path, title=title))
@@ -103,10 +102,6 @@ def drop_table(request, table):
     return render("show_tables.mako", request, dict(tables=tables,))
 
 
-def read_table(request, table):
-  return beeswax_read_table(request, table)
-
- 
 def load_table(request, table):
   """
   Loads data into a table.
@@ -211,13 +206,15 @@ def pig_view(request, table=None):
 from beeswax.views import (authorized_get_design, safe_get_design, save_design,
                            _strip_trailing_semicolon, get_parameterization,
                            make_beeswax_query, explain_directly, execute_directly,
-                           expand_exception)
-from beeswax.forms import query_form
+                           expand_exception, make_query_context, authorized_get_history,
+                           _parse_query_context, _parse_out_hadoop_jobs, _get_browse_limit_clause,
+                           _get_server_id_and_state, download, parse_results)
+from beeswax.forms import query_form, SaveResultsForm
 from beeswax import db_utils
-from beeswax.models import MetaInstall, SavedQuery
+from beeswax.models import MetaInstall, SavedQuery, QueryHistory
 from django.core import urlresolvers
 from beeswax.design import HQLdesign
-from beeswaxd.ttypes import BeeswaxException
+from beeswaxd.ttypes import BeeswaxException, QueryHandle
 
 
 def hive_view(request, table=None):
@@ -293,3 +290,207 @@ def execute_query(request, design_id=None, table=None):
         'action': action, 'design': design, 'error_message': error_message,
         'form': form, 'log': log, 'on_success_url': on_success_url, 'table': table})
 
+
+def read_table(request, table):
+  """View function for select * from table"""
+  table_obj = db_utils.meta_client().get_table("default", table)
+  hql = "SELECT * FROM `%s` %s" % (table, _get_browse_limit_clause(table_obj))
+  query_msg = make_beeswax_query(request, hql)
+  try:
+    return execute_directly(request, query_msg, tablename=table)
+  except BeeswaxException, e:
+    # Note that this state is difficult to get to.
+    error_message, log = expand_exception(e)
+    error = _("Failed to read table. Error: %(error)s") % {'error': error_message}
+    raise PopupException(error, title=_("Beeswax Error"), detail=log)
+
+
+def execute_directly(request, query_msg, design=None, tablename=None,
+                     on_success_url=None, on_success_params=None, **kwargs):
+  """
+  execute_directly(request, query_msg, tablename, design) -> HTTP response for execution
+
+  This method wraps around db_utils.execute_directly() to take care of the HTTP response
+  after the execution.
+
+    query_msg
+      The thrift Query object.
+
+    design
+      The design associated with the query.
+
+    tablename
+      The associated table name for the context.
+
+    on_success_url
+      Where to go after the query is done. The URL handler may expect an option "context" GET
+      param. (See ``watch_query``.) For advanced usage, on_success_url can be a function, in
+      which case the on complete URL is the return of:
+        on_success_url(history_obj) -> URL string
+      Defaults to the view results page.
+
+    on_success_params
+      Optional params to pass to the on_success_url (in additional to "context").
+
+  Note that this may throw a Beeswax exception.
+  """
+  if design is not None:
+    authorized_get_design(request, design.id)
+  history_obj = db_utils.execute_directly(request.user, query_msg, design, **kwargs)
+  watch_url = urlresolvers.reverse("hcatalog.views.watch_query", kwargs=dict(id=history_obj.id))
+
+  # Prepare the GET params for the watch_url
+  get_dict = QueryDict(None, mutable=True)
+  # (1) context
+  if design:
+    get_dict['context'] = make_query_context("design", design.id)
+  elif tablename:
+    get_dict['context'] = make_query_context("table", tablename)
+
+  # (2) on_success_url
+  if on_success_url:
+    if callable(on_success_url):
+      on_success_url = on_success_url(history_obj)
+    get_dict['on_success_url'] = on_success_url
+
+  # (3) misc
+  if on_success_params:
+    get_dict.update(on_success_params)
+
+  return format_preserving_redirect(request, watch_url, get_dict)
+  
+  
+def watch_query(request, id):
+  """
+  Wait for the query to finish and (by default) displays the results of query id.
+  It understands the optional GET params:
+
+    on_success_url
+      If given, it will be displayed when the query is successfully finished.
+      Otherwise, it will display the view query results page by default.
+
+    context
+      A string of "name:data" that describes the context
+      that generated this query result. It may be:
+        - "table":"<table_name>"
+        - "design":<design_id>
+
+  All other GET params will be passed to on_success_url (if present).
+  """
+  # Coerce types; manage arguments
+  id = int(id)
+
+  query_history = authorized_get_history(request, id, must_exist=True)
+
+  # GET param: context.
+  context_param = request.GET.get('context', '')
+
+  # GET param: on_success_url. Default to view_results
+  results_url = urlresolvers.reverse(view_results, kwargs=dict(id=str(id), first_row=0))
+  on_success_url = request.GET.get('on_success_url')
+  if not on_success_url:
+    on_success_url = results_url
+
+  # Get the server_id
+  server_id, state = _get_server_id_and_state(query_history)
+  query_history.save_state(state)
+
+  # Query finished?
+  if state == QueryHistory.STATE.expired:
+    raise PopupException(_("The result of this query has expired."))
+  elif state == QueryHistory.STATE.available:
+    return format_preserving_redirect(request, on_success_url, request.GET)
+  elif state == QueryHistory.STATE.failed:
+    # When we fetch, Beeswax server will throw us a BeeswaxException, which has the
+    # log we want to display.
+    return format_preserving_redirect(request, results_url, request.GET)
+
+  # Still running
+  log = db_utils.db_client(query_history.get_query_server()).get_log(server_id)
+
+  # Keep waiting
+  # - Translate context into something more meaningful (type, data)
+  context = _parse_query_context(context_param)
+  return render('watch_wait.mako', request, {
+                      'query': query_history,
+                      'fwd_params': request.GET.urlencode(),
+                      'log': log,
+                      'hadoop_jobs': _parse_out_hadoop_jobs(log),
+                      'query_context': context,
+                    })
+  
+  
+def view_results(request, id, first_row=0):
+  """
+  Returns the view for the results of the QueryHistory with the given id.
+
+  The query results MUST be ready.
+  To display query results, one should always go through the watch_query view.
+
+  If ``first_row`` is 0, restarts (if necessary) the query read.  Otherwise, just
+  spits out a warning if first_row doesn't match the servers conception.
+  Multiple readers will produce a confusing interaction here, and that's known.
+
+  It understands the ``context`` GET parameter. (See watch_query().)
+  """
+  # Coerce types; manage arguments
+  id = int(id)
+  first_row = long(first_row)
+  start_over = (first_row == 0)
+
+  query_history = authorized_get_history(request, id, must_exist=True)
+
+  handle = QueryHandle(id=query_history.server_id, log_context=query_history.log_context)
+  context = _parse_query_context(request.GET.get('context'))
+
+  # Retrieve query results
+  try:
+    results = db_utils.db_client(query_history.get_query_server()).fetch(handle, start_over, -1)
+    assert results.ready, _('Trying to display result that is not yet ready. Query id %(id)s') % {'id': id}
+    # We display the "Download" button only when we know
+    # that there are results:
+    downloadable = (first_row > 0 or len(results.data) > 0)
+    fetch_error = False
+  except BeeswaxException, ex:
+    fetch_error = True
+    error_message, log = expand_exception(ex)
+
+  # Handle errors
+  if fetch_error:
+    return render('watch_results.mako', request, {
+      'query': query_history,
+      'error': True,
+      'error_message': error_message,
+      'log': log,
+      'hadoop_jobs': _parse_out_hadoop_jobs(log),
+      'query_context': context,
+      'can_save': False,
+    })
+
+  log = db_utils.db_client(query_history.get_query_server()).get_log(query_history.server_id)
+  download_urls = {}
+  if downloadable:
+    for format in common.DL_FORMATS:
+      download_urls[format] = urlresolvers.reverse(
+                                    download, kwargs=dict(id=str(id), format=format))
+
+  save_form = SaveResultsForm()
+
+  # Display the results
+  return render('watch_results.mako', request, {
+    'error': False,
+    'query': query_history,
+    # Materialize, for easier testability.
+    'results': list(parse_results(results.data)),
+    'has_more': results.has_more,
+    'next_row': results.start_row + len(results.data),
+    'start_row': results.start_row,
+    'expected_first_row': first_row,
+    'columns': results.columns,
+    'download_urls': download_urls,
+    'log': log,
+    'hadoop_jobs': _parse_out_hadoop_jobs(log),
+    'query_context': context,
+    'save_form': save_form,
+    'can_save': query_history.owner == request.user,
+  })
