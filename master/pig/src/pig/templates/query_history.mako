@@ -19,15 +19,15 @@ ${shared.menubar(section='Query history')}
 <tbody>
 % for job in jobs:
     <tr>
-      <td>${job.script.date_created}</td>
-      <td><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.pig_script.replace("\n", "<br>")}</a></td>
+      <td>${job.script.date_created.strftime('%d.%m.%Y %H:%M')}</td>
+      <td><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.title}</a></td>
       <td>
         <span class="label label-success-warning">
           % if job.status == job.JOB_SUBMITED:
-          <i class="icon-refresh icon-red" title="Retired"></i>
+          <i class="icon-refresh icon-red" title="running"></i>
           running
           % else:
-          <i class="icon-briefcase icon-green" title="Retired"></i>
+          <i class="icon-briefcase icon-green" title="succeeded"></i>
           succeeded
           % endif
         </span>
