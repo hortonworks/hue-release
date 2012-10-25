@@ -94,6 +94,7 @@ def index(request, obj_id=None, table=None):
         #return redirect("view_script", obj_id=instance.pk)
 
     result.update(request.session.get("autosave", {}))
+    table and result.update({'pig_script': table})
 
     if obj_id and not disable:
         instance = get_object_or_404(PigScript, pk=obj_id)
