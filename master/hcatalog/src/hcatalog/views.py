@@ -35,21 +35,30 @@ from desktop.lib.django_util import render
 
 from hadoop.fs.exceptions import WebHdfsException
 from filebrowser.views import _do_newfile_save
-
-from beeswax.views import read_table as beeswax_read_table
+from jobsub.parameterization import find_variables, substitute_variables
+from filebrowser.views import location_to_url
 
 import hcatalog.forms
 from hcatalog import common
 from hcatalog import models
 from hcat_client import hcat_client
 from templeton import Templeton
-
-from jobsub.parameterization import find_variables, substitute_variables
-from filebrowser.views import location_to_url
+from beeswax.views import (authorized_get_design, safe_get_design, save_design,
+                           _strip_trailing_semicolon, get_parameterization,
+                           make_beeswax_query, explain_directly,
+                           expand_exception, make_query_context, authorized_get_history,
+                           _parse_query_context, _parse_out_hadoop_jobs, _get_browse_limit_clause,
+                           _get_server_id_and_state, download, parse_results)
+from beeswax.views import execute_directly as e_d, explain_directly as expl_d
+from beeswax.forms import query_form, SaveResultsForm
+from beeswax import db_utils
+from beeswax.models import MetaInstall, SavedQuery, QueryHistory
+from django.core import urlresolvers
+from beeswax.design import HQLdesign
+from beeswaxd.ttypes import BeeswaxException, QueryHandle
 
 import time
 from datetime import date, datetime
-
 import logging
 import os
 
@@ -108,7 +117,11 @@ def load_table(request, table):
   """
   try:
     table_desc_extended = hcat_client().describe_table_extended(table)
-    table_obj = {'tableName':table, 'columns':table_desc_extended['columns'], 'partitionKeys':table_desc_extended['partitionColumns']}
+    is_table_partitioned = table_desc_extended['partitioned']
+    partitionColumns = []
+    if is_table_partitioned:
+      partitionColumns = table_desc_extended['partitionColumns']
+    table_obj = {'tableName':table, 'columns':table_desc_extended['columns'], 'partitionKeys':partitionColumns}
   except Exception:
     import traceback
     error = traceback.format_exc()
@@ -137,7 +150,7 @@ def load_table(request, table):
       import traceback
       error = traceback.format_exc()
       raise PopupException('Error loading data into the table', title="Error loading data into the table", detail=error)
-    return beeswax_read_table(request, table)
+    return read_table(request, table)
   else:
     form = hcatalog.forms.LoadDataForm(table_obj)
     return render("load_table.mako", request, dict(form=form, table=table, action=request.get_full_path()))
@@ -203,20 +216,6 @@ def pig_view(request, table=None):
     return pig_view_for_hcat(request, table=table)
 
 
-from beeswax.views import (authorized_get_design, safe_get_design, save_design,
-                           _strip_trailing_semicolon, get_parameterization,
-                           make_beeswax_query, explain_directly, execute_directly,
-                           expand_exception, make_query_context, authorized_get_history,
-                           _parse_query_context, _parse_out_hadoop_jobs, _get_browse_limit_clause,
-                           _get_server_id_and_state, download, parse_results)
-from beeswax.forms import query_form, SaveResultsForm
-from beeswax import db_utils
-from beeswax.models import MetaInstall, SavedQuery, QueryHistory
-from django.core import urlresolvers
-from beeswax.design import HQLdesign
-from beeswaxd.ttypes import BeeswaxException, QueryHandle
-
-
 def hive_view(request, table=None):
     tables = db_utils.meta_client().get_tables("default", ".*")
     if not tables:
@@ -233,11 +232,11 @@ def execute_query(request, design_id=None, table=None):
     action = request.path
     design = safe_get_design(request, SavedQuery.HQL, design_id)
     on_success_url = request.REQUEST.get('on_success_url')
-
+ 
     for _ in range(1):
         if request.method == 'POST':
             form.bind(request.POST)
-
+ 
             to_explain = request.POST.has_key('button-explain')
             to_submit = request.POST.has_key('button-submit')
             # Always validate the saveform, which will tell us whether it needs explicit saving
@@ -252,26 +251,27 @@ def execute_query(request, design_id=None, table=None):
                 explicit_save = to_save or to_saveas
                 design = save_design(request, form, SavedQuery.HQL, design, explicit_save)
                 action = urlresolvers.reverse(execute_query, kwargs=dict(design_id=design.id))
-
+ 
             # We're not going to process the form. Simply re-render it.
             if not to_explain and not to_submit:
                 break
-
+ 
             query_str = _strip_trailing_semicolon(form.query.cleaned_data["query"])
+            query_server = db_utils.get_query_server(form.query_servers.cleaned_data["server"])
             # (Optional) Parameterization.
             parameterization = get_parameterization(request, query_str, form, design, to_explain)
             if parameterization:
                 return parameterization
-
+ 
             query_msg = make_beeswax_query(request, query_str, form)
             try:
                 if to_explain:
-                    return explain_directly(request, query_str, query_msg, design)
+                    return expl_d(request, query_str, query_msg, design, query_server)
                 else:
                     notify = form.query.cleaned_data.get('email_notify', False)
-                    return execute_directly(request, query_msg, design=design,
-                                            on_success_url=on_success_url,
-                                            notify=notify)
+                    return e_d(request, query_msg, design=design,
+                               on_success_url=on_success_url,
+                               notify=notify)
             except BeeswaxException, ex:
                 error_message, log = expand_exception(ex)
                 # Fall through to re-render the execute form.
@@ -284,7 +284,8 @@ def execute_query(request, design_id=None, table=None):
             else:
                 # New design
                 form.bind()
-
+ 
+ 
     table='SELECT * FROM `{t}`'.format(t=table)
     return render('execute.mako', request, {
         'action': action, 'design': design, 'error_message': error_message,

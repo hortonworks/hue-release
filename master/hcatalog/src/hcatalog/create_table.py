@@ -60,6 +60,11 @@ def create_table(request):
           'partition_columns': partition_columns
         }
       )
+      # Mako outputs bytestring in utf8
+      proposed_query = proposed_query.decode('utf-8')
+      tablename = form.table.cleaned_data['name']
+#      on_success_url = urlresolvers.reverse(describe_table, kwargs={'table': tablename})
+#      return confirm_query(request, proposed_query, on_success_url)
       tables = []
       try:
         hcat_client().create_table("default", proposed_query)
@@ -69,14 +74,13 @@ def create_table(request):
       return render("show_tables.mako", request, dict(tables=tables,))
   else:
     form.bind()
-    
   return render("create_table_manually.mako", request, dict(
     action="#",
     table_form=form.table,
     columns_form=form.columns,
     partitions_form=form.partitions,
   ))
-
+  
 
 IMPORT_PEEK_SIZE = 8192
 IMPORT_PEEK_NLINES = 10
@@ -88,6 +92,7 @@ DELIMITER_READABLE = {'\\001' : 'ctrl-As',
                       ','     : 'commas',
                       ' '     : 'spaces'}
 FILE_READERS = [ ]
+
 
 def import_wizard(request):
   """
@@ -131,11 +136,16 @@ def import_wizard(request):
       do_s3_column_def = request.POST.get('submit_delim')       # Step 2 -> 3
       do_hive_create = request.POST.get('submit_create')        # Step 3 -> execute
 
+      cancel_s2_user_delim = request.POST.get('cancel_delim')   # Step 2 -> 1
+      cancel_s3_column_def = request.POST.get('cancel_create')  # Step 3 -> 2
+
       # Exactly one of these should be True
       assert len(filter(None, (do_s2_auto_delim,
                                do_s2_user_delim,
                                do_s3_column_def,
-                               do_hive_create))) == 1, 'Invalid form submission'
+                               do_hive_create,
+                               cancel_s2_user_delim,
+                               cancel_s3_column_def))) == 1, 'Invalid form submission'
 
       #
       # Fix up what we should do in case any form is invalid
@@ -166,7 +176,7 @@ def import_wizard(request):
                                               [ reader.TYPE for reader in FILE_READERS ],
                                               DELIMITERS)
 
-      if (do_s2_user_delim or do_s3_column_def) and s2_delim_form.is_valid():
+      if (do_s2_user_delim or do_s3_column_def or cancel_s3_column_def) and s2_delim_form.is_valid():
         # Delimit based on input
         fields_list, n_cols, s2_delim_form = _delim_preview(
                                               request.fs,
@@ -175,10 +185,10 @@ def import_wizard(request):
                                               (s2_delim_form.cleaned_data['file_type'],),
                                               (s2_delim_form.cleaned_data['delimiter'],))
 
-      if do_s2_auto_delim or do_s2_user_delim:
+      if do_s2_auto_delim or do_s2_user_delim or cancel_s3_column_def:
         return render('choose_delimiter.mako', request, dict(
           action=urlresolvers.reverse(import_wizard),
-          delim_readable=DELIMITER_READABLE[s2_delim_form['delimiter'].data[0]],
+          delim_readable=DELIMITER_READABLE.get(s2_delim_form['delimiter'].data[0], s2_delim_form['delimiter'].data[1]),
           initial=delim_is_auto,
           file_form=s1_file_form,
           delim_form=s2_delim_form,
@@ -235,7 +245,7 @@ def import_wizard(request):
     action=urlresolvers.reverse(import_wizard),
     file_form=s1_file_form,
   ))
-
+  
 
 def _submit_create_and_load(request, create_hql, table_name, path, do_load):
   """

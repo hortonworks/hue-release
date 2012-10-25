@@ -50,8 +50,11 @@ ${layout.menubar(section='tables')}
           <tr>
             <td>${ column['name'] }</td>
             <td>${ column['type'] }</td>
-            <td>${ "" }</td>
-            ##<td>${ column['comment'] or "" }</td>
+            % if 'comment' in column:
+            	<td>${ column['comment'] }</td>
+            % else:
+            	<td>${ "" }</td>
+            % endif
           </tr>
         % endfor
       </tbody>

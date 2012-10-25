@@ -57,7 +57,7 @@
   % if query_context:
     % if query_context[0] == 'table':
       <% tablename = query_context[1] %>
-      <a href="${ url('beeswax.views.describe_table', tablename) }" class="bw-query_link">${tablename}</a>
+      <a href="${ url('hcatalog.views.describe_table', tablename) }" class="bw-query_link">${tablename}</a>
     % elif query_context[0] == 'design':
       <% design = query_context[1] %>
       % if design.is_auto:
