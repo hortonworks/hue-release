@@ -66,25 +66,27 @@ def index(request, obj_id=None, table=None):
                 instance.saved = True
                 instance.save()
 
-        script_path = 'pig_scripts/%s.pig' % '_'.join(request.POST['title'].split())
+        script_path = '/pig_scripts/%s.pig' % '_'.join(request.POST['title'].replace('(', '').replace(')', '').split())
         pig_src = request.POST['pig_script']
         if 'register' in pig_src.lower():
             pig_src = reg_replace(pig_src)
         if request.POST.get("python_script"):
             pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
 
-        if request.POST.get('submit') == 'Execute':
-            pig = CommandPy('pig %s' % script_path, pig_src)
+        if request.POST.get('submit') == 'Explain':
+            pig = CommandPy("pig -e explain -script %s" % script_path, script_path, pig_src)
             result['stdout'] = pig.returnCode()
 
-        if request.POST.get('submit') in ['Explain', 'Describe',
-                                          'Dump', 'Illustrate']:
-            command = request.POST.get('submit').upper()
-            limit = request.POST.get('limit') or 0
-            pig = PigShell('pig %s' % script_path, pig_src)
-            result['stdout'] = pig.ShowCommands(command=command, limit=int(limit))
+#        if request.POST.get('submit') in ['Explain', 'Describe',
+#                                          'Dump', 'Illustrate']:
+#            command = request.POST.get('submit').upper()
+#            limit = request.POST.get('limit') or 0
+#            pig = PigShell('pig %s' % script_path, pig_src)
+#            result['stdout'] = pig.ShowCommands(command=command, limit=int(limit))
         result['title'] = request.POST['title']
         result['pig_script'] = request.POST['pig_script']
+        if request.POST.get("script_id"):
+            result['script_id'] = request.POST['script_id']
         if request.POST['python_script']:
             result['python_script'] = request.POST['python_script']
         disable = True
@@ -94,7 +96,7 @@ def index(request, obj_id=None, table=None):
     result.update(request.session.get("autosave", {}))
 
     if obj_id and not disable:
-        instance = PigScript.objects.get(pk=obj_id)
+        instance = get_object_or_404(PigScript, pk=obj_id)
         for field in instance._meta.fields:
             result[field.name] = getattr(instance, field.name)
     return render('edit_script.mako', request, dict(result=result))
