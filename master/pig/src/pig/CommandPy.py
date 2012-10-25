@@ -17,55 +17,33 @@
 from subprocess import Popen, PIPE
 import os
 
-def logs(returnCode):
-    def wrappen(self):
-        from time import strftime
-        start_time = strftime("%Y-%m-%d %H:%M:%S")
-        answer = returnCode(self)
-        end_time = strftime("%Y-%m-%d %H:%M:%S")
-        if not answer:
-            status = '0'
-            answer = self.last_error
-        else:
-            status = '1'
-        if self.LogModel:
-            log = self.LogModel(start_time = start_time,
-                            end_time = end_time,
-                            status = status,
-                            script_name = self.file_path)
-            log.save()
-        return answer
-    return wrappen
-
 class CommandPy:
 
     file_path = ''
     shell_path = ''
     last_error = ''
 
-    def __init__(self, shell_path, pig_src=None, LogModel=None):
+    def __init__(self, shell_path, script_path, pig_src):
         self.shell_path = shell_path.split()
-        self.file_path = self.shell_path[-1]
-        self.LogModel = LogModel
+        self.file_path = script_path
         self.pig_src = pig_src
     
-    @logs
     def returnCode(self):
-        self.create_pigscript_file()
-        slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE,
-                      stderr=PIPE, close_fds = True)
+        self.createPigFile()
+        slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds = True)
         slave.wait()
         answer, error = slave.stdout.read(), slave.stderr.read()
-        error = '\n'.join(filter(lambda x: '] INFO' not in x and
-                                           '] WARN' not in x,
-                                           error.split('\n')))
+#        error = '\n'.join(filter(lambda x: '] INFO' not in x and
+#                                           '] WARN' not in x,
+#                                           error.split('\n')))
+        self.deletePigFile()
         if not answer:
-            self.last_error = error
-            return False
+            #self.last_error = error
+            return error
         else:
             return answer
 
-    def create_pigscript_file(self):
+    def createPigFile(self):
         directory = os.path.dirname(self.file_path)
         try:
             os.stat(directory)
@@ -73,3 +51,11 @@ class CommandPy:
             os.mkdir(directory)
         f1 = open(self.file_path, 'w')
         f1.write(self.pig_src)
+        f1.close
+    
+    def deletePigFile(self):
+        """
+        Delete pig script file
+        """
+        from os import remove
+        remove(self.file_path)

@@ -27,7 +27,7 @@ class PigScript(models.Model):
     pig_script = models.TextField('Pig script')
     user = models.ForeignKey(User)
     python_script = models.TextField(null=True,blank=True)
-    date_created = models.DateTimeField('Date', auto_now_add=True)
+    date_created = models.DateTimeField('Date', auto_now_add=True, auto_now=True)
     saved = models.BooleanField(default=False)
 
     class Meta:

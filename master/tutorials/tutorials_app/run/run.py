@@ -25,33 +25,42 @@ for tutorial_name in listfolders(current_dir):
         lesson_dir = os.path.join(tutorial_dir, lesson)
         lesson_name = lesson.split()
         lesson_order = int(lesson_name[-1])
+        lesson_dir = os.listdir(lesson_dir)
+        description_file = os.path.join(lesson_dir, 'description.txt')
+        if os.path.exists(description_file):
+            description = open(description_file, 'r').read()
+        else:
+            description = ''
         try:
-            del all_sections[[s.order for s in all_sections].\
-                             index(lesson_order)]
             section = Section.objects.get(order=lesson_order,
-			                              lesson_name = tutorial_name)
-        except ValueError:
+                                          lesson_name = tutorial_name)
+            section.description = description
+            section.save()
+            del all_sections[[s.id for s in all_sections].\
+                             index(section.id)]
+        except Section.DoesNotExists:
             section = Section(order = lesson_order,
                               lesson_name = tutorial_name,
-                              add_time = int(time()))
+                              add_time = int(time()),
+                              description = description)
             section.save()
 
         all_steps = list(Step.objects.filter(section=section))
-        for step in os.listdir(lesson_dir):
+        for step in lesson_dir:
             if step.endswith(".html"):
                 step_name = step[:-5].split()
                 step_order = int(step_name[-1])
-                
+
                 step_path = os.path.join(tutorial_name, lesson, step)
 
                 try:
-                    del all_steps[[s.order for s in all_steps].\
-                                  index(step_order)]
                     step_obj = Step.objects.get(order = step_order,
                                                 section = section)
+                    del all_steps[[s.id for s in all_steps].\
+                                  index(step_obj.id)]
                     step_obj.file_path = step_path
                     step_obj.save()
-                except ValueError:
+                except Step.DoesNotExists:
                     step_obj = Step(order = step_order, file_path = step_path,
                                     add_time = int(time()), section = section)
                     step_obj.save()

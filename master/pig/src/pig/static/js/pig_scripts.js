@@ -1,11 +1,16 @@
+function autosave(){
+pig_editor.save();
+python_editor.save()
+$.post("/pig/autosave_scripts/", $("#pig_script_form").serialize()); 
+}
 
-$(document).ready(function(){
 
 var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
     lineNumbers: true,
     matchBrackets: true,
     indentUnit: 4,
     mode: "text/x-pig",
+    onChange: autosave,
     onCursorActivity: function() {
         pig_editor.matchHighlight("CodeMirror-matchhighlight");
     },
@@ -13,7 +18,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
 });
 
 
-});
+
 
 
 var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code"), {
@@ -22,6 +27,7 @@ var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code
            singleLineStringErrors: true},
     lineNumbers: true,
     indentUnit: 4,
+    onChange: autosave,
     smartIndent: true,
     tabMode: "shift",
     matchBrackets: true,
@@ -64,7 +70,7 @@ $(".udf_register").click(function() {
 });
 
 $(document).ready(function(){
-    $("#pig_helper>li>a").live('click', function(){
+    $("#pig_helper").find("a").live('click', function(){
         if($(this).data("python"))
             {
                 $("#python_textarea").show();
@@ -76,6 +82,7 @@ $(document).ready(function(){
         pig_editor.setValue(cur_val+$(this).text());
         return false;
     });
+    $("#id_title").live('keyup', autosave);
     
     $("#pig_script_form").submit(function(){
         pig_editor.save();

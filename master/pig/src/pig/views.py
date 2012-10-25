@@ -53,8 +53,9 @@ def index(request, obj_id=None, table=None):
             raise PopupException(
                 "".join(["%s: %s" % (field, error) for field, error in form.errors.iteritems()])
             )
-            
         if request.POST.get('submit') == 'Save':
+            if "autosave" in request.session:
+                del request.session['autosave']
             if request.POST.get("script_id"):
                 instance = PigScript.objects.get(pk=request.POST['script_id'])
                 form = PigScriptForm(request.POST, instance=instance)
@@ -64,37 +65,38 @@ def index(request, obj_id=None, table=None):
                 instance.user = request.user
                 instance.saved = True
                 instance.save()
-        
-        
-        script_path = 'pig_scripts/%s.pig' % '_'.join(request.POST['title'].split())
+
+        script_path = '/pig_scripts/%s.pig' % '_'.join(request.POST['title'].replace('(', '').replace(')', '').split())
         pig_src = request.POST['pig_script']
         if 'register' in pig_src.lower():
             pig_src = reg_replace(pig_src)
         if request.POST.get("python_script"):
             pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
-        
-        if request.POST.get('submit') == 'Execute':
-            pig = CommandPy('pig %s' % script_path, pig_src)
+
+        if request.POST.get('submit') == 'Explain':
+            pig = CommandPy("pig -e explain -script %s" % script_path, script_path, pig_src)
             result['stdout'] = pig.returnCode()
 
-        if request.POST.get('submit') in ['Explain', 'Describe',
-                                          'Dump', 'Illustrate']:
-            command = request.POST.get('submit').upper()
-            limit = request.POST.get('limit') or 0
-            pig = PigShell('pig %s' % script_path, pig_src)
-            result['stdout'] = pig.ShowCommands(command=command, limit=int(limit))
+#        if request.POST.get('submit') in ['Explain', 'Describe',
+#                                          'Dump', 'Illustrate']:
+#            command = request.POST.get('submit').upper()
+#            limit = request.POST.get('limit') or 0
+#            pig = PigShell('pig %s' % script_path, pig_src)
+#            result['stdout'] = pig.ShowCommands(command=command, limit=int(limit))
         result['title'] = request.POST['title']
         result['pig_script'] = request.POST['pig_script']
+        if request.POST.get("script_id"):
+            result['script_id'] = request.POST['script_id']
         if request.POST['python_script']:
             result['python_script'] = request.POST['python_script']
         disable = True
         #obj_id = instance.pk
         #return redirect("view_script", obj_id=instance.pk)
 
-    table and result.update({'pig_script': table})
+    result.update(request.session.get("autosave", {}))
 
     if obj_id and not disable:
-        instance = PigScript.objects.get(pk=obj_id)
+        instance = get_object_or_404(PigScript, pk=obj_id)
         for field in instance._meta.fields:
             result[field.name] = getattr(instance, field.name)
     return render('edit_script.mako', request, dict(result=result))
@@ -140,7 +142,7 @@ def script_clone(request, obj_id):
 
 def piggybank(request, obj_id = False):
     import posixpath
-    
+
     from django.utils.translation import ugettext as _
 
     if request.method == 'POST':
@@ -213,6 +215,8 @@ def augmate_python_path(python_script, pig_script):
 
 
 def start_job(request):
+    if "autosave" in request.session:
+        del request.session['autosave']
     t = Templeton(request.user.username)
     statusdir = "/tmp/.pigjobs/%s" % datetime.now().strftime("%s")
     script_file = statusdir + "/script.pig"
@@ -244,7 +248,7 @@ def start_job(request):
 def kill_job(request):
     t = Templeton(request.user.username)
     try:
-        job_id = request.POST['job_id']        
+        job_id = request.POST['job_id']
         t.kill_job(job_id)
         Job.objects.get(job_id=request.POST['job_id']).delete()
         return HttpResponse(json.dumps({"text": "Job %s was killed" % job_id}))
@@ -254,8 +258,8 @@ def kill_job(request):
 
 def _job_result(request, job):
     """
-    
-    """    
+
+    """
     statusdir = job.statusdir
     result = {}
     try:
@@ -274,7 +278,7 @@ def _job_result(request, job):
 
 
 def get_job_result(request):
-    job = Job.objects.get(job_id=request.POST['job_id']) 
+    job = Job.objects.get(job_id=request.POST['job_id'])
     result = {}
     try:
         result.update(_job_result(request, job))
@@ -301,6 +305,7 @@ def show_job_result(request, job_id):
         result['JOB_SUBMITED'] = True
     else:
         result.update(_job_result(request, job))
+    result['stdout'] = result['stdout'].decode("utf-8")
     instance = job.script
     for field in instance._meta.fields:
         result[field.name] = getattr(instance, field.name)
@@ -339,4 +344,10 @@ def notify_job_complited(request, job_id):
     return HttpResponse("Done")
 
 
-    
+def autosave_scripts(request):
+    request.session['autosave'] = {
+        "pig_script": request.POST['pig_script'],
+        "python_script": request.POST.get('python_script'),
+        "title": request.POST.get("title")
+        }
+    return HttpResponse(json.dumps("Done"))

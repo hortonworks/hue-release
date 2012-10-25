@@ -51,7 +51,9 @@ udfs = UDF.objects.all()
                    % endif
                    />
 	  </li>
-	  <li  class="nav-header"><a id="displayText" href='#'>User-defined Functions</a></li>
+	  <li  class="nav-header">
+            <a id="displayText" href='javascript:void(0);'>User-defined Functions</a>
+          </li>
 	  <div id="toggleText" style="display: none">
 	  ${my_scripts.udfs(result['udfs'])}
 	  </div>
@@ -70,10 +72,10 @@ udfs = UDF.objects.all()
 	  <form action="#" method="post" id="pig_script_form">
             <input type="hidden" name="script_id"  value="${result.get('id','')}" >
             <label for="id_title">Title:</label>
-            <input id="id_title" type="text" name="title"
+            <input id="id_title" type="text" name="title" required="required"
                    maxlength="200" value="${result.get('title',"")}">
             <label for="id_text">Pig script:</label>
-            <textarea id="id_pig_script" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
+            <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
             <div class="nav-collapse">
               <ul class="nav">
                 <li class="dropdown">
@@ -151,13 +153,10 @@ udfs = UDF.objects.all()
 	<input type="hidden" name="email" class='intoemail' />
 	<div class="actions">
 	  <input class="btn primary" type="submit" name="submit" value="Save" />
-	  <input class="btn primary" type="submit" name="submit" value="Execute" />
-	  <input class="btn primary" type="submit" name="submit" value="Explain" />
-	  <input class="btn primary" type="submit" name="submit" value="Describe" />
-	  <input class="btn primary" type="submit" name="submit" value="Dump" />
-	  <input class="btn primary" type="submit" name="submit" value="Illustrate" />
-	  <input class="btn primary" type="button" id="start_job" name="submit" value="Schedule" />
+	  <input class="btn primary" type="button" id="start_job"
+	  value="Execute" />	  
           <input class="btn primary" type="button" id="kill_job"  value="Kill job" style="display:none" />
+	  <input class="btn primary" type="submit" name="submit" value="Explain" />
 	</div>
 	</form>
       </div>
@@ -202,6 +201,8 @@ udfs = UDF.objects.all()
 <style type="text/css" media="screen">
   .CodeMirror-focused span.CodeMirror-matchhighlight { background: #e7e4ff; !important }
 </style>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js">
+</script>
 <script src="/pig/static/js/codemirror.js"></script>
 <script src="/pig/static/js/pig.js"></script>
 <script src="/pig/static/js/python.js"></script>
@@ -265,11 +266,13 @@ function ping_job(job_id){
 
 $(document).ready(function(){
 
+
 % if result.get("job_id") and result.get("JOB_SUBMITED"):
 percent = 10;
 ping_job("${result['job_id']}");
 % endif
 
+$("#pig_script_form").validate()
 
 var get_job_res_timer = null;
 var ping_job_timer = null;
@@ -293,6 +296,7 @@ var job_id = null;
     
     
     $("#start_job").live("click", function(){
+        if (!$("#pig_script_form").valid()) return;
         $(this).hide();              
         $("#id_text").attr("disabled", "disabled");
         percent = 2;
