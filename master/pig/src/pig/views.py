@@ -40,9 +40,9 @@ from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm, UDFForm
 from pig.CommandPy import CommandPy
-from pig.PigShell import PigShell
 
-def index(request, obj_id=None, table=None):
+
+def index(request, obj_id=None):
     result = {}
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
     result['udfs'] = UDF.objects.all()
@@ -93,8 +93,8 @@ def index(request, obj_id=None, table=None):
         #obj_id = instance.pk
         #return redirect("view_script", obj_id=instance.pk)
 
-    result.update(request.session.get("autosave", {}))
-    table and result.update({'pig_script': table})
+    if not request.GET.get("new"):
+        result.update(request.session.get("autosave", {}))
 
     if obj_id and not disable:
         instance = get_object_or_404(PigScript, pk=obj_id)

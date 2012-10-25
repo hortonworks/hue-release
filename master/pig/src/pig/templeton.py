@@ -4,7 +4,7 @@ import urllib2
 import simplejson as json
 
 
-TEMPLETON_URL = "http://ec2-75-101-213-8.compute-1.amazonaws.com:50111/templeton/v1/"
+TEMPLETON_URL = "http://localhost:50111/templeton/v1/"
 
 
 class Templeton(object):
