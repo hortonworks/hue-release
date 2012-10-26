@@ -212,7 +212,7 @@ def pig_view(request, table=None):
         from pig.views import index as pig_view_for_hcat
     except:
         raise Http404
-    table = 'A = LOAD \'{t}\';\nDUMP A;'.format(t=table)
+    table = 'A = LOAD \'{t}\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;'.format(t=table)
     return pig_view_for_hcat(request, table=table)
 
 
