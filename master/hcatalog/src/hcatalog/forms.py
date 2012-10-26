@@ -259,9 +259,11 @@ class CreateByImportFileForm(forms.Form):
 
 class CreateByImportDelimForm(forms.Form):
   """Form for step 2 (picking delimiter) of the import wizard"""
-  delimiter = ChoiceOrOtherField(required=False, initial=TERMINATOR_CHOICES[0][0],
-                                 choices=TERMINATOR_CHOICES)
+  delimiter = ChoiceOrOtherField(required=False, initial=TERMINATOR_CHOICES[0][0], choices=TERMINATOR_CHOICES)
   file_type = forms.CharField(widget=forms.HiddenInput, required=True)
+  parse_first_row_as_header = forms.BooleanField(required=False, initial=True,
+                          label="Use the first row as a table header",
+                          help_text="Column list will be parsed from the first row of the data file")
 
   def clean(self):
     # ChoiceOrOtherField doesn't work with required=True

@@ -94,6 +94,7 @@ DELIMITER_READABLE = {'\\001' : 'ctrl-As',
 FILE_READERS = [ ]
 
 
+
 def import_wizard(request):
   """
   Help users define table and based on a file they want to import to Hive.
@@ -146,7 +147,8 @@ def import_wizard(request):
                                do_hive_create,
                                cancel_s2_user_delim,
                                cancel_s3_column_def))) == 1, 'Invalid form submission'
-
+                               
+      s2_delim_form = None
       #
       # Fix up what we should do in case any form is invalid
       #
@@ -169,22 +171,23 @@ def import_wizard(request):
       #
       if do_s2_auto_delim:
         delim_is_auto = True
-        fields_list, n_cols, s2_delim_form = _delim_preview(
+        fields_list, n_cols, col_names, s2_delim_form = _delim_preview(
                                               request.fs,
                                               s1_file_form,
                                               encoding,
                                               [ reader.TYPE for reader in FILE_READERS ],
-                                              DELIMITERS)
+                                              DELIMITERS,
+                                              True)
 
       if (do_s2_user_delim or do_s3_column_def or cancel_s3_column_def) and s2_delim_form.is_valid():
         # Delimit based on input
-        fields_list, n_cols, s2_delim_form = _delim_preview(
+        fields_list, n_cols, col_names, s2_delim_form = _delim_preview(
                                               request.fs,
                                               s1_file_form,
                                               encoding,
                                               (s2_delim_form.cleaned_data['file_type'],),
-                                              (s2_delim_form.cleaned_data['delimiter'],))
-
+                                              (s2_delim_form.cleaned_data['delimiter'],),
+                                              s2_delim_form.cleaned_data.get('parse_first_row_as_header'))
       if do_s2_auto_delim or do_s2_user_delim or cancel_s3_column_def:
         return render('choose_delimiter.mako', request, dict(
           action=urlresolvers.reverse(import_wizard),
@@ -194,7 +197,7 @@ def import_wizard(request):
           delim_form=s2_delim_form,
           fields_list=fields_list,
           delimiter_choices=hcatalog.forms.TERMINATOR_CHOICES,
-          n_cols=n_cols,
+          col_names=col_names,
         ))
 
       #
@@ -203,11 +206,12 @@ def import_wizard(request):
       if do_s3_column_def:
         if s3_col_formset is None:
           columns = []
-          for i in range(n_cols):
+          for col_name in col_names:
             columns.append(dict(
-                column_name='col_%s' % (i,),
+                column_name=col_name,
                 column_type='string',
             ))
+            
           s3_col_formset = hcatalog.forms.ColumnTypeFormSet(prefix='cols', initial=columns)
         return render('define_columns.mako', request, dict(
           action=urlresolvers.reverse(import_wizard),
@@ -268,7 +272,7 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load):
   return render("show_tables.mako", request, dict(tables=tables,))
 
 
-def _delim_preview(fs, file_form, encoding, file_types, delimiters):
+def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_row_as_header):
   """
   _delim_preview(fs, file_form, encoding, file_types, delimiters)
                               -> (fields_list, n_cols, delim_form)
@@ -289,15 +293,28 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters):
     LOG.exception(msg)
     raise PopupException(msg)
 
+  col_names = []
   n_cols = max([ len(row) for row in fields_list ])
+  if parse_first_row_as_header and len(fields_list) > 0:
+    col_names = fields_list[0]
+    fields_list = fields_list[1:]
+    if len(col_names) < n_cols:
+      for i in range(len(col_names) + 1, n_cols + 1):
+        col_names.append('col_%s' % (i,))
+  elif not parse_first_row_as_header:
+    for i in range(1, n_cols + 1):
+      col_names.append('col_%s' % (i,))
+      
   # ``delimiter`` is a MultiValueField. delimiter_0 and delimiter_1 are the sub-fields.
   delim_form = hcatalog.forms.CreateByImportDelimForm(dict(delimiter_0=delim,
                                                           delimiter_1='',
                                                           file_type=file_type,
-                                                          n_cols=n_cols))
+                                                          n_cols=n_cols,
+                                                          col_names=col_names,
+                                                          parse_first_row_as_header=parse_first_row_as_header))
   if not delim_form.is_valid():
     assert False, 'Internal error when constructing the delimiter form'
-  return fields_list, n_cols, delim_form
+  return fields_list, n_cols, col_names, delim_form
 
 
 def _parse_fields(path, file_obj, encoding, filetypes, delimiters):

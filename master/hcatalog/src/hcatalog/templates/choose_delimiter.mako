@@ -64,14 +64,23 @@ ${layout.menubar(section='tables')}
                         </div>
                     </div>
                     <div class="control-group">
+                        ${comps.bootstrapLabel(delim_form["parse_first_row_as_header"])}
+                        <div class="controls">
+                            ${comps.field(delim_form["parse_first_row_as_header"], render_default=True)}
+                            <span class="help-block">
+                        ${_('Check this box if you want to use the first row of data file as a table header. Leave it unchecked if you want the column names to be generated automatically.')}
+                        </span>
+                        </div>
+                    </div>
+                    <div class="control-group">
                         <label class="control-label">${_('Table preview')}</label>
                         <div class="controls">
                             <div class="scrollable">
                                 <table class="table table-striped table-condensed">
                                     <thead>
                                     <tr>
-                                            % for i in range(n_cols):
-                                                <th>col_${i+1}</th>
+                                            % for col_name in col_names:
+                                                <th>${col_name}</th>
                                             % endfor
                                     </tr>
                                     </thead>
