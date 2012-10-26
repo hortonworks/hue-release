@@ -38,11 +38,7 @@ udfs = UDF.objects.all()
         ${my_scripts.my_scripts(result['scripts'])}
         
         <h2>Settings</h2>
-	<ul class="nav nav-list">
-	  <li>Limit dump:</li>
-	  <li>
-            <input class="inptext" type="text" placeholder="limit dump" />
-	  </li>
+	<ul class="nav nav-list">	  
 	  <li>Email notification:</li>
 	  <li>
 	    <input class="email" type="checkbox" 
@@ -195,7 +191,6 @@ udfs = UDF.objects.all()
   </div>
 </div>
 </div>
-
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
 <style type="text/css" media="screen">
@@ -210,6 +205,7 @@ udfs = UDF.objects.all()
 <script src="/pig/static/js/pig-hint.js"></script>
 <script src="/pig/static/js/searchcursor.js"></script>
 <script src="/pig/static/js/match-highlighter.js"></script>
+<script src="/pig/static/js/emacs.js"></script>
 <script src="/pig/static/js/pig_scripts.js"></script>
 <script type="text/javascript">
 var percent = 0;
@@ -223,6 +219,9 @@ function get_job_result(job_id)
             $(".bar").css("width", percent+"%");
             return;
         }
+if (parseInt(data.exit)==0) $(".bar").addClass("bar-success"); 
+else $(".bar").addClass("bar-danger");
+
         $("#log_info").html(data.error.replace(/\n/g, "<br>"));
         $("#job_info").html(data.stdout.replace(/\n/g, "<br>"));
         percent = 100;
@@ -272,7 +271,7 @@ percent = 10;
 ping_job("${result['job_id']}");
 % endif
 
-$("#pig_script_form").validate()
+$("#pig_script_form").validate();
 
 var get_job_res_timer = null;
 var ping_job_timer = null;

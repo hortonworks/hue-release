@@ -26,4 +26,4 @@ class PigScriptForm(forms.ModelForm):
 
 
 class UDFForm(forms.Form):
-    hdfs_file = forms.FileField(required=True, label=_("File to Upload"))
+    hdfs_file = forms.FileField(required=True, label=_("File to Upload"), widget=forms.FileInput(attrs={"accept": "application/java-archive"}))

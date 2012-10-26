@@ -25,7 +25,6 @@ for tutorial_name in listfolders(current_dir):
         lesson_dir = os.path.join(tutorial_dir, lesson)
         lesson_name = lesson.split()
         lesson_order = int(lesson_name[-1])
-        lesson_dir = os.listdir(lesson_dir)
         description_file = os.path.join(lesson_dir, 'description.txt')
         if os.path.exists(description_file):
             description = open(description_file, 'r').read()
@@ -46,7 +45,7 @@ for tutorial_name in listfolders(current_dir):
             section.save()
 
         all_steps = list(Step.objects.filter(section=section))
-        for step in lesson_dir:
+        for step in os.listdir(lesson_dir):
             if step.endswith(".html"):
                 step_name = step[:-5].split()
                 step_order = int(step_name[-1])

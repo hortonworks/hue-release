@@ -21,7 +21,7 @@
   </li>
   % endfor
 </ul>
-<a class="btn" href="${url('root_pig')}">New script</a>
+<a class="btn" href="${url('root_pig')}?new=true">New script</a>
 </%def>
 
 <%def name="udfs(udfs)">

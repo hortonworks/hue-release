@@ -1,11 +1,11 @@
 (function() {
-  CodeMirror.simpleHint = function(editor, getHints, givenOptions) {
+  CodeMirror.simpleHint = function(editor, getHints, givenOptions, dirList) {
     // Determine effective options based on given values and defaults.
     var options = {}, defaults = CodeMirror.simpleHint.defaults;
     for (var opt in defaults)
       if (defaults.hasOwnProperty(opt))
         options[opt] = (givenOptions && givenOptions.hasOwnProperty(opt) ? givenOptions : defaults)[opt];
-    
+
     function collectHints(previousToken) {
       // We want a single cursor position.
       if (editor.somethingSelected()) return;
@@ -19,7 +19,11 @@
       }
 
       var result = getHints(editor);
-      if (!result || !result.list.length) return;
+      if (!result || !result.list.length) {
+        if(typeof dirList !== 'undefined')
+          result=dirList;
+      };
+
       var completions = result.list;
       function insert(str) {
         editor.replaceRange(str, result.from, result.to);
@@ -57,6 +61,8 @@
         complete.style.width = (sel.clientWidth - 1) + "px";
 
       var done = false;
+
+
       function close() {
         if (done) return;
         done = true;
