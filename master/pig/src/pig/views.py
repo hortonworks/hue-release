@@ -80,6 +80,7 @@ def index(request, obj_id=None, pig_script=None):
             #Sending 'script_id' to 'result' in order to avoid losing it
             if request.POST.get("script_id"):
                 result.update({'id': request.POST['script_id']})
+            result.update({'pig_script': request.POST['pig_script'], 'title': request.POST['title'], 'python_script': request.POST['python_script']})
             disable = True      #Turn of renew, because we have all data
             
     if not request.GET.get("new"):

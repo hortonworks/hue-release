@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 
 class PigScript(models.Model):
 
-    title = models.CharField('Title', max_length=200, unique=True)
+    title = models.CharField('Title', max_length=200) #, unique=True
     pig_script = models.TextField('Pig script')
     user = models.ForeignKey(User)
     python_script = models.TextField(null=True,blank=True)
