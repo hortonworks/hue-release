@@ -14,15 +14,10 @@
 ## KIND, either express or implied.  See the License for the
 ## specific language governing permissions and limitations
 ## under the License.
-
-from desktop.lib.django_util import render
-
-import os
-import re
-from datetime import date, datetime
+import os, re
 import simplejson as json
 
-#from django.test.client import Client
+from datetime import date, datetime
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
@@ -33,7 +28,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from desktop.lib.exceptions import PopupException
-from desktop.lib.django_util import login_notrequired
+from desktop.lib.django_util import login_notrequired, render
 from filebrowser.views import _do_newfile_save
 from filebrowser.forms import UploadFileForm
 from pig.models import PigScript, UDF, Job
@@ -42,7 +37,7 @@ from pig.forms import PigScriptForm, UDFForm
 from pig.CommandPy import CommandPy
 
 
-def index(request, obj_id=None):
+def index(request, obj_id=None, pig_script=None):
     result = {}
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
     result['udfs'] = UDF.objects.all()
@@ -53,6 +48,8 @@ def index(request, obj_id=None):
             raise PopupException(
                 "".join(["%s: %s" % (field, error) for field, error in form.errors.iteritems()])
             )
+
+        #Save or Create new script
         if request.POST.get('submit') == 'Save':
             if "autosave" in request.session:
                 del request.session['autosave']
@@ -65,37 +62,34 @@ def index(request, obj_id=None):
                 instance.user = request.user
                 instance.saved = True
                 instance.save()
+                if pig_script:
+                    return redirect(index, obj_id=instance.pk)
+                else:
+                    obj_id = instance.pk
 
-        script_path = '/pig_scripts/%s.pig' % '_'.join(request.POST['title'].replace('(', '').replace(')', '').split())
-        pig_src = request.POST['pig_script']
-        if 'register' in pig_src.lower():
-            pig_src = reg_replace(pig_src)
-        if request.POST.get("python_script"):
-            pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
-
+        #runing Explain
         if request.POST.get('submit') == 'Explain':
+            script_path = '/pig_scripts/%s.pig' % '_'.join(request.POST['title'].replace('(', '').replace(')', '').split())
+            pig_src = request.POST['pig_script']
+            if 'register' in pig_src.lower():
+                pig_src = reg_replace(pig_src)
+            if request.POST.get("python_script"):
+                pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
             pig = CommandPy("pig -e explain -script %s" % script_path, script_path, pig_src)
             result['stdout'] = pig.returnCode()
-
-#        if request.POST.get('submit') in ['Explain', 'Describe',
-#                                          'Dump', 'Illustrate']:
-#            command = request.POST.get('submit').upper()
-#            limit = request.POST.get('limit') or 0
-#            pig = PigShell('pig %s' % script_path, pig_src)
-#            result['stdout'] = pig.ShowCommands(command=command, limit=int(limit))
-        result['title'] = request.POST['title']
-        result['pig_script'] = request.POST['pig_script']
-        if request.POST.get("script_id"):
-            result['script_id'] = request.POST['script_id']
-        if request.POST['python_script']:
-            result['python_script'] = request.POST['python_script']
-        disable = True
-        #obj_id = instance.pk
-        #return redirect("view_script", obj_id=instance.pk)
-
+            #Sending 'script_id' to 'result' in order to avoid losing it
+            if request.POST.get("script_id"):
+                result.update({'id': request.POST['script_id']})
+            disable = True      #Turn of renew, because we have all data
+            
     if not request.GET.get("new"):
         result.update(request.session.get("autosave", {}))
-
+    
+    # This is for 'View in pig' functions in Hcatalog and script cloning
+    if pig_script and not disable:
+        result.update({'pig_script': pig_script['pig_script'], 'title': pig_script['title'], 'python_script': pig_script['python_script']})
+    
+    #If we have obj_id, we renew or get instance to send it into form.
     if obj_id and not disable:
         instance = get_object_or_404(PigScript, pk=obj_id)
         for field in instance._meta.fields:
@@ -121,24 +115,16 @@ def delete(request, obj_id):
     instance.delete()
     return redirect(index)
 
-
-def script_clone(request, obj_id):
-    pig_script = PigScript.objects.filter(id=obj_id).values()
+#Clone script by obj_id to user forms
+def script_clone(request, obj_id=None):
+    pig_script = PigScript.objects.filter(user=request.user, id=obj_id).values()
     if pig_script:
         pig_script = pig_script[0]
     else:
         raise Http404
-    check = 0
-    if '(copy)' in pig_script['title'] or PigScript.objects.filter(title__icontains=pig_script['title'] + '(copy)'):
-        check = PigScript.objects.filter(title__icontains=pig_script['title'])
-    if check:
-        p1 = check[0]
-    else:
-        pig_script['title'] = pig_script['title'] + '(copy)'
-        del pig_script['id']
-        del pig_script['date_created']
-        p1 = PigScript.objects.create(**pig_script)
-    return redirect(index, p1.id)
+    del pig_script['id']
+    del pig_script['date_created']
+    return index(request, pig_script=pig_script)
 
 
 def piggybank(request, obj_id = False):
@@ -183,7 +169,7 @@ def piggybank(request, obj_id = False):
             if obj_id:
                 return redirect('pig_root', obj_id)
             else:
-                return (piggybank_index(request))
+                return piggybank_index(request)
 
         else:
             raise PopupException(_("Error in upload form: %s") % (form.errors, ))
@@ -205,7 +191,7 @@ def udf_del(request, obj_id):
     finally:
         msg = msg + '<pre> Deleted from database %s </pre>' % udf.file_name
         udf.delete()
-    return (piggybank_index(request, msg))
+    return piggybank_index(request, msg)
 
 
 python_template = re.compile(r"(\w+)\.py")
