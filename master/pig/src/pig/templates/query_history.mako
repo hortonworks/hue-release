@@ -19,7 +19,7 @@ ${shared.menubar(section='Query history')}
 <tbody>
 % for job in jobs:
     <tr>
-      <td>${job.script.date_created.strftime('%d.%m.%Y %H:%M')}</td>
+      <td>${job.start_time.strftime('%d.%m.%Y %H:%M')}</td>
       <td><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.title}</a></td>
       <td>
         <span class="label label-success-warning">

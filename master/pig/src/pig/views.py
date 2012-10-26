@@ -339,3 +339,11 @@ def autosave_scripts(request):
         "title": request.POST.get("title")
         }
     return HttpResponse(json.dumps("Done"))
+
+
+def check_script_title(request):
+    """
+    Check script name for unique.
+    """
+    result = PigScript.objects.filter(title=request.GET.get("title")).count()
+    return HttpResponse(json.dumps(not bool(result)))

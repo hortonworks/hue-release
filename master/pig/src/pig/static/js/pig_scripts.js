@@ -19,22 +19,25 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     var curLine=cm.getLine(lineNumber);
     var posArr=findPosition(curLine);
 
-    if(key.keyCode=="9"&&posArr.length>1)
+    if(key.keyCode=="9"&&posArr.length>1){
         pig_editor.setOption("keyMap", "emacs");
+    }else{
+      pig_editor.setOption("keyMap", "basic");
+    }
 
   },
   onChange : function (from, change){
 
     var curText=from.getTokenAt(from.getCursor()).string;
+    var lastKeys=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,2);
 
-    if(curText.substr(curText.length-2)== "'/" || curText.substr(curText.length-2)== '"/'){
-
+    if(lastKeys== "'/" || lastKeys== '"/'){
       var dirList=getDirList(curText);
 
       var dirArr={
-        from: change.to,
+        from: change.from,
         list:dirList,
-        to: change.to
+        to: change.from
       };
 
       CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr );
@@ -129,7 +132,7 @@ $(document).ready(function(){
     if (cur_val) cur_val += "\n";
     pig_editor.setValue(cur_val+$(this).text());
     pig_editor.focus();
-    pig_editor.setCursor({line:pig_editor.lineCount(), ch:"0"});
+    //pig_editor.setCursor({line:pig_editor.lineCount(), ch:"0"});
 
     var pos = findPosition($(this).text());
 

@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 
 class PigScript(models.Model):
 
-    title = models.CharField('Title', max_length=200) #, unique=True
+    title = models.CharField('Title', max_length=200)
     pig_script = models.TextField('Pig script')
     user = models.ForeignKey(User)
     python_script = models.TextField(null=True,blank=True)
@@ -31,7 +31,7 @@ class PigScript(models.Model):
     saved = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['-date_created']
+        ordering = ['title']
 
     def __unicode__(self):
         return u'%s' % self.title
@@ -59,6 +59,7 @@ class Job(models.Model):
         (JOB_COMPLETED, "Complited"),
         (3, "Failed"),
     )
+    start_time = models.DateTimeField(auto_now_add=True)
     job_id = models.CharField(max_length=50, primary_key=True)
     statusdir = models.CharField(max_length=100)
     script = models.ForeignKey(PigScript)

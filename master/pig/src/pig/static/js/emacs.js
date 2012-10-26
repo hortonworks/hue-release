@@ -35,13 +35,13 @@
 
         }
       }
-      pig_editor.setOption("keyMap", "default");
+      pig_editor.setOption("keyMap", "basic");
     }
 
   };
 
-  CodeMirror.keyMap["emacs-Ctrl-X"] = {
+ /* CodeMirror.keyMap["emacs-Ctrl-X"] = {
     "Ctrl-S": "save", "Ctrl-W": "save", "S": "saveAll", "F": "open", "U": "undo", "K": "close",
     auto: "emacs", nofallthrough: true
-  };
+  };*/
 })();

@@ -144,8 +144,7 @@ udfs = UDF.objects.all()
                  <label>Python UDF</label>
                  <textarea id="python_code" name="python_script"></textarea>
             </div>
-            % endif
-	<input type="hidden" name="limit" class='intolimit' />
+            % endif	
 	<input type="hidden" name="email" class='intoemail' />
 	<div class="actions">
 	  <input class="btn primary" type="submit" name="submit" value="Save" />
@@ -271,7 +270,20 @@ percent = 10;
 ping_job("${result['job_id']}");
 % endif
 
-$("#pig_script_form").validate();
+$("#pig_script_form").validate({
+  rules:{
+  title:{
+  required: true,
+  % if not result.get("id"):  
+  remote: "${url("check_script_title")}"
+  % endif
+}
+}, 
+messages: {
+title:{
+remote: "Script title already exists"
+}}
+});
 
 var get_job_res_timer = null;
 var ping_job_timer = null;
