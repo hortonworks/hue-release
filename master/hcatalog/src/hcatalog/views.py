@@ -42,7 +42,6 @@ import hcatalog.forms
 from hcatalog import common
 from hcatalog import models
 from hcat_client import hcat_client
-from templeton import Templeton
 from beeswax.views import (authorized_get_design, safe_get_design, save_design,
                            _strip_trailing_semicolon, get_parameterization,
                            make_beeswax_query, explain_directly,
@@ -164,20 +163,6 @@ def do_load_table(request, create_hql):
     hcat_client().hive_cli(file=script_file)
     if os.path.exists(script_file):
         os.remove(script_file)
-
-
-def start_job(request, script_query):
-    t = Templeton(request.user.username)
-    statusdir = "/tmp/.hcatjobs/%s" % datetime.now().strftime("%s")
-    script_file = statusdir + "/script.hcat"
-#    _do_newfile_save(request.fs, script_file, script_query, "utf-8")
-#    job = t.hive_query(file=script_file, statusdir=statusdir)
-    job = t.hive_query(execute=script_query, statusdir=statusdir)
-
-#    return HttpResponse(json.dumps(
-#        {"job_id": job['id'],
-#         "text": "The Job has been started successfully.\
-#You can check job status on the following <a href='%s'>link</a>" % reverse("single_job", args=[job['id']])}))
 
 
 def browse_partition(request, table):

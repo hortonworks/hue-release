@@ -18,7 +18,7 @@
 from tempfile import NamedTemporaryFile
 import os
 from time import time
-from templeton import Templeton
+from pig.templeton import Templeton
 from subprocess import Popen, PIPE
 import urllib2
 import urllib
