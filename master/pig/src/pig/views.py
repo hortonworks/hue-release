@@ -115,9 +115,8 @@ def script_clone(request, obj_id=None):
         pig_script = pig_script[0]
     else:
         raise Http404
-    del pig_script['id']
     del pig_script['date_created']
-    return index(request, pig_script=pig_script)
+    return HttpResponse(json.dumps(pig_script))
 
 
 def piggybank(request, obj_id = False):

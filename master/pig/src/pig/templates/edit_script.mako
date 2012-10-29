@@ -346,6 +346,25 @@ var job_id = null;
     });
 });
 
+$(".clone").click(function()
+{
+    var scr_id = $(this).attr('value');
+    $.post("/pig/clone/" + scr_id + "/", {}, function(data){
+        $("#id_pig_script").text(data['pig_script'])
+        var title = data['title'] + "(copy)";
+        $("#id_title").attr('value', title)
+        $("#script_id").attr('value', '')
+        $("#copy").html("<li><p><a href='#'>" + title + "</a></p></li>")
+        $('.CodeMirror').hide()
+        var editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
+            lineNumbers: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            mode: "text/x-pig"
+        });
+    }, "json");
+})
+
 </script>
 
 ${commonfooter()}
