@@ -342,7 +342,7 @@ def download_job_result(request, job_id):
     if job.status != job.JOB_COMPLETED:
         raise PopupException("Job not completed yet")
     job_result = _job_result(request, job)
-    response = HttpResponse(job_result['stdout'], content_type='application/vnd.ms-excel')
+    response = HttpResponse(job_result['stdout'], content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename="%s_result.txt"' % job_id
     return response
     
