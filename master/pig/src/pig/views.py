@@ -14,10 +14,13 @@
 ## KIND, either express or implied.  See the License for the
 ## specific language governing permissions and limitations
 ## under the License.
-import os, re
+import os
+import re
 import simplejson as json
-
+import posixpath
 from datetime import date, datetime
+
+from django.utils.translation import ugettext as _
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
@@ -40,8 +43,7 @@ from pig.CommandPy import CommandPy
 def index(request, obj_id=None, pig_script=None):
     result = {}
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
-    result['udfs'] = UDF.objects.all()
-    disable = False
+    result['udfs'] = UDF.objects.all()    
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if not form.is_valid():
@@ -71,44 +73,34 @@ def index(request, obj_id=None, pig_script=None):
         if request.POST.get('submit') == 'Explain':
             script_path = '/pig_scripts/%s.pig' % '_'.join(request.POST['title'].replace('(', '').replace(')', '').split())
             pig_src = request.POST['pig_script']
-            if 'register' in pig_src.lower():
-                pig_src = reg_replace(pig_src)
-            if request.POST.get("python_script"):
-                pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
+            pig_src = augmate_udf_path(pig_src, request)
+            pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
             pig = CommandPy("pig -e explain -script %s" % script_path, script_path, pig_src)
             result['stdout'] = pig.returnCode()
             #Sending 'script_id' to 'result' in order to avoid losing it
             if request.POST.get("script_id"):
                 result.update({'id': request.POST['script_id']})
             result.update({'pig_script': request.POST['pig_script'], 'title': request.POST['title'], 'python_script': request.POST['python_script']})
-            disable = True      #Turn of renew, because we have all data
-            
+
     if not request.GET.get("new"):
         result.update(request.session.get("autosave", {}))
-    
-    # This is for 'View in pig' functions in Hcatalog and script cloning
-    if pig_script and not disable:
-        result.update({'pig_script': pig_script['pig_script'], 'title': pig_script['title'], 'python_script': pig_script['python_script']})
-    
+
     #If we have obj_id, we renew or get instance to send it into form.
-    if obj_id and not disable:
+    if obj_id:
         instance = get_object_or_404(PigScript, pk=obj_id)
         for field in instance._meta.fields:
             result[field.name] = getattr(instance, field.name)
     return render('edit_script.mako', request, dict(result=result))
 
 #Making normal path to our *.jar files
-def reg_replace(pig_src):
-    pig_split = pig_src.split('\n')
-    a = lambda x: re.findall(r'.*(.\jar)$', x)
-    pig_src_out = ''
-    for item in pig_split:
-        if 'register' in item.lower():
-            filtered_a = filter(a, item.split())
-            if filtered_a:
-                item = item.replace(filtered_a[0], 'hdfs://ip-10-4-214-110.ec2.internal:8020/tmp/' + os.path.split(filtered_a[0])[1])
-        pig_src_out += item + '\n'
-    return pig_src_out
+udf_template = re.compile(r"register\s+(\w+)\.jar", re.I)
+def augmate_udf_path(pig_src, request):
+    udf_name = re.search(udf_template, pig_src)
+    if udf_name:
+        return re.sub(udf_template, request.fs.default.name + udf_name, pig_script)
+    else:
+        return pig_src
+
 
 #Deleting PigScript objects
 def delete(request, obj_id):
@@ -129,16 +121,12 @@ def script_clone(request, obj_id=None):
 
 
 def piggybank(request, obj_id = False):
-    import posixpath
-
-    from django.utils.translation import ugettext as _
-
     if request.method == 'POST':
         form = UDFForm(request.POST, request.FILES)
 
         if form.is_valid():
             uploaded_file = request.FILES['hdfs_file']
-            dest = '/tmp'
+            dest = '/tmp/udfs'
             if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
                 raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))
 
@@ -211,7 +199,7 @@ def start_job(request):
     pig_script = request.POST['pig_script']
     if request.POST.get("python_script"):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
-    pig_script = reg_replace(pig_script)
+    pig_script = augmate_udf_path(pig_script)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
     job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"))
     #job = t.pig_query(execute=request.POST['pig_script'], statusdir=statusdir)
@@ -347,3 +335,14 @@ def check_script_title(request):
     """
     result = PigScript.objects.filter(title=request.GET.get("title")).count()
     return HttpResponse(json.dumps(not bool(result)))
+
+
+def download_job_result(request, job_id):
+    job = get_object_or_404(Job, job_id=job_id)
+    if job.status != job.JOB_COMPLETED:
+        raise PopupException("Job not completed yet")
+    job_result = _job_result(request, job)
+    response = HttpResponse(job_result['stdout'], content_type='application/vnd.ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="%s_result.txt"' % job_id
+    return response
+    
