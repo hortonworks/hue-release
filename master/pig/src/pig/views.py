@@ -219,7 +219,7 @@ def start_job(request):
     if request.POST.get("script_id"):
         script = PigScript.objects.get(pk=request.POST['script_id'])
     else:
-        script = PigScript(user=request.user, saved=False)
+        script = PigScript(user=request.user, saved=False, title=request.POST['title'])
     script.pig_script = request.POST['pig_script']
     script.python_script = request.POST['python_script']
     script.save()
