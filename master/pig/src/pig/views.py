@@ -274,10 +274,10 @@ def show_job_result(request, job_id):
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
     result['udfs'] = UDF.objects.all()
     job = Job.objects.get(job_id=job_id)
+    result['job_id'] = job.job_id
     if job.email_notification:
         result['email_notification'] = True
-    if job.status == job.JOB_SUBMITED:
-        result['job_id'] = job.job_id
+    if job.status == job.JOB_SUBMITED:        
         result['JOB_SUBMITED'] = True
     else:
         result.update(_job_result(request, job))

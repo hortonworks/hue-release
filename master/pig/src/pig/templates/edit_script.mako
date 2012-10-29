@@ -182,8 +182,11 @@ udfs = UDF.objects.all()
         <div class="accordion alert alert-warning" id="accordion2">
           <div class="accordion-group">
             <div class="accordion-heading">
-              <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">
+              <a class="accordion-toggle" data-toggle="collapse" id="job_logs"
+          data-parent="#accordion2" href="#collapseOne">
+                % if 'error' in result:
                 Logs...
+                % endif                
               </a>
             </div>
             <div id="collapseOne" class="accordion-body collapse in">
@@ -231,6 +234,10 @@ function get_job_result(job_id)
 if (parseInt(data.exit)==0) $(".bar").addClass("bar-success"); 
 else $(".bar").addClass("bar-danger");
 
+$("#download_job_result").show();
+$("#download_job_result").attr("href", "/pig/download_job_result/" +
+job_id);
+$("#job_logs").text("Logs...");
         $("#log_info").html(data.error.replace(/\n/g, "<br>"));
         $("#job_info").html(data.stdout.replace(/\n/g, "<br>"));
         percent = 100;
