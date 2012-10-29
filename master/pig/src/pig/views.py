@@ -199,7 +199,7 @@ def start_job(request):
     pig_script = request.POST['pig_script']
     if request.POST.get("python_script"):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
-    pig_script = augmate_udf_path(pig_script)
+    pig_script = augmate_udf_path(pig_script, request)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
     job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"))
     #job = t.pig_query(execute=request.POST['pig_script'], statusdir=statusdir)
