@@ -20,11 +20,12 @@ from django.utils.translation import ugettext as _
 %>
 <%namespace name="layout" file="layout.mako" />
 <%namespace name="util" file="util.mako" />
-<%namespace name="comps" file="hcatalog_components.mako" />
+<%namespace name="comps" file="beeswax_components.mako" />
 ${commonheader(_('HCatalog: Query Results'), "hcatalog", user, "100px")}
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
+    ##<pre>${_('HCatalog: debug_info:')} ${debug_info}</pre>
 	<h1>${_('HCatalog: Query Results:')} ${util.render_query_context(query_context)}</h1>
 	<div class="row-fluid">
 		<div class="span3">
@@ -102,12 +103,12 @@ ${layout.menubar(section='tables')}
 					<div class="pagination pull-right">
 				    	<ul>
 							% if start_row != 0:
-				            <li><a href="${ url('hcatalog.views.view_results', query.id, 0) }" title="${_('Back to first row')}">${_('Back to first row')}</a></li>
+				            <li><a href="${ url('hcatalog.views.view_results', query.id, 0) }?context=${query_context[0]}:${query_context[1]}" title="${_('Back to first row')}">${_('Back to first row')}</a></li>
 							% else:
 							<li class="active"><a href="#" title="${_('Back to first row')}">${_('Back to first row')}</a></li>
 				            % endif
 							% if has_more:
-				    		<li><a href="${ url('hcatalog.views.view_results', query.id, next_row) }" title="${_('Next page')}">${_('Next page')} &rarr;</a></li>
+				    		<li><a href="${ url('hcatalog.views.view_results', query.id, next_row) }?context=${query_context[0]}:${query_context[1]}" title="${_('Next page')}">${_('Next page')} &rarr;</a></li>
 							% endif
 				    	</ul>
 				    </div>

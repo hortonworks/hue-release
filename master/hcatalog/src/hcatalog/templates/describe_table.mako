@@ -63,7 +63,8 @@ ${layout.menubar(section='tables')}
 </%def>
 
 <div class="container-fluid">
-	<h1>HCatalog Table Metadata: ${table['tableName']}</h1>
+	<h1 id="describe-header">HCatalog Table Metadata: ${table['tableName']}</h1>
+	<div id="browse-spinner"><h1>Getting partition location...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 	<div class="row-fluid">
 		<div class="span3">
 			<div class="well sidebar-nav">
@@ -105,7 +106,6 @@ ${layout.menubar(section='tables')}
 		          <thead>
 		            <tr>
                       <th>Partitions</th>
-##				      <th>&nbsp;</th>
                     </tr>
 				  </thead>
 				  <tbody>
@@ -114,7 +114,6 @@ ${layout.menubar(section='tables')}
                       <tr>
                         <td><a href="#" data-row-selector="true">${partition['name']}</a></td>
                         <td><a href="#" class="btn browsePartitionLocation" partitionname=${partition['name']}>Browse</a></td>
-                        ##<td><a href="${ url("hcatalog.views.browse_partition", partition="a") }" class="btn">Browse</a></td>
                         <td><a href="#dropPartition${indx}" data-toggle="modal" class="btn">Drop</a></td>
                     </tr>
                     % endfor
@@ -138,7 +137,7 @@ ${layout.menubar(section='tables')}
 		<h3>Drop Table</h3>
 	</div>
 	<div class="modal-body">
-	  <div id="dropTableMessage" class="alert">
+	  <div class="dropTableMessage">
 
 	  </div>
 	</div>
@@ -160,7 +159,7 @@ ${layout.menubar(section='tables')}
 		<h3>Drop Partition</h3>
 	</div>
 	<div class="modal-body">
-	  <div id="dropPartitionMessage" class="alert">
+	  <div class="alert dropPartitionMessage">
 	  </div>
 	</div>
 	<div class="modal-footer">
@@ -233,10 +232,19 @@ ${layout.menubar(section='tables')}
 		overflow-y:scroll;
 		margin-top:10px;
 	}
+	#browse-spinner {
+		display:none;
+	}
 </style>
 
 <script type="text/javascript" charset="utf-8">
 	$(document).ready(function(){
+	
+		$('.browsePartitionLocation').click(function() {
+			$('#describe-header').hide();
+       		$('#browse-spinner').show();
+			return false;
+		});
 
 		$("#filechooser").jHueFileChooser({
 			onFileChoose: function(filePath){
@@ -253,7 +261,7 @@ ${layout.menubar(section='tables')}
 		});
 
 		$.getJSON("${ url("hcatalog.views.drop_table", table=table_name) }",function(data){
-			$("#dropTableMessage").text(data.title);
+			$(".dropTableMessage").text(data.title);
 		});
 		$(".hideModal").click(function(){
 			$(this).closest(".modal").modal("hide");
@@ -281,7 +289,7 @@ ${layout.menubar(section='tables')}
 		$("a[data-row-selector='true']").jHueRowSelector();
 		
 		$.getJSON("${ url("hcatalog.views.drop_partition", table=table_name) }",function(data){
-			$("#dropPartitionMessage").text(data.title);
+			$(".dropPartitionMessage").text(data.title);
 		});
 		
 		$(".browsePartitionLocation").click(function(){

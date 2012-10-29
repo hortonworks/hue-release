@@ -495,4 +495,5 @@ def view_results(request, id, first_row=0):
     'query_context': context,
     'save_form': save_form,
     'can_save': query_history.owner == request.user,
+#    'debug_info': request,
   })
