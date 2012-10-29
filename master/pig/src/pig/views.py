@@ -115,9 +115,8 @@ def script_clone(request, obj_id=None):
         pig_script = pig_script[0]
     else:
         raise Http404
-    del pig_script['id']
     del pig_script['date_created']
-    return index(request, pig_script=pig_script)
+    return HttpResponse(json.dumps(pig_script))
 
 
 def piggybank(request, obj_id = False):
@@ -199,7 +198,7 @@ def start_job(request):
     pig_script = request.POST['pig_script']
     if request.POST.get("python_script"):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
-    pig_script = augmate_udf_path(pig_script)
+    pig_script = augmate_udf_path(pig_script, request)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
     job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"))
     #job = t.pig_query(execute=request.POST['pig_script'], statusdir=statusdir)
@@ -274,10 +273,10 @@ def show_job_result(request, job_id):
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
     result['udfs'] = UDF.objects.all()
     job = Job.objects.get(job_id=job_id)
+    result['job_id'] = job.job_id
     if job.email_notification:
         result['email_notification'] = True
-    if job.status == job.JOB_SUBMITED:
-        result['job_id'] = job.job_id
+    if job.status == job.JOB_SUBMITED:        
         result['JOB_SUBMITED'] = True
     else:
         result.update(_job_result(request, job))
@@ -342,7 +341,7 @@ def download_job_result(request, job_id):
     if job.status != job.JOB_COMPLETED:
         raise PopupException("Job not completed yet")
     job_result = _job_result(request, job)
-    response = HttpResponse(job_result['stdout'], content_type='application/vnd.ms-excel')
+    response = HttpResponse(job_result['stdout'], content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename="%s_result.txt"' % job_id
     return response
     
