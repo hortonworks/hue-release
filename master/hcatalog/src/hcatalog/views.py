@@ -53,7 +53,6 @@ from beeswax.views import execute_directly as e_d, explain_directly as expl_d
 from beeswax.forms import query_form, SaveResultsForm
 from beeswax import db_utils
 from beeswax.models import MetaInstall, SavedQuery, QueryHistory
-from django.core import urlresolvers
 from beeswax.design import HQLdesign
 from beeswaxd.ttypes import BeeswaxException, QueryHandle
 
@@ -212,9 +211,8 @@ def pig_view(request, table=None):
         from pig.views import index as pig_view_for_hcat
     except:
         raise Http404
-    pig_script = {}
-    pig_script.update({'pig_script': 'A = LOAD \'{t}\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;'.format(t=table), 'title': '{t}'.format(t=table), 'python_script': '' })
-    return pig_view_for_hcat(request, pig_script=pig_script)
+    request.session['autosave'] = { "pig_script": 'A = LOAD \'{t}\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;'.format(t=table), 'title': '{t}'.format(t=table) }
+    return pig_view_for_hcat(request)
 
 
 def hive_view(request, table=None):
