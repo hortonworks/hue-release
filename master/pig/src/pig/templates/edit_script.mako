@@ -159,9 +159,6 @@ udfs = UDF.objects.all()
         <div class="progress progress-striped active">
           <div class="bar" style="width: 0%;"></div>
         </div>
-<<<<<<< Updated upstream
-        
-=======
 
         <a class="btn-success btn-mini" 
            % if 'stdout' in result:
@@ -172,7 +169,7 @@ udfs = UDF.objects.all()
            id="download_job_result">
           <i class="icon-download-alt"></i></a>
 
->>>>>>> Stashed changes
+
         <div class="alert alert-success" id="job_info">
           % if 'stdout' in result:
           ${result['stdout'].replace("\n", "<br>")}
