@@ -218,7 +218,7 @@ def start_job(request):
     return HttpResponse(json.dumps(
         {"job_id": job['id'],
          "text": "The Job has been started successfully.\
-         You can check job status on the following <a href='%s'>link</a>" % reverse("single_job", args=[job['id']])}))
+         You can check job result on the following link <a href='%s'>link</a>" % reverse("show_job_result", args=[job['id']])}))
 
 
 def kill_job(request):

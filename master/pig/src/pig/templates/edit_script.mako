@@ -324,7 +324,7 @@ var job_id = null;
     
     
     $("#start_job").live("click", function(){
-        if (!$("#pig_script_form").valid()) return;
+        if (!$("#pig_script_form").valid()) return false;
         $(this).hide();              
         $("#id_text").attr("disabled", "disabled");
         percent = 2;

@@ -5,6 +5,13 @@ function autosave(){
   return true;
 }
 
+function listdir(context){
+    // Context - Full path, that user have typed. e.g. /tmp/dir1/
+    $.get("/proxy/ip-10-4-214-110.ec2.internal/50070/webhdfs/v1/" + context + "?op=LISTSTATUS&user.name=hue&doas=hdfs", function(data){
+        console.log(data);
+    })
+}
+
 var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
   lineNumbers: true,
   matchBrackets: true,
