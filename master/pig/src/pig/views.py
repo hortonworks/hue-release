@@ -166,8 +166,8 @@ def piggybank(request, obj_id = False):
 def piggybank_index(request, msg=None):
     udfs = UDF.objects.filter(owner=request.user)
     pig_script = PigScript.objects.filter(saved=True, user=request.user)
-    udf_form = UDFForm(request.POST, request.FILES)
-    return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, udf_form = udf_form, msg = msg))
+#    udf_form = UDFForm(request.POST, request.FILES)  # udf_form = udf_form, 
+    return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, msg = msg))
 
 
 def udf_del(request, obj_id):
