@@ -64,10 +64,7 @@ def index(request, obj_id=None):
                 instance.user = request.user
                 instance.saved = True
                 instance.save()
-                if pig_script:
-                    return redirect(index, obj_id=instance.pk)
-                else:
-                    obj_id = instance.pk
+                obj_id = instance.pk
 
         #runing Explain
         if request.POST.get('submit') == 'Explain':
