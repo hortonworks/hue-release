@@ -40,7 +40,7 @@ from pig.forms import PigScriptForm, UDFForm
 from pig.CommandPy import CommandPy
 
 
-def index(request, obj_id=None, pig_script=None):
+def index(request, obj_id=None):
     result = {}
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
     result['udfs'] = UDF.objects.all()    
@@ -109,14 +109,15 @@ def delete(request, obj_id):
     return redirect(index)
 
 #Clone script by obj_id to user forms
-def script_clone(request, obj_id=None):
-    pig_script = PigScript.objects.filter(user=request.user, id=obj_id).values()
-    if pig_script:
-        pig_script = pig_script[0]
-    else:
-        raise Http404
-    del pig_script['date_created']
-    return HttpResponse(json.dumps(pig_script))
+def script_clone(request, obj_id):
+    script = get_object_or_404(PigScript, pk=obj_id)
+    request.session['autosave'] = {
+        "pig_script": script.pig_script,
+        "python_script": script.python_script,
+        "title": script.title + "(copy)"
+    }
+    return redirect(reverse("root_pig"))
+
 
 
 def piggybank(request, obj_id = False):
@@ -280,7 +281,7 @@ def show_job_result(request, job_id):
         result['JOB_SUBMITED'] = True
     else:
         result.update(_job_result(request, job))
-    result['stdout'] = result['stdout'].decode("utf-8")
+        result['stdout'] = result['stdout'].decode("utf-8")
     instance = job.script
     for field in instance._meta.fields:
         result[field.name] = getattr(instance, field.name)
