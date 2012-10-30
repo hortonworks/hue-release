@@ -43,7 +43,8 @@ from pig.CommandPy import CommandPy
 def index(request, obj_id=None):
     result = {}
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
-    result['udfs'] = UDF.objects.all()    
+    result['udfs'] = UDF.objects.all()
+    disable = False
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if not form.is_valid():
@@ -77,13 +78,13 @@ def index(request, obj_id=None):
             #Sending 'script_id' to 'result' in order to avoid losing it
             if request.POST.get("script_id"):
                 result.update({'id': request.POST['script_id']})
-            result.update({'pig_script': request.POST['pig_script'], 'title': request.POST['title'], 'python_script': request.POST['python_script']})
+            disable = True
 
     if not request.GET.get("new"):
         result.update(request.session.get("autosave", {}))
 
     #If we have obj_id, we renew or get instance to send it into form.
-    if obj_id:
+    if obj_id and not disable:
         instance = get_object_or_404(PigScript, pk=obj_id)
         for field in instance._meta.fields:
             result[field.name] = getattr(instance, field.name)
