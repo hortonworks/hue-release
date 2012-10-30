@@ -137,7 +137,7 @@ ${layout.menubar(section='tables')}
 		<h3>Drop Table</h3>
 	</div>
 	<div class="modal-body">
-	  <div class="dropTableMessage">
+	  <div class="alert dropTableMessage">
 
 	  </div>
 	</div>

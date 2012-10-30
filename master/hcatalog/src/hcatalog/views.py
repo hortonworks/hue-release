@@ -371,7 +371,7 @@ def watch_query(request, id):
   context_param = request.GET.get('context', '')
 
   # GET param: on_success_url. Default to view_results
-  results_url = urlresolvers.reverse(view_results, kwargs=dict(id=str(id), first_row=0))
+  results_url = urlresolvers.reverse(view_results, kwargs=dict(id=str(id), first_row=0, last_result_len=0))
   on_success_url = request.GET.get('on_success_url')
   if not on_success_url:
     on_success_url = results_url
@@ -405,7 +405,7 @@ def watch_query(request, id):
                     })
   
   
-def view_results(request, id, first_row=0):
+def view_results(request, id, first_row=0, last_result_len=0):
   """
   Returns the view for the results of the QueryHistory with the given id.
 
@@ -456,18 +456,21 @@ def view_results(request, id, first_row=0):
   download_urls = {}
   if downloadable:
     for format in common.DL_FORMATS:
-      download_urls[format] = urlresolvers.reverse(
-                                    download, kwargs=dict(id=str(id), format=format))
+      download_urls[format] = urlresolvers.reverse(download, kwargs=dict(id=str(id), format=format))
 
   save_form = SaveResultsForm()
-
+  has_more = True
+  last_result_len = long(last_result_len)
+  if last_result_len != 0 and len(results.data) != last_result_len:
+    has_more = False  
   # Display the results
   return render('watch_results.mako', request, {
     'error': False,
     'query': query_history,
     # Materialize, for easier testability.
     'results': list(parse_results(results.data)),
-    'has_more': results.has_more,
+    'last_result_len': len(results.data),
+    'has_more': has_more,
     'next_row': results.start_row + len(results.data),
     'start_row': results.start_row,
     'expected_first_row': first_row,
@@ -478,5 +481,4 @@ def view_results(request, id, first_row=0):
     'query_context': context,
     'save_form': save_form,
     'can_save': query_history.owner == request.user,
-#    'debug_info': request,
   })
