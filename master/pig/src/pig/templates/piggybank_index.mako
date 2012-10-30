@@ -40,7 +40,7 @@ ${shared.menubar(section='PiggyBank')}
       <ul class="nav nav-list">
         % for udf in udfs:
         <li><p>
-        <a href="${url('udf_del', udf.id)}"><img src="/pig/static/art/delete.gif" alt="Delete" height="12" width="12"></a>
+        <a href="${url('udf_del', udf.id)}"  onclick="return confirm('Are you sure, you want to delete this script?');"><img src="/pig/static/art/delete.gif" alt="Delete" height="12" width="12"></a>
         ${udf.file_name}
         </p></li>
         % endfor
