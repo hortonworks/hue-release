@@ -12,7 +12,7 @@ class Migration(SchemaMigration):
         db.add_column('pig_job', 'start_time', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, default=datetime.datetime(2012, 10, 26, 11, 0, 2, 755089), blank=True), keep_default=False)
 
         # Adding unique constraint on 'PigScript', fields ['title']
-        db.create_unique('pig_pigscript', ['title'])
+        #db.create_unique('pig_pigscript', ['title'])
 
         # Changing field 'PigScript.date_created'
         db.alter_column('pig_pigscript', 'date_created', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, auto_now_add=True, blank=True))

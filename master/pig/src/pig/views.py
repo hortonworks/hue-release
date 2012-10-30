@@ -40,10 +40,11 @@ from pig.forms import PigScriptForm, UDFForm
 from pig.CommandPy import CommandPy
 
 
-def index(request, obj_id=None, pig_script=None):
+def index(request, obj_id=None):
     result = {}
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
-    result['udfs'] = UDF.objects.all()    
+    result['udfs'] = UDF.objects.all()
+    disable = False
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if not form.is_valid():
@@ -64,10 +65,7 @@ def index(request, obj_id=None, pig_script=None):
                 instance.user = request.user
                 instance.saved = True
                 instance.save()
-                if pig_script:
-                    return redirect(index, obj_id=instance.pk)
-                else:
-                    obj_id = instance.pk
+                obj_id = instance.pk
 
         #runing Explain
         if request.POST.get('submit') == 'Explain':
@@ -80,13 +78,13 @@ def index(request, obj_id=None, pig_script=None):
             #Sending 'script_id' to 'result' in order to avoid losing it
             if request.POST.get("script_id"):
                 result.update({'id': request.POST['script_id']})
-            result.update({'pig_script': request.POST['pig_script'], 'title': request.POST['title'], 'python_script': request.POST['python_script']})
+            disable = True
 
     if not request.GET.get("new"):
         result.update(request.session.get("autosave", {}))
 
     #If we have obj_id, we renew or get instance to send it into form.
-    if obj_id:
+    if obj_id and not disable:
         instance = get_object_or_404(PigScript, pk=obj_id)
         for field in instance._meta.fields:
             result[field.name] = getattr(instance, field.name)
@@ -109,14 +107,15 @@ def delete(request, obj_id):
     return redirect(index)
 
 #Clone script by obj_id to user forms
-def script_clone(request, obj_id=None):
-    pig_script = PigScript.objects.filter(user=request.user, id=obj_id).values()
-    if pig_script:
-        pig_script = pig_script[0]
-    else:
-        raise Http404
-    del pig_script['date_created']
-    return HttpResponse(json.dumps(pig_script))
+def script_clone(request, obj_id):
+    script = get_object_or_404(PigScript, pk=obj_id)
+    request.session['autosave'] = {
+        "pig_script": script.pig_script,
+        "python_script": script.python_script,
+        "title": script.title + "(copy)"
+    }
+    return redirect(reverse("root_pig"))
+
 
 
 def piggybank(request, obj_id = False):
@@ -165,8 +164,8 @@ def piggybank(request, obj_id = False):
 def piggybank_index(request, msg=None):
     udfs = UDF.objects.filter(owner=request.user)
     pig_script = PigScript.objects.filter(saved=True, user=request.user)
-    udf_form = UDFForm(request.POST, request.FILES)
-    return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, udf_form = udf_form, msg = msg))
+#    udf_form = UDFForm(request.POST, request.FILES)  # udf_form = udf_form, 
+    return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, msg = msg))
 
 
 def udf_del(request, obj_id):
@@ -217,7 +216,7 @@ def start_job(request):
     return HttpResponse(json.dumps(
         {"job_id": job['id'],
          "text": "The Job has been started successfully.\
-         You can check job status on the following <a href='%s'>link</a>" % reverse("single_job", args=[job['id']])}))
+         You can check job result on the following link <a href='%s'>link</a>" % reverse("show_job_result", args=[job['id']])}))
 
 
 def kill_job(request):
@@ -280,7 +279,7 @@ def show_job_result(request, job_id):
         result['JOB_SUBMITED'] = True
     else:
         result.update(_job_result(request, job))
-    result['stdout'] = result['stdout'].decode("utf-8")
+        result['stdout'] = result['stdout'].decode("utf-8")
     instance = job.script
     for field in instance._meta.fields:
         result[field.name] = getattr(instance, field.name)
