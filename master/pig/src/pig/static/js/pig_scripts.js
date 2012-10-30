@@ -7,9 +7,21 @@ function autosave(){
 
 function listdir(context){
     // Context - Full path, that user have typed. e.g. /tmp/dir1/
-    $.get("/proxy/ip-10-4-214-110.ec2.internal/50070/webhdfs/v1/" + context + "?op=LISTSTATUS&user.name=hue&doas=hdfs", function(data){
+    $.get("/proxy/localhost/50070/webhdfs/v1/" + context + "?op=LISTSTATUS&user.name=hue&doas=hdfs", function(data){
         console.log(data);
-    })
+    });
+}
+
+function getTables(){
+$.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table?user.name=hue", function(data){
+console.log(data);
+});
+}
+
+function getTableFields(table){
+$.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
+console.log(data);
+});
 }
 
 var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
