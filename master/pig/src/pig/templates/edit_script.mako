@@ -68,9 +68,13 @@ udfs = UDF.objects.all()
 	  <form action="#" method="post" id="pig_script_form">
             <input type="hidden" name="script_id"  value="${result.get('id','')}" >
             <label for="id_title">Title:</label>
-            <input id="id_title" type="text" name="title" required="required"
-                   maxlength="200" value="${result.get('title',"")}">
+            <div class="control-group">
             <label for="id_text">Pig script:</label>
+              <div class="controls">
+                <input id="id_title" type="text" name="title" required="required"
+                       maxlength="200" value="${result.get('title',"")}">
+              </div>
+            </div>
             <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
             <div class="nav-collapse">
               <ul class="nav">
@@ -206,7 +210,21 @@ udfs = UDF.objects.all()
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
 <style type="text/css" media="screen">
-  .CodeMirror-focused span.CodeMirror-matchhighlight { background: #e7e4ff; !important }
+  .CodeMirror-focused span.CodeMirror-matchhighlight { 
+background:  #e7e4ff; !important; }
+label.valid {
+  width: 24px;
+  height: 24px;
+  background: url(assets/img/valid.png) center center no-repeat;
+  display: inline-block;
+  text-indent: -9999px;
+}
+label.error {
+  font-weight: bold;
+  color: red;
+  padding: 2px 8px;
+  margin-top: 2px;
+}
 </style>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js">
 </script>
@@ -299,7 +317,10 @@ $("#pig_script_form").validate({
 messages: {
 title:{
 remote: "Script title already exists"
-}}
+}},
+highlight: function(label) {
+    $(label).closest('.control-group').addClass('error');
+  },
 });
 
 var get_job_res_timer = null;
