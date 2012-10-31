@@ -90,6 +90,20 @@ def index(request, obj_id=None):
             result[field.name] = getattr(instance, field.name)
     return render('edit_script.mako', request, dict(result=result))
 
+
+#Explain view
+def explain(request):
+    script_path = '/pig_scripts/%s.pig' % '_'.join(request.POST['title'].replace('(', '').replace(')', '').split())
+    pig_src = request.POST['pig_script']
+    pig_src = augmate_udf_path(pig_src, request)
+    pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
+    if request.GET.get('t_s') == 'Explain':
+        pig = CommandPy("pig -e explain -script %s" % script_path, script_path, pig_src)
+    else:
+        pig = CommandPy("pig -check %s" % script_path, script_path, pig_src)
+    return HttpResponse(json.dumps({"text": pig.returnCode().replace("\n", "<br>")}))
+
+
 #Making normal path to our *.jar files
 udf_template = re.compile(r"register\s+(\w+)\.jar", re.I)
 def augmate_udf_path(pig_src, request):
