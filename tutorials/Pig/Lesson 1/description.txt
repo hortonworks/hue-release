@@ -1,1 +1,1 @@
-Pig lesson description
+We will learn to load and describe data.

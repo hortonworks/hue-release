@@ -68,9 +68,13 @@ udfs = UDF.objects.all()
 	  <form action="#" method="post" id="pig_script_form">
             <input type="hidden" name="script_id"  value="${result.get('id','')}" >
             <label for="id_title">Title:</label>
-            <input id="id_title" type="text" name="title" required="required"
-                   maxlength="200" value="${result.get('title',"")}">
+            <div class="control-group">
             <label for="id_text">Pig script:</label>
+              <div class="controls">
+                <input id="id_title" type="text" name="title" required="required"
+                       maxlength="200" value="${result.get('title',"")}">
+              </div>
+            </div>
             <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
             <div class="nav-collapse">
               <ul class="nav">
@@ -82,11 +86,11 @@ udfs = UDF.objects.all()
                     <li class="dropdown-submenu">
                       <a href="#">Aggregation functions</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">AVG</a></li>
-                        <li><a href="#">SUM</a></li>
-                        <li><a href="#">MAX</a></li>
-                        <li><a href="#">MIN</a></li>
-                        <li><a href="#">COUNT</a></li>
+                        <li><a href="#">AVG(%VAR%)</a></li>
+                        <li><a href="#">SUM(%VAR%)</a></li>
+                        <li><a href="#">MAX(%VAR%)</a></li>
+                        <li><a href="#">MIN(%VAR%)</a></li>
+                        <li><a href="#">COUNT(%VAR%)</a></li>
                         
                       </ul>
                     </li>
@@ -94,11 +98,11 @@ udfs = UDF.objects.all()
                       <a href="#">Data processing functions</a>
                       <ul class="dropdown-menu">
                         <li><a href="#">FOREACH %DATA%</a></li>
-                        <li><a href="#">GENERATE</a></li>
-                        <li><a href="#">FILTER %VAR% BY</a></li>
-                        <li><a href="#">GROUP %VARIABLE% BY </a></li>
-                        <li><a href="#">COGROUP %VARIABLE% BY </a></li>
-                        <li><a href="#">JOIN %VARIABLE% BY </a></li>
+                        <li><a href="#">GENERATE %VAR%</a></li>
+                        <li><a href="#">FILTER %VAR% BY %COND%</a></li>
+                        <li><a href="#">GROUP %VAR% BY %VAR%</a></li>
+                        <li><a href="#">COGROUP %VAR% BY %VAR%</a></li>
+                        <li><a href="#">JOIN %VAR% BY </a></li>
                         <li><a href="#">LIMIT</a></li>
                       </ul>
                     </li>
@@ -106,30 +110,33 @@ udfs = UDF.objects.all()
                     <li class="dropdown-submenu">
                       <a href="#">I/0</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">A = LOAD '__';</a></li>
-                        <li><a href="#">DUMP</a></li>
-                        <li><a href="#">STORE %VAR% INTO %PATH%</a></li>
+                        <li><a href="#">A = LOAD '%FILE%';</a></li>
+                        <li><a href="#">DUMP %VAR%;</a></li>
+                        <li><a href="#">STORE %VAR% INTO %PATH%;</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
                       <a href="#">Debug</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">EXPLAINE</a></li>
-                        <li><a href="#">ILUSTRATE</a></li>
-                        <li><a href="#">DESCRIBE</a></li>
+                        <li><a href="#">EXPLAINE %VAR%;</a></li>
+                        <li><a href="#">ILUSTRATE %VAR%;</a></li>
+                        <li><a href="#">DESCRIBE %VAR%;</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
                       <a href="#">HCatalog</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">A = LOAD '%__%' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
+                        <li><a href="#">A = LOAD '%TABLE%' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
                       <a href="#">Python UDF</a>
                       <ul class="dropdown-menu">
                         <li>
-                          <a href="#" data-python="true">Register 'python_udf.py' using jython as myfuncs;</a>
+                          <a href="#" data-python="true">
+                            Register 'python_udf.py' using jython as
+                            myfuncs;
+                          </a>
                         </li>
                       </ul>
                     </li>
@@ -206,7 +213,21 @@ udfs = UDF.objects.all()
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
 <style type="text/css" media="screen">
-  .CodeMirror-focused span.CodeMirror-matchhighlight { background: #e7e4ff; !important }
+  .CodeMirror-focused span.CodeMirror-matchhighlight { 
+background:  #e7e4ff; !important; }
+label.valid {
+  width: 24px;
+  height: 24px;
+  background: url(assets/img/valid.png) center center no-repeat;
+  display: inline-block;
+  text-indent: -9999px;
+}
+label.error {
+  font-weight: bold;
+  color: red;
+  padding: 2px 8px;
+  margin-top: 2px;
+}
 </style>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js">
 </script>
@@ -278,9 +299,16 @@ function ping_job(job_id){
           
 }
 
+function explain_progres(percent){
+              percent += 10;
+              $(".bar").css("width", percent+"%");
+              if(percent==100) { return false; }
+              window.setTimeout("explain_progres("+percent+");", 300);
+         };
 
 $(document).ready(function(){
 
+$('#explain').click(function(){explain_progres(0)});
 
 % if result.get("job_id") and result.get("JOB_SUBMITED"):
 percent = 10;
@@ -299,7 +327,10 @@ $("#pig_script_form").validate({
 messages: {
 title:{
 remote: "Script title already exists"
-}}
+}},
+highlight: function(label) {
+    $(label).closest('.control-group').addClass('error');
+  },
 });
 
 var get_job_res_timer = null;

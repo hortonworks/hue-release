@@ -1,3 +1,5 @@
+var pigKeywordsU;
+
 function autosave(){
   pig_editor.save();
   python_editor.save()
@@ -5,23 +7,54 @@ function autosave(){
   return true;
 }
 
-function listdir(context){
-    // Context - Full path, that user have typed. e.g. /tmp/dir1/
-    $.get("/proxy/localhost/50070/webhdfs/v1/" + context + "?op=LISTSTATUS&user.name=hue&doas=hdfs", function(data){
-        console.log(data);
-    });
+function listdir(_context){
+  // Context - Full path, that user have typed. e.g. /tmp/dir1/
+  var contentList=[];
+  if(_context.length>1&&(_context[0]=="'"||_context[0]=='"'))
+    _context=_context.substring(1);
+
+  _context=_context.split(" ");
+  _context=_context[0];
+  //console.log(_context);
+
+  $.ajax({
+    //url: 'files.php/?con=' + _context,
+    url: "/proxy/localhost/50070/webhdfs/v1" + _context + "?op=LISTSTATUS&user.name=hue&doas=hdfs",
+    type: "GET",
+    dataType: "json",
+    cache: false,
+    async: false,
+    success: function(data) {
+      //console.log(data);
+      if(data.hasOwnProperty("FileStatuses")){
+        for (var i = 0; i < data.FileStatuses.FileStatus.length; i++) {
+          //console.log(data.FileStatuses.FileStatus[i].pathSuffix);
+
+            contentList.push( data.FileStatuses.FileStatus[i].pathSuffix);
+
+        }
+      }
+    }
+  });
+  return contentList;
 }
 
 function getTables(){
-$.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table?user.name=hue", function(data){
-console.log(data);
-});
+  $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table?user.name=hue", function(data){
+  //$.get("tables.php", function(data){
+    if(data.hasOwnProperty("tables"))
+    {
+      for (var i = 0; i < data.tables.length; i++) {
+        pigKeywordsU.push(data.tables[i]);
+      }
+    }
+  },"json");
 }
 
 function getTableFields(table){
-$.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
-console.log(data);
-});
+  $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
+    console.log(data);
+  });
 }
 
 var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
@@ -39,7 +72,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     var posArr=findPosition(curLine);
 
     if(key.keyCode=="9"&&posArr.length>1){
-        pig_editor.setOption("keyMap", "emacs");
+      pig_editor.setOption("keyMap", "emacs");
     }else{
       pig_editor.setOption("keyMap", "basic");
     }
@@ -48,23 +81,26 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
   onChange : function (from, change){
 
     var curText=from.getTokenAt(from.getCursor()).string;
-    var lastKeys=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,2);
+    //var lastKeys=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,2);
+    var startKeys=curText.substr(0,2);
+    var lastKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-1,1);
 
-    if(lastKeys== "'/" || lastKeys== '"/'){
-      var dirList=getDirList(curText);
+    if((startKeys== "'/" || startKeys== '"/')&&(lastKey=="/")){
 
+      var dirList=listdir(curText);
+
+      change.from.ch=from.getCursor().ch;
+      console.log(dirList);
       var dirArr={
         from: change.from,
         list:dirList,
         to: change.from
       };
 
-      CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr );
+      if(dirList.length>0)
+        CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr );
     }
 
-    function getDirList(context){
-      return ["/dir1","/dir2","/dir3","/dir1/dir_1_1","/dir1/dir_1_2","/dir1/dir_2_1","/dir1/dir_3_1"]
-    }
     autosave();
 
   }
@@ -83,7 +119,7 @@ var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code
   tabMode: "shift",
   matchBrackets: true,
   onChange: autosave,
-  mode: "text/x-python",
+  mode: "text/x-python"
 
 });
 
@@ -138,6 +174,9 @@ $("#id_hdfs_file").change(function() {
 
 
 $(document).ready(function(){
+
+  getTables();
+
   $("#id_title").live('keyup', autosave);
 
   $("#pig_helper").find("a").live('click', function(){
