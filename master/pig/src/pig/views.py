@@ -306,15 +306,13 @@ def notify_job_complited(request, job_id):
     job_result = _job_result(request, job)
     if job.email_notification:
         subject = 'Query result'
-        message = render_to_string(
-            'mail/approved.html',
-            {'user': job.script.user.username,
-             'query': job.script.pig_script,
-             'stdout': job_result['stdout'],
-             "stderr": job_result['error']}
+        body = "Your PIG script '%s' started at %s has been complited.\
+        You can check result at the following link %s" % (
+            job.script.title,
+            job.start_time.strftime('%d.%m.%Y %H:%M'),
+            reverse("show_job_result", job_id)
         )
-        from_email = settings.DEFAULT_FROM_EMAIL
-        send_mail(subject, message, from_email, [job.script.user.email])
+        job.user.email_user(subject, body)
     return HttpResponse("Done")
 
 

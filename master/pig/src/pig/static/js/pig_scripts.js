@@ -1,6 +1,7 @@
-var pigKeywordsU;
+var pigKeywordsT=[];
 
 function autosave(){
+  $("#save_button").removeAttr("disabled");
   pig_editor.save();
   python_editor.save()
   $.post("/pig/autosave_scripts/", $("#pig_script_form").serialize());
@@ -10,16 +11,14 @@ function autosave(){
 function listdir(_context){
   // Context - Full path, that user have typed. e.g. /tmp/dir1/
   var contentList=[];
-  if(_context.length>1&&(_context[0]=="'"||_context[0]=='"'))
-    _context=_context.substring(1);
-
+  _context=_context.replace(/'/g, "" ).replace(/"/g, "" );
   _context=_context.split(" ");
   _context=_context[0];
-  //console.log(_context);
+
 
   $.ajax({
     //url: 'files.php/?con=' + _context,
-    url: "/proxy/localhost/50070/webhdfs/v1" + _context + "?op=LISTSTATUS&user.name=hue&doas=hdfs",
+    url: "/proxy/localhost/50070/webhdfs/v1/" + _context + "?op=LISTSTATUS&user.name=hue&doas=hdfs",
     type: "GET",
     dataType: "json",
     cache: false,
@@ -28,10 +27,8 @@ function listdir(_context){
       //console.log(data);
       if(data.hasOwnProperty("FileStatuses")){
         for (var i = 0; i < data.FileStatuses.FileStatus.length; i++) {
-          //console.log(data.FileStatuses.FileStatus[i].pathSuffix);
-
-            contentList.push( data.FileStatuses.FileStatus[i].pathSuffix);
-
+            if(data.FileStatuses.FileStatus[i].pathSuffix !="")
+              contentList.push( data.FileStatuses.FileStatus[i].pathSuffix);
         }
       }
     }
@@ -45,7 +42,7 @@ function getTables(){
     if(data.hasOwnProperty("tables"))
     {
       for (var i = 0; i < data.tables.length; i++) {
-        pigKeywordsU.push(data.tables[i]);
+        pigKeywordsT.push(data.tables[i]);
       }
     }
   },"json");
@@ -65,7 +62,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
   onCursorActivity: function() {
     pig_editor.matchHighlight("CodeMirror-matchhighlight");
   },
-  extraKeys: {"Ctrl-Space": function(cm) {CodeMirror.simpleHint(cm, CodeMirror.pigHint);  }},
+  extraKeys: {"Ctrl-Space": function(cm) { CodeMirror.simpleHint(cm, CodeMirror.pigHint);  }},
   onKeyEvent: function(cm,key){
     var lineNumber=cm.getCursor().line;
     var curLine=cm.getLine(lineNumber);
@@ -81,16 +78,17 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
   onChange : function (from, change){
 
     var curText=from.getTokenAt(from.getCursor()).string;
-    //var lastKeys=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,2);
+
     var startKeys=curText.substr(0,2);
     var lastKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-1,1);
+    var prevKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,1);
 
     if((startKeys== "'/" || startKeys== '"/')&&(lastKey=="/")){
 
       var dirList=listdir(curText);
 
       change.from.ch=from.getCursor().ch;
-      console.log(dirList);
+
       var dirArr={
         from: change.from,
         list:dirList,
@@ -99,6 +97,19 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
 
       if(dirList.length>0)
         CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr );
+
+    }else if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey))){
+
+      //change.from.ch=from.getCursor().ch;
+
+      /*var tablesArr={
+        from: change.from,
+        list: pigKeywordsT,
+        to: change.to
+      };*/
+      // CodeMirror.simpleHint(from, CodeMirror.pigHint, "", tablesArr );
+
+      CodeMirror.simpleHint(from, CodeMirror.pigHint);
     }
 
     autosave();

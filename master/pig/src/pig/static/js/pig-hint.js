@@ -18,7 +18,25 @@
 
   function scriptHint(editor, keywords, getToken) {
     // Find the token at the cursor
-    var cur = editor.getCursor(), token = getToken(editor, cur), tprop = token;
+    var cur = editor.getCursor();
+    var token = getToken(editor, cur);
+
+    if(token.string[0]=="'"||token.string[0]=='"'){
+
+      token.start=token.start+1;
+      token.string=token.string.replace("'", "" ).replace('"', "" );
+
+      if(token.string.lastIndexOf("'")>0||token.string.indexOf('"')>0){
+        token.string=token.string.replace(/'/g, "" ).replace(/"/g, "" );
+        token.end=token.end-1;
+      }
+
+      token.className="pig-word";
+    }
+
+
+
+    var tprop = token;
     // If it's not a 'word-style' token, ignore the token.
 
     if (!/^[\w$_]*$/.test(token.string)) {
@@ -56,7 +74,7 @@
       + "PARTITION GROUP AND OR NOT GENERATE FLATTEN ASC DESC IS STREAM THROUGH STORE MAPREDUCE "
       + "SHIP CACHE INPUT OUTPUT STDERROR STDIN STDOUT LIMIT SAMPLE LEFT RIGHT FULL EQ GT LT GTE LTE "
       + "NEQ MATCHES TRUE FALSE DESCRIBE ILLUSTRATE REGISTER EXPLAIN DUMP";
-  pigKeywordsU = pigKeywords.split(" ");
+  var pigKeywordsU = pigKeywords.split(" ");
   var pigKeywordsL = pigKeywords.toLowerCase().split(" ");
 
   var pigTypes = "BOOLEAN INT LONG FLOAT DOUBLE CHARARRAY BYTEARRAY BAG TUPLE MAP";
@@ -101,6 +119,7 @@
         forEach(pigTypesL, maybeAdd);
         forEach(pigKeywordsU, maybeAdd);
         forEach(pigKeywordsL, maybeAdd);
+        forEach(pigKeywordsT, maybeAdd);
       }
     }
 

@@ -154,7 +154,12 @@ udfs = UDF.objects.all()
             % endif	
 	<input type="hidden" name="email" class='intoemail' />
 	<div class="actions">
-	  <input class="btn primary" type="submit" name="submit" value="Save" />
+	  <input class="btn primary" type="submit" name="submit" id="save_button"
+                 value="Save" 
+                 % if result.get("id"):
+                 disabled="disabled"
+                 % endif
+                 />
 	  <input class="btn primary" type="button" id="start_job"
 	  value="Execute" />	  
           <input class="btn primary" type="button" id="kill_job"  value="Kill job" style="display:none" />
