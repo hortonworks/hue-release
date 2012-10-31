@@ -24,7 +24,7 @@ class Migration(SchemaMigration):
         db.delete_column('pig_job', 'start_time')
 
         # Removing unique constraint on 'PigScript', fields ['title']
-        db.delete_unique('pig_pigscript', ['title'])
+        #db.delete_unique('pig_pigscript', ['title'])
 
         # Changing field 'PigScript.date_created'
         db.alter_column('pig_pigscript', 'date_created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True))

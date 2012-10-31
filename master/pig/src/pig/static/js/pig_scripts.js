@@ -1,3 +1,5 @@
+var pigKeywordsU;
+
 function autosave(){
   pig_editor.save();
   python_editor.save()
@@ -16,8 +18,8 @@ function listdir(_context){
   //console.log(_context);
 
   $.ajax({
-    //url: '1.php/?con=' + _context,
-    url: "/proxy/localhost/50070/webhdfs/v1/" + _context + "?op=LISTSTATUS&user.name=hue&doas=hdfs",
+    //url: 'files.php/?con=' + _context,
+    url: "/proxy/localhost/50070/webhdfs/v1" + _context + "?op=LISTSTATUS&user.name=hue&doas=hdfs",
     type: "GET",
     dataType: "json",
     cache: false,
@@ -39,8 +41,14 @@ function listdir(_context){
 
 function getTables(){
   $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table?user.name=hue", function(data){
-    console.log(data);
-  });
+  //$.get("tables.php", function(data){
+    if(data.hasOwnProperty("tables"))
+    {
+      for (var i = 0; i < data.tables.length; i++) {
+        pigKeywordsU.push(data.tables[i]);
+      }
+    }
+  },"json");
 }
 
 function getTableFields(table){
@@ -74,13 +82,13 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
 
     var curText=from.getTokenAt(from.getCursor()).string;
     //var lastKeys=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,2);
-    var lastKeys=curText.substr(0,2);
-    console.log(curText); //TODO: '/ INTO %PATH%
-    if(lastKeys== "'/" || lastKeys== '"/'){
+    var startKeys=curText.substr(0,2);
+    var lastKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-1,1);
+
+    if((startKeys== "'/" || startKeys== '"/')&&(lastKey=="/")){
 
       var dirList=listdir(curText);
 
-      //debugger;
       change.from.ch=from.getCursor().ch;
       console.log(dirList);
       var dirArr={
@@ -166,6 +174,9 @@ $("#id_hdfs_file").change(function() {
 
 
 $(document).ready(function(){
+
+  getTables();
+
   $("#id_title").live('keyup', autosave);
 
   $("#pig_helper").find("a").live('click', function(){

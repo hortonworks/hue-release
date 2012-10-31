@@ -86,11 +86,11 @@ udfs = UDF.objects.all()
                     <li class="dropdown-submenu">
                       <a href="#">Aggregation functions</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">AVG</a></li>
-                        <li><a href="#">SUM</a></li>
-                        <li><a href="#">MAX</a></li>
-                        <li><a href="#">MIN</a></li>
-                        <li><a href="#">COUNT</a></li>
+                        <li><a href="#">AVG(%VAR%)</a></li>
+                        <li><a href="#">SUM(%VAR%)</a></li>
+                        <li><a href="#">MAX(%VAR%)</a></li>
+                        <li><a href="#">MIN(%VAR%)</a></li>
+                        <li><a href="#">COUNT(%VAR%)</a></li>
                         
                       </ul>
                     </li>
@@ -98,11 +98,11 @@ udfs = UDF.objects.all()
                       <a href="#">Data processing functions</a>
                       <ul class="dropdown-menu">
                         <li><a href="#">FOREACH %DATA%</a></li>
-                        <li><a href="#">GENERATE</a></li>
-                        <li><a href="#">FILTER %VAR% BY</a></li>
-                        <li><a href="#">GROUP %VARIABLE% BY </a></li>
-                        <li><a href="#">COGROUP %VARIABLE% BY </a></li>
-                        <li><a href="#">JOIN %VARIABLE% BY </a></li>
+                        <li><a href="#">GENERATE %VAR%</a></li>
+                        <li><a href="#">FILTER %VAR% BY %COND%</a></li>
+                        <li><a href="#">GROUP %VAR% BY %VAR%</a></li>
+                        <li><a href="#">COGROUP %VAR% BY %VAR%</a></li>
+                        <li><a href="#">JOIN %VAR% BY </a></li>
                         <li><a href="#">LIMIT</a></li>
                       </ul>
                     </li>
@@ -110,30 +110,33 @@ udfs = UDF.objects.all()
                     <li class="dropdown-submenu">
                       <a href="#">I/0</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">A = LOAD '__';</a></li>
-                        <li><a href="#">DUMP</a></li>
-                        <li><a href="#">STORE %VAR% INTO %PATH%</a></li>
+                        <li><a href="#">A = LOAD '%FILE%';</a></li>
+                        <li><a href="#">DUMP %VAR%;</a></li>
+                        <li><a href="#">STORE %VAR% INTO %PATH%;</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
                       <a href="#">Debug</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">EXPLAINE</a></li>
-                        <li><a href="#">ILUSTRATE</a></li>
-                        <li><a href="#">DESCRIBE</a></li>
+                        <li><a href="#">EXPLAINE %VAR%;</a></li>
+                        <li><a href="#">ILUSTRATE %VAR%;</a></li>
+                        <li><a href="#">DESCRIBE %VAR%;</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
                       <a href="#">HCatalog</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">A = LOAD '%__%' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
+                        <li><a href="#">A = LOAD '%TABLE%' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
                       <a href="#">Python UDF</a>
                       <ul class="dropdown-menu">
                         <li>
-                          <a href="#" data-python="true">Register 'python_udf.py' using jython as myfuncs;</a>
+                          <a href="#" data-python="true">
+                            Register 'python_udf.py' using jython as
+                            myfuncs;
+                          </a>
                         </li>
                       </ul>
                     </li>
