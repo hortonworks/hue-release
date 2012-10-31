@@ -1,3 +1,103 @@
-Create HCatalog Table.<br/>
-Click button <b>Create a table from file</b><br/>
-Go to the next step.
+<html>
+  <head>
+    <title>Loading Data in Pig</title>
+  </head>
+  <body>
+    <h3>Loading our Data</h3>
+    <p>The data we'll be working with is daily stock data for the NYSE for the year 2009. Our raw data looks like this:</p> 
+    <pre>AEA	2009-12-31T00:00:00.000Z	5.57	5.71	5.54	5.56	418600	5.56
+AEA	2009-12-30T00:00:00.000Z	5.65	5.67	5.5	5.57	226400	5.57
+AEA	2009-12-29T00:00:00.000Z	5.67	5.74	5.66	5.67	115100	5.67
+AEA	2009-12-28T00:00:00.000Z	5.81	5.86	5.63	5.67	326600	5.67</pre>
+    <p>It is simple TSV or 'Tab Separated Value' format. As a table, our data looks like this:</p>
+    <table>
+      <thead style="text-align: left;">
+        <tr>
+          <th>stock_symbol</th>
+          <th>date</th>
+          <th>stock_price_open</th>
+          <th>stock_price_high</th>
+          <th>stock_price_low</th>
+          <th>stock_price_close</th>
+          <th>stock_volume</th>
+          <th>stock_price_adj_close</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>AEA</td>
+          <td>2009-12-31T00:00:00.000Z</td>
+          <td>5.57</td>
+          <td>5.71</td>
+          <td>5.54</td>
+          <td>5.56</td>
+          <td>418600</td>
+          <td>5.56</td>
+        </tr>
+        <tr>
+          <td>AEA</td>
+          <td>2009-12-30T00:00:00.000Z</td>
+          <td>5.65</td>
+          <td>5.67</td>
+          <td>5.5</td>
+          <td>5.57</td>
+          <td>226400</td>
+          <td>5.57</td>
+        </tr>
+        <tr>
+          <td>AEA</td>	
+          <td>2009-12-29T00:00:00.000Z</td>
+          <td>5.67</td>
+          <td>5.74</td>
+          <td>5.66</td>
+          <td>5.67</td>
+          <td>115100</td>
+          <td>5.67<td>
+        </tr>
+        <tr>
+          <td>AEA</td>
+          <td>2009-12-28T00:00:00.000Z</td>
+          <td>5.81</td>
+          <td>5.86</td>
+          <td>5.63</td>
+          <td>5.67</td>
+          <td>326600</td>
+          <td>5.67</td>
+        </tr>
+        <tr><td>...</td></tr>
+      </tbody>
+    </table>
+    <p>To load our TSV data in Pig, we load it and name the columns with PigStorage.</p>
+    <pre line="1" lang="pig">daily_ticker = load '/user/hdfs/stock.txt.gz' using PigStorage() as (
+  stock_symbol:chararray,
+  date:chararray,
+  stock_price_open:float,
+  stock_price_high:float,
+  stock_price_low:float,
+  stock_price_close:float,
+  stock_volume:long,
+  stock_price_adj_close:float );</pre>
+  <p>To see the schema of our data, click DESCRIBE or type: <code>describe daily_ticker</code>.</p>
+  <pre line="1" lang="pig">daily_ticker: {
+    stock_symbol: chararray,
+    date: chararray,
+    stock_price_open: float,
+    stock_price_high: float,
+    stock_price_low: float,
+    stock_price_close: float,
+    stock_volume: long,
+    stock_price_adj_close: float
+}</pre>
+  <p>To see a sample of our data, click ILLUSTRATE, or type: <code>illustrate daily_ticker</code>.</p>
+  <pre line="1">(AEG,2009-01-26T00:00:00.000Z,5.24,5.48,4.97,5.1,1508900,5.1)
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  | daily_ticker     | stock_symbol:chararray   | date:chararray           | stock_price_open:float   | stock_price_high:float   | stock_price_low:float   | stock_price_close:float   | stock_volume:long   | stock_price_adj_close:float   | 
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  |                  | AEG                      | 2009-01-26T00:00:00.000Z | 5.24                     | 5.48                     | 4.97                    | 5.1                       | 1508900             | 5.1                           | 
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------</pre>
+    <p>Now lets store our data some place new.</p>
+    <pre line="1">store daily_ticker into '/user/hdfs/stock_ticker';</pre>
+    <p>When we don't specify what kind of storage we mean, Pig assumes PigStorage with tab-delimeters. Just like our input format. Now click 'Execute.'</p>
+    <p>Note that this takes a bit longer than describe or illustrate. That is because Hadoop is a batch system, and must now process our data on the cluster. DESCRIBE and ILLUSTRATE are shortcuts that speed our development in between batch runs on Hadoop with Execute.</p>
+  </body>
+</html>
