@@ -306,13 +306,13 @@ def notify_job_complited(request, job_id):
     job_result = _job_result(request, job)
     if job.email_notification:
         subject = 'Query result'
-        body = "Your PIG script '%s' started at %s has been complited.\
+        body = "Your PIG script '%s' started at %s has been complited.\n\
         You can check result at the following link %s" % (
             job.script.title,
             job.start_time.strftime('%d.%m.%Y %H:%M'),
-            reverse("show_job_result", job_id)
+            request.build_absolute_uri(reverse("show_job_result", args=[job_id]))
         )
-        job.user.email_user(subject, body)
+        job.script.user.email_user(subject, body)
     return HttpResponse("Done")
 
 
