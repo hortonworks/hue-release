@@ -299,9 +299,16 @@ function ping_job(job_id){
           
 }
 
+function explain_progres(percent){
+              percent += 10;
+              $(".bar").css("width", percent+"%");
+              if(percent==100) { return false; }
+              window.setTimeout("explain_progres("+percent+");", 300);
+         };
 
 $(document).ready(function(){
 
+$('#explain').click(function(){explain_progres(0)});
 
 % if result.get("job_id") and result.get("JOB_SUBMITED"):
 percent = 10;
