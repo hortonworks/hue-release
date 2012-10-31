@@ -65,6 +65,9 @@ ${layout.menubar(section='tables')}
 <div class="container-fluid">
 	<h1 id="describe-header">HCatalog Table Metadata: ${table['tableName']}</h1>
 	<div id="browse-spinner"><h1>Getting partition location...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+	<div id="drop-table-spinner"><h1>Dropping table...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+	<div id="drop-partition-spinner"><h1>Dropping table partition...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+	<div id="import-data-spinner"><h1>Importing data...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 	<div class="row-fluid">
 		<div class="span3">
 			<div class="well sidebar-nav">
@@ -142,7 +145,7 @@ ${layout.menubar(section='tables')}
 	  </div>
 	</div>
 	<div class="modal-footer">
-		<input type="submit" class="btn primary" value="Yes"/>
+		<a href="#" class="btn primary submitDropTable">Yes</a>
 		<a href="#" class="btn secondary hideModal">No</a>
 	</div>
 	</form>
@@ -152,7 +155,7 @@ ${layout.menubar(section='tables')}
 % if is_table_partitioned and has_partitions:
   % for indx, part in enumerate(table['partitions']):
 <div id="dropPartition${indx}" class="modal hide fade">
-	<form id="dropPartitionForm" method="POST" action="${ url("hcatalog.views.drop_partition", table=table_name) }">
+	<form id="dropPartitionForm">
 	<input id="partition_name" type="hidden" value=${part['name']} name="partition_name"/>
 	<div class="modal-header">
 		<a href="#" class="close" data-dismiss="modal">&times;</a>
@@ -163,7 +166,7 @@ ${layout.menubar(section='tables')}
 	  </div>
 	</div>
 	<div class="modal-footer">
-		<input type="submit" class="btn primary submitDropPartition" value="Yes"/>
+		<a href="#" class="btn primary submitDropPartition">Yes</a>
 		<a href="#" class="btn secondary hideModal">No</a>
 	</div>
 	</form>
@@ -172,7 +175,7 @@ ${layout.menubar(section='tables')}
 % endif
 
 <div id="importData" class="modal hide fade">
-	<form method="POST" action="${ url("hcatalog.views.load_table", table=table_name) }" class="form-stacked">
+	<form id="importDataForm" class="form-stacked">
 	<div class="modal-header">
 		<a href="#" class="close" data-dismiss="modal">&times;</a>
 		<h3>Import data</h3>
@@ -217,7 +220,7 @@ ${layout.menubar(section='tables')}
 	</div>
 
 	<div class="modal-footer">
-		<input type="submit" class="btn primary" value="Submit"/>
+		<a href="#" class="btn primary submitImportData" data-dismiss="modal">Submit</a>
 		<a href="#" class="btn secondary" data-dismiss="modal">Cancel</a>
 	</div>
 	</form>
@@ -232,7 +235,7 @@ ${layout.menubar(section='tables')}
 		overflow-y:scroll;
 		margin-top:10px;
 	}
-	#browse-spinner {
+	#browse-spinner, #drop-table-spinner, #drop-partition-spinner, #import-data-spinner {
 		display:none;
 	}
 </style>
@@ -240,12 +243,6 @@ ${layout.menubar(section='tables')}
 <script type="text/javascript" charset="utf-8">
 	$(document).ready(function(){
 	
-		$('.browsePartitionLocation').click(function() {
-			$('#describe-header').hide();
-       		$('#browse-spinner').show();
-			return false;
-		});
-
 		$("#filechooser").jHueFileChooser({
 			onFileChoose: function(filePath){
 				$(".loadPath").val(filePath);
@@ -259,10 +256,36 @@ ${layout.menubar(section='tables')}
 			"bInfo": false,
 			"bFilter": false
 		});
+		
+		$(".submitImportData").click(function(){
+		    $('#describe-header').hide();
+		    $('#import-data-spinner').show();
+			$(this).closest(".modal").modal("hide");
+			var formData = $('#importDataForm').serialize();
+			$.post("${url("hcatalog.views.load_table", table=table_name)}", formData, function(data){
+            if (data.on_success_url != "")
+            {
+                window.location.replace(data.on_success_url);
+                return;
+            } 
+            }, "json");
+		});		
 
 		$.getJSON("${ url("hcatalog.views.drop_table", table=table_name) }",function(data){
 			$(".dropTableMessage").text(data.title);
 		});
+		$(".submitDropTable").click(function(){
+		    $('#describe-header').hide();
+		    $('#drop-table-spinner').show();
+			$(this).closest(".modal").modal("hide");
+			$.post("${url("hcatalog.views.drop_table", table=table_name)}", function(data){
+            if (data.on_success_url != "")
+            {
+                window.location.replace(data.on_success_url);
+                return;
+            } 
+            }, "json");
+		});		
 		$(".hideModal").click(function(){
 			$(this).closest(".modal").modal("hide");
 		});
@@ -291,8 +314,21 @@ ${layout.menubar(section='tables')}
 		$.getJSON("${ url("hcatalog.views.drop_partition", table=table_name) }",function(data){
 			$(".dropPartitionMessage").text(data.title);
 		});
-		
+		$(".submitDropPartition").click(function(){
+		    $('#describe-header').hide();
+		    $('#drop-partition-spinner').show();
+			$(this).closest(".modal").modal("hide");
+			$.post("${url("hcatalog.views.drop_partition", table=table_name)}", {partition_name:$(this).closest(".modal").find("#partition_name").attr('value')}, function(data){
+            if (data.on_success_url != "")
+            {
+                window.location.replace(data.on_success_url);
+                return;
+            } 
+            }, "json");
+		});		
 		$(".browsePartitionLocation").click(function(){
+			$('#describe-header').hide();
+       		$('#browse-spinner').show();
             $.post("${url("hcatalog.views.browse_partition", table=table_name)}", {partition_name:$(this).attr('partitionname')}, function(data){
             if (data.url != "")
             {

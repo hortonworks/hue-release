@@ -103,10 +103,11 @@ def drop_table(request, table):
     tables = []
     try:
       hcat_client().drop_table(table)
-      tables = hcat_client().get_tables()
     except Exception, ex:
       raise PopupException('Drop table', title="Drop table", detail=str(ex))
-    return render("show_tables.mako", request, dict(tables=tables,))
+    on_success_url = urlresolvers.reverse(show_tables)
+    result = {'on_success_url':on_success_url}
+    return HttpResponse(json.dumps(result))
 
 
 def load_table(request, table):
@@ -148,7 +149,9 @@ def load_table(request, table):
       import traceback
       error = traceback.format_exc()
       raise PopupException('Error loading data into the table', title="Error loading data into the table", detail=error)
-    return read_table(request, table)
+    on_success_url = urlresolvers.reverse(describe_table, kwargs=dict(table=table))
+    result = {'on_success_url':on_success_url}
+    return HttpResponse(json.dumps(result))
   else:
     form = hcatalog.forms.LoadDataForm(table_obj)
     return render("load_table.mako", request, dict(form=form, table=table, action=request.get_full_path()))
@@ -188,7 +191,9 @@ def drop_partition(request, table):
       hcat_client().drop_partition(table, partition_name)
     except Exception, ex:
       raise PopupException('Drop partition', title="Drop partition", detail=str(ex))
-    return describe_table(request, table)
+    on_success_url = urlresolvers.reverse(describe_table, kwargs=dict(table=table))
+    result = {'on_success_url':on_success_url}
+    return HttpResponse(json.dumps(result))
 
 
 def pig_view(request, table=None):
