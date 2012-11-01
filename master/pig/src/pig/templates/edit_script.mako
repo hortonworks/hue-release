@@ -154,11 +154,17 @@ udfs = UDF.objects.all()
             % endif	
 	<input type="hidden" name="email" class='intoemail' />
 	<div class="actions">
-	  <input class="btn primary" type="submit" name="submit" value="Save" />
+	  <input class="btn primary" type="submit" name="submit" id="save_button"
+                 value="Save" 
+                 % if result.get("id"):
+                 disabled="disabled"
+                 % endif
+                 />
 	  <input class="btn primary" type="button" id="start_job"
 	  value="Execute" />	  
           <input class="btn primary" type="button" id="kill_job"  value="Kill job" style="display:none" />
-	  <input class="btn primary" type="submit" name="submit" value="Explain" />
+	  <input class="btn primary explain" type="button" id="explain" value="Explain" />
+	  <input class="btn primary explain" type="button" id="check" value="Syntax check" />
 	</div>
 	</form>
       </div>
@@ -308,7 +314,26 @@ function explain_progres(percent){
 
 $(document).ready(function(){
 
-$('#explain').click(function(){explain_progres(0)});
+    $('.explain').click(function(){explain_progres(0)});
+    $('.explain').live("click", function(){
+        if (!$("#pig_script_form").valid()) return false;
+        $("#id_text").attr("disabled", "disabled");
+        percent = 2;
+        $(".bar").css("width", percent+"%");
+	var t_s = $(this).attr('value')
+        pig_editor.save();
+        python_editor.save();
+        $.ajax({
+            url: "${url('explain')}?t_s=" + t_s,
+            dataType: "json",
+            type: "POST",
+            data: $("#pig_script_form").serialize(),
+            success: function(data){
+                $("#job_info").text('');
+                $("#job_info").append(data.text);
+            }
+        });
+    });
 
 % if result.get("job_id") and result.get("JOB_SUBMITED"):
 percent = 10;
