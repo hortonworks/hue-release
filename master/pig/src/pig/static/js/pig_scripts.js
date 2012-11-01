@@ -1,4 +1,5 @@
 var pigKeywordsT=[];
+var dollarSaveParamTrig = 0;
 
 function autosave(){
   $("#save_button").removeAttr("disabled");
@@ -27,8 +28,8 @@ function listdir(_context){
       //console.log(data);
       if(data.hasOwnProperty("FileStatuses")){
         for (var i = 0; i < data.FileStatuses.FileStatus.length; i++) {
-            if(data.FileStatuses.FileStatus[i].pathSuffix !="")
-              contentList.push( data.FileStatuses.FileStatus[i].pathSuffix);
+          if(data.FileStatuses.FileStatus[i].pathSuffix !="")
+            contentList.push( data.FileStatuses.FileStatus[i].pathSuffix);
         }
       }
     }
@@ -38,7 +39,7 @@ function listdir(_context){
 
 function getTables(){
   $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table?user.name=hue", function(data){
-  //$.get("tables.php", function(data){
+    //$.get("tables.php", function(data){
     if(data.hasOwnProperty("tables"))
     {
       for (var i = 0; i < data.tables.length; i++) {
@@ -62,7 +63,20 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
   onCursorActivity: function() {
     pig_editor.matchHighlight("CodeMirror-matchhighlight");
   },
-  extraKeys: {"Ctrl-Space": function(cm) { CodeMirror.simpleHint(cm, CodeMirror.pigHint);  }},
+  extraKeys: {
+    "Ctrl-Space": function(cm) { CodeMirror.simpleHint(cm, CodeMirror.pigHint);  },
+    "Shift-4":function(cm){
+      $("#show-modal-for-dollar")
+          .modal("show")
+          .on('hide', function() {
+            if(dollarSaveParamTrig==1){
+              cm.replaceRange($("#show-modal-for-dollar").find("input").val(),cm.getCursor()  );
+              cm.focus();
+            }
+            dollarSaveParamTrig=0;
+          });
+    }
+  },
   onKeyEvent: function(cm,key){
     var lineNumber=cm.getCursor().line;
     var curLine=cm.getLine(lineNumber);
@@ -87,6 +101,9 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
 
       var dirList=listdir(curText);
 
+      if(dirList.length<2)
+        dirList.push("");
+
       change.from.ch=from.getCursor().ch;
 
       var dirArr={
@@ -103,10 +120,10 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
       //change.from.ch=from.getCursor().ch;
 
       /*var tablesArr={
-        from: change.from,
-        list: pigKeywordsT,
-        to: change.to
-      };*/
+       from: change.from,
+       list: pigKeywordsT,
+       to: change.to
+       };*/
       // CodeMirror.simpleHint(from, CodeMirror.pigHint, "", tablesArr );
 
       CodeMirror.simpleHint(from, CodeMirror.pigHint);
@@ -187,6 +204,11 @@ $("#id_hdfs_file").change(function() {
 $(document).ready(function(){
 
   getTables();
+
+  $("#save-param-modal-for-dollar").click(function(){
+    dollarSaveParamTrig=1;
+    $("#show-modal-for-dollar").modal("hide");
+  })
 
   $("#id_title").live('keyup', autosave);
 

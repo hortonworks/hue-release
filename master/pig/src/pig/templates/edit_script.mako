@@ -31,6 +31,22 @@ udfs = UDF.objects.all()
 
 ## Use double hashes for a mako template comment
 ## Main body
+<div id="show-modal-for-dollar" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal">&times;</a>
+        <h3>Please specify parameters for this query:</h3>
+    </div>
+    <div class="modal-body">
+        <div class="clearfix">
+            <input  value="" type='text'  class=""  />
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button id="save-param-modal-for-dollar" class="btn primary">Save</button>
+    </div>
+</div>
+
+
 <div class="container-fluid">
   <div class="row-fluid">
     <div class="span3" style="float: left;">
