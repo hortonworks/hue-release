@@ -306,10 +306,14 @@ function ping_job(job_id){
 }
 
 function explain_progres(percent){
-              percent += 10;
+	      var t_out =300;
+              if(percent==0) { t_out = 1000; }
               $(".bar").css("width", percent+"%");
-              if(percent==100) { return false; }
-              window.setTimeout("explain_progres("+percent+");", 300);
+              percent += 10;
+              if(percent==100) {
+                $(".bar").css("width", percent+"%");
+		return false; }
+              window.setTimeout("explain_progres("+percent+");", t_out);
          };
 
 $(document).ready(function(){
@@ -317,7 +321,7 @@ $(document).ready(function(){
     $('.explain').click(function(){explain_progres(0)});
     $('.explain').live("click", function(){
         if (!$("#pig_script_form").valid()) return false;
-        $("#id_text").attr("disabled", "disabled");
+        $("#id_text, .explain, #start_job, #kill_job").attr("disabled", "disabled");
         percent = 2;
         $(".bar").css("width", percent+"%");
 	var t_s = $(this).attr('value')
@@ -331,6 +335,7 @@ $(document).ready(function(){
             success: function(data){
                 $("#job_info").text('');
                 $("#job_info").append(data.text);
+                $("#id_text, .explain, #start_job, #kill_job").removeAttr("disabled");
             }
         });
     });
