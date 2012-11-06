@@ -331,7 +331,7 @@ def check_script_title(request):
     """
     Check script name for unique.
     """
-    result = PigScript.objects.filter(title=request.GET.get("title")).count()
+    result = PigScript.objects.filter(title=request.GET.get("title"), saved=True, user=request.user).count()
     return HttpResponse(json.dumps(not bool(result)))
 
 
