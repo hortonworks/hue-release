@@ -31,18 +31,20 @@ udfs = UDF.objects.all()
 
 ## Use double hashes for a mako template comment
 ## Main body
-<div id="show-modal-for-dollar" class="modal hide fade">
+<div id="show-modal-for-var" class="modal hide fade">
     <div class="modal-header">
         <a href="#" class="close" data-dismiss="modal">&times;</a>
-        <h3>Please specify parameters for this query:</h3>
+        <h3>Please specify parameters for this variable(s):</h3>
     </div>
     <div class="modal-body">
         <div class="clearfix">
-            <input  value="" type='text'  class=""  />
+           <div class="modal-for-var-input-warp">
+
+           </div>
         </div>
     </div>
     <div class="modal-footer">
-        <button id="save-param-modal-for-dollar" class="btn primary">Save</button>
+        <button id="save-values-for-var" class="btn primary">Save</button>
     </div>
 </div>
 
@@ -267,13 +269,14 @@ var percent = 0;
 function get_job_result(job_id)
 {
     $.post("${url("get_job_result")}", {job_id: job_id}, function(data){
-        if (data.error==="" && data.stdout==="" && data.exit==="")
+        if (data.error==="" && data.stdout==="")
         {
             get_job_res_timer = window.setTimeout("get_job_result('"+job_id+"');", 3000);
             percent += 1;
             $(".bar").css("width", percent+"%");
             return;
         }
+
 if (parseInt(data.exit)==0) $(".bar").addClass("bar-success"); 
 else $(".bar").addClass("bar-danger");
 

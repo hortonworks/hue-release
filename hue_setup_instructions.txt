@@ -19,6 +19,7 @@ to the end of the file
 a) Change dfs.block.access.token.enable to false
 b) Change dfs.permissions to false
 c) Change dfs.web.ugi to hue,hue
+d) Change dfs.http.adres to localhost:50070
 * I'm not sure that all this changes are nesesary
 
 4) edit these files:
