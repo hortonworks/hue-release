@@ -37,7 +37,7 @@ for tutorial_name in listfolders(current_dir):
             section.save()
             del all_sections[[s.id for s in all_sections].\
                              index(section.id)]
-        except Section.DoesNotExists:
+        except Section.DoesNotExist:
             section = Section(order = lesson_order,
                               lesson_name = tutorial_name,
                               add_time = int(time()),
@@ -59,7 +59,7 @@ for tutorial_name in listfolders(current_dir):
                                   index(step_obj.id)]
                     step_obj.file_path = step_path
                     step_obj.save()
-                except Step.DoesNotExists:
+                except Step.DoesNotExist:
                     step_obj = Step(order = step_order, file_path = step_path,
                                     add_time = int(time()), section = section)
                     step_obj.save()
