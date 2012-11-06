@@ -18,5 +18,5 @@ cd $RUN_DIR
 [ ! -L git_files ] && ln -s git_files_all/tutorials git_files
 
 echo -n "Updating DB...  "
-/home/tutorials/.env/bin/python run.py >/dev/null
+$RUN_DIR/../../.env/bin/python run.py >/dev/null
 echo "Done"
