@@ -115,8 +115,7 @@ udfs = UDF.objects.all()
                     <li class="dropdown-submenu">
                       <a href="#">Data processing functions</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">FOREACH %DATA%</a></li>
-                        <li><a href="#">GENERATE %VAR%</a></li>
+                        <li><a href="#">FOREACH %DATA% GENERATE %NEW_DATA%</a></li>
                         <li><a href="#">FILTER %VAR% BY %COND%</a></li>
                         <li><a href="#">GROUP %VAR% BY %VAR%</a></li>
                         <li><a href="#">COGROUP %VAR% BY %VAR%</a></li>
@@ -136,8 +135,8 @@ udfs = UDF.objects.all()
                     <li class="dropdown-submenu">
                       <a href="#">Debug</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">EXPLAINE %VAR%;</a></li>
-                        <li><a href="#">ILUSTRATE %VAR%;</a></li>
+                        <li><a href="#">EXPLAIN %VAR%;</a></li>
+                        <li><a href="#">ILLUSTRATE %VAR%;</a></li>
                         <li><a href="#">DESCRIBE %VAR%;</a></li>
                       </ul>
                     </li>
@@ -151,9 +150,7 @@ udfs = UDF.objects.all()
                       <a href="#">Python UDF</a>
                       <ul class="dropdown-menu">
                         <li>
-                          <a href="#" data-python="true">
-                            Register 'python_udf.py' using jython as
-                            myfuncs;
+                          <a href="#" data-python="true">Register 'python_udf.py' using jython as myfuncs;
                           </a>
                         </li>
                       </ul>
