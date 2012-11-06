@@ -43,8 +43,7 @@ from pig.CommandPy import CommandPy
 def index(request, obj_id=None):
     result = {}
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
-    result['udfs'] = UDF.objects.all()
-    disable = False
+    result['udfs'] = UDF.objects.all()    
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if not form.is_valid():
@@ -65,26 +64,15 @@ def index(request, obj_id=None):
                 instance.user = request.user
                 instance.saved = True
                 instance.save()
-                obj_id = instance.pk
 
-        #runing Explain
-        if request.POST.get('submit') == 'Explain':
-            script_path = '/tmp/%s.pig' % '_'.join(request.POST['title'].replace('(', '').replace(')', '').split())
-            pig_src = request.POST['pig_script']
-            pig_src = augmate_udf_path(pig_src, request)
-            pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
-            pig = CommandPy("pig -e explain -script %s" % script_path, script_path, pig_src)
-            result['stdout'] = pig.returnCode()
-            #Sending 'script_id' to 'result' in order to avoid losing it
-            if request.POST.get("script_id"):
-                result.update({'id': request.POST['script_id']})
-            disable = True
+        return redirect(reverse("view_script", args=[instance.pk]))
 
+        
     if not request.GET.get("new"):
         result.update(request.session.get("autosave", {}))
 
     #If we have obj_id, we renew or get instance to send it into form.
-    if obj_id and not disable:
+    if obj_id:
         instance = get_object_or_404(PigScript, pk=obj_id)
         for field in instance._meta.fields:
             result[field.name] = getattr(instance, field.name)
