@@ -466,8 +466,8 @@ def view_results(request, id, first_row=0, last_result_len=0):
   save_form = SaveResultsForm()
   has_more = True
   last_result_len = long(last_result_len)
-  if last_result_len != 0 and len(results.data) != last_result_len:
-    has_more = False  
+  if (last_result_len != 0 and len(results.data) != last_result_len) or len(results.data) == 0:
+    has_more = False
   # Display the results
   return render('watch_results.mako', request, {
     'error': False,

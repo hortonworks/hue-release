@@ -35,6 +35,9 @@ import hcatalog.forms
 from hcatalog.views import describe_table, do_load_table
 from hcat_client import hcat_client
 
+import csv
+import StringIO
+
 LOG = logging.getLogger(__name__)
 
 def index(request):
@@ -241,6 +244,12 @@ def import_wizard(request):
 
         do_load_data = s1_file_form.cleaned_data.get('do_import')
         path = s1_file_form.cleaned_data['path']
+        path_tmp = path + '.tmp'
+        if request.fs.exists(path_tmp):
+          if do_load_data:
+            path = path_tmp
+          else:
+            request.fs.remove(path_tmp)
         return _submit_create_and_load(request, proposed_query, table_name, path, do_load_data)
   else:
     s1_file_form = hcatalog.forms.CreateByImportFileForm()
@@ -293,11 +302,42 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
     LOG.exception(msg)
     raise PopupException(msg)
 
+  try:
+    csvfile = fs.open(path)
+    raw_file_content = csvfile.read()
+    file_content = csv.reader(StringIO.StringIO(raw_file_content), delimiter=str(delim)[0])
+    fields_list = [row for row in file_content]
+    csvfile.close()
+  except IOError, ex:
+    msg = "Failed to open file '%s': %s" % (path, ex)
+    LOG.exception(msg)
+    raise PopupException(msg)
+
   col_names = []
   n_cols = max([ len(row) for row in fields_list ])
+  new_fields_list = []
+  new_fields_to_store = []
+  for row in fields_list:
+    new_row = []
+    for field in row:
+      new_row.append(field.replace(delim, ''))
+    new_fields_list.append(new_row)
+    new_fields_to_store.append(delim.join(new_row))
+  fields_list = new_fields_list
   if parse_first_row_as_header and len(fields_list) > 0:
     col_names = fields_list[0]
     fields_list = fields_list[1:]
+    # creating tmp file to import data from
+    try:
+      path_tmp = path + '.tmp'
+      if not fs.exists(path_tmp):
+        csvfile_tmp = fs.open(path_tmp, 'w')
+        csvfile_tmp.write('\n'.join(new_fields_to_store[1:]))
+        csvfile_tmp.close()
+    except IOError, ex:
+      msg = "Failed to open file '%s': %s" % (path, ex)
+      LOG.exception(msg)
+      raise PopupException(msg)
     if len(col_names) < n_cols:
       for i in range(len(col_names) + 1, n_cols + 1):
         col_names.append('col_%s' % (i,))
