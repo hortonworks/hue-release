@@ -150,7 +150,7 @@ udfs = UDF.objects.all()
                       <a href="#">Python UDF</a>
                       <ul class="dropdown-menu">
                         <li>
-                          <a href="#" data-python="true">Register 'python_udf.py' using jython as myfuncs;
+                          <a href="#" data-python="true">REGISTER 'python_udf.py' USING jython AS myfuncs;
                           </a>
                         </li>
                       </ul>

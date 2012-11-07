@@ -1,5 +1,6 @@
 var pigKeywordsT=[];
 var dollarSaveParamTrig = 0;
+var varSaveParamTrig = 0;
 
 function autosave(){
   $("#save_button").removeAttr("disabled");
@@ -10,6 +11,7 @@ function autosave(){
 }
 
 function listdir(_context){
+  console.log("listdir:"+_context);
   // Context - Full path, that user have typed. e.g. /tmp/dir1/
   var contentList=[];
   _context=_context.replace(/'/g, "" ).replace(/"/g, "" );
@@ -55,6 +57,89 @@ function getTableFields(table){
   });
 }
 
+function changeVarInEditorContent(e){
+  console.log(e.currentTarget.id); // = explain
+  var html="";
+  var editorContent=pig_editor.getValue();
+  var found_var=editorContent.match(/\$\S+/g);
+
+  if(found_var != null && found_var.length >0){
+    found_var.map(function(elem,i){
+      html+='<label>'+elem+':</label><input name="'+elem+'"  /><br/><br/>';
+    })
+    $(".modal-for-var-input-warp").html( html);
+
+    $("#show-modal-for-var")
+        .addClass("cur-"+e.currentTarget.id)
+        .modal("show")
+        .on('hide', function() {
+          if(varSaveParamTrig==1){
+            var out_html="";
+
+            $(".modal-for-var-input-warp > input").each(function(){
+              out_html+='<input class="var-input-for-form-submit" type="hidden" name="'+$(this).attr("name")+'" value="'+$(this).val()+'" />';
+            });
+            $(".var-input-for-form-submit").remove();
+            $("#pig_script_form").append( out_html );
+            $(".modal-for-var-input-warp").html( "" );
+
+            if($("#show-modal-for-var").hasClass("cur-explain"))
+              explain_button_click();;
+
+            if($("#show-modal-for-var").hasClass("cur-start_job"))
+              start_job_submit_form();
+          }
+          $("#show-modal-for-var").removeClass("cur-start_job").removeClass("cur-explain");
+          varSaveParamTrig=0;
+        });
+
+  }
+}
+
+function start_job_submit_form(){
+  if (!$("#pig_script_form").valid()) return false;
+  $("#start_job").hide();
+  $("#id_text").attr("disabled", "disabled");
+  percent = 2;
+  $(".bar").css("width", percent+"%");
+  pig_editor.save();
+  python_editor.save()
+  $.ajax({
+    url: "http://ec2-75-101-213-8.compute-1.amazonaws.com:8000/pig/start_job/",
+    dataType: "json",
+    type: "POST",
+    data: $("#pig_script_form").serialize(),
+    success: function(data){
+      $("#kill_job").show();
+      $("#job_info").append(data.text);
+      job_id = data.job_id;
+      ping_job(job_id);
+    }
+  });
+}
+
+function explain_button_click(){
+  if (!$("#pig_script_form").valid()) return false;
+  $("#id_text, .explain, #start_job, #kill_job").attr("disabled", "disabled");
+  percent = 2;
+  $(".bar").css("width", percent+"%");
+  var t_s = $(this).attr('value')
+  pig_editor.save();
+  python_editor.save();
+  $.ajax({
+    url: "/pig/explain/?t_s=" + t_s,
+    dataType: "json",
+    type: "POST",
+    data: $("#pig_script_form").serialize(),
+    success: function(data){
+      $("#job_info").text('');
+      $("#job_info").append(data.text);
+      $("#id_text, .explain, #start_job, #kill_job").removeAttr("disabled");
+    }
+  });
+}
+
+
 var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
   lineNumbers: true,
   matchBrackets: true,
@@ -64,7 +149,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     pig_editor.matchHighlight("CodeMirror-matchhighlight");
   },
   extraKeys: {
-    "Ctrl-Space": function(cm) { CodeMirror.simpleHint(cm, CodeMirror.pigHint);  },
+    "Ctrl-Space": function(cm) { CodeMirror.simpleHint(cm, CodeMirror.pigHint);  }/*,
     "Shift-4":function(cm){
       $("#show-modal-for-dollar")
           .modal("show")
@@ -75,7 +160,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
             }
             dollarSaveParamTrig=0;
           });
-    }
+    }*/
   },
   onKeyEvent: function(cm,key){
     var lineNumber=cm.getCursor().line;
@@ -98,10 +183,11 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     var prevKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,1);
 
     if((startKeys== "'/" || startKeys== '"/')&&(lastKey=="/")){
+      console.log("change:"+curText)
 
       var dirList=listdir(curText);
 
-      if(dirList.length<2)
+      if(dirList.length<2 && dirList.length>0)
         dirList.push("");
 
       change.from.ch=from.getCursor().ch;
@@ -112,7 +198,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
         to: change.from
       };
 
-      if(dirList.length>0)
+      if(dirList.length>0 && dirList[0].trim()!="")
         CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr );
 
     }else if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey))){
@@ -205,9 +291,24 @@ $(document).ready(function(){
 
   getTables();
 
+  $(".explain").on("click", function(event){
+    explain_progres(0);
+    changeVarInEditorContent(event);
+  });
+
+
+  $("#start_job").on("click", function(event){
+    changeVarInEditorContent(event);
+  });
+
   $("#save-param-modal-for-dollar").click(function(){
     dollarSaveParamTrig=1;
     $("#show-modal-for-dollar").modal("hide");
+  })
+
+  $("#save-values-for-var").click(function(){
+    varSaveParamTrig=1;
+    $("#show-modal-for-var").modal("hide");
   })
 
   $("#id_title").live('keyup', autosave);
