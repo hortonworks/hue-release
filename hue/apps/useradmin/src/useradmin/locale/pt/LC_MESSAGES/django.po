@@ -1,0 +1,560 @@
+# Portuguese translations for Hue.
+# Copyright (C) 2012 Cloudera
+# This file is distributed under the same license as the Hue project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2012-09-11 13:36-0700\n"
+"PO-Revision-Date: 2012-07-30 18:47-0700\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: pt <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
+
+#: src/useradmin/models.py:124
+#, python-format
+msgid "You do not have permissions to %(description)s."
+msgstr "Não tem permissões para %(description)s."
+
+#: src/useradmin/views.py:58
+msgid "You must be a superuser to delete users."
+msgstr "Tem de ser um super-utilizador para poder eliminar utilizadores."
+
+#: src/useradmin/views.py:65
+msgid "You cannot remove yourself."
+msgstr "Não pode remover-se a si próprio."
+
+#: src/useradmin/views.py:73
+msgid "The user was deleted !"
+msgstr ""
+
+#: src/useradmin/views.py:76
+msgid "User not found."
+msgstr "Utilizador não encontrado."
+
+#: src/useradmin/views.py:82
+msgid "You must be a superuser to delete groups."
+msgstr "Tem de ser um super-utilizador para poder eliminar grupos."
+
+#: src/useradmin/views.py:94
+msgid "The default user group may not be deleted."
+msgstr "O grupo de utilizadores predefinido não pode ser eliminado."
+
+#: src/useradmin/views.py:99
+msgid "The group was deleted !"
+msgstr ""
+
+#: src/useradmin/views.py:102
+msgid "Group not found."
+msgstr "Grupo não encontrado."
+
+#: src/useradmin/views.py:112 src/useradmin/views.py:296
+#: src/useradmin/templates/list_users.mako:44
+msgid "Username"
+msgstr "Nome de utilizador"
+
+#: src/useradmin/views.py:115 src/useradmin/views.py:299
+msgid "Required. 30 characters or fewer. No whitespaces or colons."
+msgstr "Necessário. 30 caracteres ou menos. Sem espaços ou dois pontos."
+
+#: src/useradmin/views.py:116 src/useradmin/views.py:300
+#: src/useradmin/views.py:365
+msgid "Whitespaces and ':' not allowed"
+msgstr "Os espaços e os \":\" não são permitidos"
+
+#: src/useradmin/views.py:117
+msgid "Password"
+msgstr "Palavra-passe"
+
+#: src/useradmin/views.py:118
+msgid "Password confirmation"
+msgstr "Confirmação da palavra-passe"
+
+#: src/useradmin/views.py:119 src/useradmin/views.py:306
+msgid "Create home directory"
+msgstr ""
+
+#: src/useradmin/views.py:120
+msgid "Create home directory if one doesn't already exist."
+msgstr ""
+
+#: src/useradmin/views.py:131
+msgid "Passwords do not match."
+msgstr "As palavras-passe não são iguais."
+
+#: src/useradmin/views.py:137
+msgid "You must specify a password when creating a new user."
+msgstr "Tem de especificar uma palavra-passe ao criar um novo utilizador."
+
+#: src/useradmin/views.py:179
+msgid "You must be a superuser to add or edit another user."
+msgstr ""
+"Tem de ser um super-utilizador para poder adicionar ou editar outro "
+"utilizador."
+
+#: src/useradmin/views.py:203
+msgid "You cannot make yourself inactive."
+msgstr "Não pode desactivar-se a si próprio."
+
+#: src/useradmin/views.py:215
+msgid "You cannot make yourself a superuser."
+msgstr "Não pode definir-se a si próprio como super-utilizador."
+
+#: src/useradmin/views.py:219
+msgid "User information updated"
+msgstr ""
+
+#: src/useradmin/views.py:228 src/useradmin/views.py:347
+#, python-format
+msgid "Cannot make home directory for user %s"
+msgstr ""
+
+#: src/useradmin/views.py:246
+msgid "You must be a superuser to add or edit a group."
+msgstr "Tem de ser um super-utilizador para poder adicionar ou editar um grupo."
+
+#: src/useradmin/views.py:257
+msgid "Group information updated"
+msgstr ""
+
+#: src/useradmin/views.py:278
+msgid "You must be a superuser to change permissions."
+msgstr "Tem de ser um super-utilizador para poder alterar permissões."
+
+#: src/useradmin/views.py:286
+msgid "Permission information updated"
+msgstr ""
+
+#: src/useradmin/views.py:301 src/useradmin/views.py:366
+msgid "Distinguished name"
+msgstr "Nome distinto"
+
+#: src/useradmin/views.py:302
+#: src/useradmin/management/commands/import_ldap_group.py:35
+#: src/useradmin/management/commands/import_ldap_user.py:33
+msgid "Whether or not the user should be imported by distinguished name."
+msgstr "Indica se o utilizador deve ou não ser importado por nome distinto."
+
+#: src/useradmin/views.py:307
+msgid "Create home directory for user if one doesn't already exist."
+msgstr ""
+
+#: src/useradmin/views.py:318
+#, python-format
+msgid "Too long: 30 characters or fewer and not %(username)s"
+msgstr "Demasiado longo: 30 caracteres ou menos e sem %(username)s"
+
+#: src/useradmin/views.py:335
+msgid "You must be a superuser to add another user."
+msgstr "Tem de ser um super-utilizador para poder adicionar outro utilizador."
+
+#: src/useradmin/views.py:351
+#, python-format
+msgid "Could not get LDAP details for user %(username)s"
+msgstr "Não foi possível obter os detalhes de LDAP do utilizador %(username)s"
+
+#: src/useradmin/views.py:363
+msgid ""
+"Required. 30 characters or fewer. May only contain letters, numbers, "
+"hyphens or underscores."
+msgstr ""
+"Necessário. 30 caracteres ou menos. Apenas letras, números, hífenes e "
+"underscores."
+
+#: src/useradmin/views.py:367
+msgid "Whether or not the group should be imported by distinguished name."
+msgstr "Indica se o grupo deve ser importado por nome distinto ou não."
+
+#: src/useradmin/views.py:371
+msgid "Import new members"
+msgstr "Importar novos membros"
+
+#: src/useradmin/views.py:372
+msgid "Import unimported or new users from the group."
+msgstr "Importar utilizadores não importados ou novos a partir do grupo."
+
+#: src/useradmin/views.py:375
+msgid "Create home directories"
+msgstr ""
+
+#: src/useradmin/views.py:376
+msgid ""
+"Create home directories for every member imported, if members are being "
+"imported."
+msgstr ""
+
+#: src/useradmin/views.py:387
+#, python-format
+msgid "Too long: 30 characters or fewer and not %(name)s"
+msgstr "Demasiado longo: 30 caracteres ou menos e sem %(name)s"
+
+#: src/useradmin/views.py:405
+msgid "You must be a superuser to add another group."
+msgstr "Tem de ser um super-utilizador para poder adicionar outro grupo."
+
+#: src/useradmin/views.py:417
+#, python-format
+msgid "Could not get LDAP details for group %(groupname)s"
+msgstr "Não foi possível obter os detalhes de LDAP do grupo %(groupname)s"
+
+#: src/useradmin/views.py:433
+msgid "You must be a superuser to sync the LDAP users/groups."
+msgstr ""
+"Tem de ser um super-utilizador para poder sincronizar utilizadores/grupos"
+" de LDAP."
+
+#: src/useradmin/views.py:447
+msgid "The import may not be complete, sync again"
+msgstr ""
+
+#: src/useradmin/views.py:471
+msgid "No active superuser configured."
+msgstr "Não existe um super-utilizador activo configurado."
+
+#: src/useradmin/views.py:473
+msgid "You cannot remove the last active superuser from the configuration."
+msgstr "Não pode remover o último super-utilizador activo da configuração."
+
+#: src/useradmin/views.py:656
+msgid "Group name may only contain letters, numbers, hyphens or underscores."
+msgstr "O nome do grupo pode conter apenas letras, números, hífenes e underscores."
+
+#: src/useradmin/views.py:671
+#, fuzzy
+msgid "members"
+msgstr "Membros"
+
+#: src/useradmin/views.py:672
+#, fuzzy
+msgid "permissions"
+msgstr "Permissões"
+
+#: src/useradmin/views.py:714
+#, fuzzy
+msgid "groups"
+msgstr "Grupos"
+
+#: src/useradmin/views.py:748
+msgid "Create Home Directories"
+msgstr ""
+
+#: src/useradmin/views.py:749
+msgid "Create home directory for every user, if one doesn't already exist."
+msgstr ""
+
+#: src/useradmin/management/commands/import_ldap_group.py:39
+msgid "Import users from the group."
+msgstr "Importar utilizadores a partir do grupo."
+
+#: src/useradmin/management/commands/import_ldap_group.py:48
+msgid "A group name must be provided."
+msgstr "É necessário indicar um nome de grupo."
+
+#: src/useradmin/management/commands/import_ldap_user.py:43
+msgid "A username must be provided."
+msgstr "É necessário indicar um nome de utilizador."
+
+#: src/useradmin/management/commands/useradmin_sync_with_unix.py:31
+msgid "Minimum UID to import (Inclusive)."
+msgstr "UID mínimo a importar (incluído)."
+
+#: src/useradmin/management/commands/useradmin_sync_with_unix.py:32
+msgid "Maximum UID to import (Exclusive)."
+msgstr "UID máximo a importar (não incluído)."
+
+#: src/useradmin/management/commands/useradmin_sync_with_unix.py:33
+msgid "Minimum GID to import (Inclusive)."
+msgstr "GID mínimo a importar (incluído)."
+
+#: src/useradmin/management/commands/useradmin_sync_with_unix.py:34
+msgid "Maximum GID to import (Exclusive)."
+msgstr "GID máximo a importar (não incluído)."
+
+#: src/useradmin/management/commands/useradmin_sync_with_unix.py:35
+msgid "Whether or not to check that the user's shell is not /bin/false."
+msgstr "Verificar ou não se a shell do utilizador não é /bin/false."
+
+#: src/useradmin/templates/confirm.mako:22
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: src/useradmin/templates/confirm.mako:25
+#: src/useradmin/templates/delete_group.mako:25
+#: src/useradmin/templates/delete_user.mako:25
+msgid "Yes"
+msgstr "Sim"
+
+#: src/useradmin/templates/delete_group.mako:22
+#, fuzzy
+msgid "Are you sure you want to delete"
+msgstr "Quer mesmo eliminar %(group_name)s?"
+
+#: src/useradmin/templates/delete_group.mako:22
+#: src/useradmin/templates/delete_user.mako:22
+msgid "?"
+msgstr ""
+
+#: src/useradmin/templates/delete_group.mako:26
+#: src/useradmin/templates/delete_user.mako:26
+msgid "No"
+msgstr "Não"
+
+#: src/useradmin/templates/delete_user.mako:22
+#, fuzzy
+msgid "Are you sure you want to delete "
+msgstr "Quer mesmo eliminar %(group_name)s?"
+
+#: src/useradmin/templates/edit_group.mako:26
+#: src/useradmin/templates/list_groups.mako:24
+#: src/useradmin/templates/list_groups.mako:28
+msgid "Hue Groups"
+msgstr "Grupos da Hue"
+
+#: src/useradmin/templates/edit_group.mako:47
+#, python-format
+msgid "Hue Groups - Edit group: %(name)s"
+msgstr "Grupos da Hue - Editar grupo: %(name)s"
+
+#: src/useradmin/templates/edit_group.mako:50
+msgid "Hue Groups - Add/Sync LDAP group"
+msgstr "Grupos da Hue - Adicionar/Sincronizar grupo de LDAP"
+
+#: src/useradmin/templates/edit_group.mako:52
+msgid "Hue Groups - Create group"
+msgstr "Grupos da Hue - Criar grupo"
+
+#: src/useradmin/templates/edit_group.mako:65
+msgid "Update group"
+msgstr "Actualizar grupo"
+
+#: src/useradmin/templates/edit_group.mako:68
+msgid "Add/Sync group"
+msgstr "Adicionar/Sincronizar grupo"
+
+#: src/useradmin/templates/edit_group.mako:70
+#: src/useradmin/templates/list_groups.mako:32
+msgid "Add group"
+msgstr "Adicionar grupo"
+
+#: src/useradmin/templates/edit_group.mako:73
+#: src/useradmin/templates/edit_permissions.mako:53
+#: src/useradmin/templates/edit_user.mako:70
+#: src/useradmin/templates/sync_ldap_users_groups.mako:49
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: src/useradmin/templates/edit_group.mako:82
+#: src/useradmin/templates/edit_group.mako:87
+#: src/useradmin/templates/edit_permissions.mako:62
+#: src/useradmin/templates/edit_user.mako:77
+msgid "Select all"
+msgstr "Seleccionar tudo"
+
+#: src/useradmin/templates/edit_group.mako:83
+#: src/useradmin/templates/edit_group.mako:88
+#: src/useradmin/templates/edit_permissions.mako:63
+#: src/useradmin/templates/edit_user.mako:78
+msgid "Search"
+msgstr "Pesquisar"
+
+#: src/useradmin/templates/edit_permissions.mako:23
+#: src/useradmin/templates/list_permissions.mako:25
+#: src/useradmin/templates/list_permissions.mako:29
+msgid "Hue Permissions"
+msgstr "Permissões da Hue"
+
+#: src/useradmin/templates/edit_permissions.mako:43
+#, python-format
+msgid "Hue Permissions - Edit app: %(app)s"
+msgstr "Permissões da Hue - Editar aplicação: %(app)s"
+
+#: src/useradmin/templates/edit_permissions.mako:52
+msgid "Update permission"
+msgstr "Actualizar permissão"
+
+#: src/useradmin/templates/edit_user.mako:24
+#: src/useradmin/templates/list_users.mako:24
+#: src/useradmin/templates/list_users.mako:28
+msgid "Hue Users"
+msgstr "Utilizadores da Hue"
+
+#: src/useradmin/templates/edit_user.mako:44
+#, python-format
+msgid "Hue Users - Edit user: %(username)s"
+msgstr "Utilizadores da Hue - Editar utilizador: %(username)s"
+
+#: src/useradmin/templates/edit_user.mako:47
+msgid "Hue Users - Add/Sync LDAP user"
+msgstr "Utilizadores da Hue - Adicionar/Sincronizar utilizador de LDAP"
+
+#: src/useradmin/templates/edit_user.mako:49
+msgid "Hue Users - Create user"
+msgstr "Adicionar/Sincronizar - Criar utilizador"
+
+#: src/useradmin/templates/edit_user.mako:62
+msgid "Update user"
+msgstr "Actualizar utilizador"
+
+#: src/useradmin/templates/edit_user.mako:65
+msgid "Add/Sync user"
+msgstr "Adicionar/Sincronizar utilizador"
+
+#: src/useradmin/templates/edit_user.mako:67
+#: src/useradmin/templates/list_users.mako:32
+msgid "Add user"
+msgstr "Adicionar utilizador"
+
+#: src/useradmin/templates/layout.mako:32
+msgid "Users"
+msgstr "Utilizadores"
+
+#: src/useradmin/templates/layout.mako:33
+#: src/useradmin/templates/list_permissions.mako:40
+#: src/useradmin/templates/list_users.mako:48
+msgid "Groups"
+msgstr "Grupos"
+
+#: src/useradmin/templates/layout.mako:34
+#: src/useradmin/templates/list_groups.mako:45
+msgid "Permissions"
+msgstr "Permissões"
+
+#: src/useradmin/templates/list_groups.mako:33
+msgid "Add/Sync LDAP group"
+msgstr "Adicionar/Sincronizar grupo de LDAP"
+
+#: src/useradmin/templates/list_groups.mako:37
+#: src/useradmin/templates/list_permissions.mako:32
+#: src/useradmin/templates/list_users.mako:38
+msgid "Filter: "
+msgstr "Filtro: "
+
+#: src/useradmin/templates/list_groups.mako:37
+msgid "Search for group name, members, etc..."
+msgstr "Pesquisar por nome de grupo, membros, etc..."
+
+#: src/useradmin/templates/list_groups.mako:43
+msgid "Group Name"
+msgstr "Nome de grupo"
+
+#: src/useradmin/templates/list_groups.mako:44
+msgid "Members"
+msgstr "Membros"
+
+#: src/useradmin/templates/list_groups.mako:59
+#, python-format
+msgid "Edit %(groupname)s"
+msgstr "Editar %(groupname)s"
+
+#: src/useradmin/templates/list_groups.mako:59
+#: src/useradmin/templates/list_permissions.mako:54
+#: src/useradmin/templates/list_users.mako:68
+msgid "Edit"
+msgstr "Editar"
+
+#: src/useradmin/templates/list_groups.mako:60
+#, python-format
+msgid "Delete %(groupname)s"
+msgstr "Eliminar %(groupname)s"
+
+#: src/useradmin/templates/list_groups.mako:60
+#, python-format
+msgid "Are you sure you want to delete %(group_name)s?"
+msgstr "Quer mesmo eliminar %(group_name)s?"
+
+#: src/useradmin/templates/list_groups.mako:60
+#: src/useradmin/templates/list_users.mako:69
+msgid "Delete"
+msgstr "Eliminar"
+
+#: src/useradmin/templates/list_permissions.mako:32
+msgid "Search for application name, description, etc..."
+msgstr "Pesquisar por nome de aplicação, descrição, etc..."
+
+#: src/useradmin/templates/list_permissions.mako:38
+msgid "Application"
+msgstr "Aplicação"
+
+#: src/useradmin/templates/list_permissions.mako:39
+msgid "Permission"
+msgstr "Permissão"
+
+#: src/useradmin/templates/list_permissions.mako:54
+msgid "Edit permission"
+msgstr "Editar permissão"
+
+#: src/useradmin/templates/list_users.mako:33
+msgid "Add/Sync LDAP user"
+msgstr "Adicionar/Sincronizar utilizador de LDAP"
+
+#: src/useradmin/templates/list_users.mako:34
+msgid "Sync LDAP users/groups"
+msgstr "Sincronizar utilizadores/grupos de LDAP"
+
+#: src/useradmin/templates/list_users.mako:38
+msgid "Search for username, name, e-mail, etc..."
+msgstr "Pesquisar por nome de utilizador, nome, e-mail, etc..."
+
+#: src/useradmin/templates/list_users.mako:45
+msgid "First Name"
+msgstr "Nome próprio"
+
+#: src/useradmin/templates/list_users.mako:46
+msgid "Last Name"
+msgstr "Apelido"
+
+#: src/useradmin/templates/list_users.mako:47
+msgid "E-mail"
+msgstr "E-mail"
+
+#: src/useradmin/templates/list_users.mako:49
+msgid "Last Login"
+msgstr "Último início de sessão"
+
+#: src/useradmin/templates/list_users.mako:64
+#: src/useradmin/templates/list_users.mako:68
+#: src/useradmin/templates/list_users.mako:72
+#, python-format
+msgid "Edit %(username)s"
+msgstr "Editar %(username)s"
+
+#: src/useradmin/templates/list_users.mako:65
+#: src/useradmin/templates/list_users.mako:69
+#, python-format
+msgid "Delete %(username)s"
+msgstr "Eliminar %(username)s"
+
+#: src/useradmin/templates/sync_ldap_users_groups.mako:37
+msgid "Sync LDAP users and groups"
+msgstr "Sincronizar utilizadores e grupos de LDAP"
+
+#: src/useradmin/templates/sync_ldap_users_groups.mako:41
+msgid ""
+"This will not import any users or groups that don't already exist in Hue."
+" Only users and groups imported from LDAP can be synced."
+msgstr ""
+"Isto importará todos os utilizadores e grupos que ainda não existam na "
+"Hue. Apenas os utilizadores e grupos que tenham sido importados de LDAP "
+"podem ser sincronizados."
+
+#: src/useradmin/templates/sync_ldap_users_groups.mako:42
+msgid ""
+"All user information and group memberships will be updated based on the "
+"LDAP server's current state."
+msgstr ""
+"Toda a informação associada aos utilizadores e grupos será actualizada "
+"com base no estado actual do servidor LDAP."
+
+#: src/useradmin/templates/sync_ldap_users_groups.mako:50
+msgid "Sync"
+msgstr "Sincronizar"
+
+#~ msgid "Create Home Directory"
+#~ msgstr ""
+
