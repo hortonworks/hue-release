@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RUN_DIR=/home/tutorials/tutorials_app/run
+RUN_DIR=/home/sandbox/tutorials/tutorials_app/run
 GIT_REPO=git@github.com:hortonworks/sandbox-shared.git
 
 USER=root
