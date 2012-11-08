@@ -185,7 +185,7 @@ udfs = UDF.objects.all()
 
         <div class="alert alert-success" id="job_info">
           % if 'stdout' in result:
-          ${result['stdout'].replace("\n", "<br>")}
+          ${result['stdout'].replace("\n", "<br>").replace(" ", "&nbsp;")}
           % endif
         </div>
         
@@ -264,9 +264,11 @@ else $(".bar").addClass("bar-danger");
 $("#download_job_result").show();
 $("#download_job_result").attr("href", "/pig/download_job_result/" +
 job_id + "/");
+var stdout = data.stdout.replace(/\n/g, "<br>");
+stdout = stdout.replace(/\s/g, "&nbsp;");
 $("#job_logs").text("Logs...");
         $("#log_info").html(data.error.replace(/\n/g, "<br>"));
-        $("#job_info").html(data.stdout.replace(/\n/g, "<br>"));
+        $("#job_info").html(stdout);
         percent = 100;
         $("#start_job").show();
         $("#kill_job").hide();
