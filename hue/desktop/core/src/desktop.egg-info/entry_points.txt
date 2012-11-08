@@ -1,8 +1,0 @@
-[desktop.supervisor.specs]
-runcpserver = desktop:SUPERVISOR_SPEC
-kt_renewer = desktop.kt_renewer:SPEC
-
-[console_scripts]
-hue = desktop.manage_entry:entry
-supervisor = desktop.supervisor:main
-
