@@ -18,5 +18,5 @@
 DJANGO_APPS = [ "hcatalog" ]
 NICE_NAME = "HCatalog"
 REQUIRES_HADOOP = False
-MENU_INDEX = 100
+MENU_INDEX = 12
 ICON = "/hcatalog/static/art/hcatalog-logo_24.png"
