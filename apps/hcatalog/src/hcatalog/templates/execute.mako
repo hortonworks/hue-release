@@ -285,6 +285,7 @@ ${layout.menubar(section='query')}
     </div>
 </div>
 
+<link href="/hcatalog/static/css/codemirror.css" rel="stylesheet">
 <style>
     #filechooser {
         min-height:100px;
@@ -321,12 +322,58 @@ ${layout.menubar(section='query')}
 
 </style>
 
-
-
 <script src="/static/ext/js/jquery/plugins/jquery.cookie.js"></script>
-
+<script src="/hcatalog/static/js/codemirror.js"></script>
+<script src="/hcatalog/static/js/mysql.js"></script>
+<script src="/hcatalog/static/js/simple-hint.js"></script>
+<script src="/hcatalog/static/js/pig-hint.js"></script>
 <script type="text/javascript" charset="utf-8">
+
+  function getTables(){
+    var pigKeywordsT=[];
+    $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table?user.name=hue", function(data){
+      if(data.hasOwnProperty("tables"))
+      {
+        for (var i = 0; i < data.tables.length; i++) {
+          pigKeywordsT.push(data.tables[i]);
+        }
+      }
+    },"json");
+  }
+
     $(document).ready(function(){
+
+      var editor = CodeMirror.fromTextArea(document.getElementById("queryField"), {
+            lineNumbers: true,
+      	    matchBrackets: true,
+	    indentUnit: 4,
+	    mode: "text/x-mysql",
+	    onChange : function (from, change){
+                var curText=from.getTokenAt(from.getCursor()).string;
+ 	        var startKeys=curText.substr(0,1);
+	        var lastKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-1,1);
+                var prevKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,1);
+		console.log(startKeys);
+		console.log(lastKey);
+		console.log(prevKey);
+                if(startKeys== "'" || startKeys== '"'){
+                    var dirList=getTables();
+                    if(dirList.length<2)
+                        dirList.push("");
+                    change.from.ch=from.getCursor().ch;
+	            var dirArr={
+                      from: change.from,
+                      list:dirList,
+                      to: change.from
+                    };
+	            if(dirList.length>0)
+                      CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr );
+                } else if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey))){
+                    CodeMirror.simpleHint(from, CodeMirror.pigHint);
+                }
+            }
+      });
+
         $("*[rel=tooltip]").tooltip({
             placement: 'bottom'
         });
