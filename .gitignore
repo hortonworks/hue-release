@@ -19,3 +19,5 @@
 #virtualenv
 build/
 *.egg
+app.reg
+desktop.db
