@@ -17,5 +17,5 @@
 
 DJANGO_APPS = [ "pig" ]
 REQUIRES_HADOOP = False
-MENU_INDEX = 100
+MENU_INDEX = 11
 ICON = "/pig/static/art/pig.png"
