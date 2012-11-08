@@ -200,7 +200,7 @@ udfs = UDF.objects.all()
 
         <div class="alert alert-success" id="job_info">
           % if 'stdout' in result:
-          ${result['stdout'].replace("\n", "<br>")}
+          ${result['stdout'].replace("\n", "<br>").replace(" ", "&nbsp;")}
           % endif
         </div>
         
@@ -281,10 +281,13 @@ $("#download_job_result").show();
 $("#download_job_result").attr("href", "/pig/download_job_result/" +
 job_id + "/");
 $("#job_logs").text("Logs...");
+var stdout = data.stdout.replace(/\n/g, "<br>");
+stdout = stdout.replace(/\s/g, "&nbsp;")
         $("#log_info").html(data.error.replace(/\n/g, "<br>"));
-        $("#job_info").html(data.stdout.replace(/\n/g, "<br>"));
+        $("#job_info").html(stdout);
         percent = 100;
         $("#start_job").show();
+$("#save_button").removeAttr("disabled");
         $("#kill_job").hide();
         $(".bar").css("width", percent+"%");
     }, "json");
@@ -400,6 +403,7 @@ var job_id = null;
         if (!$("#pig_script_form").valid()) return false;
         $(this).hide();              
         $("#id_text").attr("disabled", "disabled");
+        $("#save_button").attr("disabled", "disabled");
         percent = 2;
         $(".bar").css("width", percent+"%");
         pig_editor.save();
