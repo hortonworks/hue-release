@@ -23,7 +23,7 @@ DATABASES = {
     }
 }
 
-CONTENT_FRAME_URL = "http://127.0.0.1:8081/" # HUE URL param
+CONTENT_FRAME_URL = "http://localhost:8000/" # HUE URL param
 
 DATABASE_ROUTERS = ['tutorials_app.db_routers.AuthRouter']
 
