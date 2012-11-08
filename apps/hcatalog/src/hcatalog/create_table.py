@@ -305,7 +305,7 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
   try:
     csvfile = fs.open(path)
     raw_file_content = csvfile.read()
-    file_content = csv.reader(StringIO.StringIO(raw_file_content), delimiter=str(delim)[0])
+    file_content = csv.reader(StringIO.StringIO(raw_file_content), delimiter=delim.decode('string_escape'))
     fields_list = [row for row in file_content]
     csvfile.close()
   except IOError, ex:
@@ -319,25 +319,23 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
   new_fields_to_store = []
   for row in fields_list:
     new_row = []
+    new_unicode_row = []
     for field in row:
-      new_row.append(field.replace(delim, ''))
-    new_fields_list.append(new_row)
-    new_fields_to_store.append(delim.join(new_row))
+      new_row.append(field.replace(delim.decode('string_escape'), ''))
+      try:
+        field = unicode(field, encoding, errors='replace')
+      except UnicodeError:
+        raise PopupException('Unicode error')
+      new_unicode_row.append(field.replace(delim.decode('string_escape'), ''))
+    new_fields_list.append(new_unicode_row)
+    new_fields_to_store.append(delim.decode('string_escape').join(new_row))
   fields_list = new_fields_list
+  
+  # making column list and preview data part
   if parse_first_row_as_header and len(fields_list) > 0:
     col_names = fields_list[0]
-    fields_list = fields_list[1:]
-    # creating tmp file to import data from
-    try:
-      path_tmp = path + '.tmp'
-      if not fs.exists(path_tmp):
-        csvfile_tmp = fs.open(path_tmp, 'w')
-        csvfile_tmp.write('\n'.join(new_fields_to_store[1:]))
-        csvfile_tmp.close()
-    except IOError, ex:
-      msg = "Failed to open file '%s': %s" % (path, ex)
-      LOG.exception(msg)
-      raise PopupException(msg)
+    fields_list = fields_list[1:IMPORT_PEEK_NLINES]
+    new_fields_to_store = new_fields_to_store[1:]
     if len(col_names) < n_cols:
       for i in range(len(col_names) + 1, n_cols + 1):
         col_names.append('col_%s' % (i,))
@@ -345,6 +343,18 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
     for i in range(1, n_cols + 1):
       col_names.append('col_%s' % (i,))
       
+  # creating tmp file to import data from
+  try:
+    path_tmp = path + '.tmp'
+    if not fs.exists(path_tmp):
+      csvfile_tmp = fs.open(path_tmp, 'w')
+      csvfile_tmp.write('\n'.join(new_fields_to_store))
+      csvfile_tmp.close()
+  except IOError, ex:
+    msg = "Failed to open file '%s': %s" % (path, ex)
+    LOG.exception(msg)
+    raise PopupException(msg)
+  
   # ``delimiter`` is a MultiValueField. delimiter_0 and delimiter_1 are the sub-fields.
   delim_form = hcatalog.forms.CreateByImportDelimForm(dict(delimiter_0=delim,
                                                           delimiter_1='',
