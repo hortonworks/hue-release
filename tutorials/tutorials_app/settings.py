@@ -14,12 +14,16 @@ DATABASES = {
         'NAME': os.path.join(PROJECT_PATH, 'db/lessons.db'),
     },
     'auth_db': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(PROJECT_PATH, '../../1.db'), # HUE database file
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'sandbox',
+        'USER': 'sandbox',
+        'PASSWORD': '1111',
+        'HOST': '127.0.0.1',
+        'PORT':' 3306',
     }
 }
 
-CONTENT_FRAME_URL = "http://127.0.0.1:8081/" # HUE URL param
+CONTENT_FRAME_URL = "http://localhost:8000/" # HUE URL param
 
 DATABASE_ROUTERS = ['tutorials_app.db_routers.AuthRouter']
 
