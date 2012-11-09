@@ -339,7 +339,7 @@ function explain_progres(percent){
 
 start_job_func = function start_job_click(){
         if (!$("#pig_script_form").valid()) return false;
-        $(this).hide();              
+        $("#start_job").hide();
         $("#id_text").attr("disabled", "disabled");
         $("#save_button").attr("disabled", "disabled");
         percent = 2;
