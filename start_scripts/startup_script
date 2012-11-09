@@ -3,7 +3,7 @@
 # chkconfig: 5 99 1
 # description: startup script
 
-SCRIPTS_PATH="/home/sandbox/start_script"
+SCRIPTS_PATH="/home/sandbox/start_scripts"
 NAME="startup_script"
 LOG="/var/log/startup_script.log"
 
@@ -24,6 +24,8 @@ case "$1" in
 start)
     printf "%-50s\n" "Starting $NAME..." | tee -a $LOG
     
+    dhclient &
+
     bash $SCRIPTS_PATH/sandbox_component_versions.sh
 
     printf "%-50s\n" "Updating IP..." | tee -a $LOG
