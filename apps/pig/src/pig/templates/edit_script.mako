@@ -176,7 +176,7 @@ udfs = UDF.objects.all()
                  % endif
                  />
 	  <input class="btn primary" type="button" id="start_job"
-	  value="Execute" onClick="call_popup_var_edit();" />	  
+	  value="Execute" />	  
           <input class="btn primary" type="button" id="kill_job"  value="Kill job" style="display:none" />
 	  <input class="btn primary explain" type="button" id="explain" value="Explain" />
 	  <input class="btn primary explain" type="button" id="check" value="Syntax check" />
@@ -337,11 +337,34 @@ function explain_progres(percent){
               window.setTimeout("explain_progres("+percent+");", t_out);
          };
 
-$(document).ready(function(){
-
-    $('.explain').click(function(){explain_progres(0)});
-    $('.explain').live("click", function(){
+start_job_func = function start_job_click(){
         if (!$("#pig_script_form").valid()) return false;
+        $(this).hide();              
+        $("#id_text").attr("disabled", "disabled");
+        $("#save_button").attr("disabled", "disabled");
+        percent = 2;
+        $(".bar").css("width", percent+"%");
+        pig_editor.save();
+        python_editor.save()                                
+        $.ajax({
+            url: "${url("start_job")}",
+            dataType: "json",
+            type: "POST",
+            data: $("#pig_script_form").serialize(),
+            success: function(data){
+                $("#kill_job").show();
+                $("#job_info").append(data.text);
+                job_id = data.job_id;
+                ping_job(job_id);
+            }
+        });
+}
+
+
+
+explain_func = function explain_click(){
+explain_progres(0);
+if (!$("#pig_script_form").valid()) return false;
         $("#id_text, .explain, #start_job, #kill_job").attr("disabled", "disabled");
         percent = 2;
         $(".bar").css("width", percent+"%");
@@ -359,7 +382,13 @@ $(document).ready(function(){
                 $("#id_text, .explain, #start_job, #kill_job").removeAttr("disabled");
             }
         });
-    });
+}
+
+$(document).ready(function(){
+ 
+    $('.explain').live("click", function(e){
+               call_popup_var_edit(e);
+            });
 
 % if result.get("job_id") and result.get("JOB_SUBMITED"):
 percent = 10;
@@ -403,30 +432,11 @@ var job_id = null;
             $("#job_info").append("<br>"+data.text);
         }, "json");
     });
-    
-    
-    $("#start_job").live("click", function(){
 
-        if (!$("#pig_script_form").valid()) return false;
-        $(this).hide();              
-        $("#id_text").attr("disabled", "disabled");
-        $("#save_button").attr("disabled", "disabled");
-        percent = 2;
-        $(".bar").css("width", percent+"%");
-        pig_editor.save();
-        python_editor.save()                                
-        $.ajax({
-            url: "${url("start_job")}",
-            dataType: "json",
-            type: "POST",
-            data: $("#pig_script_form").serialize(),
-            success: function(data){
-                $("#kill_job").show();
-                $("#job_info").append(data.text);
-                job_id = data.job_id;
-                ping_job(job_id);
-            }
-        });
+    
+    $("#start_job").live("click", function(e){
+        call_popup_var_edit(e);
+
     });
 });
 
