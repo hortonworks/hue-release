@@ -1,0 +1,1 @@
+CREATE TABLE nyse_daily_prices(exchange:STRING, stock_symbol:STRING, date:STRING, stock_price_open:float, stock_price_high:float, stock_price_low:float, stock_price_close:float, stock_volume:BIGINT, stock_price_adj_close:float)
