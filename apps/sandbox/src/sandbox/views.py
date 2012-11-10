@@ -16,8 +16,41 @@
 # limitations under the License.
 
 from desktop.lib.django_util import render
+from desktop.lib.exceptions import PopupException
+
+import re
 import datetime
+import logging
+
+LOG = logging.getLogger(__name__)
+
+COMPONENT_LIST = ['sandbox', 'tutorials', 'pig', 'hive', 'hcatalog']
 
 def index(request):
-  components = [{'name':'HCatalog', 'version':'0.4.0.16'}, {'name':'Pig', 'version':'0.9.2.15'}]
+  version_content_list = []
+  try:
+    path = '/tmp/sandbox_component_versions.info'
+    file_obj = open(path, 'r')
+    version_content_list = file_obj.readlines()
+    file_obj.close()
+  except IOError, ex:
+    msg = "Failed to open file '%s': %s" % (path, ex)
+    LOG.exception(msg)
+  components = [
+        {'name':'Sandbox', 'version':_get_version('sandbox', version_content_list)},
+        {'name':'Tutorials', 'version':_get_version('tutorials', version_content_list), 'updateButton':True},
+        {'name':'HCatalog', 'version':_get_version('pig', version_content_list)}, 
+        {'name':'Pig', 'version':_get_version('pig', version_content_list)},
+        {'name':'Hive', 'version':_get_version('hive', version_content_list)},]
   return render('configuration.mako', request, {'components':components})
+
+def _get_version(component, content_list):
+  version = 'undefined'
+  for version_content in content_list:
+    if component in version_content:
+      m = re.match(r"[\D\.-]*(?P<ver>[\d+\.-]+)[\.\D]*", version_content)
+#      raise PopupException(str(''))
+      if m is not None:
+        version = m.group('ver')
+      break
+  return version
