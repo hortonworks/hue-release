@@ -98,7 +98,7 @@ parameters_template = re.compile(r"%(\w+)%")
 def process_pig_script(pig_src, request):
     #1) Replace parameters with their values
     def get_param(matchobj):
-        return request.POST.get(matchobj.group(1))
+        return request.POST.get("%"+matchobj.group(1)+"%")
     pig_src = re.sub(parameters_template, get_param, pig_src)
     udf_name = re.search(udf_template, pig_src)
     if udf_name:

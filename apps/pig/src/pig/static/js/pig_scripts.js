@@ -2,6 +2,8 @@ var pigKeywordsT=[];
 var dollarSaveParamTrig = 0;
 var varSaveParamTrig = 0;
 var submitFormPopup=false;
+var explain_func, start_job_func;
+
 
 function autosave(){
   $("#save_button").removeAttr("disabled");
@@ -58,19 +60,24 @@ function getTableFields(table){
   });
 }
 
-function call_popup_var_edit(){
+function call_popup_var_edit(e){
+  console.log(e.currentTarget.id)
   var html="";
   var editorContent=pig_editor.getValue();
   var found_var=editorContent.match(/\%\S+\%/g);
 
   if(found_var != null && found_var.length >0){
     found_var.map(function(elem,i){
-      html+='<label>'+elem+':</label><input name="'+elem+'"  /><br/><br/>';
+      html+='<label>'+elem.slice(1,elem.length-1)+':</label><input name="'+elem+'"  /><br/><br/>';
     })
     $(".modal-for-var-input-warp").html( html );
-    $("#show-modal-for-var").modal("show");
+    $("#show-modal-for-var").modal("show").addClass("cur-btn-"+e.currentTarget.id);
   }else{
-    return true;
+    if(e.currentTarget.id == "explain"){
+      explain_func();
+    }else if(e.currentTarget.id == "start_job"){
+      start_job_func();
+    }
   }
 
 }
@@ -91,6 +98,13 @@ $("#show-modal-for-var").on('hide', function() {
       $("#pig_script_form").append( out_html );
       $(".modal-for-var-input-warp").html( "" );
       submitFormPopup=true;
+      if($("#show-modal-for-var").hasClass("cur-btn-explain")){
+        explain_func();
+        //try{ explain_func(); }catch(e) { console.log("Error in explain_click", e) };
+      }else if($("#show-modal-for-var").hasClass("cur-btn-start_job")){
+        start_job_func();
+        //try{ start_job_func(); }catch(e) { console.log("Error in start_job_click", e) };
+      }
     }else{
       varSaveParamTrig=0;
       $(".modal-for-var-input-warp > input").each(function(){

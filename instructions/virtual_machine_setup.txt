@@ -1,0 +1,15 @@
+1) Import virtual machine image to VirtualBox
+
+2) Create network bridge with real ethernet
+    Up bridge interface with appropriate netmask (255.255.0.0 in most cases)
+        to be able to get to VM IP, which is 192.168.56.2
+
+3) Open VirtualBox Machine settings, 
+  a) On Network page enable first network adapter,
+  b) Set type of adapter as Bridged Adapter
+  c) Select created above adapter in list
+  d) Open "Advanced" options and set MAC Address to 08002793F666
+
+4) Start machine, wait booting
+
+5) Go to http://192.168.56.2:8888
