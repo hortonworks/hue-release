@@ -319,7 +319,9 @@ ${layout.menubar(section='query')}
     .fileChooserBtn {
         border-radius: 0 3px 3px 0;
     }
-
+    .CodeMirror-completions{
+        position:absolute;
+    }
 </style>
 
 <script src="/static/ext/js/jquery/plugins/jquery.cookie.js"></script>
