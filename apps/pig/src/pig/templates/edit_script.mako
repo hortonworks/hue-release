@@ -300,7 +300,7 @@ function ping_job(job_id){
     var url = '/proxy/localhost/50111/templeton/v1/queue/';          
     $.get(url+job_id+'?user.name=hdfs', 
           function(data) {
-              if (data.status.exitValue !== null)
+              if (data.exitValue !== null)
               {
                   if (data.status.failureInfo != 'NA')
                       $("#failure_info").html(data.status.failureInfo);
