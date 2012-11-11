@@ -19,9 +19,6 @@
 Views & controls for creating tables
 """
 
-import logging
-import gzip
-
 from django.core import urlresolvers
 
 from desktop.lib import django_mako, i18n
@@ -35,8 +32,12 @@ import hcatalog.forms
 from hcatalog.views import describe_table, do_load_table
 from hcat_client import hcat_client
 
+import logging
+import gzip
 import csv
 import StringIO
+from datetime import date, datetime
+import os.path
 
 LOG = logging.getLogger(__name__)
 
@@ -180,7 +181,9 @@ def import_wizard(request):
                                               encoding,
                                               [ reader.TYPE for reader in FILE_READERS ],
                                               DELIMITERS,
-                                              True)
+                                              True,
+                                              False,
+                                              None)
 
       if (do_s2_user_delim or do_s3_column_def or cancel_s3_column_def) and s2_delim_form.is_valid():
         # Delimit based on input
@@ -190,7 +193,9 @@ def import_wizard(request):
                                               encoding,
                                               (s2_delim_form.cleaned_data['file_type'],),
                                               (s2_delim_form.cleaned_data['delimiter'],),
-                                              s2_delim_form.cleaned_data.get('parse_first_row_as_header'))
+                                              s2_delim_form.cleaned_data.get('parse_first_row_as_header'),
+                                              s2_delim_form.cleaned_data.get('apply_excel_dialect'),
+                                              s2_delim_form.cleaned_data['path_tmp'])
       if do_s2_auto_delim or do_s2_user_delim or cancel_s3_column_def:
         return render('choose_delimiter.mako', request, dict(
           action=urlresolvers.reverse(import_wizard),
@@ -244,7 +249,7 @@ def import_wizard(request):
 
         do_load_data = s1_file_form.cleaned_data.get('do_import')
         path = s1_file_form.cleaned_data['path']
-        path_tmp = path + '.tmp'
+        path_tmp = s2_delim_form.cleaned_data['path_tmp']
         if request.fs.exists(path_tmp):
           if do_load_data:
             path = path_tmp
@@ -281,9 +286,9 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load):
   return render("show_tables.mako", request, dict(tables=tables,))
 
 
-def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_row_as_header):
+def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_row_as_header, apply_excel_dialect, path_tmp):
   """
-  _delim_preview(fs, file_form, encoding, file_types, delimiters)
+  _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_row_as_header, apply_excel_dialect, path_tmp)
                               -> (fields_list, n_cols, delim_form)
 
   Look at the beginning of the file and parse it according to the list of
@@ -292,22 +297,13 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
   assert file_form.is_valid()
 
   path = file_form.cleaned_data['path']
+  if path_tmp is None:
+    path_tmp = "/tmp/%s.tmp.%s" % (os.path.basename(path), datetime.now().strftime("%s"))
   try:
     file_obj = fs.open(path)
     delim, file_type, fields_list = _parse_fields(
-              path, file_obj, encoding, file_types, delimiters)
+              fs, path, file_obj, encoding, file_types, delimiters, parse_first_row_as_header, apply_excel_dialect, path_tmp)
     file_obj.close()
-  except IOError, ex:
-    msg = "Failed to open file '%s': %s" % (path, ex)
-    LOG.exception(msg)
-    raise PopupException(msg)
-
-  try:
-    csvfile = fs.open(path)
-    raw_file_content = csvfile.read()
-    file_content = csv.reader(StringIO.StringIO(raw_file_content), delimiter=delim.decode('string_escape'))
-    fields_list = [row for row in file_content]
-    csvfile.close()
   except IOError, ex:
     msg = "Failed to open file '%s': %s" % (path, ex)
     LOG.exception(msg)
@@ -315,61 +311,42 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
 
   col_names = []
   n_cols = max([ len(row) for row in fields_list ])
-  new_fields_list = []
-  new_fields_to_store = []
-  for row in fields_list:
-    new_row = []
-    new_unicode_row = []
-    for field in row:
-      new_row.append(field.replace(delim.decode('string_escape'), ''))
-      try:
-        field = unicode(field, encoding, errors='replace')
-      except UnicodeError:
-        raise PopupException('Unicode error')
-      new_unicode_row.append(field.replace(delim.decode('string_escape'), ''))
-    new_fields_list.append(new_unicode_row)
-    new_fields_to_store.append(delim.decode('string_escape').join(new_row))
-  fields_list = new_fields_list
   
   # making column list and preview data part
   if parse_first_row_as_header and len(fields_list) > 0:
     col_names = fields_list[0]
     fields_list = fields_list[1:IMPORT_PEEK_NLINES]
-    new_fields_to_store = new_fields_to_store[1:]
     if len(col_names) < n_cols:
       for i in range(len(col_names) + 1, n_cols + 1):
         col_names.append('col_%s' % (i,))
   elif not parse_first_row_as_header:
     for i in range(1, n_cols + 1):
       col_names.append('col_%s' % (i,))
-      
-  # creating tmp file to import data from
-  try:
-    path_tmp = path + '.tmp'
-    if not fs.exists(path_tmp):
-      csvfile_tmp = fs.open(path_tmp, 'w')
-      csvfile_tmp.write('\n'.join(new_fields_to_store))
-      csvfile_tmp.close()
-  except IOError, ex:
-    msg = "Failed to open file '%s': %s" % (path, ex)
-    LOG.exception(msg)
-    raise PopupException(msg)
-  
+ 
   # ``delimiter`` is a MultiValueField. delimiter_0 and delimiter_1 are the sub-fields.
-  delim_form = hcatalog.forms.CreateByImportDelimForm(dict(delimiter_0=delim,
-                                                          delimiter_1='',
+  delimiter_0 = delim
+  delimiter_1 = ''
+  # If custom delimiter
+  if not filter(lambda val: val[0] == delim, hcatalog.forms.TERMINATOR_CHOICES):
+    delimiter_0 = '__other__'
+    delimiter_1 = delim
+
+  delim_form = hcatalog.forms.CreateByImportDelimForm(dict(delimiter_0=delimiter_0,
+                                                          delimiter_1=delimiter_1,
                                                           file_type=file_type,
+                                                          path_tmp=path_tmp,
                                                           n_cols=n_cols,
                                                           col_names=col_names,
-                                                          parse_first_row_as_header=parse_first_row_as_header))
+                                                          parse_first_row_as_header=parse_first_row_as_header,
+                                                          apply_excel_dialect=apply_excel_dialect))
   if not delim_form.is_valid():
-    assert False, 'Internal error when constructing the delimiter form'
+    assert False, _('Internal error when constructing the delimiter form: %(error)s' % {'error': delim_form.errors})
   return fields_list, n_cols, col_names, delim_form
 
 
-def _parse_fields(path, file_obj, encoding, filetypes, delimiters):
+def _parse_fields(fs, path, file_obj, encoding, filetypes, delimiters, parse_first_row_as_header, apply_excel_dialect, path_tmp):
   """
-  _parse_fields(path, file_obj, encoding, filetypes, delimiters)
+  _parse_fields(fs, path, file_obj, encoding, filetypes, delimiters, parse_first_row_as_header, apply_excel_dialect, path_tmp)
                                   -> (delimiter, filetype, fields_list)
 
   Go through the list of ``filetypes`` (gzip, text) and stop at the first one
@@ -387,6 +364,37 @@ def _parse_fields(path, file_obj, encoding, filetypes, delimiters):
     lines = reader.readlines(file_obj, encoding)
     if lines is not None:
       delim, fields_list = _readfields(lines, delimiters)
+      
+      # creating tmp file to import data from
+      if fs.exists(path_tmp):
+        fs.remove(path_tmp)
+      if parse_first_row_as_header or apply_excel_dialect:
+        try:
+          csvfile_tmp = fs.open(path_tmp, 'w')
+          file_obj.seek(0, hadoopfs.SEEK_SET)
+          all_data = reader.read_all_data(file_obj, encoding)
+          if apply_excel_dialect:
+            csv_content = csv.reader(StringIO.StringIO('\n'.join(all_data)), delimiter=delim.decode('string_escape'))
+            new_fields_list = []
+            data_to_store = []        
+            for row in csv_content:
+              new_row = []
+              for field in row:
+                new_row.append(field.replace(delim.decode('string_escape'), ''))
+              data_to_store.append(delim.decode('string_escape').join(new_row))
+              new_fields_list.append(new_row)
+            fields_list = new_fields_list[:IMPORT_PEEK_NLINES]
+          if parse_first_row_as_header:
+            if apply_excel_dialect:
+              all_data = data_to_store
+            csvfile_tmp.write('\n'.join(all_data[1:]))
+          else:
+            csvfile_tmp.write('\n'.join(all_data))
+          csvfile_tmp.close()
+        except IOError, ex:
+          msg = "Failed to open file '%s': %s" % (path, ex)
+          LOG.exception(msg)
+
       return delim, reader.TYPE, fields_list
   else:
     # Even TextFileReader doesn't work
@@ -473,6 +481,16 @@ class GzipFileReader(object):
       return unicode(data, encoding, errors='replace').split('\n')[:IMPORT_PEEK_NLINES]
     except UnicodeError:
       return None
+  
+  @staticmethod
+  def read_all_data(fileobj, encoding):
+    """read_all_data(fileobj, encoding) -> list of lines"""
+    gz = gzip.GzipFile(fileobj=fileobj, mode='rb')
+    try:
+      data = gz.read().split('\n')
+    except IOError:
+      return None
+    return data
 
 FILE_READERS.append(GzipFileReader)
 
@@ -489,5 +507,14 @@ class TextFileReader(object):
       return unicode(data, encoding, errors='replace').split('\n')[:IMPORT_PEEK_NLINES]
     except UnicodeError:
       return None
+  
+  @staticmethod
+  def read_all_data(fileobj, encoding):
+    """read_all_data(fileobj, encoding) -> list of lines"""
+    try:
+      data = fileobj.read().split('\n')
+    except IOError:
+      return None
+    return data
 
 FILE_READERS.append(TextFileReader)
