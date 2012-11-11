@@ -39,6 +39,7 @@ from pig.templeton import Templeton
 from pig.forms import PigScriptForm, UDFForm
 from pig.CommandPy import CommandPy
 
+UDF_PATH = '/tmp/udfs/'
 
 def index(request, obj_id=None):
     result = {}
@@ -93,18 +94,18 @@ def explain(request):
 
 
 #Making normal path to our *.jar files
-udf_template = re.compile(r"register\s+(\w+)\.jar", re.I)
+udf_template = re.compile(r"register\s+(\S+\.jar)", re.I|re.M)
 parameters_template = re.compile(r"%(\w+)%")
 def process_pig_script(pig_src, request):
     #1) Replace parameters with their values
     def get_param(matchobj):
-        return request.POST.get("%"+matchobj.group(1)+"%")
+        return request.POST.get("%" + matchobj.group(1) + "%")
+
+    def get_file_path(matchobj):
+        return "REGISTER " + request.fs.fs_defaultfs + UDF_PATH + matchobj.group(1)
     pig_src = re.sub(parameters_template, get_param, pig_src)
-    udf_name = re.search(udf_template, pig_src)
-    if udf_name:
-        return re.sub(udf_template, request.fs.default.name + udf_name, pig_script)
-    else:
-        return pig_src
+    pig_src = re.sub(udf_template, get_file_path, pig_src)
+    return pig_src
 
 
 #Deleting PigScript objects
@@ -131,11 +132,11 @@ def piggybank(request, obj_id = False):
 
         if form.is_valid():
             uploaded_file = request.FILES['hdfs_file']
-            dest = '/tmp/udfs'
+            dest = UDF_PATH
             if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
                 raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))
 
-            dest = request.fs.join(dest, uploaded_file.name)
+            dest = request.fs.join(dest, uploaded_file.name.replace(" ", "_"))
             tmp_file = uploaded_file.get_temp_path()
             username = request.user.username
 
@@ -204,7 +205,8 @@ def start_job(request):
     pig_script = request.POST['pig_script']
     if request.POST.get("python_script"):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
-    pig_script = process_pig_script(pig_script, request)    
+    pig_script = process_pig_script(pig_script, request)
+    #return HttpResponse(json.dumps(pig_script))
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
     job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"))
     #job = t.pig_query(execute=request.POST['pig_script'], statusdir=statusdir)
