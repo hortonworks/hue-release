@@ -46,6 +46,7 @@ ${layout.menubar(section='tables')}
                 <div class="hide">
                     ${util.render_form(file_form)}
                     ${comps.field(delim_form['file_type'])}
+                    ${comps.field(delim_form['path_tmp'])}
                 </div>
                 <fieldset>
                     <div class="alert alert-info"><h3>${_('Choose a Delimiter')}</h3>
@@ -72,6 +73,15 @@ ${layout.menubar(section='tables')}
                         </span>
                         </div>
                     </div>
+                    <div class="control-group">
+                        ${comps.bootstrapLabel(delim_form["apply_excel_dialect"])}
+                        <div class="controls">
+                            ${comps.field(delim_form["apply_excel_dialect"], render_default=True)}
+                            <span class="help-block">
+                        ${_('Check this box if you want to use an \'excel\' dialect on the importing data from the input file. Leave it unchecked if your input file contains the simple csv-formatted data (non double-quoted values, etc).')}
+                        </span>
+                        </div>
+                    </div>                    
                     <div class="control-group">
                         <label class="control-label">${_('Table preview')}</label>
                         <div class="controls">
