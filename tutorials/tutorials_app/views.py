@@ -135,3 +135,15 @@ def lesson_static(request, section_id, step, path):
                             mimetype=mimetypes.guess_type(rfile)[0])
 
     return response
+
+def get_file(request, path):
+    import mimetypes
+    from django.core.servers.basehttp import FileWrapper
+
+    git_files = os.path.join(settings.PROJECT_PATH, 'run/git_files')
+
+    rfile = os.path.join(git_files, path)
+    response = HttpResponse(FileWrapper(file(rfile, 'rb')),
+                            mimetype=mimetypes.guess_type(rfile)[0])
+
+    return response
