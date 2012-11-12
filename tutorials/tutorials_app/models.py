@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+VERSION = 0
 
 class Section(models.Model):
     order = models.IntegerField(max_length=2)

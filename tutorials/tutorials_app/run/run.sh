@@ -5,6 +5,16 @@ GIT_REPO=git@github.com:hortonworks/sandbox-shared.git
 
 USER=root
 
+if [[ "$1" == "--migrate" ]]; then
+    echo "Migrating DB..."
+    cd "$RUN_DIR/../db"
+    rm -f lessons.db
+    cd ../../
+    ./.env/bin/python manage.py syncdb
+    exit 0
+fi
+
+
 cd $RUN_DIR
 
 [ -d git_files_all ] || mkdir git_files_all
@@ -20,5 +30,5 @@ cd $RUN_DIR
 [ ! -L git_files ] && ln -s git_files_all/tutorials/tutorials git_files
 
 echo -n "Updating DB...  "
-$RUN_DIR/../../.env/bin/python run.py >/dev/null
+$RUN_DIR/../../.env/bin/python run.py &>/dev/null
 echo "Done"
