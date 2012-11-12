@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <title>Hortonworks Data Platform Sandbox</title>
+  </head>
+  <body>
+    <h1>Introduction</h1>
+    <p>Welcome to the Hortonworks Sandbox!</p>
+    <p>The Sandbox is a tool to help you learn and explore the Hortonworks Data Platform and Hadoop technology.The Hortonworks Data Platform (HDP) is a 100% open source data management platform based on Apache Hadoop. It allows you to load, store, process and manage data in virtually any format and at any scale. Hortonworks Data Platform delivers the power and cost-effectiveness of Apache Hadoop with the advanced services required for enterprise deployments.</p>
+    <p>The Sandbox is a single node implementation of the Hortonworks Data Platform (HDP). It is packaged as a virtual machine to make setup fast and easy. The tutorials and features in the Sandbox are oriented towards exploring how HDP can help you solve your business big data problems. The Sandbox tutorials will walk you through brining some sample data into HDP and manipulate it using the tools built into HDP. The idea is to show you how you can get started and show you how to accomplish tasks in HDP.</p>
+    <p>The Apache Hadoop projects provide a series of tools designed to solve big data problems. The Hadoop cluster implements a parallel computing cluster using inexpensive commodity hardware. The cluster is partitioned across across many servers to provide a near linear scalability. The philosophy of the cluster design is to bring the computing to the data. So each datanode will hold part of the overall data and be able to process the data that it holds. The overall framework for the processing software is called MapReduce.</p>
+    <p>Apache Hadoop can be useful across a range of use cases spanning virtually every vertical industry. It is becoming popular anywhere that you need to store, process, and analyze large volumes of data. Examples include digital marketing automation, fraud detection and prevention, social network and relationship analysis, predictive modeling for new drugs, retail in-store behavior analysis, and mobile device location-based marketing.</p>
+    <h3>The Hadoop Distributed FileSystem</h3>
+    <p>In next section we are going to look closer at some of the components we will be using in the Sandbox tutorials. Underlying all of these components is the HDFS file system. This is the foundation of the Hadoop cluster. The HDFS file system manages how the datasets are stored in the Hadoop cluster. It is responsible for distributing the data across the datanodes, managing replication for redundancy and administrative tasks like adding, removing and recovery of datanodes.</p>
+    <h3>Hive</h3>
+    <p>The Apache Hive project provides a data warehouse view of the data in HDFS. Using a SQL-like language Hive lets you create summarizations of your data, perform ad-hoc queries, and analysis of large datasets in the Hadoop cluster. The overall approach with Hive is to project a table structure on the dataset and then manipulate it with HiveQL. Since you are using data in HDFS your operations can be scaled across all the datanodes and you can manipulate huge datasets.</p>
+    <h3>HCatalog</h3>
+    <p>The function of HCatalog is to hold location and meta data about the data in a Hadoop cluster. This allows scripts and MapReduce jobs to be decoupled from data location and meta data like the schema. Additionally since HCatalog supports many tools like Hive and Pig the location and meta data can be shared between tools. Using the open APIs of HCatalog other tools like Terra Data Aster can also use the location and meta data in HCatalog. In the tutorials we will see how we can now reference data by name and we can inherit the location and meta data.</p>
+    <h3>Pig</h3>
+    <p>Pig is a language for expressing data analysis and infrastructure processes. Pig is translated into a series of Map Reduce job that are run by the Hadoop cluster. Pig is extensible through user defined functions that can be written in Java and other languages. Pig scripts provide a high level language to create the Map Reduce jobs needed to process data in a Hadoop cluster.</p>
+    <h1>Using HDP</h1>
+    <p>Here we go! We're going to walk you through a series of step-by-step tutorials to get you up and running with the Hortonworks Data Platform (HDP).</p>
+    <h3>Downloading Example Data</h3>
+    <p>We'll need some example data for our lessons. For our first lesson, we'll be using stock ticker data from the New York Stock Exchange from the years 2000-2001. You can download this file here: <a href="https://s3.amazonaws.com/rjurney.public/NYSE-2000-2001.tsv.gz">https://s3.amazonaws.com/rjurney.public/NYSE-2000-2001.tsv</a>. The file is about 40 megabytes, and may take a few minutes to download. Fortunately, to learn 'Big Data' you don't have to use a massive dataset. You need only use tools that scale to massive datasets. Click and save this file to your computer.<p>
+    <h3>Using the File Browser</h3>
+    <p>You can reach the File Browser by clicking its icon, circled in yellow below:</p>
+    <img width="80%" src="files/pick_file_browser.gif" />
+    <p>The File Browser interface should be familiar to you, it is similar to the file manager on a Windows PC or Mac. We begin in our home directory. This is where we'll store the results of our work. File Browser also lets us upload files.</p>
+    <h3>Uploading a File</h3>
+    <p>To upload the example data you just downloaded, select the 'Upload' button and then select 'File.'</p>
+    <img width="80%" src="files/select_file_upload.gif" />
+    <p>A pop-up window will appear. Click the button which says, 'Upload a file'. Locate the example data you downloaded and select it. A progress meter will appear, and the upload may take a few moments. When it is completed, you'll see this:</p>
+    <img width="80%" src="files/uploaded_stock_data.gif" />
+    <p>Now click the file. You'll see it, displayed in tabular form:</p>
+    <img width="80%" src="files/view_stock_data.gif" />
+    <p>You can use file browser just like your own computer's file manager. Next, lets register our dataset with HCatalog.</p>
+    
+    <h3>Using HCatalog</h3>
+    <p>Select the HCatalog icon at the top of Hue:</p>
+    <img width="80%" src="files/select_hcat.gif" />
+    <p>Select </p>
+  </body>
+</html>
