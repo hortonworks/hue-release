@@ -31,7 +31,7 @@ else:
 
 if new_version:
     RUN = os.path.abspath(os.path.join(os.path.abspath(os.curdir), 'run.sh'))
-    subprocess.call([RUN, "--migrate"])
+    subprocess.call(['bash', RUN, "--migrate"], shell=True)
     print>>file(VERSION_FILE, 'w'), VERSION
 
 all_sections = list(Section.objects.all())
