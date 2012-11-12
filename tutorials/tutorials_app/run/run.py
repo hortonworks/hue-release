@@ -24,16 +24,20 @@ for tutorial_name in listfolders(current_dir):
     for lesson in listfolders(tutorial_dir):
         lesson_dir = os.path.join(tutorial_dir, lesson)
         lesson_name = lesson.split()
-        lesson_order = int(lesson_name[-1])
+        lesson_order = int(lesson_name[1])
         description_file = os.path.join(lesson_dir, 'description.txt')
         if os.path.exists(description_file):
             description = open(description_file, 'r').read()
         else:
             description = ''
+
+        lesson_title = '-'.join(lesson.split('-')[1:]).strip()
+
         try:
             section = Section.objects.get(order=lesson_order,
                                           lesson_name = tutorial_name)
             section.description = description
+            section.lesson_title = lesson_title
             section.save()
             del all_sections[[s.id for s in all_sections].\
                              index(section.id)]
@@ -41,7 +45,8 @@ for tutorial_name in listfolders(current_dir):
             section = Section(order = lesson_order,
                               lesson_name = tutorial_name,
                               add_time = int(time()),
-                              description = description)
+                              description = description,
+                              lesson_title = lesson_title)
             section.save()
 
         all_steps = list(Step.objects.filter(section=section))
