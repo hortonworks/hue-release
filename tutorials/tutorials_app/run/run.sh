@@ -29,6 +29,11 @@ cd - >/dev/null
 cd $RUN_DIR
 [ ! -L git_files ] && ln -s git_files_all/tutorials/tutorials git_files
 
+# updating tutorials version
+if [[ -f 'git_files/version' ]]; then
+cat git_files/version > /tmp/tutorials_version.info
+fi
+
 echo -n "Updating DB...  "
 $RUN_DIR/../../.env/bin/python run.py &>/dev/null
 echo "Done"
