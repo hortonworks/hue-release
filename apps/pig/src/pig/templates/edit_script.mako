@@ -198,10 +198,12 @@ udfs = UDF.objects.all()
           <i class="icon-download-alt"></i></a>
 
 
-        <div class="alert alert-success" id="job_info">
+        <div class="alert alert-success" >
+          <pre id="job_info">
           % if 'stdout' in result:
-          ${result['stdout'].replace("\n", "<br>").replace(" ", "&nbsp;")}
+          ${result['stdout']}
           % endif
+          </pre>
         </div>
         
         <div class="alert alert-error" id="failure_info">
@@ -283,11 +285,9 @@ job_id + "/");
 var stdout = data.stdout.replace(/\n/g, "<br>");
 stdout = stdout.replace(/\s/g, "&nbsp;");
 $("#job_logs").text("Logs...");
-var stdout = data.stdout.replace(/\n/g, "<br>");
-stdout = stdout.replace(/\s/g, "&nbsp;")
-        $("#log_info").html(data.error.replace(/\n/g, "<br>"));
-        $("#job_info").html(stdout);
-        percent = 100;
+$("#log_info").html(data.error.replace(/\n/g, "<br>"));
+$("#job_info").html(data.stdout);
+percent = 100;
         $("#start_job").show();
 $("#save_button").removeAttr("disabled");
         $("#kill_job").hide();
@@ -337,32 +337,12 @@ function explain_progres(percent){
               window.setTimeout("explain_progres("+percent+");", t_out);
          };
 
-start_job_func = function start_job_click(){
-        if (!$("#pig_script_form").valid()) return false;
-        $("#start_job").hide();
-        $("#id_text").attr("disabled", "disabled");
-        $("#save_button").attr("disabled", "disabled");
-        percent = 2;
-        $(".bar").css("width", percent+"%");
-        pig_editor.save();
-        python_editor.save()                                
-        $.ajax({
-            url: "${url("start_job")}",
-            dataType: "json",
-            type: "POST",
-            data: $("#pig_script_form").serialize(),
-            success: function(data){
-                $("#kill_job").show();
-                $("#job_info").append(data.text);
-                job_id = data.job_id;
-                ping_job(job_id);
-            }
-        });
-}
 
 
-
-explain_func = function explain_click(){
+$(document).ready(function(){
+ 
+    $('.explain').live("click", function(e){
+      call_popup_var_edit().done(function() {
 explain_progres(0);
 if (!$("#pig_script_form").valid()) return false;
         $("#id_text, .explain, #start_job, #kill_job").attr("disabled", "disabled");
@@ -382,12 +362,8 @@ if (!$("#pig_script_form").valid()) return false;
                 $("#id_text, .explain, #start_job, #kill_job").removeAttr("disabled");
             }
         });
-}
 
-$(document).ready(function(){
- 
-    $('.explain').live("click", function(e){
-               call_popup_var_edit(e);
+});
             });
 
 % if result.get("job_id") and result.get("JOB_SUBMITED"):
@@ -402,7 +378,10 @@ $("#pig_script_form").validate({
   % if not result.get("id"):  
   remote: "${url("check_script_title")}"
   % endif
-}
+},
+pig_script: {
+required: true
+},
 }, 
 messages: {
 title:{
@@ -435,7 +414,28 @@ var job_id = null;
 
     
     $("#start_job").live("click", function(e){
-        call_popup_var_edit(e);
+call_popup_var_edit().done(function() {
+        if (!$("#pig_script_form").valid()) return false;
+        $("#start_job").hide();
+        $("#id_text").attr("disabled", "disabled");
+        $("#save_button").attr("disabled", "disabled");
+        percent = 2;
+        $(".bar").css("width", percent+"%");
+        pig_editor.save();
+        python_editor.save()                                
+        $.ajax({
+            url: "${url("start_job")}",
+            dataType: "json",
+            type: "POST",
+            data: $("#pig_script_form").serialize(),
+            success: function(data){
+                $("#kill_job").show();
+                $("#job_info").append(data.text);
+                job_id = data.job_id;
+                ping_job(job_id);
+            }
+        });
+       }); 
 
     });
 });

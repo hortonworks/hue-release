@@ -90,3 +90,8 @@ INSTALLED_APPS = (
     'tutorials_app',
     'gunicorn',
 )
+
+try:
+    from local_settings import *
+except ImportError:
+    pass
