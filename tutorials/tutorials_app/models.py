@@ -1,15 +1,21 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+VERSION = 0
 
 class Section(models.Model):
     order = models.IntegerField(max_length=2)
     lesson_name = models.CharField(max_length=30)
+    lesson_title = models.CharField(max_length=50)
     add_time = models.IntegerField(max_length=20)
     description = models.TextField()
 
     def __str__(self):
         return str(self.order)
+
+    def title(self):
+        return self.lesson_title if self.lesson_title != '' \
+               else "Lesson %d" % self.order
 
 
 class Step(models.Model):

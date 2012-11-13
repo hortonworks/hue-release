@@ -21,3 +21,7 @@ build/
 *.egg
 app.reg
 desktop.db
+tutorials/tutorials_app/db/db_version.txt
+
+.env/
+local_settings.py

@@ -20,7 +20,7 @@
             <% i = 0 %>
             % for lesson in lessons:
                 <h3>
-                    <a href="#">${lesson.lesson_name}: Lesson ${lesson.order}
+                    <a href="#">${lesson.lesson_name}: ${lesson.title()}
                     %if now < lesson.add_time:
                         <b><span class="new">new!</span></b>
                     %endif
