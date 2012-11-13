@@ -285,7 +285,7 @@ ${layout.menubar(section='query')}
     </div>
 </div>
 
-<link href="/hcatalog/static/css/codemirror.css" rel="stylesheet">
+<link href="/pig/static/css/codemirror.css" rel="stylesheet">
 <style>
     #filechooser {
         min-height:100px;
@@ -325,12 +325,12 @@ ${layout.menubar(section='query')}
 </style>
 
 <script src="/static/ext/js/jquery/plugins/jquery.cookie.js"></script>
-<script src="/hcatalog/static/js/codemirror.js"></script>
+<script src="/pig/static/js/codemirror.js"></script>
 <script src="/hcatalog/static/js/mysql.js"></script>
 <script src="/hcatalog/static/js/simple-hint.js"></script>
 <script src="/hcatalog/static/js/pig-hint.js"></script>
 <script type="text/javascript" charset="utf-8">
-
+  var pigKeywordsT=[];
   function getTables(){
     var pigKeywordsT=[];
     $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table?user.name=hue", function(data){
@@ -341,6 +341,7 @@ ${layout.menubar(section='query')}
         }
       }
     },"json");
+    return pigKeywordsT;
   }
 
     $(document).ready(function(){
@@ -355,10 +356,7 @@ ${layout.menubar(section='query')}
  	        var startKeys=curText.substr(0,1);
 	        var lastKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-1,1);
                 var prevKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,1);
-		console.log(startKeys);
-		console.log(lastKey);
-		console.log(prevKey);
-                if(startKeys== "'" || startKeys== '"'){
+                if((startKeys== "'" || startKeys== '"')&&(/\s/.test(prevKey))){
                     var dirList=getTables();
                     if(dirList.length<2)
                         dirList.push("");
