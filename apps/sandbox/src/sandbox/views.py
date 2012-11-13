@@ -17,6 +17,9 @@
 
 from desktop.lib.django_util import render
 from desktop.lib.exceptions import PopupException
+from django.http import HttpResponse
+from django.core import urlresolvers
+from django.utils import simplejson as json
 
 import re
 import datetime
@@ -27,6 +30,12 @@ LOG = logging.getLogger(__name__)
 COMPONENT_LIST = ['sandbox', 'tutorials', 'pig', 'hive', 'hcatalog']
 
 def index(request):
+  if request.method == 'POST':
+    _updateTutorials()
+    on_success_url = urlresolvers.reverse(index)
+    result = {'on_success_url':on_success_url}
+    return HttpResponse(json.dumps(result))
+
   version_content_list = []
   try:
     path = '/tmp/sandbox_component_versions.info'
@@ -48,9 +57,17 @@ def _get_version(component, content_list):
   version = 'undefined'
   for version_content in content_list:
     if component in version_content:
-      m = re.match(r"[\D\.-]*(?P<ver>[\d+\.-]+)[\.\D]*", version_content)
+      m = re.match(r"[\D\.-]*(?P<ver>\d[\d+\.-]+\d)[\D\.-]*", version_content)
 #      raise PopupException(str(''))
       if m is not None:
         version = m.group('ver')
       break
   return version
+  
+def _updateTutorials():
+  try:
+    p = Popen("update_tutorials.sh", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+    answer, error = p.communicate()
+  except Exception, ex:
+    msg = "Updating tutorials failed: %s" % (ex)
+    LOG.exception(msg)
