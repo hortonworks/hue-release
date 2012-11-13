@@ -198,7 +198,7 @@ udfs = UDF.objects.all()
           <i class="icon-download-alt"></i></a>
 
 
-        <div class="alert alert-success" >
+        <div class="alert alert-success" id="job_info_outer">
           <pre id="job_info">
           % if 'stdout' in result:
           ${result['stdout']}
@@ -379,9 +379,7 @@ $("#pig_script_form").validate({
   remote: "${url("check_script_title")}"
   % endif
 },
-pig_script: {
-required: true
-},
+pig_script: "required",
 }, 
 messages: {
 title:{
@@ -419,7 +417,7 @@ call_popup_var_edit().done(function() {
         $("#start_job").hide();
         $("#id_text").attr("disabled", "disabled");
         $("#save_button").attr("disabled", "disabled");
-        percent = 2;
+        percent = 0;
         $(".bar").css("width", percent+"%");
         pig_editor.save();
         python_editor.save()                                
@@ -430,7 +428,7 @@ call_popup_var_edit().done(function() {
             data: $("#pig_script_form").serialize(),
             success: function(data){
                 $("#kill_job").show();
-                $("#job_info").append(data.text);
+                $("#job_info_outer").prepend(data.text);
                 job_id = data.job_id;
                 ping_job(job_id);
             }
