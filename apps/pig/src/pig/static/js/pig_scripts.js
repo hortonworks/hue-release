@@ -57,7 +57,7 @@ function getTables(){
 }
 
 function getTableFields(table){
-
+/*
   $.each(table , function(e,i){
     $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
     //$.get("table_f.php?con=" + e, function(data){
@@ -71,7 +71,7 @@ function getTableFields(table){
 
     },"json");
   })
-
+*/
 }
 
 function call_popup_var_edit(){
