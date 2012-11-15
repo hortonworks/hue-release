@@ -5,8 +5,6 @@ set -e
 RUN_DIR=/home/sandbox/tutorials/tutorials_app/run
 GIT_REPO=git@github.com:hortonworks/sandbox-tutorials.git
 
-USER=sandbox
-
 if [[ "$1" == "--migrate" ]]; then
     echo "Migrating DB..."
     cd $RUN_DIR
@@ -21,12 +19,11 @@ fi
 cd $RUN_DIR
 
 [ -d git_files ] || mkdir git_files
-chown $USER git_files
 cd git_files
 CUR_DIR="`pwd`"
-[ ! -d .git ] && su $USER -c "cd $CUR_DIR && git init && git remote add origin $GIT_REPO"
+[ ! -d .git ] && cd $CUR_DIR && git init && git remote add origin $GIT_REPO
 echo -n "Pull...  "
-su $USER -c "cd $CUR_DIR && git pull origin master" # >/dev/null 2>&1
+cd $CUR_DIR && git pull origin master # >/dev/null 2>&1
 echo "Done"
 cd - >/dev/null
 cd $RUN_DIR
