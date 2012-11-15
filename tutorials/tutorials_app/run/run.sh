@@ -5,6 +5,10 @@ set -e
 RUN_DIR=/home/sandbox/tutorials/tutorials_app/run
 GIT_REPO=git@github.com:hortonworks/sandbox-tutorials.git
 
+GIT_FILES=/home/sandbox/sandbox-tutorials
+
+PYTHON=/home/sandbox/tutorials/.env/bin/python
+
 if [[ "$1" == "--migrate" ]]; then
     echo "Migrating DB..."
     cd $RUN_DIR
@@ -18,22 +22,19 @@ fi
 
 cd $RUN_DIR
 
-[ -d git_files ] || mkdir git_files
-cd git_files
-CUR_DIR="`pwd`"
-[ ! -d .git ] && cd $CUR_DIR && git init && git remote add origin $GIT_REPO
+[ -d $GIT_FILES ] || mkdir -p $GIT_FILES
+cd $GIT_FILES
+[ ! -d .git ] && git init && git remote add origin $GIT_REPO
 echo -n "Pull...  "
-cd $CUR_DIR && git pull origin master # >/dev/null 2>&1
+git pull origin master # >/dev/null 2>&1
 echo "Done"
-cd - >/dev/null
 cd $RUN_DIR
 
 # updating tutorials version
 if [[ -f 'git_files/version' ]]; then
-cat git_files/version > /tmp/tutorials_version.info
+cat $GIT_FILES/version > /tmp/tutorials_version.info
 fi
 
 echo -n "Updating DB...  "
-$RUN_DIR/../../.env/bin/python run.py &>/dev/null
-#[ $? -eq 10 ] && echo "New version" && echo "$0"
+$PYTHON run.py &>/dev/null
 echo "Done"
