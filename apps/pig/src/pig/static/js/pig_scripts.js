@@ -2,7 +2,7 @@ var pigKeywordsT=[];
 var dollarSaveParamTrig = 0;
 var varSaveParamTrig = 0;
 var submitFormPopup=false;
-
+var table_fields={};
 
 function autosave(){
   $("#save_button").removeAttr("disabled");
@@ -13,7 +13,6 @@ function autosave(){
 }
 
 function listdir(_context){
-  console.log("listdir:"+_context);
   // Context - Full path, that user have typed. e.g. /tmp/dir1/
   var contentList=[];
   _context=_context.replace(/'/g, "" ).replace(/"/g, "" );
@@ -46,17 +45,33 @@ function getTables(){
     //$.get("tables.php", function(data){
     if(data.hasOwnProperty("tables"))
     {
-      for (var i = 0; i < data.tables.length; i++) {
-        pigKeywordsT.push(data.tables[i]);
+      if(pigKeywordsT.length<1){
+        for (var i = 0; i < data.tables.length; i++) {
+          pigKeywordsT.push(data.tables[i]);
+          table_fields[data.tables[i]]={};
+        }
+        getTableFields(table_fields);
       }
     }
   },"json");
 }
 
 function getTableFields(table){
-  $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
-    console.log(data);
-  });
+
+  $.each(table , function(e,i){
+    $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
+    //$.get("table_f.php?con=" + e, function(data){
+
+      if(typeof (data) !=="undefined" && data.hasOwnProperty("columns") && data.columns.length>0)
+      {
+        table_fields[e]=data;
+      }else{
+        delete table_fields[e];
+      }
+
+    },"json");
+  })
+
 }
 
 function call_popup_var_edit(){
@@ -166,7 +181,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     var prevKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,1);
 
     if((startKeys== "'/" || startKeys== '"/')&&(lastKey=="/")){
-      console.log("change:"+curText)
+
 
       var dirList=listdir(curText);
 
@@ -186,6 +201,42 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
 
     }else if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey))){
       CodeMirror.simpleHint(from, CodeMirror.pigHint);
+    }else if(lastKey == "." ){
+      var table_name=from.getLine(from.getCursor().line).substr(0,from.getCursor().ch-1);
+      table_name=table_name.match(/\w*$/);
+      if(table_name!="")
+      {
+        var fields_hint=[];
+
+        $.each(table_fields, function(e){
+          if(e == table_name)
+          {
+            $.each(this.columns, function(e){
+              if(this.name != "" )
+                fields_hint.push(this.name);
+            })
+
+          }
+
+        })
+
+
+
+        if(fields_hint.length<2 && fields_hint.length>0)
+          fields_hint.push("");
+
+        change.from.ch=from.getCursor().ch;
+
+        var dirArr={
+          from: change.from,
+          list:fields_hint,
+          to: change.from
+        };
+
+        if(fields_hint.length>0 && fields_hint[0].name !="")
+          CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr , true );
+      }
+      console.log(table_name)
     }
 
     autosave();
