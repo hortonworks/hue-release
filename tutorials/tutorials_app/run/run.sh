@@ -35,6 +35,8 @@ if [[ -f 'git_files/version' ]]; then
 cat $GIT_FILES/version > /tmp/tutorials_version.info
 fi
 
+[ ! -L $RUN_DIR/git_files ] && ln -s $GIT_FILES $RUN_DIR/git_files
+
 echo -n "Updating DB...  "
 $PYTHON run.py &>/dev/null
 echo "Done"
