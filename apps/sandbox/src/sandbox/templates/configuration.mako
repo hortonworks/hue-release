@@ -61,6 +61,7 @@ ${shared.menubar(section='configuration')}
                         $('#update-tutorials-spinner').hide();
                         $('#describe-header').show();
                         $('#update-tutorials-msg').show();
+                        window.location.reload(true);
                         return;
                     }
                 }
