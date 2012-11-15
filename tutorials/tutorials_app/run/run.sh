@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 RUN_DIR=/home/sandbox/tutorials/tutorials_app/run
 GIT_REPO=git@github.com:hortonworks/sandbox-tutorials.git
 
