@@ -53,7 +53,7 @@ def create_table(request):
       partitions=beeswax.forms.PartitionTypeFormSet)
   if request.method == "POST":
     form.bind(request.POST)
-    if form.is_valid():
+    if form.is_valid() and 'createTable' in request.POST:
       columns = [ f.cleaned_data for f in form.columns.forms ]
       partition_columns = [ f.cleaned_data for f in form.partitions.forms ]
       proposed_query = django_mako.render_to_string("create_table_statement.mako",
