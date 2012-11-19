@@ -42,7 +42,7 @@ function listdir(_context){
 
 function getTables(){
   $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table?user.name=hue", function(data){
-    //$.get("tables.php", function(data){
+  //$.get("tables.php", function(data){
     if(data.hasOwnProperty("tables"))
     {
       if(pigKeywordsT.length<1){
@@ -57,9 +57,8 @@ function getTables(){
 }
 
 function getTableFields(table){
-/*
   $.each(table , function(e,i){
-    $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
+    $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+e+"?user.name=hue", function(data){
     //$.get("table_f.php?con=" + e, function(data){
 
       if(typeof (data) !=="undefined" && data.hasOwnProperty("columns") && data.columns.length>0)
@@ -71,7 +70,6 @@ function getTableFields(table){
 
     },"json");
   })
-*/
 }
 
 function call_popup_var_edit(){
@@ -207,7 +205,6 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
       if(table_name!="")
       {
         var fields_hint=[];
-
         $.each(table_fields, function(e){
           if(e == table_name)
           {
@@ -215,12 +212,8 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
               if(this.name != "" )
                 fields_hint.push(this.name);
             })
-
           }
-
         })
-
-
 
         if(fields_hint.length<2 && fields_hint.length>0)
           fields_hint.push("");
@@ -236,7 +229,6 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
         if(fields_hint.length>0 && fields_hint[0].name !="")
           CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr , true );
       }
-      console.log(table_name)
     }
 
     autosave();
@@ -327,7 +319,7 @@ $(document).ready(function(){
 
   $("#id_title").live('keyup', autosave);
 
-  $("#pig_helper").find(".dropdown-menu").find("a").live('click', function(){
+  $("#pig_helper").find("a").live('click', function(){
     if($(this).data("python"))
     {
       $("#python_textarea").show();

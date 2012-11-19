@@ -37,6 +37,9 @@
         }
       };
 
+      if(result.list.length == 0 )
+        return;
+
       var completions = result.list;
       function insert(str) {
         editor.replaceRange(str, result.from, result.to);
