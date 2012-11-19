@@ -327,7 +327,7 @@ $(document).ready(function(){
 
   $("#id_title").live('keyup', autosave);
 
-  $("#pig_helper").find("a").live('click', function(){
+  $("#pig_helper").find(".dropdown-menu").find("a").live('click', function(){
     if($(this).data("python"))
     {
       $("#python_textarea").show();
