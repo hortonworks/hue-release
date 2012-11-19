@@ -1,12 +1,5 @@
 (function() {
-  CodeMirror.simpleHint = function(editor, getHints, givenOptions, dirList, disabled) {
-
-    if(typeof (disabled) === "undefined")
-    {
-      disabled=false;
-    }
-
-
+  CodeMirror.simpleHint = function(editor, getHints, givenOptions, dirList) {
     // Determine effective options based on given values and defaults.
     var options = {}, defaults = CodeMirror.simpleHint.defaults;
     for (var opt in defaults)
@@ -26,19 +19,10 @@
       }
 
       var result = getHints(editor);
-
       if (!result || !result.list.length) {
         if(typeof dirList !== 'undefined')
           result=dirList;
-      }else{
-        if(disabled && typeof dirList !== 'undefined')
-        {
-          result=dirList;
-        }
       };
-
-      if(typeof(result.list) === "undefined" || result.list.length == 0 )
-        return;
 
       var completions = result.list;
       function insert(str) {
@@ -53,9 +37,7 @@
       // Build the select widget
       var complete = document.createElement("div");
       complete.className = "CodeMirror-completions";
-
       var sel = complete.appendChild(document.createElement("select"));
-
       // Opera doesn't move the selection when pressing up/down in a
       // multi-select, but it does properly support the size property on
       // single-selects, so no multi-select is necessary.
@@ -64,46 +46,22 @@
         var opt = sel.appendChild(document.createElement("option"));
         opt.appendChild(document.createTextNode(completions[i]));
       }
-      if(!disabled){
-        sel.firstChild.selected = true;
-      }
-
+      sel.firstChild.selected = true;
       sel.size = Math.min(10, completions.length);
       var pos = options.alignWithWord ? editor.charCoords(result.from) : editor.cursorCoords();
       complete.style.left = pos.x + "px";
       complete.style.top = pos.yBot + "px";
       document.body.appendChild(complete);
-
       // If we're at the edge of the screen, then we want the menu to appear on the left of the cursor.
       var winW = window.innerWidth || Math.max(document.body.offsetWidth, document.documentElement.offsetWidth);
       if(winW - pos.x < sel.clientWidth)
         complete.style.left = (pos.x - sel.clientWidth) + "px";
       // Hack to hide the scrollbar.
-      if (completions.length <= 10){
+      if (completions.length <= 10)
         complete.style.width = (sel.clientWidth - 1) + "px";
-        over_width=complete.style.width;
-      }else{
-        over_width=202;
-      }
-
 
       var done = false;
 
-
-      if(disabled)
-      {
-        $(".CodeMirror-completions").prepend("<div class='disable-completions-over'></div>");
-        $(".disable-completions-over").css({
-          "z-index" : "11",
-          "position": "absolute",
-          "width": over_width ,
-          "height": $(".CodeMirror-completions").height()+"px",
-          "backgroundColor": "grey",
-          "opacity" : "0.3"
-        });
-
-        //$(".CodeMirror-completions").find("select").attr("disabled","disabled")
-      }
 
       function close() {
         if (done) return;
@@ -115,17 +73,11 @@
         close();
         setTimeout(function(){editor.focus();}, 50);
       }
-
       CodeMirror.connect(sel, "blur", close);
       CodeMirror.connect(sel, "keydown", function(event) {
         var code = event.keyCode;
-
-        if(disabled&&(code=="38"||code=="40"))
-        {
-          CodeMirror.e_stop(event);
-        }
         // Enter
-        if (code == 13) { if(!disabled){CodeMirror.e_stop(event); pick();}}
+        if (code == 13) {CodeMirror.e_stop(event); pick();}
         // Escape
         else if (code == 27) {CodeMirror.e_stop(event); close(); editor.focus();}
         else if (code != 38 && code != 40 && code != 33 && code != 34 && !CodeMirror.isModifierKey(event)) {
