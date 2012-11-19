@@ -241,7 +241,7 @@ background:  #e7e4ff; !important; }
 label.valid {
   width: 24px;
   height: 24px;
-  background: url(assets/img/valid.png) center center no-repeat;
+  color: green;
   display: inline-block;
   text-indent: -9999px;
 }
@@ -388,6 +388,11 @@ remote: "Script title already exists"
 highlight: function(label) {
     $(label).closest('.control-group').addClass('error');
   },
+success: function(label) {
+    label
+      .text('OK!').addClass('valid')
+      .closest('.control-group').addClass('success');
+  }
 });
 
 var get_job_res_timer = null;
@@ -413,6 +418,7 @@ var job_id = null;
     
     $("#start_job").live("click", function(e){
 call_popup_var_edit().done(function() {
+        $("#job_info_outer").html('<pre id="job_info"></pre>');
         if (!$("#pig_script_form").valid()) return false;
         $("#start_job").hide();
         $("#id_text").attr("disabled", "disabled");
