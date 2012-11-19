@@ -239,7 +239,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
             {
               $.each(this.columns, function(e){
                 if(this.name != "" )
-                  fields_hint.push(this.name);
+                  fields_hint.push(this.name + ":" + this.type);
               })
             }else{
               getTableFields(e, dirArr);
