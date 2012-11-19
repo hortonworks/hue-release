@@ -37,7 +37,7 @@
         }
       };
 
-      if(result.list.length == 0 )
+      if(typeof(result.list) === "undefined" || result.list.length == 0 )
         return;
 
       var completions = result.list;

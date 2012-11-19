@@ -50,26 +50,37 @@ function getTables(){
           pigKeywordsT.push(data.tables[i]);
           table_fields[data.tables[i]]={};
         }
-        getTableFields(table_fields);
       }
     }
   },"json");
 }
 
-function getTableFields(table){
-  $.each(table , function(e,i){
-    $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+e+"?user.name=hue", function(data){
-    //$.get("table_f.php?con=" + e, function(data){
+function getTableFields(table,target){
+
+    $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
+    //$.get("table_f.php?con=" + table, function(data){
 
       if(typeof (data) !=="undefined" && data.hasOwnProperty("columns") && data.columns.length>0)
       {
-        table_fields[e]=data;
+        table_fields[table]=data;
+
+        $.each(data.columns, function(e){
+          if(this.name != "" )
+            target.list.push(this.name + ":" + this.type);
+        })
+
+        if(target.list.length<2 && target.list.length>0)
+          target.list.push("");
+
+        if(target.list.length>0 && target.list[0].name !="")
+          CodeMirror.simpleHint(pig_editor, CodeMirror.pigHint, "", target , true );
+
       }else{
-        delete table_fields[e];
+        delete table_fields[table];
       }
 
     },"json");
-  })
+
 }
 
 function call_popup_var_edit(){
@@ -172,13 +183,16 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
   },
   onChange : function (from, change){
 
+    $(".empty-codemirror-textarea-error").remove();
+
     var curText=from.getTokenAt(from.getCursor()).string;
 
     var startKeys=curText.substr(0,2);
     var lastKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-1,1);
     var prevKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,1);
 
-    if((startKeys== "'/" || startKeys== '"/')&&(lastKey=="/")){
+    if((startKeys== "'/" || startKeys== '"/')&&(lastKey=="/"))
+    {
 
 
       var dirList=listdir(curText);
@@ -197,26 +211,18 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
       if(dirList.length>0 && dirList[0].trim()!="")
         CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr );
 
-    }else if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey))){
+    }
+    else if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey)))
+    {
       CodeMirror.simpleHint(from, CodeMirror.pigHint);
-    }else if(lastKey == "." ){
+    }
+    else if(lastKey == "." )
+    {
       var table_name=from.getLine(from.getCursor().line).substr(0,from.getCursor().ch-1);
       table_name=table_name.match(/\w*$/);
       if(table_name!="")
       {
         var fields_hint=[];
-        $.each(table_fields, function(e){
-          if(e == table_name)
-          {
-            $.each(this.columns, function(e){
-              if(this.name != "" )
-                fields_hint.push(this.name);
-            })
-          }
-        })
-
-        if(fields_hint.length<2 && fields_hint.length>0)
-          fields_hint.push("");
 
         change.from.ch=from.getCursor().ch;
 
@@ -226,8 +232,27 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
           to: change.from
         };
 
-        if(fields_hint.length>0 && fields_hint[0].name !="")
+        $.each(table_fields, function(e){
+          if(e == table_name)
+          {
+            if(typeof (this.columns) !== "undefined")
+            {
+              $.each(this.columns, function(e){
+                if(this.name != "" )
+                  fields_hint.push(this.name);
+              })
+            }else{
+              getTableFields(e, dirArr);
+            }
+          }
+        })
+
+        if(fields_hint.length<2 && fields_hint.length>0)
+          fields_hint.push("");
+
+        if(fields_hint.length>0 && fields_hint[0].name !=""){
           CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr , true );
+        }
       }
     }
 
@@ -306,6 +331,23 @@ $("#id_hdfs_file").change(function() {
 $(document).ready(function(){
 
   getTables();
+
+  //Don`t submit form if codemirror textarea is empty
+  $("#pig_script_form").on("submit",function(event){
+    if(pig_editor.getValue()=="")
+    {
+      $(".empty-codemirror-textarea-error").remove();
+      $(".CodeMirror").append("<div class='empty-codemirror-textarea-error'>This field is required.</div>")
+      $(".empty-codemirror-textarea-error").css({
+        "padding":"15px 0px",
+        "color":"red",
+        "font-size":"14px",
+        "font-weight":"bold"
+      });
+      setTimeout(function(){pig_editor.focus();}, 50);
+      return false;
+    }
+  });
 
   $("#save-param-modal-for-dollar").click(function(){
     dollarSaveParamTrig=1;
