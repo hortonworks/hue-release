@@ -1,11 +1,4 @@
-/*
- *	MySQL Mode for CodeMirror 2 by MySQL-Tools
- *	@author James Thorne (partydroid)
- *	@link 	http://github.com/partydroid/MySQL-Tools
- * 	@link 	http://mysqltools.org
- *	@version 02/Jan/2012
-*/
-CodeMirror.defineMode("mysql", function(config) {
+CodeMirror.defineMode("hive", function(config) {
   var indentUnit = config.indentUnit;
   var curPunc;
 
@@ -15,21 +8,27 @@ CodeMirror.defineMode("mysql", function(config) {
   var ops = wordRegexp(["str", "lang", "langmatches", "datatype", "bound", "sameterm", "isiri", "isuri",
                         "isblank", "isliteral", "union", "a"]);
   var keywords = wordRegexp([
-  ('ACCESSIBLE'),('ALTER'),('AS'),('BEFORE'),('BINARY'),('BY'),('CASE'),('CHARACTER'),('COLUMN'),('CONTINUE'),('CROSS'),('CURRENT_TIMESTAMP'),('DATABASE'),('DAY_MICROSECOND'),('DEC'),('DEFAULT'),
-	('DESC'),('DISTINCT'),('DOUBLE'),('EACH'),('ENCLOSED'),('EXIT'),('FETCH'),('FLOAT8'),('FOREIGN'),('GRANT'),('HIGH_PRIORITY'),('HOUR_SECOND'),('IN'),('INNER'),('INSERT'),('INT2'),('INT8'),
-	('INTO'),('JOIN'),('KILL'),('LEFT'),('LINEAR'),('LOCALTIME'),('LONG'),('LOOP'),('MATCH'),('MEDIUMTEXT'),('MINUTE_SECOND'),('NATURAL'),('NULL'),('OPTIMIZE'),('OR'),('OUTER'),('PRIMARY'),
-	('RANGE'),('READ_WRITE'),('REGEXP'),('REPEAT'),('RESTRICT'),('RIGHT'),('SCHEMAS'),('SENSITIVE'),('SHOW'),('SPECIFIC'),('SQLSTATE'),('SQL_CALC_FOUND_ROWS'),('STARTING'),('TERMINATED'),
-	('TINYINT'),('TRAILING'),('UNDO'),('UNLOCK'),('USAGE'),('UTC_DATE'),('VALUES'),('VARCHARACTER'),('WHERE'),('WRITE'),('ZEROFILL'),('ALL'),('AND'),('ASENSITIVE'),('BIGINT'),('BOTH'),('CASCADE'),
-	('CHAR'),('COLLATE'),('CONSTRAINT'),('CREATE'),('CURRENT_TIME'),('CURSOR'),('DAY_HOUR'),('DAY_SECOND'),('DECLARE'),('DELETE'),('DETERMINISTIC'),('DIV'),('DUAL'),('ELSEIF'),('EXISTS'),('FALSE'),
-	('FLOAT4'),('FORCE'),('FULLTEXT'),('HAVING'),('HOUR_MINUTE'),('IGNORE'),('INFILE'),('INSENSITIVE'),('INT1'),('INT4'),('INTERVAL'),('ITERATE'),('KEYS'),('LEAVE'),('LIMIT'),('LOAD'),('LOCK'),
-	('LONGTEXT'),('MASTER_SSL_VERIFY_SERVER_CERT'),('MEDIUMINT'),('MINUTE_MICROSECOND'),('MODIFIES'),('NO_WRITE_TO_BINLOG'),('ON'),('OPTIONALLY'),('OUT'),('PRECISION'),('PURGE'),('READS'),
-	('REFERENCES'),('RENAME'),('REQUIRE'),('REVOKE'),('SCHEMA'),('SELECT'),('SET'),('SPATIAL'),('SQLEXCEPTION'),('SQL_BIG_RESULT'),('SSL'),('TABLE'),('TINYBLOB'),('TO'),('TRUE'),('UNIQUE'),
-	('UPDATE'),('USING'),('UTC_TIMESTAMP'),('VARCHAR'),('WHEN'),('WITH'),('YEAR_MONTH'),('ADD'),('ANALYZE'),('ASC'),('BETWEEN'),('BLOB'),('CALL'),('CHANGE'),('CHECK'),('CONDITION'),('CONVERT'),
-	('CURRENT_DATE'),('CURRENT_USER'),('DATABASES'),('DAY_MINUTE'),('DECIMAL'),('DELAYED'),('DESCRIBE'),('DISTINCTROW'),('DROP'),('ELSE'),('ESCAPED'),('EXPLAIN'),('FLOAT'),('FOR'),('FROM'),
-	('GROUP'),('HOUR_MICROSECOND'),('IF'),('INDEX'),('INOUT'),('INT'),('INT3'),('INTEGER'),('IS'),('KEY'),('LEADING'),('LIKE'),('LINES'),('LOCALTIMESTAMP'),('LONGBLOB'),('LOW_PRIORITY'),
-	('MEDIUMBLOB'),('MIDDLEINT'),('MOD'),('NOT'),('NUMERIC'),('OPTION'),('ORDER'),('OUTFILE'),('PROCEDURE'),('READ'),('REAL'),('RELEASE'),('REPLACE'),('RETURN'),('RLIKE'),('SECOND_MICROSECOND'),
-	('SEPARATOR'),('SMALLINT'),('SQL'),('SQLWARNING'),('SQL_SMALL_RESULT'),('STRAIGHT_JOIN'),('THEN'),('TINYTEXT'),('TRIGGER'),('UNION'),('UNSIGNED'),('USE'),('UTC_TIME'),('VARBINARY'),('VARYING'),
-	('WHILE'),('XOR'),('FULL'),('COLUMNS'),('MIN'),('MAX'),('STDEV'),('COUNT')
+    ('CREATE'),('DATABASE'),('SCHEMA'),('TABLE'),('EXTERNAL'),('IF'),('NOT'),('EXISTS'),
+   ('COMMENT'),('LOCATION'),('WITH'),('DBPROPERTIES'),('DROP'),('RESTRICT'),('CASCADE'),
+   ('PARTITIONED BY'),('CLUSTERED BY'),('SORTED BY'),('ASC'),('DESC'),('INTO'),('BUCKETS'),
+   ('SKEWED BY'),('ON'),('ROW FORMAT'),('STORED AS'),('STORED BY'),('WITH SERDEPROPERTIES'),
+   ('TBLPROPERTIES'),('LIKE'),('DELIMITED'),('FIELDS TERMINATED BY'),('BY'),
+   ('COLLECTION ITEMS TERMINATED BY'),('MAP KEYS TERMINATED BY'),('LINES TERMINATED BY'),
+   ('SERDE'),('SEQUENCEFILE'),('TEXTFILE'),('RCFILE'),('INPUTFORMAT'),('OUTPUTFORMAT'),('AS'),
+   ('CLUSTER BY'),('SORT BY'),('IF EXISTS'),('IF NOT EXISTS'),('ALTER'),('ADD'),('PARTITION'),
+   ('MSCK'),('REPAIR'),('RECOVER'),('PARTITIONS'),('RENAME TO'),('CHANGE'),('COLUMN'),('FIRST'),
+   ('AFTER'),('REPLACE COLUMNS'),('SET'),('SET TBLPROPERTIES'),('SET SERDE'),('SET SERDEPROPERTIES'),
+   ('SET FILEFORMAT'),('SET LOCATION'),('TOUCH'),('ARCHIVE PARTITION'),('UNARCHIVE PARTITION'),
+   ('ENABLE'),('DISABLE NO_DROP'),('DISABLE OFFLINE'),('RENAME TO PARTITION'),('VIEW'),('LOAD'),
+   ('INSERT'),('FROM'),('WHERE'),('TEMPORARY'),('FUNCTION'),('INDEX'),('WITH DEFERRED REBUILD'),
+   ('IDXPROPERTIES'),('SHOW'),('DATABASES'),('SCHEMAS'),('TABLES'),('EXTENDED'),('FUNCTIONS'),
+   ('FORMATTED'),('INDEXES'),('IN'),('COLUMNS'),('DOT'),('DESCRIBE'),('LOCK'),('TABLESAMPLE'),
+   ('UNION'),('UNION ALL'),('LATERAL'),('LATERAL VIEW'),('JOIN'),('LEFT'),('RIGHT'),('FULL'),
+   ('OUTER'),('SEMI'),('CROSS'),('CROSS JOIN'),('MAPJOIN'),('STREAMTABLE'),('ALL'),('DISTINCT'),
+   ('DISTRIBUTE BY'),('GROUP BY'),('LIMIT'),('AND'),('OR'),('HAVING'),('LOAD DATA'),('INPATH'),
+   ('SELECT'),('IMPORT'),('EXPORT'),('INPUT__FILE__NAME'),('BLOCK__OFFSET__INSIDE__FILE'),('EXPLAIN'),
+   ('OVERWRITE'),('CREATE ROLE'),('DROP ROLE\GRANT ROLE'),('REVOKE ROLE'),('USER'),('GROUP'),
+   ('ROLE'),('GRANT'),('SHOW ROLE GRANT')
   ]);
   var operatorChars = /[*+\-<>=&|]/;
 
@@ -183,4 +182,4 @@ CodeMirror.defineMode("mysql", function(config) {
   };
 });
 
-CodeMirror.defineMIME("text/x-mysql", "mysql");
+CodeMirror.defineMIME("text/x-hive", "hive");

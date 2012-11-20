@@ -326,10 +326,11 @@ ${layout.menubar(section='query')}
 
 <script src="/static/ext/js/jquery/plugins/jquery.cookie.js"></script>
 <script src="/pig/static/js/codemirror.js"></script>
-<script src="/hcatalog/static/js/mysql.js"></script>
-<script src="/pig/static/js/simple-hint.js"></script>
+<script src="/hcatalog/static/js/hive.js"></script>
+<script src="/hcatalog/static/js/simple-hint.js"></script>
 <script src="/hcatalog/static/js/hive-hint.js"></script>
 <script src="/hcatalog/static/js/hive-script.js"></script>
+
 
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
@@ -425,6 +426,10 @@ ${layout.menubar(section='query')}
         });
 
         function checkAndSubmit(){
+            if(editor != undefined)
+        	{
+                editor.save();
+            }
             // TODO: client side validation
             $(".query").val($("#queryField").val());
             $("#advancedSettingsForm").submit();

@@ -31,7 +31,7 @@
         token.end=token.end-1;
       }
 
-      token.className="pig-word";
+      token.className="hive-word";
     }
 
 
@@ -41,7 +41,7 @@
 
     if (!/^[\w$_]*$/.test(token.string)) {
       token = tprop = {start: cur.ch, end: cur.ch, string: "", state: token.state,
-        className: token.string == ":" ? "pig-type" : null};
+        className: token.string == ":" ? "hive-type" : null};
     }
 
     if (!context) var context = [];
@@ -59,8 +59,8 @@
       to: {line: cur.line, ch: token.end}};
   }
 
-  CodeMirror.pigHint = function(editor) {
-    return scriptHint(editor, pigKeywordsU, function (e, cur) {return e.getTokenAt(cur);});
+  CodeMirror.hiveHint = function(editor) {
+    return scriptHint(editor, keywordsU, function (e, cur) {return e.getTokenAt(cur);});
   };
 
   function toTitleCase(str) {
@@ -69,37 +69,33 @@
     });
   }
 
-  var pigKeywords = "VOID IMPORT RETURNS DEFINE LOAD FILTER FOREACH ORDER CUBE DISTINCT COGROUP "
-   + "JOIN CROSS UNION SPLIT INTO IF OTHERWISE ALL AS BY USING INNER OUTER ONSCHEMA PARALLEL "
-   + "PARTITION GROUP AND OR NOT GENERATE FLATTEN ASC DESC IS STREAM THROUGH STORE MAPREDUCE "
-   + "SHIP CACHE INPUT OUTPUT STDERROR STDIN STDOUT LIMIT SAMPLE LEFT RIGHT FULL EQ GT LT GTE LTE "
-   + "NEQ MATCHES TRUE FALSE DESCRIBE ILLUSTRATE REGISTER EXPLAIN DUMP";
-  var pigKeywordsU = pigKeywords.split(" ");
-  var pigKeywordsL = pigKeywords.toLowerCase().split(" ");
+  var keywords = "CREATE\tDATABASE\tSCHEMA\tTABLE\tEXTERNAL\tIF\tNOT\tEXISTS\tCOMMENT\tLOCATION\t" 
+	  + "WITH\tDBPROPERTIES\tDROP\tRESTRICT\tCASCADE\tPARTITIONED BY\tCLUSTERED BY\tSORTED BY\t" 
+	  + "ASC\tDESC\tINTO\tBUCKETS\tSKEWED BY\tON\tROW FORMAT\tSTORED AS\tSTORED BY\tBY\t" 
+	  + "WITH SERDEPROPERTIES\tTBLPROPERTIES\tLIKE\tDELIMITED\tFIELDS TERMINATED BY\t"
+	  + "COLLECTION ITEMS TERMINATED BY\tMAP KEYS TERMINATED BY\tLINES TERMINATED BY\tSERDE\t"
+	  + "SEQUENCEFILE\tTEXTFILE\tRCFILE\tINPUTFORMAT\tOUTPUTFORMAT\tAS\tCLUSTER BY\tSORT BY\t"
+	  + "IF EXISTS\tIF NOT EXISTS\tALTER\tADD\tPARTITION\tMSCK\tREPAIR\tRECOVER\tPARTITIONS\t"
+	  + "RENAME TO\tCHANGE\tCOLUMN\tFIRST\tAFTER\tREPLACE COLUMNS\tSET\tSET TBLPROPERTIES\t"
+	  + "SET SERDE\tSET SERDEPROPERTIES\tSET FILEFORMAT\tSET LOCATION\tTOUCH\tARCHIVE PARTITION\t"
+	  + "UNARCHIVE PARTITION\tENABLE\tDISABLE NO_DROP\tDISABLE OFFLINE\tRENAME TO PARTITION\t"
+	  + "VIEW\tLOAD\tINSERT\tFROM\tWHERE\tTEMPORARY\tFUNCTION\tINDEX\tWITH DEFERRED REBUILD\t"
+	  + "IDXPROPERTIES\tSHOW\tDATABASES\tSCHEMAS\tTABLES\tEXTENDED\tFUNCTIONS\tFORMATTED\tINDEXES\t"
+	  + "IN\tCOLUMNS\tDOT\tDESCRIBE\tLOCK\tTABLESAMPLE\tUNION\tUNION ALL\tLATERAL\tLATERAL VIEW\t"
+	  + "JOIN\tLEFT\tRIGHT\tFULL\tOUTER\tSEMI\tCROSS\tCROSS JOIN\tMAPJOIN\tSTREAMTABLE\tALL\t"
+	  + "DISTINCT\tDISTRIBUTE BY\tGROUP BY\tLIMIT\tAND\tOR\tHAVING\tLOAD DATA\tINPATH\t"
+	  + "SELECT\tIMPORT\tEXPORT\tINPUT__FILE__NAME\tBLOCK__OFFSET__INSIDE__FILE\tEXPLAIN\tOVERWRITE\t"
+	  + "CREATE ROLE\tDROP ROLE\GRANT ROLE\tREVOKE ROLE\tUSER\tGROUP\tROLE\tGRANT\tSHOW ROLE GRANT\t";
+  var keywordsU = keywords.split("\t");
+  var keywordsL = keywords.toLowerCase().split("\t");
 
-  var pigTypes = "BOOLEAN INT LONG FLOAT DOUBLE CHARARRAY BYTEARRAY BAG TUPLE MAP";
-  var pigTypesU = pigTypes.split(" ");
-  var pigTypesL = pigTypes.toLowerCase().split(" ");
+  var types = "TINYINT SMALLINT INT BIGINT BOOLEAN FLOAT DOUBLE STRING BINARY TIMESTAMP ARRAY MAP STRUCT UNIONTYPE";
+  var typesU = types.split(" ");
+  var typesL = types.toLowerCase().split(" ");
 
-  var pigBuiltins ="ABS ACOS ARITY ASIN ATAN AVG BAGSIZE BINSTORAGE BLOOM BUILDBLOOM CBRT CEIL "
-   + "CONCAT COR COS COSH COUNT COUNT_STAR COV CONSTANTSIZE CUBEDIMENSIONS DIFF DISTINCT DOUBLEABS "
-   + "DOUBLEAVG DOUBLEBASE DOUBLEMAX DOUBLEMIN DOUBLEROUND DOUBLESUM EXP FLOOR FLOATABS FLOATAVG "
-   + "FLOATMAX FLOATMIN FLOATROUND FLOATSUM GENERICINVOKER INDEXOF INTABS INTAVG INTMAX INTMIN "
-   + "INTSUM INVOKEFORDOUBLE INVOKEFORFLOAT INVOKEFORINT INVOKEFORLONG INVOKEFORSTRING INVOKER "
-   + "ISEMPTY JSONLOADER JSONMETADATA JSONSTORAGE LAST_INDEX_OF LCFIRST LOG LOG10 LOWER LONGABS "
-   + "LONGAVG LONGMAX LONGMIN LONGSUM MAX MIN MAPSIZE MONITOREDUDF NONDETERMINISTIC OUTPUTSCHEMA  "
-   + "PIGSTORAGE PIGSTREAMING RANDOM REGEX_EXTRACT REGEX_EXTRACT_ALL REPLACE ROUND SIN SINH SIZE "
-   + "SQRT STRSPLIT SUBSTRING SUM STRINGCONCAT STRINGMAX STRINGMIN STRINGSIZE TAN TANH TOBAG "
-   + "TOKENIZE TOMAP TOP TOTUPLE TRIM TEXTLOADER TUPLESIZE UCFIRST UPPER UTF8STORAGECONVERTER";
-  var pigBuiltinsU = pigBuiltins.split(" ").join("() ").split(" ");
-  var pigBuiltinsL = pigBuiltins.toLowerCase().split(" ").join("() ").split(" ");
-  var pigBuiltinsC = ("BagSize BinStorage Bloom BuildBloom ConstantSize CubeDimensions DoubleAbs "
-   + "DoubleAvg DoubleBase DoubleMax DoubleMin DoubleRound DoubleSum FloatAbs FloatAvg FloatMax "
-   + "FloatMin FloatRound FloatSum GenericInvoker IntAbs IntAvg IntMax IntMin IntSum "
-   + "InvokeForDouble InvokeForFloat InvokeForInt InvokeForLong InvokeForString Invoker "
-   + "IsEmpty JsonLoader JsonMetadata JsonStorage LongAbs LongAvg LongMax LongMin LongSum MapSize "
-   + "MonitoredUDF Nondeterministic OutputSchema PigStorage PigStreaming StringConcat StringMax "
-   + "StringMin StringSize TextLoader TupleSize Utf8StorageConverter").split(" ").join("() ").split(" ");
+  var builtins ="ABS AVG MAX MIN DISTINCT";
+  var builtinsU = builtins.split(" ").join("() ").split(" ");
+  var builtinsL = builtins.toLowerCase().split(" ").join("() ").split(" ");
 
   function getCompletions(token, context) {
     var found = [], start = token.string;
@@ -109,17 +105,16 @@
 
     function gatherCompletions(obj) {
       if(obj == ":") {
-        forEach(pigTypesL, maybeAdd);
+        forEach(typesL, maybeAdd);
       }
       else {
-        forEach(pigBuiltinsU, maybeAdd);
-        forEach(pigBuiltinsL, maybeAdd);
-        forEach(pigBuiltinsC, maybeAdd);
-        forEach(pigTypesU, maybeAdd);
-        forEach(pigTypesL, maybeAdd);
-        forEach(pigKeywordsU, maybeAdd);
-        forEach(pigKeywordsL, maybeAdd);
-        forEach(pigKeywordsT, maybeAdd);
+        forEach(builtinsU, maybeAdd);
+        forEach(builtinsL, maybeAdd);
+        forEach(typesU, maybeAdd);
+        forEach(typesL, maybeAdd);
+        forEach(keywordsU, maybeAdd);
+        forEach(keywordsL, maybeAdd);
+        forEach(keywordsT, maybeAdd);
       }
     }
 
@@ -128,12 +123,12 @@
       // find in the current environment.
       var obj = context.pop(), base;
 
-      if (obj.className == "pig-word"){
+      if (obj.className == "hive-word"){
         base = obj.string;
       }else if (obj.className == "variable"){
         base = obj.string;
       }
-      else if(obj.className == "pig-type")
+      else if(obj.className == "hive-type")
         base = ":" + obj.string;
 
       while (base != null && context.length)
