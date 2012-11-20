@@ -265,6 +265,10 @@ label.error {
 <script src="/pig/static/js/pig_scripts.js"></script>
 <script type="text/javascript">
 var percent = 0;
+var get_job_res_timer = null;
+var ping_job_timer = null;
+var job_id = null;
+
 function get_job_result(job_id)
 {
     $.post("${url("get_job_result")}", {job_id: job_id}, function(data){
@@ -276,66 +280,24 @@ function get_job_result(job_id)
             return;
         }
 
-if (parseInt(data.exit)==0) $(".bar").addClass("bar-success"); 
-else $(".bar").addClass("bar-danger");
+        if (parseInt(data.exit)==0) $(".bar").addClass("bar-success"); 
+        else $(".bar").addClass("bar-danger");
 
-$("#download_job_result").show();
-$("#download_job_result").attr("href", "/pig/download_job_result/" +
-job_id + "/");
-var stdout = data.stdout.replace(/\n/g, "<br>");
-stdout = stdout.replace(/\s/g, "&nbsp;");
-$("#job_logs").text("Logs...");
-$("#log_info").html(data.error.replace(/\n/g, "<br>"));
-$("#job_info").html(data.stdout);
-percent = 100;
+        $("#download_job_result").show();
+        $("#download_job_result").attr("href", "/pig/download_job_result/" +
+                                       job_id + "/");
+        var stdout = data.stdout.replace(/\n/g, "<br>");
+        stdout = stdout.replace(/\s/g, "&nbsp;");
+        $("#job_logs").text("Logs...");
+        $("#log_info").html(data.error.replace(/\n/g, "<br>"));
+        $("#job_info").html(data.stdout);
+        percent = 100;
         $("#start_job").show();
-$("#save_button").removeAttr("disabled");
         $("#kill_job").hide();
         $(".bar").css("width", percent+"%");
     }, "json");
     
 }
-
-function ping_job(job_id){
-    var url = '/proxy/localhost/50111/templeton/v1/queue/';          
-    $.get(url+job_id+'?user.name=hdfs', 
-          function(data) {
-              if (data.exitValue !== null)
-              {
-                  if (data.status.failureInfo != 'NA')
-                      $("#failure_info").html(data.status.failureInfo);
-                  percent += 10;
-                  $(".bar").css("width", percent+"%");
-                  get_job_res_timer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
-                  return 
-              }
-              if (/[1-9]\d?0?\%/.test(data.percentComplete))
-              {
-                  var job_done = parseInt(data.percentComplete.match(/\d+/)[0]);
-                  if (job_done==100) job_done=90
-                  percent = (job_done < percent)?percent:job_done;              
-                  $(".bar").css("width", percent + "%");
-              }
-              else
-              {
-                  percent += 1;
-                  $(".bar").css("width", percent+"%");
-              }
-              ping_job_timer = window.setTimeout("ping_job('"+job_id+"');", 1000);     
-           });
-          
-}
-
-function explain_progres(percent){
-	      var t_out =300;
-              if(percent==0) { t_out = 1000; }
-              $(".bar").css("width", percent+"%");
-              percent += 10;
-              if(percent==100) {
-                $(".bar").css("width", percent+"%");
-		return false; }
-              window.setTimeout("explain_progres("+percent+");", t_out);
-         };
 
 
 
@@ -395,10 +357,6 @@ success: function(label) {
   }
 });
 
-var get_job_res_timer = null;
-var ping_job_timer = null;
-
-var job_id = null;
     
     $(".collapse").collapse();
     
@@ -419,10 +377,9 @@ var job_id = null;
     $("#start_job").live("click", function(e){
 call_popup_var_edit().done(function() {
         $("#job_info_outer").html('<pre id="job_info"></pre>');
+        $(".bar").attr("class", "bar");
         if (!$("#pig_script_form").valid()) return false;
         $("#start_job").hide();
-        $("#id_text").attr("disabled", "disabled");
-        $("#save_button").attr("disabled", "disabled");
         percent = 0;
         $(".bar").css("width", percent+"%");
         pig_editor.save();
@@ -443,8 +400,6 @@ call_popup_var_edit().done(function() {
 
     });
 });
-
-
 
 </script>
 
