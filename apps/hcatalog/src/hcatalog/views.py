@@ -42,9 +42,9 @@ import hcatalog.forms
 from hcatalog import common
 from hcatalog import models
 from hcat_client import hcat_client
+from beeswax.design import _strip_trailing_semicolon
 from beeswax.views import (authorized_get_design, safe_get_design, save_design,
-                           _strip_trailing_semicolon, get_parameterization,
-                           make_beeswax_query, explain_directly,
+                           get_parameterization, make_beeswax_query, explain_directly,
                            expand_exception, make_query_context, authorized_get_history,
                            _parse_query_context, _parse_out_hadoop_jobs, _get_browse_limit_clause,
                            _get_server_id_and_state, download, parse_results)
