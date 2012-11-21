@@ -48,7 +48,8 @@ from beeswax.server.dbms import expand_exception, get_query_server
 from beeswax.views import (authorized_get_design, safe_get_design, save_design,
                            get_parameterization, explain_directly, download,
                            make_query_context, authorized_get_history,
-                           _parse_query_context, _parse_out_hadoop_jobs)
+                           _parse_query_context, _parse_out_hadoop_jobs,
+                           _get_query_handle_and_state)
 
 from beeswax.views import execute_directly as execute_directly_beeswax
 from beeswax.views import explain_directly as explain_directly_beeswax
@@ -491,7 +492,7 @@ def view_results(request, id, first_row=0):
       for format in common.DL_FORMATS:
         download_urls[format] = urlresolvers.reverse(download, kwargs=dict(id=str(id), format=format))
 
-    save_form = beeswax.forms.SaveResultsForm()
+    save_form = SaveResultsForm()
     results.start_row = first_row
 
     context.update({
