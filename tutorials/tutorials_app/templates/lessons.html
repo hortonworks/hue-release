@@ -62,7 +62,7 @@
                 frameset.cols = "0%, 100%";
                 tutorials_frame.noResize = true;
                 detachedTutorials = window.open('/', 'Tutorials', 'fullscreen=yes');
-                detachedTutorials.location = tutorials_frame.location;
+                detachedTutorials.location = tutorials_frame.contentWindow.document.location;
                 detachedTutorials.lessonsParent = window;
                 window.detachedTutorials = detachedTutorials;
                 detachedTutorials.onload = function() {
