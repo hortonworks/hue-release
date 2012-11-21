@@ -2,10 +2,78 @@
 <html>
     <head>
         <title>Lessons</title>
+        <script>
+            function addButtons(tutorials_doc, code) {
+                var style = tutorials_doc.createElement('style');
+                style.type = 'text/css';
+                style.innerHTML =   'body { margin: 7px; padding: 0; } \
+                                    .button {  \
+                                        margin: 0; \
+                                        border: 1px solid #666; \
+                                        position: fixed;  \
+                                        top: 50%;  \
+                                        left: -20px;  \
+                                        margin-top: -30px; \
+                                        filter:alpha(opacity=30); \
+                                        opacity: 0.3; \
+                                        -moz-opacity: 0.3; \
+                                        -khtml-opacity: 0.3; \
+                                        -moz-transform: rotate(-90deg); \
+                                        -webkit-transform: rotate(-90deg); \
+                                        -o-transform: rotate(-90deg); \
+                                        -ms-transform: rotate(-90deg); \
+                                        transform: rotate(-90deg); \
+                                        text-decoration: none; \
+                                        color: #222; \
+                                        padding: 10px; \
+                                        height: 20px; \
+                                        width: 60px; \
+                                        background-color: #EEE; \
+                                    } \
+                                    .button:hover {  \
+                                        filter:alpha(opacity=100); \
+                                        opacity: 1;  \
+                                        -moz-opacity: 1; \
+                                        -khtml-opacity: 1; \
+                                    }';
+                tutorials_doc.getElementsByTagName('head')[0].appendChild(style);
+
+                var btn = tutorials_doc.createElement('div');
+                btn.innerHTML = code;
+                tutorials_doc.getElementsByTagName('body')[0].appendChild(btn);
+            }
+
+            function addButtonsAttached() {
+                var tutorials_doc = document.getElementById('c1').contentWindow.document;
+                addButtons(tutorials_doc, '<a href="#" onclick="top.detach()" class="button">Detach</a>');
+            }
+
+            function attach() {
+                var frameset = document.getElementsByTagName("frameset")[0];
+                var tutorials_frame = document.getElementById('c1');
+                frameset.cols = "30%, 70%";
+                tutorials_frame.noResize = false;
+                window.detachedTutorials.close();
+            }
+
+            function detach() {
+                var frameset = document.getElementsByTagName("frameset")[0];
+                var tutorials_frame = document.getElementById('c1');
+                frameset.cols = "0%, 100%";
+                tutorials_frame.noResize = true;
+                detachedTutorials = window.open('/', 'Tutorials', 'fullscreen=yes');
+                detachedTutorials.location = tutorials_frame.location;
+                detachedTutorials.lessonsParent = window;
+                window.detachedTutorials = detachedTutorials;
+                detachedTutorials.onload = function() {
+                    addButtons(detachedTutorials.document,
+                               '<a href="#" onclick="window.lessonsParent.attach()" class="button">Attach</a>');
+                }
+            }
+        </script>
     </head>
     <frameset cols="30%, 70%">
-<!--        <frame id='c1' src="${step_location}"> -->
-        <frame id='c1' src='/file/index.html'>
+        <frame id='c1' src='/file/index.html' onload="addButtonsAttached()">
         <frame id='c2' src="${content}">
     </frameset>
 </html>
