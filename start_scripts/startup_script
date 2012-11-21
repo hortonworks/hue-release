@@ -34,9 +34,9 @@ start)
     bash $SCRIPTS_PATH/gen_hosts.sh
    
     printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
-    cd /home/sandbox
+    cd /home/sandbox/sandbox-shared
     git pull  >> /var/log/startup_script.log 2>&1
-    /home/hue/build/env/bin/hue migrate  >> $LOG 2>&1
+    /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
     bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
     cd - >> $LOG 2>&1
     restart -s

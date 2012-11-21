@@ -9,12 +9,12 @@ function get_ip() {
 }
 
 HOST=$(get_ip)
-NUM=1
+NUM=5
 while [ -z "$HOST" ]; do
 	HOST=$(get_ip)
 	sleep 5
 	NUM=$(($NUM-1))
-	if [ ! $NUM -gt 0 ]; then
+	if [ $NUM -le 0 ]; then
 		HOST="127.0.0.1"
 		echo "Failed to update IP"
 		break
