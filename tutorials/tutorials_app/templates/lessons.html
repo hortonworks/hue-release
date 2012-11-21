@@ -61,7 +61,7 @@
                 var tutorials_frame = document.getElementById('c1');
                 frameset.cols = "0%, 100%";
                 tutorials_frame.noResize = true;
-                detachedTutorials = window.open('/', 'Tutorials', 'fullscreen=yes');
+                detachedTutorials = window.open('/', 'Tutorials', 'fullscreen=yes,scrollbars=1');
                 detachedTutorials.location = tutorials_frame.contentWindow.document.location;
                 detachedTutorials.lessonsParent = window;
                 window.detachedTutorials = detachedTutorials;
@@ -69,6 +69,7 @@
                     addButtons(detachedTutorials.document,
                                '<a href="#" onclick="window.lessonsParent.attach()" class="button">Attach</a>');
                 }
+                window.onbeforeunload=function() {window.detachedTutorials.close();}
             }
         </script>
     </head>
