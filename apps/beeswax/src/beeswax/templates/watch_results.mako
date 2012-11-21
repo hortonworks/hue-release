@@ -17,17 +17,54 @@
 from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 %>
+
 <%namespace name="layout" file="layout.mako" />
 <%namespace name="util" file="util.mako" />
 <%namespace name="comps" file="beeswax_components.mako" />
+
 ${commonheader(_('Query Results'), "beeswax", user, "100px")}
 ${layout.menubar(section='query')}
 
+<style>
+  #collapse {
+    float: right;
+    cursor: pointer;
+  }
+
+  #expand {
+    display: none;
+    cursor: pointer;
+    position: absolute;
+    background-color: #01639C;
+    padding: 3px;
+    -webkit-border-top-right-radius: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -moz-border-radius-bottomright: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    opacity: 0.5;
+    left: -4px;
+  }
+
+  #expand:hover {
+    opacity: 1;
+    left: 0;
+  }
+
+  .resultTable td, .resultTable th {
+    white-space: nowrap;
+  }
+
+</style>
+
 <div class="container-fluid">
 	<h1>${_('Query Results:')} ${util.render_query_context(query_context)}</h1>
+  <div id="expand"><i class="icon-chevron-right icon-white"></i></div>
 	<div class="row-fluid">
 		<div class="span3">
 			<div class="well sidebar-nav">
+        <a id="collapse" class="btn btn-small"><i class="icon-chevron-left" rel="tooltip" title="${_('Collapse this panel')}"></i></a>
 				<ul class="nav nav-list">
 					% if download_urls:
 					<li class="nav-header">${_('Downloads')}</li>
@@ -53,70 +90,74 @@ ${layout.menubar(section='query')}
 					% endif
 				</ul>
 			</div>
+      <div id="jumpToColumnAlert" class="alert hide">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>${_('Did you know?')}</strong> ${_('You can click on a row to select a column you want to jump to.')}
+      </div>
 		</div>
 		<div class="span9">
-				<ul class="nav nav-tabs">
-					<li class="active"><a href="#results" data-toggle="tab">
-		  			%if error:
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#results" data-toggle="tab">
+            %if error:
 			            ${_('Error')}
-					%else:
+            %else:
 						${_('Results')}
-					%endif
-					</a></li>
-					<li><a href="#query" data-toggle="tab">${_('Query')}</a></li>
-					<li><a href="#log" data-toggle="tab">${_('Log')}</a></li>
-				</ul>
+            %endif
+        </a></li>
+        <li><a href="#query" data-toggle="tab">${_('Query')}</a></li>
+        <li><a href="#log" data-toggle="tab">${_('Log')}</a></li>
+      </ul>
 
-				<div class="tab-content">
-					<div class="active tab-pane" id="results">
-					% if error:
-		            <div class="alert alert-error">
-		              <h3>${_('Error!')}</h3>
-		              <pre>${error_message | h}</pre>
-		            </div>
-          			% else:
-		            % if expected_first_row != start_row:
-		              <div class="alert"><strong>${_('Warning:')}</strong> ${_('Page offset may have incremented since last view.')}</div>
-		            % endif
-            		<table class="table table-striped table-condensed resultTable" cellpadding="0" cellspacing="0">
-		              <thead>
-		                <tr>
-		                  <th>&nbsp;</th>
-		                  % for col in columns:
-		                    <th>${col}</th>
-		                  % endfor
-		                </tr>
-		              </thead>
-		              <tbody>
-		                % for i, row in enumerate(results):
-		                <tr>
-		                  <td style="white-space: nowrap">${start_row + i}</td>
-		                  % for item in row:
-		                    <td style="white-space: nowrap">${ item }</td>
-		                  % endfor
-		                </tr>
-		                % endfor
-		              </tbody>
-		            </table>
-					<div class="pagination pull-right">
-				    	<ul>
-							% if start_row != 0:
-                                <li class="prev"><a title="${_('Beginning of List')}" href="${ url('beeswax.views.view_results', query.id, 0) }${'?context=' + context_param or '' | n}">&larr; ${_('Beginning of List')}</a></li>
-				            % endif
-                            % if has_more and len(results) == 100:
-                                <li><a title="${_('Next page')}" href="${ url('beeswax.views.view_results', query.id, next_row) }${'?context=' + context_param or '' | n}">${_('Next Page')} &rarr;</a></li>
-                            % endif
-				    	</ul>
-				    </div>
-		          % endif
-				</div>
-				<div class="tab-pane" id="query">
-						<pre>${query.query | h}</pre>
-				</div>
-				<div class="tab-pane" id="log">
-					<pre>${log | h}</pre>
-				</div>
-			</div>
+      <div class="tab-content">
+        <div class="active tab-pane" id="results">
+            % if error:
+              <div class="alert alert-error">
+                <h3>${_('Error!')}</h3>
+                <pre>${error_message | h}</pre>
+              </div>
+            % else:
+            % if expected_first_row != start_row:
+                <div class="alert"><strong>${_('Warning:')}</strong> ${_('Page offset may have incremented since last view.')}</div>
+            % endif
+            <table class="table table-striped table-condensed resultTable" cellpadding="0" cellspacing="0">
+            <thead>
+            <tr>
+              <th>&nbsp;</th>
+            % for col in columns:
+                <th>${col}</th>
+            % endfor
+            </tr>
+            </thead>
+            <tbody>
+              % for i, row in enumerate(results):
+              <tr>
+                <td>${start_row + i}</td>
+              % for item in row:
+                  <td>${ item }</td>
+              % endfor
+              </tr>
+              % endfor
+            </tbody>
+            </table>
+            <div class="pagination pull-right">
+              <ul>
+              % if start_row != 0:
+                  <li class="prev"><a title="${_('Beginning of List')}" href="${ url('beeswax.views.view_results', query.id, 0) }${'?context=' + context_param or '' | n}">&larr; ${_('Beginning of List')}</a></li>
+              % endif
+              % if has_more and len(results) == 100:
+                  <li><a title="${_('Next page')}" href="${ url('beeswax.views.view_results', query.id, next_row) }${'?context=' + context_param or '' | n}">${_('Next Page')} &rarr;</a></li>
+              % endif
+              </ul>
+            </div>
+            % endif
+        </div>
+        <div class="tab-pane" id="query">
+          <pre>${query.query | h}</pre>
+        </div>
+        <div class="tab-pane" id="log">
+          <pre>${log | h}</pre>
+        </div>
+      </div>
 
 		</div>
 	</div>
@@ -152,13 +193,15 @@ ${layout.menubar(section='query')}
       <div id="fieldRequired" class="hide" style="position: absolute; left: 10;">
         <span class="label label-important">${_('Sorry, name is required.')}</span>
       </div>
-      <a id="saveBtn" class="btn primary">${_('Save')}</a>
-      <input type="hidden" name="save" value="save"/>
       <a class="btn" data-dismiss="modal">${_('Cancel')}</a>
+      <a id="saveBtn" class="btn btn-primary">${_('Save')}</a>
+      <input type="hidden" name="save" value="save"/>
     </div>
   </form>
   </div>
 %endif
+
+
 
 
 <script type="text/javascript" charset="utf-8">
@@ -226,6 +269,38 @@ ${layout.menubar(section='query')}
           $("#fileChooserModal").slideDown();
         });
       }
+
+      $("#collapse").click(function () {
+        $(".sidebar-nav").parent().css("margin-left", "-31%");
+        $("#expand").show().css("top", $(".sidebar-nav i").position().top + "px");
+        $(".sidebar-nav").parent().next().removeClass("span9").addClass("span12").addClass("noLeftMargin");
+      });
+      $("#expand").click(function () {
+        $(this).hide();
+        $(".sidebar-nav").parent().next().removeClass("span12").addClass("span9").removeClass("noLeftMargin");
+        $(".sidebar-nav").parent().css("margin-left", "0");
+      });
+
+      $(".resultTable").jHueTableExtender({
+        hintElement: "#jumpToColumnAlert",
+        fixedHeader: true,
+        firstColumnTooltip: true
+      });
+
+      resizeLogs();
+
+      $(window).resize(function () {
+        resizeLogs();
+      });
+
+      $("a[href='#log']").on("shown", function () {
+        resizeLogs();
+      });
+
+      function resizeLogs() {
+        $("#log pre").css("overflow", "auto").height($(window).height() - $("#log pre").position().top - 40);
+      }
+
     });
 </script>
 

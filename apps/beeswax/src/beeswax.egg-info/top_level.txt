@@ -1,4 +1,5 @@
+hive_metastore
 beeswax
 beeswaxd
+cli_service
 fb303
-hive_metastore
