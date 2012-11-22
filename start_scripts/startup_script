@@ -35,11 +35,12 @@ start)
    
     printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
     cd /home/sandbox/sandbox-shared
-    git pull  >> /var/log/startup_script.log 2>&1
+    sudo -u sandbox git pull  >> /var/log/startup_script.log 2>&1
+    chown sandbox:sandbox -R /home/sandbox/sandbox-shared
     /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
-    bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
+    sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
     cd - >> $LOG 2>&1
-    restart -s
+    [ "z$2" == "z--fake" ] || restart -s
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
     /etc/init.d/supervisord start >> $LOG 2>&1
