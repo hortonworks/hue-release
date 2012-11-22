@@ -68,13 +68,13 @@ ${layout.menubar(section='tables')}
 		<h3>${_('Install samples')}</h3>
 	</div>
 	<div class="modal-body">
-	  <div id="installSamplesMessage">
+	  <div id="installSamplesMessage" class="alert">
 
 	  </div>
 	</div>
 	<div class="modal-footer">
-		<a href="#" class="btn" data-dismiss="modal">${_('Cancel')}</a>
-		<a href="#" id="installSamplesBtn" class="btn btn-primary">${_('Yes, install samples')}</a>
+		<a href="#" id="installSamplesBtn" class="btn primary">${_('Yes')}</a>
+		<a href="#" class="btn secondary" data-dismiss="modal">${_('No')}</a>
 	</div>
 </div>
 % endif
@@ -109,7 +109,7 @@ ${layout.menubar(section='tables')}
                     }
                     else {
                         var message = "${_('There was an error processing your request:')} " + result.message;
-                        $("#installSamplesMessage").addClass("alert").addClass("alert-error").text(message);
+                        $("#installSamplesMessage").addClass("alert-error").text(message);
                     }
                 }
             );

@@ -17,11 +17,9 @@
 from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 %>
-
 <%namespace name="layout" file="layout.mako" />
 <%namespace name="util" file="util.mako" />
 <%namespace name="comps" file="beeswax_components.mako" />
-
 ${commonheader(_('Query Results'), "beeswax", user, "100px")}
 ${layout.menubar(section='query')}
 
@@ -193,9 +191,9 @@ ${layout.menubar(section='query')}
       <div id="fieldRequired" class="hide" style="position: absolute; left: 10;">
         <span class="label label-important">${_('Sorry, name is required.')}</span>
       </div>
-      <a class="btn" data-dismiss="modal">${_('Cancel')}</a>
-      <a id="saveBtn" class="btn btn-primary">${_('Save')}</a>
+      <a id="saveBtn" class="btn primary">${_('Save')}</a>
       <input type="hidden" name="save" value="save"/>
+      <a class="btn" data-dismiss="modal">${_('Cancel')}</a>
     </div>
   </form>
   </div>
@@ -286,20 +284,6 @@ ${layout.menubar(section='query')}
         fixedHeader: true,
         firstColumnTooltip: true
       });
-
-      resizeLogs();
-
-      $(window).resize(function () {
-        resizeLogs();
-      });
-
-      $("a[href='#log']").on("shown", function () {
-        resizeLogs();
-      });
-
-      function resizeLogs() {
-        $("#log pre").css("overflow", "auto").height($(window).height() - $("#log pre").position().top - 40);
-      }
 
     });
 </script>

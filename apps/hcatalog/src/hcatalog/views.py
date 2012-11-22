@@ -42,21 +42,18 @@ import hcatalog.forms
 from hcatalog import common
 from hcatalog import models
 from hcat_client import hcat_client
-from beeswax.design import _strip_trailing_semicolon, HQLdesign, hql_query
-from beeswax.server import dbms
-from beeswax.server.dbms import expand_exception, get_query_server
 from beeswax.views import (authorized_get_design, safe_get_design, save_design,
-                           get_parameterization, explain_directly, download,
-                           make_query_context, authorized_get_history,
-                           _parse_query_context, _parse_out_hadoop_jobs,
-                           _get_query_handle_and_state)
-
-from beeswax.views import execute_directly as execute_directly_beeswax
-from beeswax.views import explain_directly as explain_directly_beeswax
-from beeswax.forms import QueryForm, SaveResultsForm
+                           _strip_trailing_semicolon, get_parameterization,
+                           make_beeswax_query, explain_directly,
+                           expand_exception, make_query_context, authorized_get_history,
+                           _parse_query_context, _parse_out_hadoop_jobs, _get_browse_limit_clause,
+                           _get_server_id_and_state, download, parse_results)
+from beeswax.views import execute_directly as e_d, explain_directly as expl_d
+from beeswax.forms import query_form, SaveResultsForm
+from beeswax import db_utils
 from beeswax.models import MetaInstall, SavedQuery, QueryHistory
 from beeswax.design import HQLdesign
-from beeswaxd.ttypes import BeeswaxException
+from beeswaxd.ttypes import BeeswaxException, QueryHandle
 
 import time
 from datetime import date, datetime
@@ -209,8 +206,7 @@ def pig_view(request, table=None):
 
 
 def hive_view(request, table=None):
-    db = dbms.get(request.user)
-    tables = db.get_tables('default', '.*')
+    tables = db_utils.meta_client().get_tables("default", ".*")
     if not tables:
         examples_installed = MetaInstall.get().installed_example
         return render("index.mako", request, {'examples_installed': examples_installed})
@@ -219,98 +215,84 @@ def hive_view(request, table=None):
 
 
 def execute_query(request, design_id=None, table=None):
-  """
-  View function for executing an arbitrary query.
-  It understands the optional GET/POST params:
-
-    on_success_url
-      If given, it will be displayed when the query is successfully finished.
-      Otherwise, it will display the view query results page by default.
-  """
-  authorized_get_design(request, design_id)
-
-  error_message = None
-  form = QueryForm()
-  action = request.path
-  log = None
-  design = safe_get_design(request, SavedQuery.HQL, design_id)
-  on_success_url = request.REQUEST.get('on_success_url')
-
-  if request.method == 'POST':
-    form.bind(request.POST)
-
-    to_explain = request.POST.has_key('button-explain')
-    to_submit = request.POST.has_key('button-submit')
-
-    # Always validate the saveform, which will tell us whether it needs explicit saving
-    if form.is_valid():
-      to_save = form.saveform.cleaned_data['save']
-      to_saveas = form.saveform.cleaned_data['saveas']
-
-      if to_saveas and not design.is_auto:
-        # Save As only affects a previously saved query
-        design = design.clone()
-
-      if to_submit or to_save or to_saveas or to_explain:
-        explicit_save = to_save or to_saveas
-        design = save_design(request, form, SavedQuery.HQL, design, explicit_save)
-        action = urlresolvers.reverse(execute_query, kwargs=dict(design_id=design.id))
-
-      if to_explain or to_submit:
-        query_str = form.query.cleaned_data["query"]
-        query_server = get_query_server(form.query_servers.cleaned_data["server"])
-
-        # (Optional) Parameterization.
-        parameterization = get_parameterization(request, query_str, form, design, to_explain)
-        if parameterization:
-          return parameterization
-
-        try:
-          query = HQLdesign(form)
-          if to_explain:
-            return explain_directly_beeswax(request, query, design, query_server)
-          else:
-            notify = form.query.cleaned_data.get('email_notify', False)
-            return execute_directly_beeswax(request, query, query_server, design, on_success_url=on_success_url, notify=notify)
-        except BeeswaxException, ex:
-          print ex.errorCode
-          print ex.SQLState
-          db = dbms.get(request.user, query_server)
-          error_message, log = expand_exception(ex, db)
-  else:
-    if design.id is not None:
-      data = HQLdesign.loads(design.data).get_query_dict()
-      form.bind(data)
-      form.saveform.set_data(design.name, design.desc)
-    else:
-      # New design
-      form.bind()
-
-  table='SELECT * FROM `{t}`'.format(t=table)
-  return render('execute.mako', request, {
-    'action': action,
-    'design': design,
-    'error_message': error_message,
-    'form': form,
-    'log': log,
-    'on_success_url': on_success_url,
-    'table': table,
-  })
+    authorized_get_design(request, design_id)
+    error_message, log = None, None
+    form = query_form()
+    action = request.path
+    design = safe_get_design(request, SavedQuery.HQL, design_id)
+    on_success_url = request.REQUEST.get('on_success_url')
+ 
+    for _ in range(1):
+        if request.method == 'POST':
+            form.bind(request.POST)
+ 
+            to_explain = request.POST.has_key('button-explain')
+            to_submit = request.POST.has_key('button-submit')
+            # Always validate the saveform, which will tell us whether it needs explicit saving
+            if not form.is_valid():
+                break
+            to_save = form.saveform.cleaned_data['save']
+            to_saveas = form.saveform.cleaned_data['saveas']
+            if to_saveas and not design.is_auto:
+                # Save As only affects a previously saved query
+                design = design.clone()
+            if to_submit or to_save or to_saveas or to_explain:
+                explicit_save = to_save or to_saveas
+                design = save_design(request, form, SavedQuery.HQL, design, explicit_save)
+                action = urlresolvers.reverse(execute_query, kwargs=dict(design_id=design.id))
+ 
+            # We're not going to process the form. Simply re-render it.
+            if not to_explain and not to_submit:
+                break
+ 
+            query_str = _strip_trailing_semicolon(form.query.cleaned_data["query"])
+            query_server = db_utils.get_query_server(form.query_servers.cleaned_data["server"])
+            # (Optional) Parameterization.
+            parameterization = get_parameterization(request, query_str, form, design, to_explain)
+            if parameterization:
+                return parameterization
+ 
+            query_msg = make_beeswax_query(request, query_str, form)
+            try:
+                if to_explain:
+                    return expl_d(request, query_str, query_msg, design, query_server)
+                else:
+                    notify = form.query.cleaned_data.get('email_notify', False)
+                    return e_d(request, query_msg, design=design,
+                               on_success_url=on_success_url,
+                               notify=notify)
+            except BeeswaxException, ex:
+                error_message, log = expand_exception(ex)
+                # Fall through to re-render the execute form.
+        else:
+            # GET request
+            if design.id is not None:
+                data = HQLdesign.loads(design.data).get_query_dict()
+                form.bind(data)
+                form.saveform.set_data(design.name, design.desc)
+            else:
+                # New design
+                form.bind()
+ 
+ 
+    table='SELECT * FROM `{t}`'.format(t=table)
+    return render('execute.mako', request, {
+        'action': action, 'design': design, 'error_message': error_message,
+        'form': form, 'log': log, 'on_success_url': on_success_url, 'table': table})
 
 
 def read_table(request, table):
-  db = dbms.get(request.user)
-
-  table = db.get_table('default', table)
-
+  """View function for select * from table"""
+  table_obj = db_utils.meta_client().get_table("default", table)
+  hql = "SELECT * FROM `%s` %s" % (table, _get_browse_limit_clause(table_obj))
+  query_msg = make_beeswax_query(request, hql)
   try:
-    history = db.select_star_from(table)
-    get = request.GET.copy()
-    get['context'] = 'table:%s' % table.name
-    request.GET = get
-    return watch_query(request, history.id)
-  except Exception, e:
-    raise PopupException(_('Cannot read table'), detail=e)
+    return execute_directly(request, query_msg, tablename=table)
+  except BeeswaxException, e:
+    # Note that this state is difficult to get to.
+    error_message, log = expand_exception(e)
+    error = _("Failed to read table. Error: %(error)s") % {'error': error_message}
+    raise PopupException(error, title=_("Beeswax Error"), detail=log)
 
 
 def execute_directly(request, query_msg, design=None, tablename=None,
@@ -366,7 +348,7 @@ def execute_directly(request, query_msg, design=None, tablename=None,
     get_dict.update(on_success_params)
 
   return format_preserving_redirect(request, watch_url, get_dict)
-
+  
   
 def watch_query(request, id):
   """
@@ -386,49 +368,49 @@ def watch_query(request, id):
   All other GET params will be passed to on_success_url (if present).
   """
   # Coerce types; manage arguments
+  id = int(id)
+
   query_history = authorized_get_history(request, id, must_exist=True)
 
   # GET param: context.
   context_param = request.GET.get('context', '')
 
   # GET param: on_success_url. Default to view_results
-  results_url = urlresolvers.reverse(view_results, kwargs={'id': id, 'first_row': 0})
+  results_url = urlresolvers.reverse(view_results, kwargs=dict(id=str(id), first_row=0, last_result_len=0))
   on_success_url = request.GET.get('on_success_url')
   if not on_success_url:
     on_success_url = results_url
 
-  # Check query state
-  handle, state = _get_query_handle_and_state(query_history)
+  # Get the server_id
+  server_id, state = _get_server_id_and_state(query_history)
   query_history.save_state(state)
 
-
   # Query finished?
-#  if state == models.QueryHistory.STATE.expired:
-#    raise PopupException(_("The result of this query has expired."))
-  if query_history.is_success():
+  if state == QueryHistory.STATE.expired:
+    raise PopupException(_("The result of this query has expired."))
+  elif state == QueryHistory.STATE.available:
     return format_preserving_redirect(request, on_success_url, request.GET)
-  elif query_history.is_failure():
+  elif state == QueryHistory.STATE.failed:
     # When we fetch, Beeswax server will throw us a BeeswaxException, which has the
     # log we want to display.
     return format_preserving_redirect(request, results_url, request.GET)
 
   # Still running
-  log = dbms.get(request.user, query_history.get_query_server()).get_log(handle)
+  log = db_utils.db_client(query_history.get_query_server()).get_log(server_id)
 
   # Keep waiting
   # - Translate context into something more meaningful (type, data)
-  query_context = _parse_query_context(context_param)
-
+  context = _parse_query_context(context_param)
   return render('watch_wait.mako', request, {
-                'query': query_history,
-                'fwd_params': request.GET.urlencode(),
-                'log': log,
-                'hadoop_jobs': _parse_out_hadoop_jobs(log),
-                'query_context': query_context,
-              })
-
-
-def view_results(request, id, first_row=0):
+                      'query': query_history,
+                      'fwd_params': request.GET.urlencode(),
+                      'log': log,
+                      'hadoop_jobs': _parse_out_hadoop_jobs(log),
+                      'query_context': context,
+                    })
+  
+  
+def view_results(request, id, first_row=0, last_result_len=0):
   """
   Returns the view for the results of the QueryHistory with the given id.
 
@@ -441,70 +423,67 @@ def view_results(request, id, first_row=0):
 
   It understands the ``context`` GET parameter. (See watch_query().)
   """
+  # Coerce types; manage arguments
+  id = int(id)
   first_row = long(first_row)
   start_over = (first_row == 0)
-  results = None
-  data = None
-  fetch_error = False
-  error_message = ''
-  log = ''
 
   query_history = authorized_get_history(request, id, must_exist=True)
-  db = dbms.get(request.user, query_history.get_query_server())
 
-  handle, state = _get_query_handle_and_state(query_history)
-  context_param = request.GET.get('context', '')
-  query_context = _parse_query_context(context_param)
+  handle = QueryHandle(id=query_history.server_id, log_context=query_history.log_context)
+  context = _parse_query_context(request.GET.get('context'))
 
   # Retrieve query results
   try:
-    results = db.fetch(handle, start_over, 100)
-    data = list(results.rows()) # Materialize results
-
-    # We display the "Download" button only when we know that there are results:
-    downloadable = first_row > 0 or data
-    log = db.get_log(handle)
+    results = db_utils.db_client(query_history.get_query_server()).fetch(handle, start_over, -1)
+    assert results.ready, _('Trying to display result that is not yet ready. Query id %(id)s') % {'id': id}
+    # We display the "Download" button only when we know
+    # that there are results:
+    downloadable = (first_row > 0 or len(results.data) > 0)
+    fetch_error = False
   except BeeswaxException, ex:
     fetch_error = True
-    error_message, log = expand_exception(ex, db)
+    error_message, log = expand_exception(ex)
 
   # Handle errors
-  error = fetch_error or results is None
-
-  context = {
-    'error': error,
-    'error_message': error_message,
-    'query': query_history,
-    'results': data,
-    'expected_first_row': first_row,
-    'log': log,
-    'hadoop_jobs': _parse_out_hadoop_jobs(log),
-    'query_context': query_context,
-    'can_save': False,
-    'context_param': context_param,
-  }
-
-  if not error:
-    #data = list(results.rows()) # Materialize results
-
-    download_urls = {}
-    if downloadable:
-      for format in common.DL_FORMATS:
-        download_urls[format] = urlresolvers.reverse(download, kwargs=dict(id=str(id), format=format))
-
-    save_form = SaveResultsForm()
-    results.start_row = first_row
-
-    context.update({
-      'results': data,
-      'has_more': results.has_more,
-      'next_row': results.start_row + len(data),
-      'start_row': results.start_row,
-      'expected_first_row': first_row,
-      'columns': results.columns,
-      'download_urls': download_urls,
-      'save_form': save_form,
-      'can_save': query_history.owner == request.user,
+  if fetch_error:
+    return render('watch_results.mako', request, {
+      'query': query_history,
+      'error': True,
+      'error_message': error_message,
+      'log': log,
+      'hadoop_jobs': _parse_out_hadoop_jobs(log),
+      'query_context': context,
+      'can_save': False,
     })
 
-  return render('watch_results.mako', request, context)
+  log = db_utils.db_client(query_history.get_query_server()).get_log(query_history.server_id)
+  download_urls = {}
+  if downloadable:
+    for format in common.DL_FORMATS:
+      download_urls[format] = urlresolvers.reverse(download, kwargs=dict(id=str(id), format=format))
+
+  save_form = SaveResultsForm()
+  has_more = True
+  last_result_len = long(last_result_len)
+  if (last_result_len != 0 and len(results.data) != last_result_len) or len(results.data) == 0:
+    has_more = False
+  # Display the results
+  return render('watch_results.mako', request, {
+    'error': False,
+    'query': query_history,
+    # Materialize, for easier testability.
+    'results': list(parse_results(results.data)),
+    'last_result_len': len(results.data),
+    'has_more': has_more,
+    'next_row': results.start_row + len(results.data),
+    'start_row': results.start_row,
+    'expected_first_row': first_row,
+    'columns': results.columns,
+    'download_urls': download_urls,
+    'log': log,
+    'hadoop_jobs': _parse_out_hadoop_jobs(log),
+    'query_context': context,
+    'save_form': save_form,
+    'can_save': query_history.owner == request.user,
+  })

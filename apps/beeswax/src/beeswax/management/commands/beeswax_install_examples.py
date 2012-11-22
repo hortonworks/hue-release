@@ -39,21 +39,18 @@ import simplejson
 
 from django.core.management.base import NoArgsCommand
 from django.contrib.auth.models import User
-from django.utils.translation import ugettext as _
-
-import hive_metastore.ttypes
-from beeswaxd.ttypes import BeeswaxException
 
 import beeswax.conf
+from beeswax import db_utils, models
+from beeswaxd import BeeswaxService
+from beeswaxd.ttypes import BeeswaxException
 
-from beeswax import models
-from beeswax.design import hql_query
-from beeswax.server import dbms
+import hive_metastore.ttypes
 
+from django.utils.translation import ugettext as _
 
 LOG = logging.getLogger(__name__)
 DEFAULT_INSTALL_USER = 'hue'
-
 
 def get_install_user():
   """Use the DEFAULT_INSTALL_USER if it exists, else try the current user"""
@@ -148,6 +145,16 @@ class Command(NoArgsCommand):
     LOG.info('Successfully installed all sample queries')
 
 
+def _make_query_msg(hql):
+  """
+  Make a thrift Query object.
+  Need to run query as a valid hadoop user. Use hue:supergroup
+  """
+  query_msg = BeeswaxService.Query(query=hql, configuration=[])
+  query_msg.hadoop_user = get_install_user()
+  return query_msg
+
+
 class SampleTable(object):
   """
   Represents a table loaded from the tables.json file
@@ -177,14 +184,14 @@ class SampleTable(object):
     LOG.info('Creating table "%s"' % (self.name,))
     try:
       # Already exists?
-      dbms.get(django_user).get_table('default', self.name)
+      tables = db_utils.meta_client().get_table("default", self.name)
       msg = _('Table "%(table)s" already exists.') % {'table': self.name}
       LOG.error(msg)
       raise InstallException(msg)
     except hive_metastore.ttypes.NoSuchObjectException:
-      query = hql_query(self.hql)
+      query_msg = _make_query_msg(self.hql)
       try:
-        results = dbms.get(django_user).execute_and_wait(query)
+        results = db_utils.execute_and_wait(django_user, query_msg)
         if not results:
           msg = _('Error creating table %(table)s: Operation timeout.') % {'table': self.name}
           LOG.error(msg)
@@ -206,9 +213,9 @@ class SampleTable(object):
 
     LOG.info('Loading data into table "%s"' % (self.name,))
     hql = LOAD_HQL % dict(tablename=self.name, filename=self._contents_file)
-    query = hql_query(hql)
+    query_msg = _make_query_msg(hql)
     try:
-      results = dbms.get(django_user).execute_and_wait(query)
+      results = db_utils.execute_and_wait(django_user, query_msg)
       if not results:
         msg = _('Error loading table %(table)s: Operation timeout.') % {'table': self.name}
         LOG.error(msg)

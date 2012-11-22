@@ -22,6 +22,7 @@ Common utils for beeswax.
 import re
 
 from django import forms
+from beeswax import db_utils
 
 
 HIVE_IDENTIFER_REGEX = re.compile("^[a-zA-Z0-9]\w*$")
@@ -66,3 +67,13 @@ class HiveIdentifierField(forms.RegexField):
   def __init__(self, *args, **kwargs):
     kwargs['regex'] = HIVE_IDENTIFER_REGEX
     super(HiveIdentifierField, self).__init__(*args, **kwargs)
+
+
+class HiveTableChoiceField(forms.ChoiceField):
+  """To choose from a defined table"""
+  def __init__(self, *args, **kwargs):
+    table_names = db_utils.meta_client().get_tables("default", ".*")
+    kwargs['choices'] = to_choices([''] + table_names)
+    forms.ChoiceField.__init__(self, *args, **kwargs)
+
+
