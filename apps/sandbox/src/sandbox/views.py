@@ -28,7 +28,7 @@ import logging
 
 LOG = logging.getLogger(__name__)
 
-TUTORIAL_UPDATE_SCRIPT = 'sudo -u sandbox bash /home/hue/tutorials/tutorials_app/run/run.sh'
+TUTORIAL_UPDATE_SCRIPT = 'bash /home/sandbox/tutorials/tutorials_app/run/run.sh'
 COMPONENTS_VERSION_FILE = '/tmp/sandbox_component_versions.info'
 TUTORIAL_VERSION_FILE = '/tmp/tutorials_version.info'
 
