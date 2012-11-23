@@ -55,3 +55,10 @@ III) Add some changes in HUE:
             }
 
         change this row 127.0.0.1:8080 to the tutorials url address and port
+
+  IV) 
+    In /home/hue/hue/desktop/core/src/desktop/templates/login.mako add
+    
+      <input type="button" class="btn" value="${_('Sign in anonymously')}" onclick="document.getElementsByName("username")[0].value="AnonymousUser"; document.getElementsByName("password")[0].value="1"; document.getElementsByTagName("form")[0].submit();" />
+
+    Just after submit button.
