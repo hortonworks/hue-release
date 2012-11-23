@@ -5,7 +5,7 @@ II) Chage some config files in tutorials:
        A) Go to directory <path>/tutorials/tutorials_app/run
        B) in file run.sh chage variables:
        - RUN_DIR (full path to directory RUN)
-	     - GIT_REPO (GIT repository path)
+       - GIT_REPO (GIT repository path)
        C) configure CRON to run run.sh file
            a) In terminal, from root user run
             # crontab -e
@@ -32,10 +32,26 @@ III) Add some changes in HUE:
                     post_params.update({'password' : '1'})
                 form = django.contrib.auth.forms.AuthenticationForm(data=post_params)
     2) Save authorization user steps in HUE:
-        A) open file <path_to_hue>/hue/desktop/core/src/desktop/templates/common_header.mako
-        B) add this script in $(document).ready block
-        if(window.top != window) {
-        			document.createElement("img").src = "http://127.0.0.1:8080/sync/?loc=" + 
+        A) create symlink for hue_common_header.js in hue static folder:
+          $ ln -s <path_to_tutorials>/hue_common_header.js \
+                  <path_to_hue>/hue/desktop/core/static/js/hue_common_header.js
+
+        B) open file <path_to_hue>/hue/desktop/core/src/desktop/templates/common_header.mako
+        C) add this script to the header
+           
+            <script src="/static/js/hue_common_header.js"></script>
+           
+           add this script in $(document).ready block
+
+            handleAutoLogin()
+
+
+        D) Open <path_to_tutorials>/hue_common_header.js
+        
+        E) In block 
+            if(window.top != window) {
+              document.createElement("img").src = "http://127.0.0.1:8080/sync/?loc=" + 
               escape(document.location.href);
-        		}
-        P.S. change this row 127.0.0.1:8080 to the tutorials url address and port
+            }
+
+        change this row 127.0.0.1:8080 to the tutorials url address and port
