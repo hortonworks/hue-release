@@ -333,7 +333,6 @@ ${layout.menubar(section='query')}
 
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
-
         $("*[rel=tooltip]").tooltip({
             placement: 'bottom'
         });
