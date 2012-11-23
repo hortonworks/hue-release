@@ -54,14 +54,14 @@ udfs = UDF.objects.all()
     <div class="span3" style="float: left;">
       <div class="well sidebar-nav">
         ${my_scripts.my_scripts(result['scripts'])}
-        
+
         <h2>Settings</h2>
-	<ul class="nav nav-list">	  
+	<ul class="nav nav-list">
 	  <li>Email notification:</li>
 	  <li>
-	    <input class="email" type="checkbox" 
-                   % if result.get("email_notification"): 
-                   checked="checked"  
+	    <input class="email" type="checkbox"
+                   % if result.get("email_notification"):
+                   checked="checked"
                    % endif
                    />
 	  </li>
@@ -83,7 +83,7 @@ udfs = UDF.objects.all()
     <div class="span9" style="float: left; width: 70%;">
       <div class="clearfix">
         <div class="input">
-	  <form action="#" method="post" id="pig_script_form">
+	  <form action="${url("root_pig")}" method="post" id="pig_script_form">
             <input type="hidden" name="script_id"  value="${result.get('id','')}" >
             <label for="id_title">Title:</label>
             <div class="control-group">
@@ -109,7 +109,7 @@ udfs = UDF.objects.all()
                         <li><a href="#">MAX(%VAR%)</a></li>
                         <li><a href="#">MIN(%VAR%)</a></li>
                         <li><a href="#">COUNT(%VAR%)</a></li>
-                        
+
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
@@ -166,17 +166,17 @@ udfs = UDF.objects.all()
                  <label>Python UDF</label>
                  <textarea id="python_code" name="python_script"></textarea>
             </div>
-            % endif	
+            % endif
 	<input type="hidden" name="email" class='intoemail' />
 	<div class="actions">
 	  <input class="btn primary" type="submit" name="submit" id="save_button"
-                 value="Save" 
+                 value="Save"
                  % if result.get("id"):
                  disabled="disabled"
                  % endif
                  />
 	  <input class="btn primary" type="button" id="start_job"
-	  value="Execute" />	  
+	  value="Execute" />
           <input class="btn primary" type="button" id="kill_job"  value="Kill job" style="display:none" />
 	  <input class="btn primary explain" type="button" id="explain" value="Explain" />
 	  <input class="btn primary explain" type="button" id="check" value="Syntax check" />
@@ -188,7 +188,7 @@ udfs = UDF.objects.all()
           <div class="bar" style="width: 0%;"></div>
         </div>
 
-        <a class="btn-success btn-mini" 
+        <a class="btn-success btn-mini"
            % if 'stdout' in result and 'job_id' in result:
            href="${url("download_job_result", job_id=result['job_id'])}"
            % else:
@@ -205,10 +205,10 @@ udfs = UDF.objects.all()
           % endif
           </pre>
         </div>
-        
+
         <div class="alert alert-error" id="failure_info">
         </div>
-        
+
         <div class="accordion alert alert-warning" id="accordion2">
           <div class="accordion-group">
             <div class="accordion-heading">
@@ -216,7 +216,7 @@ udfs = UDF.objects.all()
           data-parent="#accordion2" href="#collapseOne">
                 % if 'error' in result:
                 Logs...
-                % endif                
+                % endif
               </a>
             </div>
             <div id="collapseOne" class="accordion-body collapse in">
@@ -236,7 +236,7 @@ udfs = UDF.objects.all()
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
 <style type="text/css" media="screen">
-  .CodeMirror-focused span.CodeMirror-matchhighlight { 
+  .CodeMirror-focused span.CodeMirror-matchhighlight {
 background:  #e7e4ff; !important; }
 label.valid {
   width: 24px;
@@ -280,7 +280,7 @@ function get_job_result(job_id)
             return;
         }
 
-        if (parseInt(data.exit)==0) $(".bar").addClass("bar-success"); 
+        if (parseInt(data.exit)==0) $(".bar").addClass("bar-success");
         else $(".bar").addClass("bar-danger");
 
         $("#download_job_result").show();
@@ -296,13 +296,13 @@ function get_job_result(job_id)
         $("#kill_job").hide();
         $(".bar").css("width", percent+"%");
     }, "json");
-    
+
 }
 
 
 
 $(document).ready(function(){
- 
+
     $('.explain').live("click", function(e){
       call_popup_var_edit().done(function() {
 explain_progres(0);
@@ -337,12 +337,12 @@ $("#pig_script_form").validate({
   rules:{
   title:{
   required: true,
-  % if not result.get("id"):  
+  % if not result.get("id"):
   remote: "${url("check_script_title")}"
   % endif
 },
 pig_script: "required",
-}, 
+},
 messages: {
 title:{
 remote: "Script title already exists"
@@ -357,9 +357,9 @@ success: function(label) {
   }
 });
 
-    
+
     $(".collapse").collapse();
-    
+
     $("#kill_job").live('click', function(){
         clearTimeout(get_job_res_timer);
         clearTimeout(ping_job_timer);
@@ -373,7 +373,7 @@ success: function(label) {
         }, "json");
     });
 
-    
+
     $("#start_job").live("click", function(e){
 call_popup_var_edit().done(function() {
         $("#job_info_outer").html('<pre id="job_info"></pre>');
@@ -383,7 +383,7 @@ call_popup_var_edit().done(function() {
         percent = 0;
         $(".bar").css("width", percent+"%");
         pig_editor.save();
-        python_editor.save()                                
+        python_editor.save()
         $.ajax({
             url: "${url("start_job")}",
             dataType: "json",
@@ -396,7 +396,7 @@ call_popup_var_edit().done(function() {
                 ping_job(job_id);
             }
         });
-       }); 
+       });
 
     });
 });
