@@ -1,7 +1,14 @@
 // auto login and anonymous users
 
-function handleAutoLogin() {
+function removeCookie() {
+    document.cookie = "added=;path=/;expires=Thu, 01-Jan-1970 00:00:01 GMT";
+}
 
+function setCookie() {
+    document.cookie = "added=1;path=/;";
+}
+
+function handleAutoLogin() {
     // change drop-down menu for anonymous user
     var isAnonymous = document.getElementById("usernameDropdown").innerText.trim()=="AnonymousUser";
     if (isAnonymous) {
@@ -13,22 +20,21 @@ function handleAutoLogin() {
     var isAddingUser = document.location.pathname=="/useradmin/users/new";
     if (isAddingUser && isAnonymous) {
         document.getElementById("editForm").onsubmit = function(){
-            $.cookie("added","1");
+            setCookie();
             return true;
         }
 
         if ((document.getElementsByClassName("errorlist").length) > 0) {
             // remove cookie (error while creating)
-            document.cookie="added=;expires=Thu, 01 Jan 1970 00:00:01 GMT;"
+            removeCookie();
         }
     }
 
-    var isAddedSuccessfully = $.cookie("added") !== null;
-    if (isAddedSuccessfully && isAnonymous) {
-        document.cookie="added=;expires=Thu, 01 Jan 1970 00:00:01 GMT;"
-        window.location = "/accounts/logout/";
+    isAddedSuccessfully = $.cookie("added") !== null;
+    if (isAddedSuccessfully) {
+        removeCookie();
+        setTimeout(function(){window.location = "/accounts/logout/"}, 100);
     }
-
 
     // save user steps in tutorials
     if(window.top != window) {
