@@ -68,7 +68,7 @@ def _get_components():
   components = [
         {'name':'Sandbox', 'version':_get_version('sandbox', version_content_list)},
         {'name':'Tutorials', 'version':tutorial_version, 'updateButton':True},
-        {'name':'HCatalog', 'version':_get_version('pig', version_content_list)}, 
+        {'name':'HCatalog', 'version':_get_version('hcatalog', version_content_list)}, 
         {'name':'Pig', 'version':_get_version('pig', version_content_list)},
         {'name':'Hive', 'version':_get_version('hive', version_content_list)},]
   return components
