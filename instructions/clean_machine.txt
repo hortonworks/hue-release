@@ -1,0 +1,7 @@
+1) remove all files in /var/log/*
+2) to make machine work properly:
+    $ mkdir /var/log/{supervisor,oozie,hbase,hadoop}
+    $ mkdir /var/log/hadoop/{hdfs,mapred}
+    $ chown hdfs -R /var/log/hadoop/
+    $ chown hbase -R /var/log/hbase/
+    $ chown oozie -R /var/log/oozie/

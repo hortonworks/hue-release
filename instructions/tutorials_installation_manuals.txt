@@ -1,11 +1,22 @@
-I) Copy tutorials in some directory
+I) Copy tutorials in some directory, initiate virtualenv at <path>/tutorials
+
+    $ cd <path>/tutorials
+    $ easy_install pip
+    $ pip install virtualenv
+    $ virtualenv .env
+    $ . .env/bin/activate
+    $ pip install django==1.4 django-mako mysql-python gunicorn
+
+    Init db
+    $ sudo -u sandbox run.sh
+    
 II) Chage some config files in tutorials:
     1) Go to file settings.py and change 'auth_db' in DATABASES   
     2) Updates tutorials
        A) Go to directory <path>/tutorials/tutorials_app/run
        B) in file run.sh chage variables:
        - RUN_DIR (full path to directory RUN)
-	     - GIT_REPO (GIT repository path)
+       - GIT_REPO (GIT repository path)
        C) configure CRON to run run.sh file
            a) In terminal, from root user run
             # crontab -e
@@ -14,7 +25,19 @@ II) Chage some config files in tutorials:
             or for daily update at 12:00 pm
             0 0 * * * bash /home/tutorials/tutorials_app/run/run.sh
             P.S. NO spaces before zero!
-III) Add some changes in HUE:
+
+III) Configure supervisor to start tutorials gunicorn server
+
+[program:hue_tutorial]
+command=/home/sandbox/tutorials/.env/bin/python /home/sandbox/tutorials/manage.py  run_gunicorn 0:8888
+autostart=true              ; start at supervisord start (default: true)
+autorestart=true            ; retstart at unexpected quit (default: true)
+user=root                   ; setuid to this UNIX account to run the program
+log_stderr=true             ; if true, log program stderr (def false)
+logfile=/home/sandbox/tutorials/tut.log    ; child log path, use NONE for none; default AUTO
+
+
+IV) Add some changes in HUE:
     1) Create authorizetion user without login and password
         A) in hue create user. User Params:
           login : AnonumysUser
@@ -32,10 +55,35 @@ III) Add some changes in HUE:
                     post_params.update({'password' : '1'})
                 form = django.contrib.auth.forms.AuthenticationForm(data=post_params)
     2) Save authorization user steps in HUE:
-        A) open file <path_to_hue>/hue/desktop/core/src/desktop/templates/common_header.mako
-        B) add this script in $(document).ready block
-        if(window.top != window) {
-        			document.createElement("img").src = "http://127.0.0.1:8080/sync/?loc=" + 
+        A) create symlink for hue_common_header.js in hue static folder:
+          $ ln -s <path_to_tutorials>/hue_common_header.js \
+                  <path_to_hue>/hue/desktop/core/static/js/hue_common_header.js
+
+        B) open file <path_to_hue>/hue/desktop/core/src/desktop/templates/common_header.mako
+        C) add this script to the header
+           
+            <script src="/static/js/hue_common_header.js"></script>
+           
+           add this script in $(document).ready block
+
+            handleAutoLogin()
+
+
+        D) Open <path_to_tutorials>/hue_common_header.js
+        
+        E) Add block to $(document).ready
+            if(window.top != window) {
+              document.createElement("img").src = "http://127.0.0.1:8080/sync/?loc=" + 
               escape(document.location.href);
-        		}
-        P.S. change this row 127.0.0.1:8080 to the tutorials url address and port
+            }
+
+        change this row 127.0.0.1:8080 to the tutorials url address and port
+
+
+
+V) 
+    In /home/hue/hue/desktop/core/src/desktop/templates/login.mako add
+    
+      <input type="button" class="btn" value="${_('Sign in anonymously')}" onclick="document.getElementsByName("username")[0].value="AnonymousUser"; document.getElementsByName("password")[0].value="1"; document.getElementsByTagName("form")[0].submit();" />
+
+    Just after submit button.

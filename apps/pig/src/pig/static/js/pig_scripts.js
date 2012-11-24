@@ -13,7 +13,7 @@ function ping_job(job_id){
               {
                   if (data.status.failureInfo != 'NA')
                       $("#failure_info").html(data.status.failureInfo);
-                  percent += 10;
+                  percent += 1;
                   $(".bar").css("width", percent+"%");
                   get_job_res_timer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
                   return 
