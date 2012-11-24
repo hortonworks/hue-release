@@ -36,12 +36,4 @@ function handleAutoLogin() {
         setTimeout(function(){window.location = "/accounts/logout/"}, 100);
     }
 
-    // save user steps in tutorials
-    if(window.top != window) {
-        // ====== REPLACE URL HERE =====
-        document.createElement("img").src = "http://ec2-75-101-213-8.compute-1.amazonaws.com:8888/sync/?loc=" +
-        escape(document.location.href);
-        // =============================
-    }
-
 }
