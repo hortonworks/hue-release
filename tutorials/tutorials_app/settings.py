@@ -23,7 +23,8 @@ DATABASES = {
     }
 }
 
-CONTENT_FRAME_URL = "http://192.168.56.2:8000/" # HUE URL param
+from socket import gethostname,gethostbyname
+CONTENT_FRAME_URL = "http://%s:8000/" % gethostbyname(gethostname()) # HUE URL param
 
 DATABASE_ROUTERS = ['tutorials_app.db_routers.AuthRouter']
 

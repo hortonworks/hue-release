@@ -73,7 +73,8 @@ IV) Add some changes in HUE:
         
         E) Add block to $(document).ready
             if(window.top != window) {
-              document.createElement("img").src = "http://127.0.0.1:8080/sync/?loc=" + 
+              var l=document.location;
+              document.createElement("img").src = l.protocol+"//"+l.hostname+":8888"+"/sync/?loc=" + 
               escape(document.location.href);
             }
 
