@@ -10,10 +10,11 @@ function setCookie() {
 
 function handleAutoLogin() {
     // change drop-down menu for anonymous user
-    var isAnonymous = document.getElementById("usernameDropdown").innerText.trim()=="AnonymousUser";
+    username =  document.getElementById("usernameDropdown").getElementsByTagName("a")[0].text.trim();
+    var isAnonymous = username == "AnonymousUser";
     if (isAnonymous) {
         var profileRef = document.getElementsByClassName("userProfile")[0];
-        profileRef.innerText = "Create new user";
+        profileRef.text = "Create new user";
         profileRef.href="/useradmin/users/new";
     }
 
