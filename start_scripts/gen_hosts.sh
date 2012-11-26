@@ -4,9 +4,15 @@ echo "127.0.0.1		localhost.localdomain localhost" >> /etc/hosts
 
 #echo "`ifconfig eth1 | grep "inet addr" | awk '{ print $2 }' | awk -F':' '{print $2}'`		`hostname`" >> /etc/hosts
 
-function get_ip() {
-	echo "`ip addr | grep 'inet ' | grep -v 127 | awk '{ print $2 }' | awk -F'/' '{print $1}'`"
+function get_inet_iface(){
+	route | grep default | awk '{print $8}'
 }
+
+
+function get_ip() {
+	ip addr | grep 'inet ' | grep -v -E "( lo| $(get_inet_iface))" | awk '{ print $2 }' | awk -F'/' '{print $1}'
+}
+
 
 HOST=$(get_ip)
 NUM=5
