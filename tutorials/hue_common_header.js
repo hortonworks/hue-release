@@ -15,6 +15,7 @@ function handleAutoLogin() {
     if (isAnonymous) {
         var profileRef = document.getElementsByClassName("userProfile")[0];
         profileRef.text = "Create new user";
+        profileRef.innerText = "Create new user";
         profileRef.href="/useradmin/users/new";
     }
 
