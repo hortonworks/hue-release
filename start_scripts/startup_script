@@ -44,7 +44,10 @@ start)
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
     /etc/init.d/supervisord start >> $LOG 2>&1
-    echo "You can now launch sandbox on http://localhost:8888/"
+    
+    echo "Hortonworks Data Platform Sandbox 1.0.4" > /etc/issue
+
+    echo "You can now launch sandbox on http://$(gethostip -d `hostname`):8888/" | tee -a /etc/issue
 ;;
 stop)
     date >> $LOG
