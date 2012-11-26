@@ -273,7 +273,8 @@ def get_job_result(request):
 
 
 def query_history(request):
-    return render("query_history.mako", request, dict(jobs=Job.objects.order_by("-start_time").all()))
+    return render("query_history.mako", request,
+                  dict(jobs=Job.objects.filter(script__user=request.user).order_by("-start_time").all()))
 
 
 def show_job_result(request, job_id):
