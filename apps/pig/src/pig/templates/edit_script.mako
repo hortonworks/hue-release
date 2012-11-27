@@ -297,6 +297,7 @@ function get_job_result(job_id)
         $("#job_logs").text("Logs...");
         $("#log_info").html(data.error.replace(/\n/g, "<br>"));
         $("#job_info").html(data.stdout);
+        paginator(30);
         percent = 100;
         $("#start_job").show();
         $("#kill_job").hide();
