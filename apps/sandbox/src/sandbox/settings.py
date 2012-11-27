@@ -15,5 +15,6 @@
 # limitations under the License.
 DJANGO_APPS = [ "sandbox" ]
 REQUIRES_HADOOP = False
+NICE_NAME = "Sandbox"
 MENU_INDEX = 85
 ICON = "/sandbox/static/art/sandbox-logo_24.png"
