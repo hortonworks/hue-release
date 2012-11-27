@@ -37,7 +37,7 @@
    <connection>scm:git:git://github.com/cloudera/hue.git</connection>
    <developerConnection>scm:git:git@github.com:cloudera/hue.git</developerConnection>
    <url>https://github.com/cloudera/hue</url>
-  </scm>  
+  </scm>
 
   <dependencies>
     <dependency>
@@ -135,4 +135,16 @@
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
++    <repository>
++      <id>org.datanucleus</id>
++      <url>http://www.datanucleus.org/downloads/maven2</url>
++      <name>DataNucleus for Beeswax</name>
++      <snapshots>
++        <enabled>true</enabled>
++      </snapshots>
++    </repository>
++  </repositories>
+
 </project>
