@@ -6,45 +6,45 @@ var table_fields={};
 
 
 function ping_job(job_id){
-    var url = '/proxy/localhost/50111/templeton/v1/queue/';          
-    $.get(url+job_id+'?user.name=hdfs', 
-          function(data) {
-              if (data.exitValue !== null)
-              {
-                  if (data.status.failureInfo != 'NA')
-                      $("#failure_info").html(data.status.failureInfo);
-                  percent += 1;
-                  $(".bar").css("width", percent+"%");
-                  get_job_res_timer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
-                  return 
-              }
-              if (/[1-9]\d?0?\%/.test(data.percentComplete))
-              {
-                  var job_done = parseInt(data.percentComplete.match(/\d+/)[0]);
-                  if (job_done==100) job_done=90
-                  percent = (job_done < percent)?percent:job_done;              
-                  $(".bar").css("width", percent + "%");
-              }
-              else
-              {
-                  percent += 1;
-                  $(".bar").css("width", percent+"%");
-              }
-              ping_job_timer = window.setTimeout("ping_job('"+job_id+"');", 1000);     
-           });
-          
+  var url = '/proxy/localhost/50111/templeton/v1/queue/';
+  $.get(url+job_id+'?user.name=hdfs',
+      function(data) {
+        if (data.exitValue !== null)
+        {
+          if (data.status.failureInfo != 'NA')
+            $("#failure_info").html(data.status.failureInfo);
+          percent += 1;
+          $(".bar").css("width", percent+"%");
+          get_job_res_timer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
+          return
+        }
+        if (/[1-9]\d?0?\%/.test(data.percentComplete))
+        {
+          var job_done = parseInt(data.percentComplete.match(/\d+/)[0]);
+          if (job_done==100) job_done=90
+          percent = (job_done < percent)?percent:job_done;
+          $(".bar").css("width", percent + "%");
+        }
+        else
+        {
+          percent += 1;
+          $(".bar").css("width", percent+"%");
+        }
+        ping_job_timer = window.setTimeout("ping_job('"+job_id+"');", 1000);
+      });
+
 }
 
 function explain_progres(percent){
-	      var t_out =300;
-              if(percent==0) { t_out = 1000; }
-              $(".bar").css("width", percent+"%");
-              percent += 10;
-              if(percent==100) {
-                $(".bar").css("width", percent+"%");
-		return false; }
-              window.setTimeout("explain_progres("+percent+");", t_out);
-         };
+  var t_out =300;
+  if(percent==0) { t_out = 1000; }
+  $(".bar").css("width", percent+"%");
+  percent += 10;
+  if(percent==100) {
+    $(".bar").css("width", percent+"%");
+    return false; }
+  window.setTimeout("explain_progres("+percent+");", t_out);
+};
 
 
 function autosave(){
@@ -85,7 +85,7 @@ function listdir(_context){
 
 function getTables(){
   $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table?user.name=hue", function(data){
-  //$.get("tables.php", function(data){
+    //$.get("tables.php", function(data){
     if(data.hasOwnProperty("tables"))
     {
       if(pigKeywordsT.length<1){
@@ -100,29 +100,29 @@ function getTables(){
 
 function getTableFields(table,target){
 
-    $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
+  $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
     //$.get("table_f.php?con=" + table, function(data){
 
-      if(typeof (data) !=="undefined" && data.hasOwnProperty("columns") && data.columns.length>0)
-      {
-        table_fields[table]=data;
+    if(typeof (data) !=="undefined" && data.hasOwnProperty("columns") && data.columns.length>0)
+    {
+      table_fields[table]=data;
 
-        $.each(data.columns, function(e){
-          if(this.name != "" )
-            target.list.push(this.name + ":" + this.type);
-        })
+      $.each(data.columns, function(e){
+        if(this.name != "" )
+          target.list.push(this.name + ":" + this.type);
+      })
 
-        if(target.list.length<2 && target.list.length>0)
-          target.list.push("");
+      if(target.list.length<2 && target.list.length>0)
+        target.list.push("");
 
-        if(target.list.length>0 && target.list[0].name !="")
-          CodeMirror.simpleHint(pig_editor, CodeMirror.pigHint, "", target , true );
+      if(target.list.length>0 && target.list[0].name !="")
+        CodeMirror.simpleHint(pig_editor, CodeMirror.pigHint, "", target , true );
 
-      }else{
-        delete table_fields[table];
-      }
+    }else{
+      delete table_fields[table];
+    }
 
-    },"json");
+  },"json");
 
 }
 
@@ -177,7 +177,7 @@ $("#show-modal-for-var").on('hide', function() {
       $(".modal-for-var-input-warp > input").each(function(){
         if($(this).val().trim()=="")
           $(this).css("border","solid 1px red");
-          $(".var-input-for-form-submit").remove();
+        $(".var-input-for-form-submit").remove();
       })
       submitFormPopup=false;
       return false;
@@ -200,17 +200,17 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
   },
   extraKeys: {
     "Ctrl-Space": function(cm) { CodeMirror.simpleHint(cm, CodeMirror.pigHint);  }/*,
-    "Shift-4":function(cm){
-      $("#show-modal-for-dollar")
-          .modal("show")
-          .on('hide', function() {
-            if(dollarSaveParamTrig==1){
-              cm.replaceRange($("#show-modal-for-dollar").find("input").val(),cm.getCursor()  );
-              cm.focus();
-            }
-            dollarSaveParamTrig=0;
-          });
-    }*/
+     "Shift-4":function(cm){
+     $("#show-modal-for-dollar")
+     .modal("show")
+     .on('hide', function() {
+     if(dollarSaveParamTrig==1){
+     cm.replaceRange($("#show-modal-for-dollar").find("input").val(),cm.getCursor()  );
+     cm.focus();
+     }
+     dollarSaveParamTrig=0;
+     });
+     }*/
   },
   onKeyEvent: function(cm,key){
     var lineNumber=cm.getCursor().line;
@@ -370,17 +370,60 @@ $("#id_hdfs_file").change(function() {
   }
 });
 
+function paginator(lines_per_page){
+
+   var lines = $("#job_info").text().split("\n");
+  if(lines.length < lines_per_page)
+  {
+    return;
+  }
+
+  $("#job_info_outer").append("<div class='pagination_controls'></div>");
+  $(".pagination_controls").pagination(lines.length, {
+    items_per_page:lines_per_page,
+    callback:handlePaginationClick
+  });
+
+  $("#job_info_outer").css({
+    "padding-bottom" : "30px"
+  })
+
+  function handlePaginationClick(new_page_index, pagination_container) {
+    console.log(new_page_index,pagination_container)
+    //debugger;
+    // This selects 20 elements from a content array
+    var i=new_page_index*lines_per_page;
+    var max= i+lines_per_page;
+
+    $("#job_info").html("");
+    for(i;i<max;i++) {
+      if(i<lines.length)
+      {
+        $('#job_info').append(lines[i]+"\n");
+      }else{
+        $('#job_info').append("\n");
+      }
+
+    }
+    return false;
+  }
+
+};
+
 
 $(document).ready(function(){
 
+  paginator(30);
+
   getTables();
+
 
   //Don`t submit form if codemirror textarea is empty
   $("#pig_script_form").on("submit",function(event){
     if(pig_editor.getValue()=="")
     {
       $(".empty-codemirror-textarea-error").remove();
-      $(".CodeMirror").append("<div class='empty-codemirror-textarea-error'>This field is required.</div>")
+      $(".CodeMirror").append("<div class='empty-codemirror-textarea-error'>This field is required.</div>");
       $(".empty-codemirror-textarea-error").css({
         "padding":"15px 0px",
         "color":"red",

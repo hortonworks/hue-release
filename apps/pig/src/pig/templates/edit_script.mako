@@ -251,6 +251,11 @@ label.error {
   padding: 2px 8px;
   margin-top: 2px;
 }
+.pagination_controls a, .pagination_controls span {
+          display: block;
+          float: left;
+          padding: 3px ;
+      }
 </style>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js">
 </script>
@@ -259,6 +264,7 @@ label.error {
 <script src="/pig/static/js/python.js"></script>
 <script src="/pig/static/js/simple-hint.js"></script>
 <script src="/pig/static/js/pig-hint.js"></script>
+<script src="/pig/static/js/jquery.pagination.js"></script>
 <script src="/pig/static/js/searchcursor.js"></script>
 <script src="/pig/static/js/match-highlighter.js"></script>
 <script src="/pig/static/js/emacs.js"></script>
