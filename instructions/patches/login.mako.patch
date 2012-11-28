@@ -1,0 +1,10 @@
+--- login.mako	2012-11-28 16:39:53.184229609 +0200
++++ login.mako.old	2012-11-28 16:45:00.100309651 +0200
+@@ -71,7 +71,6 @@
+ 					%else:
+ 						<input type="submit" class="btn primary" value="${_('Sign in')}" />
+ 					%endif
+-					<input type="button" class="btn" value="${_('Sign in anonymously')}" onclick='document.getElementsByName("username")[0].value="AnonymousUser"; document.getElementsByName("password")[0].value="1"; document.getElementsByTagName("form")[0].submit();' />
+ 					<input type="hidden" name="next" value="${next}" />
+ 
+ 					%if login_errors==True:

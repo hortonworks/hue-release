@@ -38,11 +38,14 @@ logfile=/home/sandbox/tutorials/tut.log    ; child log path, use NONE for none; 
 
 
 IV) Add some changes in HUE:
-    1) Create authorizetion user without login and password
+
+    
+    1) Anonymous user setup:
+        Create authorization user without login and password
         A) in hue create user. User Params:
-          login : AnonumysUser
+          login : AnonymousUser
           password : 1
-        B) Got to file <path_to_hue>/hue/desktop/core/src/desktop/auth/views.py
+        B) Go to file <path_to_hue>/hue/desktop/core/src/desktop/auth/views.py
         C) Find function dt_login
         D) In this function find this rows:
             if request.method == 'POST':
@@ -54,13 +57,20 @@ IV) Add some changes in HUE:
                     post_params.update({'username' : 'AnonumysUser'})
                     post_params.update({'password' : '1'})
                 form = django.contrib.auth.forms.AuthenticationForm(data=post_params)
+
     2) Save authorization user steps in HUE:
         A) create symlink for hue_common_header.js in hue static folder:
           $ ln -s <path_to_tutorials>/hue_common_header.js \
                   <path_to_hue>/hue/desktop/core/static/js/hue_common_header.js
 
-        B) open file <path_to_hue>/hue/desktop/core/src/desktop/templates/common_header.mako
-        C) add this script to the header
+        B)
+          Do
+          $ patch <path_to_hue>/hue/desktop/core/src/desktop/templates/common_header.mako < instructions/patches/common_header.mako.patch
+
+          == OR ==
+           open file <path_to_hue>/hue/desktop/core/src/desktop/templates/common_header.mako
+
+           add this script to the header
            
             <script src="/static/js/hue_common_header.js"></script>
            
@@ -71,9 +81,19 @@ IV) Add some changes in HUE:
             Tutorials should listen on 8888 port
 
 
-V) 
+V) Adding "Sign in anonymously" button
+
+    Do
+    $ patch /home/hue/hue/desktop/core/src/desktop/templates/login.mako < instructions/patches/login.mako.patch
+
+  == OR ==
+
     In /home/hue/hue/desktop/core/src/desktop/templates/login.mako add
     
       <input type="button" class="btn" value="${_('Sign in anonymously')}" onclick="document.getElementsByName("username")[0].value="AnonymousUser"; document.getElementsByName("password")[0].value="1"; document.getElementsByTagName("form")[0].submit();" />
 
     Just after submit button.
+
+VI) Adding support of single user mode for hue
+    
+    $ patch /home/sandbox/hue/desktop/core/src/desktop/auth/views.py < instructions/patches/auth_views.py.patch
