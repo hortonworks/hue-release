@@ -68,18 +68,7 @@ IV) Add some changes in HUE:
 
             handleAutoLogin()
 
-
-        D) Open <path_to_tutorials>/hue_common_header.js
-        
-        E) Add block to $(document).ready
-            if(window.top != window) {
-              var l=document.location;
-              document.createElement("img").src = l.protocol+"//"+l.hostname+":8888"+"/sync/?loc=" + 
-              escape(document.location.href);
-            }
-
-        change this row 127.0.0.1:8080 to the tutorials url address and port
-
+            Tutorials should listen on 8888 port
 
 
 V) 
