@@ -15,7 +15,7 @@ function ping_job(job_id){
             $("#failure_info").html(data.status.failureInfo);
           percent += 1;
           $(".bar").css("width", percent+"%");
-          get_job_res_timer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
+          rglobalTimer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
           return
         }
         if (/[1-9]\d?0?\%/.test(data.percentComplete))
@@ -30,7 +30,7 @@ function ping_job(job_id){
           percent += 1;
           $(".bar").css("width", percent+"%");
         }
-        ping_job_timer = window.setTimeout("ping_job('"+job_id+"');", 1000);
+        globalTimer = window.setTimeout("ping_job('"+job_id+"');", 1000);
       });
 
 }

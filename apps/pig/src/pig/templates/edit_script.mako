@@ -271,8 +271,7 @@ label.error {
 <script src="/pig/static/js/pig_scripts.js"></script>
 <script type="text/javascript">
 var percent = 0;
-var get_job_res_timer = null;
-var ping_job_timer = null;
+var globalTimer = null;
 var job_id = null;
 
 function get_job_result(job_id)
@@ -280,7 +279,7 @@ function get_job_result(job_id)
     $.post("${url("get_job_result")}", {job_id: job_id}, function(data){
         if (data.error==="" && data.stdout==="")
         {
-            get_job_res_timer = window.setTimeout("get_job_result('"+job_id+"');", 3000);
+            globalTimer = window.setTimeout("get_job_result('"+job_id+"');", 3000);
             percent += 1;
             $(".bar").css("width", percent+"%");
             return;
@@ -368,8 +367,7 @@ success: function(label) {
     $(".collapse").collapse();
 
     $("#kill_job").live('click', function(){
-        clearTimeout(get_job_res_timer);
-        clearTimeout(ping_job_timer);
+        clearTimeout(globalTimer);
         $(this).hide();
         $("#id_text").removeAttr("disabled");
         $("#start_job").show();
