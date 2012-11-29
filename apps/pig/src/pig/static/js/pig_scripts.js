@@ -35,15 +35,16 @@ function ping_job(job_id){
 
 }
 
-function explain_progres(percent){
+function explain_progres(perc){
   var t_out =300;
-  if(percent==0) { t_out = 1000; }
-  $(".bar").css("width", percent+"%");
-  percent += 10;
-  if(percent==100) {
-    $(".bar").css("width", percent+"%");
+  percent = perc;
+  if(perc==0) { t_out = 1000; }
+  $(".bar").css("width", perc+"%");
+  perc += 10;
+  if(perc==100) {
+    $(".bar").css("width", perc+"%");
     return false; }
-  window.setTimeout("explain_progres("+percent+");", t_out);
+  window.setTimeout("explain_progres("+perc+");", t_out);
 };
 
 
@@ -417,6 +418,9 @@ $(document).ready(function(){
 
   getTables();
 
+$("#save_button").live("click", function(){
+ if(percent > 0 && percent < 100) return confirm("Job is running. Are you sure, you want to switch to edit mode?");
+});
 
   //Don`t submit form if codemirror textarea is empty
   $("#pig_script_form").on("submit",function(event){
