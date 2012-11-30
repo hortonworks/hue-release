@@ -390,7 +390,7 @@ function paginator(lines_per_page){
   })
 
   function handlePaginationClick(new_page_index, pagination_container) {
-    console.log(new_page_index,pagination_container)
+    //console.log(new_page_index,pagination_container)
     //debugger;
     // This selects 20 elements from a content array
     var i=new_page_index*lines_per_page;
