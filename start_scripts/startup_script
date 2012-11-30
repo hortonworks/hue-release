@@ -41,6 +41,7 @@ start)
     sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
     cd - >> $LOG 2>&1
     [ "z$2" == "z--fake" ] || restart -s
+    sudo -u hdfs hadoop dfsadmin -safemode leave
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
     /etc/init.d/supervisord start >> $LOG 2>&1
