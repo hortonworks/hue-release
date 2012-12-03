@@ -24,7 +24,8 @@ ${commonheader(_("HCatalog: Create table manually"), "hcatalog", user, "100px")}
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
-<h1>${_('Create a new table manually')}</h1>
+<h1 id="describe-header">${_('Create a new table manually')}</h1>
+<div id="action-spinner"><h1>Creating a table...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 <div class="row-fluid">
 <div class="span3">
     <div class="well sidebar-nav">
@@ -430,6 +431,9 @@ ${layout.menubar(section='tables')}
     div .alert {
         margin-bottom:30px;
     }
+    #action-spinner {
+		display:none;
+	}
 </style>
 </div>
 <script type="text/javascript" charset="utf-8">
@@ -499,6 +503,11 @@ ${layout.menubar(section='tables')}
             if (!step6Valid){
                 event.preventDefault();
                 $(window).scrollTop(scrollTo);
+            }
+            else {
+                $('#describe-header').hide();
+                $('#action-spinner').show();
+                $(window).scrollTop(0);
             }
         });
         var _url = location.href;
@@ -691,6 +700,7 @@ ${layout.menubar(section='tables')}
                 field.nextAll(".error-inline").addClass("hide");
             }
         }
+        
     });
 </script>
 ${commonfooter(messages)}

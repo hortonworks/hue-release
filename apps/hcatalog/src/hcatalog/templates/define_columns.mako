@@ -25,7 +25,8 @@ ${commonheader(_('HCatalog: Create table from file'), "hcatalog", user, "100px")
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
-    <h1>${_('Create a new table from a file')}</h1>
+    <h1 id="describe-header">${_('Create a new table from a file')}</h1>
+    <div id="action-spinner"><h1>Creating a table...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
@@ -91,7 +92,7 @@ ${layout.menubar(section='tables')}
                 </fieldset>
                 <div class="form-actions">
                     <input class="btn" type="submit" name="cancel_create" value="${_('Previous')}" />
-                    <input class="btn primary" type="submit" name="submit_create" value="${_('Create Table')}" />
+                    <input class="btn primary" id="create-table" type="submit" name="submit_create" value="${_('Create Table')}" />
                 </div>
             </form>
         </div>
@@ -103,6 +104,10 @@ ${layout.menubar(section='tables')}
         width: 100%;
         overflow-x: auto;
     }
+    
+    #action-spinner {
+		display:none;
+	}
 </style>
 
 <script type="text/javascript" charset="utf-8">
@@ -121,6 +126,11 @@ ${layout.menubar(section='tables')}
                 e.preventDefault();
                 $("input[name='submit_create']").click();
             }
+        });
+        $("#create-table").click(function(){
+            $('#describe-header').hide();
+            $('#action-spinner').show();
+            scrollTo(0,0);
         });
     });
 </script>

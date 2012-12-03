@@ -40,7 +40,33 @@ ${shared.menubar(section='configuration')}
 </style>
 
 <script type="text/javascript" charset="utf-8">
+    function showError(msg){
+        $('#update-tutorials-msg').html(msg);
+        $('#update-tutorials-spinner').hide();
+        $('#describe-header').show();
+        $('#update-tutorials-msg').show();
+    }
 	$(document).ready(function(){
+	    $.ajaxSetup({
+            error: function(jqXHR, exception) {
+                if (jqXHR.status === 0) {
+                    showError("Update tutorials failed: you are offline. Please check your network.");
+                } else if (jqXHR.status == 404) {
+                    showError("Update tutorials failed: requested page not found.");
+                } else if (jqXHR.status == 500) {
+                    showError("Update tutorials failed: internal server error.");
+                } else if (exception === 'parsererror') {
+                    showError("Update tutorials failed: requested JSON parse failed.");
+                } else if (exception === 'timeout') {
+                    showError("Update tutorials failed: time out error.");
+                } else if (exception === 'abort') {
+                    showError("Update tutorials failed: ajax request aborted.");
+                } else {
+                    showError("Update tutorials failed: unknown error.");
+                }
+            }
+        });
+	
 		$("#updateTutorialsBtn").click(function(){
 			$('#describe-header').hide();
        		$('#update-tutorials-spinner').show();
@@ -57,27 +83,20 @@ ${shared.menubar(section='configuration')}
                     if(curVersion != data.components[i].version)
                     {
                         $('div#' + data.components[i].name).html(data.components[i].version);
-                        $('#update-tutorials-msg').html("Tutorials were successfully updated to " + data.components[i].version + " version");
-                        $('#update-tutorials-spinner').hide();
-                        $('#describe-header').show();
-                        $('#update-tutorials-msg').show();
+                        showError("Tutorials were successfully updated to " + data.components[i].version + " version");
                         window.location.reload(true);
                         return;
                     }
                 }
-                $('#update-tutorials-msg').html("There are no available tutorial updates");
-                $('#update-tutorials-spinner').hide();
-                $('#describe-header').show();
-                $('#update-tutorials-msg').show();
+                if(data.error != ""){
+                    showError("Update tutorials failed: " + data.error);
+                }
+                else{
+                    showError("There are no available tutorial updates");
+                }
                 return;
             }
-
-            }, "json").error(function(){
-       		    $('#update-tutorials-spinner').hide();
-       		    $('#update-tutorials-msg').replaceWith("Update tutorials failed");
-                $('#describe-header').show();
-                return;
-          });
+            }, "json");
       });
 	});
 </script>

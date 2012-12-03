@@ -84,9 +84,11 @@ def _get_version(component, content_list):
   return version
   
 def _updateTutorials():
-  p = Popen(TUTORIAL_UPDATE_SCRIPT, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+  p = Popen(TUTORIAL_UPDATE_SCRIPT, shell=True, stdin=PIPE, stdout=None, stderr=PIPE, close_fds=True)
   answer, error = p.communicate()
   if error:
-    raise Exception(str(error))
-  msg = "Updating tutorials failed: %s" % (error)
-  LOG.exception(msg)
+    msg = "Updating tutorials failed: %s" % (error)
+    LOG.error(msg)
+    if not 'FETCH_HEAD' in error:
+      raise Exception(str(error))
+

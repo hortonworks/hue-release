@@ -25,7 +25,8 @@ ${layout.menubar(section='tables')}
 
 
 <div class="container-fluid">
-    <h1>${_('Create a new table from a file')}</h1>
+    <h1 id="describe-header">${_('Create a new table from a file')}</h1>
+    <div id="action-spinner"><h1>Processing the input file...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
@@ -98,7 +99,7 @@ ${layout.menubar(section='tables')}
                     </div>
                 </fieldset>
                 <div class="form-actions">
-                    <input type="submit" class="btn primary" name="submit_file" value="${_('Next')}" />
+                    <input type="submit" class="btn primary" id="next-button" name="submit_file" value="${_('Next')}" />
                 </div>
             </form>
         </div>
@@ -141,6 +142,10 @@ ${layout.menubar(section='tables')}
     #fileWillBeMoved {
         margin-top: 10px;
     }
+    
+    #action-spinner {
+		display:none;
+	}
 </style>
 
 
@@ -176,6 +181,11 @@ ${layout.menubar(section='tables')}
                 e.preventDefault();
                 $("input[name='submit_file']").click();
             }
+        });
+        $("#next-button").click(function(){
+            $('#describe-header').hide();
+            $('#action-spinner').show();
+            scrollTo(0,0);
         });
     });
 </script>
