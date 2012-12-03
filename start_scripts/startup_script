@@ -9,6 +9,8 @@ LOG="/var/log/startup_script.log"
 
 source /etc/rc.d/init.d/functions
 
+source $SCRIPTS_PATH/consts.sh
+
 function restart() {
     date >> $LOG
     [ "$1" == "-r" ] && str="Stopping HDP..." || str="Starting HDP..."
@@ -37,8 +39,8 @@ start)
     cd /home/sandbox/sandbox-shared
 
     sudo -u sandbox git fetch >> /var/log/startup_script.log 2>&1
-    sudo -u sandbox git checkout Alstom >> /var/log/startup_script.log 2>&1
-    sudo -u sandbox git pull origin Alstom >> /var/log/startup_script.log 2>&1
+    sudo -u sandbox git checkout $BRANCH >> /var/log/startup_script.log 2>&1
+    sudo -u sandbox git pull origin $BRANCH >> /var/log/startup_script.log 2>&1
     chown sandbox:sandbox -R /home/sandbox/sandbox-shared
     /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
     sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
