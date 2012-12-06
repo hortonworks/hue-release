@@ -304,6 +304,10 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
     msg = "Failed to open file '%s': %s" % (path, ex)
     LOG.exception(msg)
     raise PopupException(msg)
+  except Exception:
+    import traceback
+    error = traceback.format_exc()
+    raise PopupException('Delimiter preview exception', title="Delimiter preview exception", detail=error)
 
   col_names = []
   n_cols = max([ len(row) for row in fields_list ])
@@ -372,7 +376,7 @@ def _parse_fields(fs, path, file_obj, encoding, filetypes, delimiters, parse_fir
           if apply_excel_dialect:
             csv_content = csv.reader(StringIO.StringIO('\n'.join(all_data)), delimiter=delim.decode('string_escape'))
             new_fields_list = []
-            data_to_store = []        
+            data_to_store = []
             for row in csv_content:
               new_row = []
               for field in row:
@@ -483,7 +487,7 @@ class GzipFileReader(object):
     """read_all_data(fileobj, encoding) -> list of lines"""
     gz = gzip.GzipFile(fileobj=fileobj, mode='rb')
     try:
-      data = gz.read().split('\n')
+      data = gz.read().splitlines()
     except IOError:
       return None
     return data
@@ -508,7 +512,7 @@ class TextFileReader(object):
   def read_all_data(fileobj, encoding):
     """read_all_data(fileobj, encoding) -> list of lines"""
     try:
-      data = fileobj.read().split('\n')
+      data = fileobj.read().splitlines()
     except IOError:
       return None
     return data
