@@ -26,12 +26,11 @@ def is_selected(section, matcher):
     return ""
 %>
 
-<%def name="menubar(section='create table')">
+<%def name="menubar(section='tables')">
 <div class="subnav subnav-fixed">
 	<div class="container-fluid">
 		<ul class="nav nav-pills">
 			<li class="${is_selected(section, 'tables')}"><a href="/hcatalog/tables">Tables</a></li>
-			<li class="${is_selected(section, 'create table')}"><a href="/hcatalog/create">Create table</a></li>
 		</ul>
 	</div>
 </div>

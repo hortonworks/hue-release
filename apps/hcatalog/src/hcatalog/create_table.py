@@ -41,10 +41,6 @@ import os.path
 
 LOG = logging.getLogger(__name__)
 
-def index(request):
-  """Main create table entry point, to divert into manual creation vs create from file."""
-  return render("create_table_index.mako", request, {})
-
 
 def create_table(request):
   """Create a table by specifying its attributes manually"""

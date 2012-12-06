@@ -22,7 +22,8 @@ ${commonheader("HCatalog: Table List", "hcatalog", user, "100px")}
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
-	<h1>HCatalog: Table List</h1>
+	<h1 id="describe-header">HCatalog: Table List</h1>
+	<div id="action-spinner"><h1>Loading a table list...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 	<div class="row-fluid">
 		<div class="span3">
 			<div class="well sidebar-nav">
@@ -34,29 +35,31 @@ ${layout.menubar(section='tables')}
 			</div>
 		</div>
 		<div class="span9">
-			<table class="table table-condensed table-striped datatables">
+			<table class="table table-condensed table-striped datatables" id=table-list-tbl>
 				<thead>
 					<tr>
 						<th>Table Name</th>
 						<th>&nbsp;</th>
 					</tr>
 				</thead>
-				<tbody>
-				% for table in tables:
-					<tr>
-						<td><a href="${ url("hcatalog.views.describe_table", table=table) }" data-row-selector="true">${ table }</a></td>
-						<td><a href="${ url("hcatalog.views.read_table", table=table) }" class="btn">Browse Data</a></td>
-						##<td><a href="#" data-row-selector="true">${ table }</a></td>
-					</tr>				
-				% endfor
+				<tbody id=table-body>
 				</tbody>
 			</table>
 		</div>
 	</div>
 </div>
 
+<style>
+	#table-list-tbl, #action-spinner {
+		display:none;
+	}
+</style>
 
 <script type="text/javascript" charset="utf-8">
+	function showError(msg) {
+		//alert(msg);
+	}
+	
 	$(document).ready(function(){
 		$(".datatables").dataTable({
 			"bPaginate": false,
@@ -70,6 +73,31 @@ ${layout.menubar(section='tables')}
 		});
 
 		$("a[data-row-selector='true']").jHueRowSelector();
+		
+		$('#describe-header').hide();
+        $('#action-spinner').show();
+		$.post("${url("hcatalog.views.get_tables")}", function(data){
+		    if("exception" in data){
+		    	showError(data.exception);
+		    }
+		    else if("tables" in data && "describe_table_urls" in data && "read_table_urls" in data){
+		    	var tableHtmlContent = "";
+				for (var i = 0; i < data.tables.length; i++){ 
+					tableHtmlContent += "<tr><td><a href=" + data.describe_table_urls[i] 
+					+ " data-row-selector=\"true\">" + data.tables[i] + "</a></td>"
+					+ "<td><a href=" + data.read_table_urls[i] + " class=\"btn\">Browse Data</a></td></tr>";
+				}
+				$('#table-body').html(tableHtmlContent);
+            }
+            $('#action-spinner').hide();
+            $('#describe-header').show();
+            $('#table-list-tbl').show();
+            return;
+        }, "json").error(function() {
+           	$('#action-spinner').hide();
+           	$('#describe-header').show();
+          	$('table-list-tbl').show();
+        });
 	});
 </script>
 

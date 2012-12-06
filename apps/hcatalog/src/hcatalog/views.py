@@ -64,34 +64,29 @@ LOG = logging.getLogger(__name__)
 
 
 def show_tables(request):
-    tables = []
-    try:
-      tables = hcat_client().get_tables()
-    except Exception, ex:
-      raise PopupException('Error on getting a table list', title="Error on getting a table list", detail=str(ex))
-    return render("show_tables.mako", request, dict(tables=tables,))
+  return render("show_tables.mako", request, dict())
 
 
 def describe_table(request, table):
   try:
-      table_desc_extended = hcat_client().describe_table_extended(table)
-      is_table_partitioned = table_desc_extended['partitioned']
-      partitions = []
-      partitionColumns = []
-      if is_table_partitioned:
-          partitions = hcat_client().get_partitions(table)
-          partitionColumns = table_desc_extended['partitionColumns']
-      table_obj = {'tableName':table, 'columns':table_desc_extended['columns'], 'partitionKeys':partitionColumns, 'partitions':partitions}
+    table_desc_extended = hcat_client().describe_table_extended(table)
+    is_table_partitioned = table_desc_extended['partitioned']
+    partitions = []
+    partitionColumns = []
+    if is_table_partitioned:
+      partitions = hcat_client().get_partitions(table)
+      partitionColumns = table_desc_extended['partitionColumns']
+    table_obj = {'tableName':table, 'columns':table_desc_extended['columns'], 'partitionKeys':partitionColumns, 'partitions':partitions}
   except Exception:
     import traceback
     error = traceback.format_exc()
     raise PopupException('Error getting table description', title="Error getting table description", detail=error)
   load_form = hcatalog.forms.LoadDataForm(table_obj)
   return render("describe_table.mako", request, dict(
-      table=table_obj,
-      table_name=table,
-      load_form=load_form,
-      is_table_partitioned=is_table_partitioned,
+    table=table_obj,
+    table_name=table,
+    load_form=load_form,
+    is_table_partitioned=is_table_partitioned,
   ))
 
 
@@ -208,8 +203,7 @@ def pig_view(request, table=None):
 def hive_view(request, table=None):
     tables = db_utils.meta_client().get_tables("default", ".*")
     if not tables:
-        examples_installed = MetaInstall.get().installed_example
-        return render("index.mako", request, {'examples_installed': examples_installed})
+        return render("show_tables.mako", request, dict(tables=[],))
     else:
         return execute_query(request, table=table)
 
@@ -487,3 +481,20 @@ def view_results(request, id, first_row=0, last_result_len=0):
     'save_form': save_form,
     'can_save': query_history.owner == request.user,
   })
+  
+  
+def get_tables(request):
+  """Returns a table list"""
+  tables = []
+  describe_table_urls = []
+  read_table_urls = []
+  try:
+    tables = hcat_client().get_tables()
+  except Exception, ex:
+    result = {'tables':tables, 'exception':str(ex)}
+    return HttpResponse(json.dumps(result))
+  for table in tables:
+    describe_table_urls.append(urlresolvers.reverse(describe_table, kwargs=dict(table=table)))
+    read_table_urls.append(urlresolvers.reverse(read_table, kwargs=dict(table=table)))
+  result = {'tables':tables, 'describe_table_urls':describe_table_urls, 'read_table_urls':read_table_urls}
+  return HttpResponse(json.dumps(result))

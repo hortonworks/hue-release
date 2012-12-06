@@ -18,7 +18,8 @@
 from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('hcatalog',
-  url(r'^$', 'create_table.index'),
+  url(r'^$', 'views.show_tables'),
+  url(r'^get_tables$', 'views.get_tables'),
   url(r'^tables$', 'views.show_tables'),
   url(r'^pig_view/(?P<table>\w+)$', 'views.pig_view'),
   url(r'^hive_view/(?P<table>\w+)$', 'views.hive_view'),
@@ -27,7 +28,6 @@ urlpatterns = patterns('hcatalog',
   url(r'^table/(?P<table>\w+)/load$', 'views.load_table'),
   url(r'^table/(?P<table>\w+)/read$', 'views.read_table'),
   url(r'^table/(?P<table>\w+)/drop$', 'views.drop_table'),
-  url(r'^create$', 'create_table.index'),
   url(r'^create/create_table$', 'create_table.create_table'),
   url(r'^create/import_wizard$', 'create_table.import_wizard'),
   url(r'^table/(?P<table>\w+)/browse_partition$', 'views.browse_partition'),
