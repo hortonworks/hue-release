@@ -29,6 +29,7 @@
 <%def name="udfs(udfs)">
   % for udf in udfs:
 <li>
+<a href="${url('udf_del', udf.id)}"  onclick="return confirm('Are you sure, you want to delete this udf?');"><img src="/pig/static/art/delete.gif" alt="Delete" height="12" width="12"></a>
   <a class="udf_register" href="#" value="${udf.file_name}">${udf.file_name}</a>
 </li>
 % endfor

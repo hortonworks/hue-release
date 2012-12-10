@@ -169,12 +169,6 @@ def piggybank(request, obj_id = False):
         else:
             raise PopupException(_("Error in upload form: %s") % (form.errors, ))
 
-def piggybank_index(request, msg=None):
-    udfs = UDF.objects.filter(owner=request.user)
-    pig_script = PigScript.objects.filter(saved=True, user=request.user)
-#    udf_form = UDFForm(request.POST, request.FILES)  # udf_form = udf_form, 
-    return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, msg = msg))
-
 
 def udf_del(request, obj_id):
     udf = get_object_or_404(UDF, pk=obj_id)
@@ -225,7 +219,7 @@ def start_job(request):
     return HttpResponse(json.dumps(
         {"job_id": job['id'],
          "text": "The Job has been started successfully.\
-         You can check job result on the following link <a href='%s'>link</a>" % reverse("show_job_result", args=[job['id']])}))
+         You can check job result on the following <a href='%s'>link</a>" % reverse("show_job_result", args=[job['id']])}))
 
 
 def kill_job(request):
