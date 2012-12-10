@@ -174,13 +174,10 @@ def udf_del(request, obj_id):
     udf = get_object_or_404(UDF, pk=obj_id)
     try:
         request.fs.remove(udf.url)
-        msg = "<pre> Deleted %s from HDFS. </pre>" % udf.url
-    except:
-        msg = "<pre> Can't delete %s from HDFS, check if it exist. </pre>" % udf.url
-    finally:
-        msg = msg + '<pre> Deleted from database %s </pre>' % udf.file_name
         udf.delete()
-    return piggybank_index(request, msg)
+    except:
+        raise PopupException("Can't delete %s from HDFS, check if it exist." % udf.url)
+    return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
 
 
 python_template = re.compile(r"(\w+)\.py")
@@ -345,4 +342,4 @@ def download_job_result(request, job_id):
     response = HttpResponse(job_result['stdout'], content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename="%s_result.txt"' % job_id
     return response
-    
+
