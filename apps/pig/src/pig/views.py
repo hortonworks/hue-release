@@ -26,7 +26,7 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect, get_object_or_404
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import HttpResponse, Http404
 from django.conf import settings
 from django.contrib.auth.models import User
 
@@ -129,45 +129,33 @@ def script_clone(request, obj_id):
 def piggybank(request, obj_id = False):
     if request.method == 'POST':
         form = UDFForm(request.POST, request.FILES)
+        if not form.is_valid():
+            raise PopupException(_("Error in upload form: %s") % form.errors)
 
-        if form.is_valid():
-            uploaded_file = request.FILES['hdfs_file']
-            dest = UDF_PATH
-            if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
-                raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))
+        uploaded_file = request.FILES['hdfs_file']
+        dest = request.fs.join(UDF_PATH, re.sub(r"[^\w\d_\-\.]+", "", uploaded_file.name))
+        tmp_file = uploaded_file.get_temp_path()
+        username = request.user.username
 
-            dest = request.fs.join(dest, uploaded_file.name.replace(" ", "_"))
-            tmp_file = uploaded_file.get_temp_path()
-            username = request.user.username
+        try:
+            # Temp file is created by superuser. Chown the file.
+            request.fs.do_as_superuser(request.fs.chmod, tmp_file, 0644)
+            request.fs.do_as_superuser(request.fs.chown, tmp_file, username, username)
 
+            # Move the file to where it belongs
+            request.fs.rename(uploaded_file.get_temp_path(), dest)
+        except IOError, ex:
+            already_exists = False
             try:
-                # Temp file is created by superuser. Chown the file.
-                request.fs.do_as_superuser(request.fs.chmod, tmp_file, 0644)
-                request.fs.do_as_superuser(request.fs.chown, tmp_file, username, username)
+                already_exists = request.fs.exists(dest)
+                msg = _('Destination %(name)s already exists.' % {'name': dest})
+            except Exception:
+                msg = _('Copy to "%(name)s failed: %(error)s') % {'name': dest, 'error': ex}
+            raise PopupException(msg)
 
-                # Move the file to where it belongs
-                request.fs.rename(uploaded_file.get_temp_path(), dest)
-            except IOError, ex:
-                already_exists = False
-                try:
-                    already_exists = request.fs.exists(dest)
-                except Exception:
-                    pass
-                if already_exists:
-                    msg = _('Destination %(name)s already exists.' % {'name': dest})
-                else:
-                    msg = _('Copy to "%(name)s failed: %(error)s') % {'name': dest, 'error': ex}
-                raise PopupException(msg)
-
-            UDF.objects.create(url=dest, file_name=uploaded_file.name,
-                               owner=request.user, description='111')
-            if obj_id:
-                return redirect('pig_root', obj_id)
-            else:
-                return piggybank_index(request)
-
-        else:
-            raise PopupException(_("Error in upload form: %s") % (form.errors, ))
+        UDF.objects.create(url=dest, file_name=uploaded_file.name,
+                           owner=request.user, description='111')
+        return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
 
 
 def udf_del(request, obj_id):
@@ -296,7 +284,7 @@ def delete_job_object(request, job_id):
     else:
         request.fs.rmtree(job.statusdir)
         job.delete()
-    return HttpResponseRedirect(reverse("query_history"))
+    return redirect(reverse("query_history"))
 
 
 @login_notrequired
