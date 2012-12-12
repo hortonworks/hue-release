@@ -28,8 +28,10 @@ def make_ip_window():
         ip_win.addstr(3,2,"Check VM setup instructions")
         ip_win.addstr(4,2,"===================================")
     else:
-        ip_win.addstr(1,2,"Log in to this sandbox by navigating your browser to")
-        ip_win.addstr(2,2,"http://%s/" % ip)
+        ip_win.addstr(1,2,"To initiate your Hortonworks Sandbox session,")
+        ip_win.addstr(2,2,"please open a browser and enter this address ")
+        ip_win.addstr(3,2,"in the browser's address field: ")
+        ip_win.addstr(4,2,"http://%s/" % ip)
 
 def make_hint_window():
     H, W = screen.getmaxyx()
@@ -52,11 +54,15 @@ def main():
 
     screen.refresh()
 
-    while True:
-        try:
-            screen.getch()
-        except KeyboardInterrupt:
-            pass
+    import sys
+    if len(sys.argv)>1 and sys.argv[1] == "-s":
+        screen.getch()
+    else:
+        while True:
+            try:
+                screen.getch()
+            except KeyboardInterrupt:
+                pass
 
     curses.endwin()
 
