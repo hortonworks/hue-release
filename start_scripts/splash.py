@@ -32,13 +32,14 @@ def make_ip_window():
         ip_win.addstr(2,2,"Connectivity issues detected!")
         ip_win.addstr(3,2,"===================================")
         ip_win.addstr(4,2,"Check VM setup instructions")
-        ip_win.addstr(4,2,"For details, see VM setup instructions")
+        ip_win.addstr(6,2,"For details, see VM setup instructions")
     except DHCPMisconfiguration:
         ip_win.addstr(1,2,"===================================")
         ip_win.addstr(2,2,"Connectivity issues detected!")
         ip_win.addstr(3,2,"===================================")
-        ip_win.addstr(4,2,"Check DHCP is enabled for Host-only interface")
-        ip_win.addstr(4,2,"For details, see VM setup instructions")
+        ip_win.addstr(4,2,"Check connection of Host-only interface")
+        ip_win.addstr(5,2,"and check DHCP is enabled for it")
+        ip_win.addstr(7,2,"For details, see VM setup instructions")
     else:
         ip_win.addstr(1,2,"To initiate your Hortonworks Sandbox session,")
         ip_win.addstr(2,2,"please open a browser and enter this address ")
