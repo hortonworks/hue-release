@@ -4,6 +4,9 @@ import sh
 screen = None
 HINT_WIDTH = 3
 
+class DHCPMisconfiguration(Exception):
+    pass
+
 def make_greet_window():
     H, W = screen.getmaxyx()
     greet_win = screen.subwin(H / 2 - HINT_WIDTH, W, 0, 0)
@@ -22,11 +25,20 @@ def make_ip_window():
                     sh.getent("ahosts", sh.hostname().strip()),
                     "{print $1}"),
                 n="1").strip()
+        if ip == "127.0.0.1":
+            raise DHCPMisconfiguration()
     except sh.ErrorReturnCode:
         ip_win.addstr(1,2,"===================================")
-        ip_win.addstr(2,2,"You have some connectivity issues!")
-        ip_win.addstr(3,2,"Check VM setup instructions")
-        ip_win.addstr(4,2,"===================================")
+        ip_win.addstr(2,2,"Connectivity issues detected!")
+        ip_win.addstr(3,2,"===================================")
+        ip_win.addstr(4,2,"Check VM setup instructions")
+        ip_win.addstr(4,2,"For details, see VM setup instructions")
+    except DHCPMisconfiguration:
+        ip_win.addstr(1,2,"===================================")
+        ip_win.addstr(2,2,"Connectivity issues detected!")
+        ip_win.addstr(3,2,"===================================")
+        ip_win.addstr(4,2,"Check DHCP is enabled for Host-only interface")
+        ip_win.addstr(4,2,"For details, see VM setup instructions")
     else:
         ip_win.addstr(1,2,"To initiate your Hortonworks Sandbox session,")
         ip_win.addstr(2,2,"please open a browser and enter this address ")
