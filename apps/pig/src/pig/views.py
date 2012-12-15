@@ -51,20 +51,17 @@ def index(request, obj_id=None):
             raise PopupException(
                 "".join(["%s: %s" % (field, error) for field, error in form.errors.iteritems()])
             )
-
-        #Save or Create new script
-        if request.POST.get('submit_action') == 'Save':
-            if "autosave" in request.session:
-                del request.session['autosave']
-            if request.POST.get("script_id"):
-                instance = PigScript.objects.get(pk=request.POST['script_id'])
-                form = PigScriptForm(request.POST, instance=instance)
-                form.save()
-            else:
-                instance = PigScript(**form.cleaned_data)
-                instance.user = request.user
-                instance.save()
-                return redirect(reverse("view_script", args=[instance.pk]))
+        if "autosave" in request.session:
+            del request.session['autosave']
+        if request.POST.get("script_id"):
+            instance = PigScript.objects.get(pk=request.POST['script_id'])
+            form = PigScriptForm(request.POST, instance=instance)
+            form.save()
+        else:
+            instance = PigScript(**form.cleaned_data)
+            instance.user = request.user
+            instance.save()
+        return redirect(reverse("view_script", args=[instance.pk]))
     if not request.GET.get("new"):
         result.update(request.session.get("autosave", {}))
 
