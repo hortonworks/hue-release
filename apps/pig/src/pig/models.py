@@ -28,7 +28,7 @@ class PigScript(models.Model):
     user = models.ForeignKey(User)
     python_script = models.TextField(null=True,blank=True)
     date_created = models.DateTimeField('Date', auto_now_add=True, auto_now=True)
-    saved = models.BooleanField(default=False)
+    saved = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['title']

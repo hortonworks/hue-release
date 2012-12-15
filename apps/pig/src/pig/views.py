@@ -59,12 +59,10 @@ def index(request, obj_id=None):
             if request.POST.get("script_id"):
                 instance = PigScript.objects.get(pk=request.POST['script_id'])
                 form = PigScriptForm(request.POST, instance=instance)
-                form.cleaned_data["saved"] = True
                 form.save()
             else:
                 instance = PigScript(**form.cleaned_data)
                 instance.user = request.user
-                instance.saved = True
                 instance.save()
                 return redirect(reverse("view_script", args=[instance.pk]))
     if not request.GET.get("new"):
