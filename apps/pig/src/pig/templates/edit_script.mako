@@ -127,7 +127,7 @@ udfs = UDF.objects.all()
                     <li class="dropdown-submenu">
                       <a href="#">I/0</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">A = LOAD '%FILE%';</a></li>
+                        <li><a href="#">LOAD '%FILE%';</a></li>
                         <li><a href="#">DUMP %VAR%;</a></li>
                         <li><a href="#">STORE %VAR% INTO %PATH%;</a></li>
                       </ul>
@@ -143,7 +143,7 @@ udfs = UDF.objects.all()
                     <li class="dropdown-submenu">
                       <a href="#">HCatalog</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">A = LOAD '%TABLE%' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
+                        <li><a href="#">LOAD '%TABLE%' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
