@@ -838,6 +838,20 @@ def _get_server_id_and_state(query_history):
   return (server_id, state)
 
 
+def _get_query_handle_and_state(query_history):
+  """
+  Front-end wrapper to handle exceptions. Expects the query to be submitted.
+  """
+  server_id, state = _get_server_id_and_state(query_history)
+
+  if server_id is None:
+    raise PopupException(_("Failed to retrieve query state from the Beeswax Server."))
+
+  if state is None:
+    raise PopupException(_("Failed to contact Beeswax Server to check query status."))
+  return (server_id, state)
+
+
 def _parse_query_context(context):
   """
   _parse_query_context(context) -> ('table', <table_name>) -or- ('design', <design_obj>)
@@ -873,6 +887,27 @@ def _parse_out_hadoop_jobs(log):
       continue
     ret.append(job_id)
   return ret
+
+def watch_query_refresh_json(request, id):
+  query_history = authorized_get_history(request, id, must_exist=True)
+  server_id, state = _get_query_handle_and_state(query_history)
+  query_history.save_state(state)
+
+  log = db_utils.db_client(query_history.get_query_server()).get_log(server_id)
+
+  jobs = _parse_out_hadoop_jobs(log)
+  job_urls = {}
+  for job in jobs:
+    job_urls[job] = urlresolvers.reverse('jobbrowser.views.single_job', kwargs=dict(jobid=job))
+
+  result = {
+    'log': log,
+    'jobs': jobs,
+    'jobUrls': job_urls,
+    'isSuccess': query_history.is_success(),
+    'isFailure': query_history.is_failure()
+  }
+  return HttpResponse(simplejson.dumps(result), mimetype="application/json")
 
 def view_results(request, id, first_row=0):
   """

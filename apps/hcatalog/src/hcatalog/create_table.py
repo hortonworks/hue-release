@@ -294,7 +294,7 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
 
   path = file_form.cleaned_data['path']
   if path_tmp is None:
-    path_tmp = "/tmp/%s.tmp.%s" % (os.path.basename(path), datetime.now().strftime("%s"))
+    path_tmp = "/tmp/%s.tmp.%s" % (os.path.basename(path).replace(' ', ''), datetime.now().strftime("%s"))
   try:
     file_obj = fs.open(path)
     delim, file_type, fields_list = _parse_fields(

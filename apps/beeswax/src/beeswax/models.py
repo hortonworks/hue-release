@@ -119,6 +119,15 @@ class QueryHistory(models.Model):
     return dict(zip(['server_name', 'server_host', 'server_port'],
                     [self.server_name, self.server_host, self.server_port]))
 
+  def is_running(self):
+    return self.last_state in (QueryHistory.STATE.running.index, QueryHistory.STATE.submitted.index)
+
+  def is_success(self):
+    return self.last_state in (QueryHistory.STATE.available.index,)
+
+  def is_failure(self):
+    return self.last_state in (QueryHistory.STATE.expired.index, QueryHistory.STATE.failed.index)
+
 
 class SavedQuery(models.Model):
   """
