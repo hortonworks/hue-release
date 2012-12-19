@@ -51,11 +51,9 @@ start)
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
     /etc/init.d/supervisord start >> $LOG 2>&1
     
-    echo "Hortonworks Data Platform Sandbox 1.0.4" > /etc/issue
-
-    echo "You can now launch sandbox on http://$(getent ahosts `hostname` | awk '{print $1}' | head -n 1):8888/" | tee -a /etc/issue
+    echo "You can now launch sandbox on http://$(getent ahosts `hostname` | awk '{print $1}' | head -n 1):8888/"
     
-    echo >> /etc/issue
+    open -c 1 -f -- python /home/sandbox/start_scripts/splash.py
 ;;
 stop)
     date >> $LOG

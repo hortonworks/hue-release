@@ -129,6 +129,7 @@ function getTableFields(table,target){
 
 function call_popup_var_edit(){
 
+
   var d = $.Deferred();
 
   setInterval(function() {
@@ -140,6 +141,21 @@ function call_popup_var_edit(){
       return d.promise();
     }
   }, 100);
+
+if(!pig_editor.getValue())
+{
+    $(".empty-codemirror-textarea-error").remove();
+    $(".CodeMirror").append("<div class='empty-codemirror-textarea-error'>This field is required.</div>");
+    $(".empty-codemirror-textarea-error").css({
+        "padding":"15px 0px",
+        "color":"red",
+        "font-size":"14px",
+        "font-weight":"bold"
+    });
+    setTimeout(function(){pig_editor.focus();}, 50);
+    return d.promise();
+}
+
 
   var html="";
   var editorContent=pig_editor.getValue();
@@ -422,22 +438,6 @@ $("#save_button").live("click", function(){
  if(percent > 0 && percent < 100) return confirm("Job is running. Are you sure, you want to switch to edit mode?");
 });
 
-  //Don`t submit form if codemirror textarea is empty
-  $("#pig_script_form").on("submit",function(event){
-    if(pig_editor.getValue()=="")
-    {
-      $(".empty-codemirror-textarea-error").remove();
-      $(".CodeMirror").append("<div class='empty-codemirror-textarea-error'>This field is required.</div>");
-      $(".empty-codemirror-textarea-error").css({
-        "padding":"15px 0px",
-        "color":"red",
-        "font-size":"14px",
-        "font-weight":"bold"
-      });
-      setTimeout(function(){pig_editor.focus();}, 50);
-      return false;
-    }
-  });
 
   $("#save-param-modal-for-dollar").click(function(){
     dollarSaveParamTrig=1;
@@ -458,8 +458,7 @@ $("#save_button").live("click", function(){
 
       python_editor.refresh();
     }
-    var cur_val = pig_editor.getValue();
-    if (cur_val) cur_val += "\n";
+    var cur_val = pig_editor.getValue();    
     pig_editor.setValue(cur_val+$(this).text());
     pig_editor.focus();
     //pig_editor.setCursor({line:pig_editor.lineCount(), ch:"0"});

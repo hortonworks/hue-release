@@ -26,7 +26,7 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect, get_object_or_404
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import HttpResponse, Http404
 from django.conf import settings
 from django.contrib.auth.models import User
 
@@ -51,24 +51,17 @@ def index(request, obj_id=None):
             raise PopupException(
                 "".join(["%s: %s" % (field, error) for field, error in form.errors.iteritems()])
             )
-
-        #Save or Create new script
-        if request.POST.get('submit') == 'Save':
-            if "autosave" in request.session:
-                del request.session['autosave']
-            if request.POST.get("script_id"):
-                instance = PigScript.objects.get(pk=request.POST['script_id'])
-                form = PigScriptForm(request.POST, instance=instance)
-                form.save()
-            else:
-                instance = PigScript(**form.cleaned_data)
-                instance.user = request.user
-                instance.saved = True
-                instance.save()
-
+        if "autosave" in request.session:
+            del request.session['autosave']
+        if request.POST.get("script_id"):
+            instance = PigScript.objects.get(pk=request.POST['script_id'])
+            form = PigScriptForm(request.POST, instance=instance)
+            form.save()
+        else:
+            instance = PigScript(**form.cleaned_data)
+            instance.user = request.user
+            instance.save()
         return redirect(reverse("view_script", args=[instance.pk]))
-
-        
     if not request.GET.get("new"):
         result.update(request.session.get("autosave", {}))
 
@@ -129,64 +122,43 @@ def script_clone(request, obj_id):
 def piggybank(request, obj_id = False):
     if request.method == 'POST':
         form = UDFForm(request.POST, request.FILES)
+        if not form.is_valid():
+            raise PopupException(_("Error in upload form: %s") % form.errors)
 
-        if form.is_valid():
-            uploaded_file = request.FILES['hdfs_file']
-            dest = UDF_PATH
-            if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
-                raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))
+        uploaded_file = request.FILES['hdfs_file']
+        dest = request.fs.join(UDF_PATH, re.sub(r"[^\w\d_\-\.]+", "", uploaded_file.name))
+        tmp_file = uploaded_file.get_temp_path()
+        username = request.user.username
 
-            dest = request.fs.join(dest, uploaded_file.name.replace(" ", "_"))
-            tmp_file = uploaded_file.get_temp_path()
-            username = request.user.username
+        try:
+            # Temp file is created by superuser. Chown the file.
+            request.fs.do_as_superuser(request.fs.chmod, tmp_file, 0644)
+            request.fs.do_as_superuser(request.fs.chown, tmp_file, username, username)
 
+            # Move the file to where it belongs
+            request.fs.rename(uploaded_file.get_temp_path(), dest)
+        except IOError, ex:
+            already_exists = False
             try:
-                # Temp file is created by superuser. Chown the file.
-                request.fs.do_as_superuser(request.fs.chmod, tmp_file, 0644)
-                request.fs.do_as_superuser(request.fs.chown, tmp_file, username, username)
+                already_exists = request.fs.exists(dest)
+                msg = _('Destination %(name)s already exists.' % {'name': dest})
+            except Exception:
+                msg = _('Copy to "%(name)s failed: %(error)s') % {'name': dest, 'error': ex}
+            raise PopupException(msg)
 
-                # Move the file to where it belongs
-                request.fs.rename(uploaded_file.get_temp_path(), dest)
-            except IOError, ex:
-                already_exists = False
-                try:
-                    already_exists = request.fs.exists(dest)
-                except Exception:
-                    pass
-                if already_exists:
-                    msg = _('Destination %(name)s already exists.' % {'name': dest})
-                else:
-                    msg = _('Copy to "%(name)s failed: %(error)s') % {'name': dest, 'error': ex}
-                raise PopupException(msg)
-
-            UDF.objects.create(url=dest, file_name=uploaded_file.name,
-                               owner=request.user, description='111')
-            if obj_id:
-                return redirect('pig_root', obj_id)
-            else:
-                return piggybank_index(request)
-
-        else:
-            raise PopupException(_("Error in upload form: %s") % (form.errors, ))
-
-def piggybank_index(request, msg=None):
-    udfs = UDF.objects.filter(owner=request.user)
-    pig_script = PigScript.objects.filter(saved=True, user=request.user)
-#    udf_form = UDFForm(request.POST, request.FILES)  # udf_form = udf_form, 
-    return render('piggybank_index.mako', request, dict(udfs=udfs, pig_script=pig_script, msg = msg))
+        UDF.objects.create(url=dest, file_name=uploaded_file.name,
+                           owner=request.user, description='111')
+        return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
 
 
 def udf_del(request, obj_id):
     udf = get_object_or_404(UDF, pk=obj_id)
     try:
         request.fs.remove(udf.url)
-        msg = "<pre> Deleted %s from HDFS. </pre>" % udf.url
-    except:
-        msg = "<pre> Can't delete %s from HDFS, check if it exist. </pre>" % udf.url
-    finally:
-        msg = msg + '<pre> Deleted from database %s </pre>' % udf.file_name
         udf.delete()
-    return piggybank_index(request, msg)
+    except:
+        raise PopupException("Can't delete %s from HDFS, check if it exist." % udf.url)
+    return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
 
 
 python_template = re.compile(r"(\w+)\.py")
@@ -225,7 +197,7 @@ def start_job(request):
     return HttpResponse(json.dumps(
         {"job_id": job['id'],
          "text": "The Job has been started successfully.\
-         You can check job result on the following link <a href='%s'>link</a>" % reverse("show_job_result", args=[job['id']])}))
+         You can check job result on the following <a href='%s'>link</a>" % reverse("show_job_result", args=[job['id']])}))
 
 
 def kill_job(request):
@@ -305,7 +277,7 @@ def delete_job_object(request, job_id):
     else:
         request.fs.rmtree(job.statusdir)
         job.delete()
-    return HttpResponseRedirect(reverse("query_history"))
+    return redirect(reverse("query_history"))
 
 
 @login_notrequired
@@ -351,4 +323,4 @@ def download_job_result(request, job_id):
     response = HttpResponse(job_result['stdout'], content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename="%s_result.txt"' % job_id
     return response
-    
+

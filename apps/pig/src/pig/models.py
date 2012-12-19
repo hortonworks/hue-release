@@ -24,11 +24,11 @@ from django.contrib.auth.models import User
 class PigScript(models.Model):
 
     title = models.CharField('Title', max_length=200)
-    pig_script = models.TextField('Pig script')
+    pig_script = models.TextField('Pig script', null=True, blank=True)
     user = models.ForeignKey(User)
     python_script = models.TextField(null=True,blank=True)
     date_created = models.DateTimeField('Date', auto_now_add=True, auto_now=True)
-    saved = models.BooleanField(default=False)
+    saved = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['title']
