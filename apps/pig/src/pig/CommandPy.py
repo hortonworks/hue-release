@@ -17,7 +17,8 @@
 from subprocess import Popen, PIPE
 import os
 
-class CommandPy:
+
+class CommandPy(object):
 
     file_path = ''
     shell_path = ''
@@ -27,7 +28,7 @@ class CommandPy:
         self.shell_path = shell_path.split()
         self.file_path = script_path
         self.pig_src = pig_src
-    
+
     def returnCode(self):
         self.createPigFile()
         slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds = True)
@@ -52,7 +53,7 @@ class CommandPy:
         f1 = open(self.file_path, 'w')
         f1.write(self.pig_src)
         f1.close
-    
+
     def deletePigFile(self):
         """
         Delete pig script file
