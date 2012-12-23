@@ -229,7 +229,7 @@ def _clean_tablename(name):
     try:
       tables = hcat_client().get_tables()
     except Exception, ex:
-      raise forms.ValidationError('Error, could not get table list: ' % (str(ex),))
+      raise forms.ValidationError('Error occurred: %s' % (str(ex),))
     if name in tables:
       raise forms.ValidationError('Table "%s" already exists' % (name,))
     return name
