@@ -15,7 +15,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 
-DJANGO_APPS = [ "pig" ]
+DJANGO_APPS = ["pig"]
 REQUIRES_HADOOP = False
 NICE_NAME = "Pig"
 MENU_INDEX = 11

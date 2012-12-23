@@ -14,26 +14,18 @@
 ## KIND, either express or implied.  See the License for the
 ## specific language governing permissions and limitations
 ## under the License.
-import os
 import re
 import simplejson as json
-import posixpath
-from datetime import date, datetime
+from datetime import datetime
 
 from django.utils.translation import ugettext as _
-from django.template import RequestContext
-from django.template.loader import render_to_string
-from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
-from django.shortcuts import render_to_response, redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, Http404
-from django.conf import settings
-from django.contrib.auth.models import User
 
 from desktop.lib.exceptions import PopupException
 from desktop.lib.django_util import login_notrequired, render
 from filebrowser.views import _do_newfile_save
-from filebrowser.forms import UploadFileForm
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm, UDFForm
@@ -41,10 +33,11 @@ from pig.CommandPy import CommandPy
 
 UDF_PATH = '/tmp/udfs/'
 
+
 def index(request, obj_id=None):
     result = {}
     result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
-    result['udfs'] = UDF.objects.all()    
+    result['udfs'] = UDF.objects.all()
     if request.method == 'POST':
         form = PigScriptForm(request.POST)
         if not form.is_valid():
@@ -118,7 +111,6 @@ def script_clone(request, obj_id):
     return redirect(reverse("root_pig"))
 
 
-
 def piggybank(request, obj_id = False):
     if request.method == 'POST':
         form = UDFForm(request.POST, request.FILES)
@@ -190,10 +182,10 @@ def start_job(request):
     script.pig_script = request.POST['pig_script']
     script.python_script = request.POST['python_script']
     script.save()
-    job_object = Job.objects.create(job_id=job['id'],
-                                    statusdir=statusdir,
-                                    script=script,
-                                    email_notification=bool(request.POST['email']))
+    Job.objects.create(job_id=job['id'],
+                       statusdir=statusdir,
+                       script=script,
+                       email_notification=bool(request.POST['email']))
     return HttpResponse(json.dumps(
         {"job_id": job['id'],
          "text": "The Job has been started successfully.\
@@ -257,7 +249,7 @@ def show_job_result(request, job_id):
     result['job_id'] = job.job_id
     if job.email_notification:
         result['email_notification'] = True
-    if job.status == job.JOB_SUBMITED:        
+    if job.status == job.JOB_SUBMITED:
         result['JOB_SUBMITED'] = True
     else:
         result.update(_job_result(request, job))
@@ -303,7 +295,7 @@ def autosave_scripts(request):
         "pig_script": request.POST['pig_script'],
         "python_script": request.POST.get('python_script'),
         "title": request.POST.get("title")
-        }
+    }
     return HttpResponse(json.dumps("Done"))
 
 
@@ -323,4 +315,3 @@ def download_job_result(request, job_id):
     response = HttpResponse(job_result['stdout'], content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename="%s_result.txt"' % job_id
     return response
-
