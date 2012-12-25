@@ -39,6 +39,7 @@ kill -9 `ps -ef | grep hive | grep hadoop | awk '{ print $2 }'`
 
 echo "Stop MySQL server"
 /etc/init.d/mysqld stop
+/etc/init.d/postgresql stop
 
 echo "Service associated with port"
 netstat -nltp
