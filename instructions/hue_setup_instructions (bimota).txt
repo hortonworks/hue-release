@@ -20,7 +20,7 @@ a) Change dfs.block.access.token.enable to false
 b) Change dfs.permissions to false
 c) Change dfs.web.ugi to hue,hue
 d) Change dfs.http.adres to localhost:50070
-* I'm not sure that all this changes are nesesary
+e) Add dfs.support.broken.append to true
 
 4) edit these files:
 /etc/puppet/agent/modules/hdp-hadoop/templates/mapred-site.xml.erb

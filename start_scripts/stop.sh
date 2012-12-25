@@ -11,7 +11,7 @@ echo "Stop Hadoop tasktracker"
 su - mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf stop tasktracker"
 
 echo "Stop templeton server"
-su - templeton -c '/usr/sbin/templeton_server.sh stop'
+su - hcat -c '/usr/lib/hcatalog/sbin/webhcat_server.sh stop'
 
 echo "Stop Oozie"
 su - oozie -c "cd /var/log/oozie; /usr/lib/oozie/bin/oozie-stop.sh"

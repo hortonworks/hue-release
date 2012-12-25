@@ -44,8 +44,8 @@ su - hive -c  'env HADOOP_HOME=/usr nohup hive --service metastore > /var/log/hi
 tail -$line  /var/log/hive/hive.log
 
 echo "Start templeton server"
-su - templeton -c '/usr/sbin/templeton_server.sh start'
-tail -$line  /var/log/templeton/templeton.log
+su - hcat -c '/usr/lib/hcatalog/sbin/webhcat_server.sh start'
+tail -$line  /var/log/webhcat/templeton.log
 
 echo "Start Oozie"
 su - oozie -c "cd /var/log/oozie; /usr/lib/oozie/bin/oozie-start.sh"

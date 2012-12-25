@@ -20,3 +20,4 @@ echo "clonning tutorials ..."
 git clone git@github.com:hortonworks/sandbox-tutorials.git
 cd hue
 make apps
+sudo cp desktop/libs/hadoop/java-lib/hue-plugins-2.1.0-SNAPSHOT.jar /usr/lib/hadoop/lib/hue-plugins-2.1.0-SNAPSHOT.jar
