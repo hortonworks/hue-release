@@ -30,7 +30,7 @@ start)
 
     /etc/init.d/mysqld start >> $LOG  #To make run.sh work (tutorials update)
 
-    bash $SCRIPTS_PATH/sandbox_component_versions.sh
+    #bash $SCRIPTS_PATH/sandbox_component_versions.sh
 
     printf "%-50s\n" "Updating IP..." | tee -a $LOG
     bash $SCRIPTS_PATH/gen_hosts.sh
