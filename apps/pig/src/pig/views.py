@@ -32,6 +32,7 @@ from pig.forms import PigScriptForm, UDFForm
 from pig.CommandPy import CommandPy
 
 UDF_PATH = '/tmp/udfs/'
+FILE_PATTERN = re.compile(r"[^\w\d_\-\.]+")
 
 
 def index(request, obj_id=None):
@@ -68,7 +69,7 @@ def index(request, obj_id=None):
 
 #Explain view
 def explain(request):
-    script_path = '/tmp/%s.pig' % '_'.join(request.POST['title'].replace('(', '').replace(')', '').split())
+    script_path = '/tmp/%s.pig' % re.sub(FILE_PATTERN, "",request.POST['title'])
     pig_src = request.POST['pig_script']
     pig_src = process_pig_script(pig_src, request)
     pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
@@ -100,6 +101,7 @@ def delete(request, obj_id):
     instance.delete()
     return redirect(index)
 
+
 #Clone script by obj_id to user forms
 def script_clone(request, obj_id):
     script = get_object_or_404(PigScript, pk=obj_id)
@@ -111,14 +113,14 @@ def script_clone(request, obj_id):
     return redirect(reverse("root_pig"))
 
 
-def piggybank(request, obj_id = False):
+def piggybank(request, obj_id=False):
     if request.method == 'POST':
         form = UDFForm(request.POST, request.FILES)
         if not form.is_valid():
             raise PopupException(_("Error in upload form: %s") % form.errors)
 
         uploaded_file = request.FILES['hdfs_file']
-        dest = request.fs.join(UDF_PATH, re.sub(r"[^\w\d_\-\.]+", "", uploaded_file.name))
+        dest = request.fs.join(UDF_PATH, re.sub(FILE_PATTERN, "", uploaded_file.name))
         tmp_file = uploaded_file.get_temp_path()
         username = request.user.username
 

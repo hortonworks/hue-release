@@ -311,13 +311,14 @@ function get_job_result(job_id)
 $(document).ready(function(){
 
     $('.explain').live("click", function(e){
+      var t_s = $(this).val();
       call_popup_var_edit().done(function() {
         if (!$("#pig_script_form").valid()) return false;
         explain_progres(0);
         $("#id_text, .explain, #start_job, #kill_job").attr("disabled", "disabled");
         percent = 2;
         $(".bar").css("width", percent+"%");
-	var t_s = $(this).attr('value')
+	
         pig_editor.save();
         python_editor.save();
         $.ajax({
