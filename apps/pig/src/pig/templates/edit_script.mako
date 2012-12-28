@@ -202,7 +202,7 @@ udfs = UDF.objects.all()
         <div class="alert alert-success" id="job_info_outer">
           <pre id="job_info">
           % if 'stdout' in result:
-          ${result['stdout']}
+${result['stdout']}
           % endif
           </pre>
         </div>
@@ -223,7 +223,7 @@ udfs = UDF.objects.all()
             <div id="collapseOne" class="accordion-body collapse in">
               <div class="accordion-inner" id="log_info">
                 % if 'error' in result:
-                ${result['error'].replace("\n", "<br>")}
+${result['error'].replace("\n", "<br>")}
                 % endif
               </div>
             </div>
