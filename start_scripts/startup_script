@@ -26,6 +26,9 @@ case "$1" in
 start)
     printf "%-50s\n" "Starting $NAME..." | tee -a $LOG
     
+    mkdir /var/www/landing 2> /dev/null
+    mount --bind /home/sandbox/tutorials/landing /var/www/landing
+
     dhclient &
 
     /etc/init.d/mysqld start >> $LOG  #To make run.sh work (tutorials update)
