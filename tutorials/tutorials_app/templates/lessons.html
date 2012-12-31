@@ -4,37 +4,44 @@
         <title>Hortonworks HDP Sandbox 1.0</title>
         <script>
             function addButtons(tutorials_doc, code) {
-                var style = tutorials_doc.createElement('style');
-                style.type = 'text/css';
-                style.innerHTML =   'body { margin: 7px; padding: 0; } \
-                                    .button {  \
-                                        margin: 0; \
-                                        border: 1px solid #666; \
-                                        position: absolute;  \
-                                        top: 5px;  \
-                                        right: 5px;  \
-                                        filter:alpha(opacity=30); \
-                                        opacity: 0.8; \
-                                        -moz-opacity: 0.8; \
-                                        -khtml-opacity: 0.8; \
-                                        text-decoration: none; \
-                                        color: #222; \
-                                        padding: 10px; \
-                                        height: 20px; \
-                                        width: 55px; \
-                                        background-color: #EEE; \
-                                    } \
-                                    .button:hover {  \
-                                        filter:alpha(opacity=100); \
-                                        opacity: 1;  \
-                                        -moz-opacity: 1; \
-                                        -khtml-opacity: 1; \
-                                    }';
-                tutorials_doc.getElementsByTagName('head')[0].appendChild(style);
+                var detaches = tutorials_doc.getElementsByClassName('detach');
+                if (detaches.length) {
+                    for(var i=0; i<detaches.length; i++) {
+                        detaches[i].onclick = top.detach;
+                    }
+                } else {
+                    var style = tutorials_doc.createElement('style');
+                    style.type = 'text/css';
+                    style.innerHTML =   'body { margin: 7px; padding: 0; } \
+                                        .button {  \
+                                            margin: 0; \
+                                            border: 1px solid #666; \
+                                            position: absolute;  \
+                                            top: 5px;  \
+                                            right: 5px;  \
+                                            filter:alpha(opacity=30); \
+                                            opacity: 0.8; \
+                                            -moz-opacity: 0.8; \
+                                            -khtml-opacity: 0.8; \
+                                            text-decoration: none; \
+                                            color: #222; \
+                                            padding: 10px; \
+                                            height: 20px; \
+                                            width: 55px; \
+                                            background-color: #EEE; \
+                                        } \
+                                        .button:hover {  \
+                                            filter:alpha(opacity=100); \
+                                            opacity: 1;  \
+                                            -moz-opacity: 1; \
+                                            -khtml-opacity: 1; \
+                                        }';
+                    tutorials_doc.getElementsByTagName('head')[0].appendChild(style);
 
-                var btn = tutorials_doc.createElement('div');
-                btn.innerHTML = code;
-                tutorials_doc.getElementsByTagName('body')[0].appendChild(btn);
+                    var btn = tutorials_doc.createElement('div');
+                    btn.innerHTML = code;
+                    tutorials_doc.getElementsByTagName('body')[0].appendChild(btn);
+                }
             }
 
             function addButtonsAttached() {
