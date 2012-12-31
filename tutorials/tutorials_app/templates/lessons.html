@@ -5,7 +5,7 @@
         <script>
             function addButtons(tutorials_doc, code) {
                 var detaches = tutorials_doc.getElementsByClassName('detach');
-                if (detaches.length) {
+                if (detaches.length && tutorials_doc.body.clientWidth <= 768) {
                     for(var i=0; i<detaches.length; i++) {
                         detaches[i].onclick = top.detach;
                     }
@@ -29,6 +29,10 @@
                                             height: 20px; \
                                             width: 55px; \
                                             background-color: #EEE; \
+                                            text-align: center; \
+                                            -moz-border-radius: 15px; \
+                                            border-radius: 15px; \
+                                            z-index: 20000; \
                                         } \
                                         .button:hover {  \
                                             filter:alpha(opacity=100); \
