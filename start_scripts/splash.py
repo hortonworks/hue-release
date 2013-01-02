@@ -67,6 +67,8 @@ def main():
 
     screen.refresh()
 
+    curses.curs_set(0)
+
     import sys
     if len(sys.argv)>1 and sys.argv[1] == "-s":
         screen.getch()
