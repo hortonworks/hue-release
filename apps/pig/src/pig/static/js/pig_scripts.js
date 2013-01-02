@@ -13,9 +13,11 @@ function ping_job(job_id){
         {
           if (data.status.failureInfo != 'NA')
             $("#failure_info").html(data.status.failureInfo);
-          percent += 1;
-          $(".bar").css("width", percent+"%");
-          rglobalTimer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
+	  if (percent < 20) {
+		percent += 0.5;
+		$(".bar").css("width", percent+"%");
+	  }
+          globalTimer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
           return
         }
         if (/[1-9]\d?0?\%/.test(data.percentComplete))
