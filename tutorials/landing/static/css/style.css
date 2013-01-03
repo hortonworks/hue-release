@@ -1,0 +1,40 @@
+html, body { margin: 0; padding: 0; height:100%; font-family: Arial, sans-serif; min-width: 1120px; }
+body { background: url(../img/elephant.png) no-repeat; }
+
+.left { float: left; }
+.right { float: right; }
+.clear { clear: both; }
+
+.hortonworks-top-text-block { margin: 0px 0 -387px 0; min-height: 100%; height: auto !important; height: 100%; }
+.logo img { margin: 30px 0 16px 0; }
+.hortonworks-greeting { font-size: 38px; margin-top: 15px; }
+.question { font-size: 22px; margin-bottom: 35px; }
+.big-data { font-size: 26px; }
+.hortonworks-name, .big-data { font-weight: 600; }
+.hortonworks-short-information, .hortonworks-footer { color: #818A8F; }
+.green-link { color: #68BE28; }
+.hortonworks-start-quastion { font-size: 25px; margin: 34px 0 26px 0; }
+.hortonworks-top-text-block, .hortonworks-footer-end { text-align: center; }
+
+.separator { margin: 0; }
+.separator, .hortonworks-footer { height: 387px; padding: 0; }
+.hortonworks-footer { }
+.hortonworks-start-panel { background-color: #818A8F; color: #FFF; height: 295px; border-top: 1px solid rgba(129, 138, 143, 0.5); border-bottom: 1px solid rgba(129, 138, 143, 0.5); }
+.hortonworks-start-panel, .hortonworks-footer { width: 100%; }
+.hortonworks-start-panel .option-block { width: 350px; margin: 49px 8px 0 8px; }
+.hortonworks-start-panel .option-block .title { font-size: 26px; }
+.hortonworks-start-panel .option-block .text-block { margin-left: 92px; }
+.icon { width: 72px; }
+.text { margin: 12px 0; }
+.text ul { list-style-image: url(../img/icons/triangle.png); padding: 0; }
+.text ul li { margin: 5px 0 5px 16px;  }
+.text ul, .text div { font-size: 12px; }
+.text ul li a { color: #FFF; }
+.hortonworks-start-panel .block-from-option-blocks { width: 1108px; margin: 0 auto; }
+.hortonworks-footer-end { height:90px; line-height: 90px; font-size: 13px; }
+
+.button { padding: 8px 10px; font-size: 13px; color: #FFF; text-decoration: none; }
+.green { background-color: #68BE28; }
+.green:hover { background-color: #71C731; }
+.orange { background-color: #E17000; }
+.orange:hover { background-color: #EC7B0B; }
