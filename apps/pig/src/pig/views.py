@@ -76,7 +76,7 @@ def explain(request):
     if request.GET.get('t_s') == 'Explain':
         pig = CommandPy("pig -e explain -script %s" % script_path, script_path, pig_src)
     else:
-        pig = CommandPy("pig -check %s" % script_path, script_path, pig_src)
+        pig = CommandPy("pig -x local -check %s" % script_path, script_path, pig_src)
     return HttpResponse(json.dumps({"text": pig.returnCode().replace("\n", "<br>")}))
 
 

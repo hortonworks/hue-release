@@ -31,13 +31,13 @@ class CommandPy(object):
 
     def returnCode(self):
         self.createPigFile()
-        slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds = True)
+        slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
         slave.wait()
         answer, error = slave.stdout.read(), slave.stderr.read()
 #        error = '\n'.join(filter(lambda x: '] INFO' not in x and
 #                                           '] WARN' not in x,
 #                                           error.split('\n')))
-        self.deletePigFile()
+        #self.deletePigFile()
         if not answer:
             #self.last_error = error
             return error

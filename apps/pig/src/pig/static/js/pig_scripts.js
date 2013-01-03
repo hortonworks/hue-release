@@ -27,7 +27,7 @@ function ping_job(job_id){
         }
         else
         {
-	if (percent <20)
+	if (percent <5)
           percent += 1;
           $(".bar").css("width", percent+"%");
         }
