@@ -4,6 +4,11 @@
            <meta charset="utf-8">
         <title>Hortonworks</title>
         <link rel="stylesheet" type="text/css" href="static/css/style.css"/>
+        <script type="text/javascript">
+            function go_to_link(port) {
+                window.location = document.location.protocol + '//' + document.location.hostname + ':' + port;
+            }
+        </script>
     </head>
     <body>
         <div class="hortonworks-top-text-block">
@@ -60,7 +65,7 @@
                                     Pig, Hive and HCatalog. Run the update<br/>
                                     function periodicaly to get new tutorials!<br/><br/>
                                 </div>
-                                <a href="#" class="button green">SEE MORE</a>
+                                <a href="#" class="button green" onclick="go_to_link(8888)">SEE MORE</a>
                             </div>
                         </div>
                     </div>
@@ -73,7 +78,7 @@
                                     Do you just want to dive in?<br/>
                                     Come om it, the Hadoop is fine!
                                 </div>
-                                <a href="#" class="button orange">START</a>
+                                <a href="#" class="button orange" onclick="go_to_link(8000)">START</a>
                             </div>
                         </div>
                     </div>
