@@ -83,6 +83,7 @@ def explain(request):
 #Making normal path to our *.jar files
 udf_template = re.compile(r"register\s+(\S+\.jar)", re.I|re.M)
 parameters_template = re.compile(r"%(\w+)%")
+macro_template = re.compile(r"import\s+[\"\'](/\S+\.macro)[\"\']\s*;?", re.I|re.M)
 def process_pig_script(pig_src, request):
     #1) Replace parameters with their values
     def get_param(matchobj):
@@ -90,8 +91,13 @@ def process_pig_script(pig_src, request):
 
     def get_file_path(matchobj):
         return "REGISTER " + request.fs.fs_defaultfs + UDF_PATH + matchobj.group(1)
+
+    def get_macro_path(matchobj):
+        return "IMPORT '" + request.fs.fs_defaultfs + matchobj.group(1) +"';"
+
     pig_src = re.sub(parameters_template, get_param, pig_src)
     pig_src = re.sub(udf_template, get_file_path, pig_src)
+    pig_src = re.sub(macro_template, get_macro_path, pig_src)
     return pig_src
 
 
