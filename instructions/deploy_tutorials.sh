@@ -54,6 +54,9 @@ fi
 
 
 patch -R /home/sandbox/hue/desktop/core/src/desktop/templates/common_header.mako < /home/sandbox/sandbox-shared/instructions/patches/common_header.mako.patch
+echo
+echo
+echo
 
 echo 'If you need "logout" in submenu of user profile, add following lines to '\
      'common_header.mako after <a class="userProfile"... line'
@@ -62,10 +65,26 @@ cat << EOF
              <li class="divider"></li>
              <li><a href="/accounts/logout/">${_('Sign Out')}</a></li>
 EOF
+echo
+echo
+
 read -p "Press [Enter] to $ vim .../common_header.mako"
 
 vim /home/sandbox/hue/desktop/core/src/desktop/templates/common_header.mako
 
 /etc/init.d/supervisord restart
+echo
+echo
 
-echo "If you need AnonymousUser, follow tutorials_installation_manuals.txt"
+echo "[INFO] If you need AnonymousUser, follow tutorials_installation_manuals.txt"
+echo
+echo
+
+yum instal httpd
+chkconfig --levels 3 httpd on
+
+echo "Start scripts:"
+echo
+ln -s /home/sandbox/start_scripts/startup_script /etc/init.d/startup_script
+chkconfig --add startup_script
+chkconfig --levels 3 startup_script on
