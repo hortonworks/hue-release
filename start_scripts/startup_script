@@ -52,6 +52,7 @@ start)
     sudo -u hdfs hadoop dfsadmin -safemode leave
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
+    cd /home/sandbox/hue
     /etc/init.d/supervisord start >> $LOG 2>&1
     
     echo "You can now launch sandbox on http://$(getent ahosts `hostname` | awk '{print $1}' | head -n 1):8888/"
