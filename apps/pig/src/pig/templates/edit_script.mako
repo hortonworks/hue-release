@@ -72,8 +72,16 @@ udfs = UDF.objects.all()
 	  ${my_scripts.udfs(result['udfs'])}
 	  </div>
 	  <li>
-	    <form id="udfs" enctype="multipart/form-data" action="${url('pig.views.piggybank')}" method="post">
-    	      ${udf_form}
+	    <form id="udfs" enctype="multipart/form-data"
+                  action="${url('pig.views.piggybank')}"
+                  method="post">
+              <div class="fileupload fileupload-new" data-provides="fileupload">
+                <span class="btn btn-file">
+                  <span class="fileupload-new">Select UDF jar</span><span class="fileupload-exists">Change</span>
+                  <input type="file" id="id_hdfs_file" accept="application/java-archive" name="hdfs_file"></span>
+                <span class="fileupload-preview"></span>
+                <a href="#" class="close fileupload-exists" data-dismiss="fileupload" style="float: none">×</a>
+              </div>
       	      <input class="btn" type="submit" name="submit" value="Add" />
 	    </form>
           </li>
@@ -236,6 +244,7 @@ ${result['error'].replace("\n", "<br>")}
 </div>
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
+<link href="/pig/static/css/bootstrap-fileupload.min.css" rel="stylesheet">
 <style type="text/css" media="screen">
   .CodeMirror-focused span.CodeMirror-matchhighlight {
 background:  #e7e4ff; !important; }
@@ -257,6 +266,8 @@ label.error {
           float: left;
           padding: 3px ;
       }
+
+
 </style>
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js">
 </script>
@@ -270,6 +281,7 @@ label.error {
 <script src="/pig/static/js/match-highlighter.js"></script>
 <script src="/pig/static/js/emacs.js"></script>
 <script src="/pig/static/js/pig_scripts.js"></script>
+<script src="/pig/static/js/bootstrap-fileupload.min.js"></script>
 <script type="text/javascript">
 var percent = 0;
 var globalTimer = null;
