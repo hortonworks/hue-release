@@ -45,6 +45,10 @@ echo "Start hcat server"
 su - hive -c  'env HADOOP_HOME=/usr nohup hive --service metastore > /var/log/hive/hive.out 2> /var/log/hive/hive.log & '
 tail -$line  /var/log/hive/hive.log
 
+echo "Start Hiveserver2"
+su - hive -c  'env HADOOP_HOME=/usr nohup hive --service hiveserver2 > /var/log/hive/hive.out 2> /var/log/hive/hive.log & '
+tail -$line  /var/log/hive/hive.log
+
 echo "Start templeton server"
 su - hcat -c '/usr/lib/hcatalog/sbin/webhcat_server.sh start'
 tail -$line  /var/log/webhcat/templeton.log
