@@ -194,10 +194,15 @@ def start_job(request):
                        statusdir=statusdir,
                        script=script,
                        email_notification=bool(request.POST['email']))
-    return HttpResponse(json.dumps(
-        {"job_id": job['id'],
-         "text": "The Job has been started successfully.\
-         You can check job result on the following <a href='%s'>link</a>" % reverse("show_job_result", args=[job['id']])}))
+    return HttpResponse(
+        json.dumps(
+            {
+                "job_id": job['id'],
+                "text": "The Job %s has been started successfully. \
+                You can always go back to <a href='%s'>Query History</a> for results after the run." % (job['id'], reverse("query_history"))
+            }
+        )
+    )
 
 
 def kill_job(request):
