@@ -198,8 +198,12 @@ def start_job(request):
         json.dumps(
             {
                 "job_id": job['id'],
-                "text": "The Job %s has been started successfully. \
-                You can always go back to <a href='%s'>Query History</a> for results after the run." % (job['id'], reverse("query_history"))
+                "text": "The Job <a href='%s' target='_blank'>%s</a> has been started successfully. <br>\
+                You can always go back to <a href='%s'>Query History</a> for results after the run." % (
+                    reverse("single_job", args=[job['id']]),
+                    job['id'],
+                    reverse("query_history")
+                )
             }
         )
     )
