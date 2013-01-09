@@ -30,7 +30,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")}
 	</div>
 
 	<div class="container-fluid">
-		<h1 id="describe-header">Hortonworks HDP Sandbox 1.0</h1>
+		<h1 id="describe-header">Hortonworks Sandbox 1.2</h1>
 		<div id="update-tutorials-spinner"><h1>Updating tutorials...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 		<h3 id="update-tutorials-msg"></h3>
 		<div class="span-3">
