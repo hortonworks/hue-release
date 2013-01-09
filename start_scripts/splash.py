@@ -11,9 +11,8 @@ def make_greet_window():
     H, W = screen.getmaxyx()
     greet_win = screen.subwin(H / 2 - HINT_WIDTH, W, 0, 0)
     greet_win.box()
-    greet_win.addstr(1,2,"Hortonworks Data Platform Sandbox")
-    greet_win.addstr(2,2,"Version 1.0.4")
-    greet_win.addstr(3,2,"http://hortonworks.com")
+    greet_win.addstr(1,2,"Hortonworks Sandbox 1.2")
+    greet_win.addstr(2,2,"http://hortonworks.com")
 
 def make_ip_window():
     H, W = screen.getmaxyx()
