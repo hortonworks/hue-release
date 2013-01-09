@@ -5,7 +5,7 @@ yum install python-setuptools
 
 cd /home/sandbox/tutorials && \
       easy_install pip && pip install virtualenv && virtualenv .env && \
-      . .env/bin/activate && pip install django==1.4 django-mako mysql-python gunicorn
+      . .env/bin/activate && pip install django==1.4 django-mako gunicorn
 
 cd /home/sandbox/tutorials/tutorials_app/run/ && sudo -u sandbox bash run.sh
 
@@ -25,7 +25,7 @@ else
 fi
 
 echo
-cat << EOF >$output
+cat << EOF >>$output
 [program:hue_tutorial]
 command=/home/sandbox/tutorials/.env/bin/python /home/sandbox/tutorials/manage.py  run_gunicorn 0:8888
 autostart=true              ; start at supervisord start (default: true)
@@ -80,7 +80,7 @@ echo "[INFO] If you need AnonymousUser, follow tutorials_installation_manuals.tx
 echo
 echo
 
-yum instal httpd
+yum install httpd
 chkconfig --levels 3 httpd on
 
 echo "Start scripts:"

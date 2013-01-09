@@ -27,7 +27,7 @@ start)
     printf "%-50s\n" "Starting $NAME..." | tee -a $LOG
     
     mkdir /var/www/landing 2> /dev/null
-    mount --bind /home/sandbox/sandbox-tutorials/splash /var/www/landing
+    mount --bind /home/sandbox/sandbox-tutorials /var/www/landing
 
     dhclient &
 
