@@ -1,0 +1,39 @@
+1) $ visudo
+requiretty => !requiretty
+
+2) disable tty1 (/etc/sysconfig/init)
+
+3) pip install sh (in global env)
+
+4) httpd to landing page:
+
+DocumentRoot "/var/www/landing"
+RewriteEngine on
+RewriteRule ^/$ /splash.html
+
+
+5) python2.7, libs
+http://toomuchdata.com/2012/06/25/how-to-install-python-2-7-3-on-centos-6-2/
+
+6) remove most of *-devel. list with:
+yum list installed | grep devel
+
+rm -rf /var/cache/yum
+
+7) iptables disable
+
+8) /etc/issue add
+login: root
+password: hadoop
+
+9) rm /etc/udev/rules.d/70-persistent-net.rules
+mkdir /etc/udev/rules.d/70-persistent-net.rules
+
+$ vim /etc/sysconfig/network-scripts/ifcfg-eth0
+$ vim /etc/sysconfig/network-scripts/ifcfg-eth1
+
+remove UUID and HWADDR entries
+
+10) chown tutorials and shared with
+chown sandbox:sandbox -R /home/sandbox/sandbox-shared
+chown sandbox:sandbox -R /home/sandbox/sandbox-tutorials
