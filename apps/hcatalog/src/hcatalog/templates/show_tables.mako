@@ -29,13 +29,13 @@ ${layout.menubar(section='tables')}
 			<div class="well sidebar-nav">
 				<ul class="nav nav-list">
 					<li class="nav-header">Actions</li>
-		      		<li><a href="${ url('hcatalog.create_table.import_wizard')}">Create a new table from file</a></li>
+				<li><a href="${ url('hcatalog.create_table.import_wizard')}">Create a new table from file</a></li>
 					<li><a href="${ url('hcatalog.create_table.create_table')}">Create a new table manually</a></li>
 				</ul>
 			</div>
 		</div>
 		<div class="span9">
-			<table class="table table-condensed table-striped datatables" id=table-list-tbl>
+			<table class="table table-condensed table-striped datatables" id="table-list-tbl">
 				<thead>
 					<tr>
 						<th>Table Name</th>
@@ -61,7 +61,7 @@ ${layout.menubar(section='tables')}
 	}
 	
 	$(document).ready(function(){
-		$(".datatables").dataTable({
+		var dataTbl = $(".datatables").dataTable({
 			"bPaginate": false,
 		    "bLengthChange": false,
 			"bInfo": false,
@@ -75,29 +75,28 @@ ${layout.menubar(section='tables')}
 		$("a[data-row-selector='true']").jHueRowSelector();
 		
 		$('#describe-header').hide();
-        $('#action-spinner').show();
+	$('#action-spinner').show();
 		$.post("${url("hcatalog.views.get_tables")}", function(data){
-		    if("exception" in data){
-		    	showError(data.exception);
-		    }
-		    else if("tables" in data && "describe_table_urls" in data && "read_table_urls" in data){
-		    	var tableHtmlContent = "";
-				for (var i = 0; i < data.tables.length; i++){ 
-					tableHtmlContent += "<tr><td><a href=" + data.describe_table_urls[i] 
-					+ " data-row-selector=\"true\">" + data.tables[i] + "</a></td>"
-					+ "<td><a href=" + data.read_table_urls[i] + " class=\"btn\">Browse Data</a></td></tr>";
-				}
-				$('#table-body').html(tableHtmlContent);
-            }
-            $('#action-spinner').hide();
-            $('#describe-header').show();
-            $('#table-list-tbl').show();
-            return;
-        }, "json").error(function() {
-           	$('#action-spinner').hide();
-           	$('#describe-header').show();
-          	$('table-list-tbl').show();
-        });
+			if("exception" in data){
+			    showError(data.exception);
+			}
+			else if("tables" in data && "describe_table_urls" in data && "read_table_urls" in data){
+			    for (var i = 0; i < data.tables.length; i++){
+				dataTbl.fnAddData([
+				"<a href=" + data.describe_table_urls[i] + ">" + data.tables[i] + "</a>",
+				"<a href=" + data.read_table_urls[i] + " class=\"btn\">Browse Data</a>"
+				]);
+			    }
+			}
+			$('#action-spinner').hide();
+			$('#describe-header').show();
+			$('#table-list-tbl').show();
+			return;
+		}, "json").error(function() {
+			$('#action-spinner').hide();
+			$('#describe-header').show();
+			$('table-list-tbl').show();
+		});
 	});
 </script>
 
