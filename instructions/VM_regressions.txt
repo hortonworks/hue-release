@@ -43,3 +43,6 @@ chown sandbox:sandbox -R /home/sandbox/sandbox-tutorials
 
 12) 2GB RAM
 VBoxManage modifyvm "SandboxBimiotaRC8v.2" --memory 2048
+
+13) Disable console screensaver:
+add consoleblank=0 to kernel parameters in /boot/grub/grub.conf
