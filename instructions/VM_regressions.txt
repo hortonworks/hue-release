@@ -34,6 +34,12 @@ $ vim /etc/sysconfig/network-scripts/ifcfg-eth1
 
 remove UUID and HWADDR entries
 
-10) chown tutorials and shared with
+10) cd /home/sandbox/sandbox-shared && sudo -u sandbox git stash
+    cd /home/sandbox/sandbox-tutorials && sudo -u sandbox git stash
+
+11) chown tutorials and shared with
 chown sandbox:sandbox -R /home/sandbox/sandbox-shared
 chown sandbox:sandbox -R /home/sandbox/sandbox-tutorials
+
+12) 2GB RAM
+VBoxManage modifyvm "SandboxBimiotaRC8v.2" --memory 2048
