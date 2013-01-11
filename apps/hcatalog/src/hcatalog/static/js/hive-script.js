@@ -1,6 +1,7 @@
 var keywordsT=[];
 var submitFormPopup=false;
 var table_fields={};
+var tmpDirList={path:"",list:[]};
 
 
 function listdir(_context){
@@ -9,7 +10,6 @@ function listdir(_context){
   _context=_context.replace(/'/g, "" ).replace(/"/g, "" );
   _context=_context.split(" ");
   _context=_context[0];
-
 
   $.ajax({
     url: "/proxy/localhost/50070/webhdfs/v1" + _context + "?op=LISTSTATUS&user.name=hue&doas=hdfs",
@@ -22,9 +22,12 @@ function listdir(_context){
       if(data.hasOwnProperty("FileStatuses")){
         for (var i = 0; i < data.FileStatuses.FileStatus.length; i++) {
           if(data.FileStatuses.FileStatus[i].pathSuffix !="")
-            contentList.push( data.FileStatuses.FileStatus[i].pathSuffix);
+            contentList.push(data.FileStatuses.FileStatus[i].pathSuffix);
         }
       }
+    },
+    error: function() {
+    	contentList.length = 0;
     }
   });
   return contentList;
@@ -103,24 +106,38 @@ var editor = CodeMirror.fromTextArea(document.getElementById("queryField"), {
     var lastKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-1,1);
     var prevKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,1);
 
-    if((startKeys== "'/" || startKeys== '"/')&&(lastKey=="/"))
+    if((startKeys== "'/" || startKeys== '"/'))
     {
-      var dirList=listdir(curText);
-
+      if(lastKey=='/' && tmpDirList.path != curText)
+      {
+        tmpDirList.list=listdir(curText);
+        tmpDirList.path=curText;
+      }
+      var lastSlashIdx = from.getLine(from.getCursor().line).lastIndexOf("/");
+      var complPart = from.getLine(from.getCursor().line).substr(lastSlashIdx+1,from.getCursor().ch-lastSlashIdx);
+      if(complPart=="") {
+        dirList=tmpDirList.list;
+      }
+      else 
+      {
+    	  dirList = [];
+          for (var i = 0; i < tmpDirList.list.length; i++) 
+          {
+            if(0 == tmpDirList.list[i].indexOf(complPart,0))
+            	dirList.push(tmpDirList.list[i]);
+          }
+      }
       if(dirList.length<2 && dirList.length>0)
         dirList.push("");
 
       change.from.ch=from.getCursor().ch;
-
       var dirArr={
-        from: change.from,
+        from: { line:from.getCursor().line, ch:lastSlashIdx+1},
         list:dirList,
-        to: change.from
+        to: { line:from.getCursor().line, ch:from.getCursor().ch}
       };
-
       if(dirList.length>0 && dirList[0].trim()!="")
-        CodeMirror.simpleHint(from, CodeMirror.hiveHint, "", dirArr );
-
+        CodeMirror.simpleHint(from, CodeMirror.hiveHint, "", dirArr, true );
     }
     else if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey)))
     {
