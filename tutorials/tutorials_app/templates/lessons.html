@@ -26,6 +26,7 @@
                                     minSize: 400,
                                     center__size: '65%',
                                     west__resizeWhileDragging: true,
+                                    center__onresize: scale_function,
                                     onopen:             loadIframePage,
                                     effects: 
                                         {
@@ -50,6 +51,22 @@
                     src  = $Iframe.attr('src')
                     ,   page = $Iframe.attr('longdesc');
                 if (page && src != page) $Iframe.attr('src',page);
+            }
+
+            function scale_function(pane, $Pane) {
+                var frame = $Pane[0];
+                if (frame.clientWidth < 650) {
+                    var p = $Pane[0].clientWidth/650;
+                    frame.style["-webkit-transform"] = "scale("+p+")";
+                    frame.style["-webkit-transform-origin"] = "0 0";
+                    frame.style.width = frame.clientWidth/p + "px";
+                    frame.style.height = frame.clientHeight/p + "px";
+                } else {
+                    frame.style["-webkit-transform"] = "scale(1.0)";
+                    frame.style["-webkit-transform-origin"] = "0 0";
+                    frame.style.width = frame.clientWidth + "px";
+                    frame.style.height = frame.clientHeight + "px";
+                }
             }
         </script>
     </head>
