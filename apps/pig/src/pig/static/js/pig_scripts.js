@@ -3,6 +3,7 @@ var dollarSaveParamTrig = 0;
 var varSaveParamTrig = 0;
 var submitFormPopup=false;
 var table_fields={};
+var tmpDirList={path:"",list:[]};
 
 
 function ping_job(job_id){
@@ -80,6 +81,9 @@ function listdir(_context){
             contentList.push( data.FileStatuses.FileStatus[i].pathSuffix);
         }
       }
+    },
+    error: function() {
+    	contentList.length = 0;
     }
   });
   return contentList;
@@ -252,21 +256,36 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     var lastKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-1,1);
     var prevKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,1);
 
-    if((startKeys== "'/" || startKeys== '"/')&&(lastKey=="/"))
+    if((startKeys== "'/" || startKeys== '"/'))
     {
-
-
-      var dirList=listdir(curText);
-
+      dirList = [];
+      if(lastKey=='/' && tmpDirList.path != curText)
+      {
+        tmpDirList.list=listdir(curText);
+        tmpDirList.path=curText;
+      }
+      var lastSlashIdx = from.getLine(from.getCursor().line).lastIndexOf("/");
+      var complPart = from.getLine(from.getCursor().line).substr(lastSlashIdx+1,from.getCursor().ch-lastSlashIdx);
+      if(complPart=="") {
+        dirList=tmpDirList.list;
+      }
+      else 
+      {
+          for (var i = 0; i < tmpDirList.list.length; i++) 
+          {
+            if(0 == tmpDirList.list[i].indexOf(complPart,0))
+            	dirList.push(tmpDirList.list[i]);
+          }
+      }
       if(dirList.length<2 && dirList.length>0)
         dirList.push("");
 
       change.from.ch=from.getCursor().ch;
 
       var dirArr={
-        from: change.from,
+        from: { line:from.getCursor().line, ch:lastSlashIdx+1},
         list:dirList,
-        to: change.from
+        to: { line:from.getCursor().line, ch:from.getCursor().ch}
       };
 
       if(dirList.length>0 && dirList[0].trim()!="")

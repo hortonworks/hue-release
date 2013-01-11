@@ -108,6 +108,7 @@ var editor = CodeMirror.fromTextArea(document.getElementById("queryField"), {
 
     if((startKeys== "'/" || startKeys== '"/'))
     {
+      dirList = [];
       if(lastKey=='/' && tmpDirList.path != curText)
       {
         tmpDirList.list=listdir(curText);
@@ -120,7 +121,6 @@ var editor = CodeMirror.fromTextArea(document.getElementById("queryField"), {
       }
       else 
       {
-    	  dirList = [];
           for (var i = 0; i < tmpDirList.list.length; i++) 
           {
             if(0 == tmpDirList.list[i].indexOf(complPart,0))
@@ -131,11 +131,13 @@ var editor = CodeMirror.fromTextArea(document.getElementById("queryField"), {
         dirList.push("");
 
       change.from.ch=from.getCursor().ch;
+
       var dirArr={
         from: { line:from.getCursor().line, ch:lastSlashIdx+1},
         list:dirList,
         to: { line:from.getCursor().line, ch:from.getCursor().ch}
       };
+
       if(dirList.length>0 && dirList[0].trim()!="")
         CodeMirror.simpleHint(from, CodeMirror.hiveHint, "", dirArr, true );
     }

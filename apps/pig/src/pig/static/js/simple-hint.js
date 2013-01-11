@@ -5,7 +5,8 @@
     for (var opt in defaults)
       if (defaults.hasOwnProperty(opt))
         options[opt] = (givenOptions && givenOptions.hasOwnProperty(opt) ? givenOptions : defaults)[opt];
-
+    var complete;
+    
     function collectHints(previousToken) {
       // We want a single cursor position.
       if (editor.somethingSelected()) return;
@@ -19,9 +20,13 @@
       }
 
       var result = getHints(editor);
+      var isDirList=false;
       if (!result || !result.list.length) {
         if(typeof dirList !== 'undefined')
+        {
           result=dirList;
+          isDirList=true;
+        }
       };
 
       var completions = result.list;
@@ -35,7 +40,13 @@
       }
 
       // Build the select widget
-      var complete = document.createElement("div");
+      if(isDirList && complete!==undefined)
+      {
+    	if(complete.parentNode==null) return;
+        complete.parentNode.removeChild(complete);
+        complete=undefined;
+      }
+      complete = document.createElement("div");
       complete.className = "CodeMirror-completions";
       var sel = complete.appendChild(document.createElement("select"));
       // Opera doesn't move the selection when pressing up/down in a
