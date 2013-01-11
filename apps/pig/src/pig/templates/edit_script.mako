@@ -269,8 +269,7 @@ label.error {
 
 
 </style>
-<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js">
-</script>
+<script type="text/javascript" src="/pig/static/js/jquery.validate.min.js"></script>
 <script src="/pig/static/js/codemirror.js"></script>
 <script src="/pig/static/js/pig.js"></script>
 <script src="/pig/static/js/python.js"></script>
