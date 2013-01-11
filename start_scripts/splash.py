@@ -49,7 +49,7 @@ def make_hint_window():
     H, W = screen.getmaxyx()
     hint_win = screen.subwin(HINT_WIDTH, W, H - HINT_WIDTH, 0)
     hint_win.box()
-    hint_win.addstr(1,1,"<Tab> Log in to this virtual machine")
+    hint_win.addstr(1,1,"Log in to this virtual machine: GNU/Linux, Windows <Alt+F5>, Mac OS <Cmd+Alt+F5>")
 
 def init_screen():
     curses.noecho()
