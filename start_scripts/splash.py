@@ -72,11 +72,11 @@ def main():
     if len(sys.argv)>1 and sys.argv[1] == "-s":
         screen.getch()
     else:
-        try:
-            screen.getch()
-        except KeyboardInterrupt:
-            pass
-
+        while True:
+            try:
+                screen.getch()
+            except KeyboardInterrupt:
+                pass
     curses.endwin()
 
 
