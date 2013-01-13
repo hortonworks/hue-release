@@ -52,12 +52,12 @@ start)
 
     chown sandbox:sandbox -R /home/sandbox/sandbox-shared ;
 
-    touch /tmp/startup_mysql.lock ; #lock mysql from stopping
+    #touch /tmp/startup_mysql.lock ; #lock mysql from stopping
     /etc/init.d/mysqld start >> $LOG  #To make run.sh work (tutorials update)
     while [ ! -e /var/lib/mysql/mysql.sock ]; do sleep 1; done  ;
     /home/sandbox/hue/build/env/bin/hue migrate ;
     sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh ;
-    rm -f /tmp/startup_mysql.lock; # end lock
+    #rm -f /tmp/startup_mysql.lock; # end lock
 
     echo "Updating sandbox DONE"
     ) >> /var/log/startup_script_update.log 2>&1 #& echo $! > /tmp/startup_1.pid
