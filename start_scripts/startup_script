@@ -49,8 +49,9 @@ start)
     chown sandbox:sandbox -R /home/sandbox/sandbox-shared
     /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
     sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
-    cd - >> $LOG 2>&1
-    [ "z$2" == "z--fake" ] || restart -s
+
+    echo "Starting HDP ..."
+    bash $SCRIPTS_PATH/start.sh
     sudo -u hdfs hadoop dfsadmin -safemode leave
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
