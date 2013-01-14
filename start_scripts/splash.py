@@ -75,6 +75,7 @@ def main():
         while True:
             try:
                 screen.getch()
+                screen.refresh()
             except KeyboardInterrupt:
                 pass
 
