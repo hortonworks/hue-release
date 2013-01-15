@@ -28,3 +28,4 @@ while [ -z "$HOST" ]; do
 done
 echo "$HOST	`hostname`" >> /etc/hosts
 
+echo 0 > /proc/sys/kernel/hung_task_timeout_secs
