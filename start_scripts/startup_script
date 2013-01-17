@@ -44,10 +44,10 @@ start)
     sudo -u sandbox git fetch >> /var/log/startup_script.log 2>&1
     sudo -u sandbox git checkout $BRANCH >> /var/log/startup_script.log 2>&1
     sudo -u sandbox git stash  >> /var/log/startup_script.log 2>&1
-    sudo -u sandbox git pull origin $BRANCH >> /var/log/startup_script.log 2>&1
+    pull_res=$(sudo -u sandbox git pull origin $BRANCH 2>> $LOG | tee $LOG)
 
     chown sandbox:sandbox -R /home/sandbox/sandbox-shared
-    /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
+    [ ! "$pull_res" = "Already up-to-date." ] && /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
     sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
 
     echo "Starting HDP ..."
