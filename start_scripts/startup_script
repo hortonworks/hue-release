@@ -29,6 +29,7 @@ start)
     mkdir /var/www/landing 2> /dev/null
     mount --bind /home/sandbox/sandbox-tutorials /var/www/landing
 
+    echo "" > /etc/resolv.conf
     dhclient &
 
     /etc/init.d/mysqld start >> $LOG  #To make run.sh work (tutorials update)
@@ -41,10 +42,13 @@ start)
     printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
     cd /home/sandbox/sandbox-shared
 
+    sed -i 1i"nameserver 8.8.8.8" /etc/resolv.conf
+
     sudo -u sandbox git fetch >> /var/log/startup_script.log 2>&1
     sudo -u sandbox git checkout $BRANCH >> /var/log/startup_script.log 2>&1
     sudo -u sandbox git stash  >> /var/log/startup_script.log 2>&1
-    pull_res=$(sudo -u sandbox git pull origin $BRANCH 2>> $LOG | tee $LOG)
+    pull_res=$(sudo -u sandbox git pull origin $BRANCH 2>> $LOG)
+    echo $pull_res >> $LOG
 
     chown sandbox:sandbox -R /home/sandbox/sandbox-shared
     [ ! "$pull_res" = "Already up-to-date." ] && /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
