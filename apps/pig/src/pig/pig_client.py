@@ -18,7 +18,7 @@ from subprocess import Popen, PIPE
 import os
 
 
-class CommandPy(object):
+class PigClient(object):
 
     file_path = ''
     shell_path = ''
@@ -34,12 +34,7 @@ class CommandPy(object):
         slave = Popen(self.shell_path, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
         slave.wait()
         answer, error = slave.stdout.read(), slave.stderr.read()
-#        error = '\n'.join(filter(lambda x: '] INFO' not in x and
-#                                           '] WARN' not in x,
-#                                           error.split('\n')))
-        #self.deletePigFile()
         if not answer:
-            #self.last_error = error
             return error
         else:
             return answer
@@ -52,11 +47,4 @@ class CommandPy(object):
             os.mkdir(directory)
         f1 = open(self.file_path, 'w')
         f1.write(self.pig_src)
-        f1.close
-
-    def deletePigFile(self):
-        """
-        Delete pig script file
-        """
-        from os import remove
-        remove(self.file_path)
+        f1.close()
