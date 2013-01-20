@@ -12,13 +12,13 @@ source /etc/rc.d/init.d/functions
 source $SCRIPTS_PATH/consts.sh
 
 function restart() {
-    date >> /var/log/startup_script_restart.log
+    date >> $LOG
     [ "$1" == "-r" ] && str="Stopping HDP..." || str="Starting HDP..."
-    printf "%-70s\n" "$str" | tee -a /var/log/startup_script_restart.log
-    [ "$1" == "-r" ] && bash $SCRIPTS_PATH/stop.sh >> /var/log/startup_script_restart.log 2>&1
+    printf "%-70s\n" "$str" | tee -a $LOG
+    bash $SCRIPTS_PATH/stop.sh >> $LOG 2>&1
 
-    [ "$1" == "-r" ] && printf "%-70s\n" "Starting HDP..." | tee -a /var/log/startup_script_restart.log
-    bash $SCRIPTS_PATH/start.sh >> /var/log/startup_script_restart.log 2>&1
+    [ "$1" == "-r" ] && printf "%-70s\n" "Starting HDP..." | tee -a $LOG
+    bash $SCRIPTS_PATH/start.sh >> $LOG 2>&1
 }
 
 
@@ -29,6 +29,7 @@ start)
     mkdir /var/www/landing 2> /dev/null
     mount --bind /home/sandbox/sandbox-tutorials /var/www/landing
 
+    echo "" > /etc/resolv.conf
     dhclient &
 
     /etc/init.d/mysqld start >> $LOG  #To make run.sh work (tutorials update)
@@ -41,48 +42,31 @@ start)
     printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
     cd /home/sandbox/sandbox-shared
 
-    ###############################
-    # Updating sandbox
-    ###############################
-    ( sleep 5;
-    sudo -u sandbox git fetch ;
-    sudo -u sandbox git checkout $BRANCH  ;
-    git stash  ;
-    sudo -u sandbox git pull origin $BRANCH ;
+    sed -i 1i"nameserver 8.8.8.8" /etc/resolv.conf
 
-    chown sandbox:sandbox -R /home/sandbox/sandbox-shared ;
+    sudo -u sandbox git fetch >> /var/log/startup_script.log 2>&1
+    sudo -u sandbox git checkout $BRANCH >> /var/log/startup_script.log 2>&1
+    sudo -u sandbox git stash  >> /var/log/startup_script.log 2>&1
+    pull_res=$(sudo -u sandbox git pull origin $BRANCH 2>> $LOG)
+    echo $pull_res >> $LOG
 
-    touch /tmp/startup_mysql.lock ; #lock mysql from stopping
-    /etc/init.d/mysqld start >> $LOG  #To make run.sh work (tutorials update)
-    while [ ! -e /var/lib/mysql/mysql.sock ]; do sleep 1; done  ;
-    /home/sandbox/hue/build/env/bin/hue migrate ;
-    sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh ;
-    rm -f /tmp/startup_mysql.lock; # end lock
+    chown sandbox:sandbox -R /home/sandbox/sandbox-shared
+    [ ! "$pull_res" = "Already up-to-date." ] && /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
+    sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
 
-    echo "Updating sandbox DONE"
-    ) >> /var/log/startup_script_update.log 2>&1 #& echo $! > /tmp/startup_1.pid
-
-    ###############################
-    # Starting HDP
-    ###############################
-    ( cd - >> /var/log/startup_script_restart.log 2>&1
-    [ "z$2" == "z--fake" ] || restart -s
-
+    echo "Starting HDP ..."
+    bash $SCRIPTS_PATH/start.sh
     sudo -u hdfs hadoop dfsadmin -safemode leave
-
-    echo "HDP Started"
-    ) #& echo $! > /tmp/startup_2.pid
     
-    #wait $(</tmp/startup_1.pid) $(</tmp/startup_2.pid)
-
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
     cd /home/sandbox/hue
     /etc/init.d/supervisord start >> $LOG 2>&1
     
+    echo 0 > /proc/sys/kernel/hung_task_timeout_secs
+
     echo "You can now launch sandbox on http://$(getent ahosts `hostname` | awk '{print $1}' | head -n 1):8888/"
-    
-    open -c 1 -f -- python /home/sandbox/start_scripts/splash.py
-    open -c 1 -f -- bash /home/sandbox/start_scripts/ch_term.sh
+    stty -F /dev/tty1 -echo
+    #open -c 1 -f -- python /home/sandbox/start_scripts/splash.py
 ;;
 stop)
     date >> $LOG

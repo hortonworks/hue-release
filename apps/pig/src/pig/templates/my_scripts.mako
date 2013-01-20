@@ -6,10 +6,11 @@
     <li id="copy" >
       <p>
         <a href="${url('pig.views.delete', v.id)}" onclick="return confirm('Are you sure, you want to delete this script?');">
-          <img src="/pig/static/art/delete.gif" alt="Delete" height="12" width="12">
+          <img src="/pig/static/art/delete.gif" alt="Delete"
+               title="Delete script" height="12" width="12">
         </a>
         <a href="${url("clone", v.id)}" class="clone" value="${v.id}">
-  	<img src="/pig/static/art/clone.png" alt="Delete" height="14" width="14">
+  	<img src="/pig/static/art/clone.png" alt="Clone" title="Clone script" height="14" width="14">
         </a>
         <a href="${url('pig.views.index', obj_id=v.id)}">
 	  % if v.title: 

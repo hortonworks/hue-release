@@ -5,6 +5,7 @@ line="50"
 #------- Start script ---------
 echo "Starting Postgresql"
 /etc/init.d/postgresql start
+sleep 5
 echo "Start name node"
 su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode";sleep 5
 tail -$line  /var/log/hadoop/hdfs/hadoop-hdfs-namenode-*.log
@@ -51,7 +52,7 @@ tail -$line  /var/log/hive/hive.log
 
 echo "Start templeton server"
 su - hcat -c '/usr/lib/hcatalog/sbin/webhcat_server.sh start'
-tail -$line  /var/log/webhcat/templeton.log
+tail -$line  /var/log/webhcat/webhcat.log
 
 echo "Start Oozie"
 su - oozie -c "cd /var/log/oozie; /usr/lib/oozie/bin/oozie-start.sh"
