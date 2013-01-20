@@ -29,7 +29,7 @@ from filebrowser.views import _do_newfile_save
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm, UDFForm
-from pig.CommandPy import CommandPy
+from pig.pig_client import PigClient
 
 UDF_PATH = '/tmp/udfs/'
 FILE_PATTERN = re.compile(r"[^\w\d_\-\.]+")
@@ -67,16 +67,15 @@ def index(request, obj_id=None):
     return render('edit_script.mako', request, dict(result=result))
 
 
-#Explain view
 def explain(request):
     script_path = '/tmp/%s.pig' % re.sub(FILE_PATTERN, "",request.POST['title'])
     pig_src = request.POST['pig_script']
     pig_src = process_pig_script(pig_src, request)
     pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
     if request.GET.get('t_s') == 'Explain':
-        pig = CommandPy("pig -e explain -script %s" % script_path, script_path, pig_src)
+        pig = PigClient("pig -e explain -script %s" % script_path, script_path, pig_src)
     else:
-        pig = CommandPy("pig -x local -check %s" % script_path, script_path, pig_src)
+        pig = PigClient("pig -x local -check %s" % script_path, script_path, pig_src)
     return HttpResponse(json.dumps({"text": pig.returnCode().replace("\n", "<br>")}))
 
 
@@ -178,10 +177,8 @@ def start_job(request):
     if request.POST.get("python_script"):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
     pig_script = process_pig_script(pig_script, request)
-    #return HttpResponse(json.dumps(pig_script))
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
     job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"))
-    #job = t.pig_query(execute=request.POST['pig_script'], statusdir=statusdir)
 
     if request.POST.get("script_id"):
         script = PigScript.objects.get(pk=request.POST['script_id'])
@@ -254,8 +251,11 @@ def get_job_result(request):
 
 
 def query_history(request):
-    return render("query_history.mako", request,
-                  dict(jobs=Job.objects.filter(script__user=request.user).order_by("-start_time").all()))
+    return render(
+        "query_history.mako",
+        request,
+        dict(jobs=Job.objects.filter(script__user=request.user).order_by("-start_time").all())
+    )
 
 
 def show_job_result(request, job_id):

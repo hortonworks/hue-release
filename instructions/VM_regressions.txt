@@ -3,6 +3,22 @@ requiretty => !requiretty
 
 2) disable tty1 (/etc/sysconfig/init)
 
+to /etc/init/start-ttys.conf add after for-loop:
+
+	initctl start tty-splash TTY=tty1
+
+create /etc/init/tty-splash.conf:
+
+	stop on runlevel [S016]
+
+	respawn
+	instance $TTY
+	exec /sbin/mingetty --autologin root --noclear $TTY
+
+add to ~/.bashrc:
+	[ $(tty) = "/dev/tty1" ] && python /home/sandbox/start_scripts/splash.py
+
+
 3) pip install sh (in global env)
 
 4) httpd to landing page:
