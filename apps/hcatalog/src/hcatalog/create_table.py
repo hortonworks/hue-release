@@ -22,7 +22,7 @@ Views & controls for creating tables
 from django.core import urlresolvers
 
 from desktop.lib import django_mako, i18n
-from desktop.lib.django_util import render 
+from desktop.lib.django_util import render
 from desktop.lib.exceptions import PopupException
 from desktop.lib.django_forms import MultiForm
 from hadoop.fs import hadoopfs
@@ -36,7 +36,7 @@ import logging
 import gzip
 import csv
 import StringIO
-from datetime import date, datetime
+from datetime import datetime
 import os.path
 
 LOG = logging.getLogger(__name__)
@@ -45,14 +45,14 @@ LOG = logging.getLogger(__name__)
 def create_table(request):
   """Create a table by specifying its attributes manually"""
   form = MultiForm(
-      table=hcatalog.forms.CreateTableForm,
-      columns=hcatalog.forms.ColumnTypeFormSet,
-      partitions=hcatalog.forms.PartitionTypeFormSet)
+    table=hcatalog.forms.CreateTableForm,
+    columns=hcatalog.forms.ColumnTypeFormSet,
+    partitions=hcatalog.forms.PartitionTypeFormSet)
   if request.method == "POST":
     form.bind(request.POST)
     if form.is_valid() and 'createTable' in request.POST:
-      columns = [ f.cleaned_data for f in form.columns.forms ]
-      partition_columns = [ f.cleaned_data for f in form.partitions.forms ]
+      columns = [f.cleaned_data for f in form.columns.forms]
+      partition_columns = [f.cleaned_data for f in form.partitions.forms]
       proposed_query = django_mako.render_to_string("create_table_statement.mako",
         {
           'table': form.table.cleaned_data,
@@ -63,36 +63,33 @@ def create_table(request):
       # Mako outputs bytestring in utf8
       proposed_query = proposed_query.decode('utf-8')
       tablename = form.table.cleaned_data['name']
-#      on_success_url = urlresolvers.reverse(describe_table, kwargs={'table': tablename})
-#      return confirm_query(request, proposed_query, on_success_url)
       tables = []
       try:
         hcat_client().create_table("default", proposed_query)
         tables = hcat_client().get_tables()
       except Exception, ex:
-        raise PopupException('Error on creating table', title="Error on creating table", detail=str(ex))    
+        raise PopupException('Error on creating table', title="Error on creating table", detail=str(ex))
       return render("show_tables.mako", request, dict(tables=tables,))
   else:
     form.bind()
   return render("create_table_manually.mako", request, dict(
-    action="#",
-    table_form=form.table,
-    columns_form=form.columns,
-    partitions_form=form.partitions,
+      action="#",
+      table_form=form.table,
+      columns_form=form.columns,
+      partitions_form=form.partitions,
   ))
-  
+
 
 IMPORT_PEEK_SIZE = 8192
 IMPORT_PEEK_NLINES = 10
-DELIMITERS = [ hive_val for hive_val, _, _ in hcatalog.common.TERMINATORS ]
-DELIMITER_READABLE = {'\\001' : 'ctrl-As',
-                      '\\002' : 'ctrl-Bs',
-                      '\\003' : 'ctrl-Cs',
-                      '\\t'   : 'tabs',
-                      ','     : 'commas',
-                      ' '     : 'spaces'}
-FILE_READERS = [ ]
-
+DELIMITERS = [hive_val for hive_val, _, _ in hcatalog.common.TERMINATORS]
+DELIMITER_READABLE = {'\\001': 'ctrl-As',
+                      '\\002': 'ctrl-Bs',
+                      '\\003': 'ctrl-Cs',
+                      '\\t': 'tabs',
+                      ',': 'commas',
+                      ' ': 'spaces'}
+FILE_READERS = []
 
 
 def import_wizard(request):
@@ -124,7 +121,7 @@ def import_wizard(request):
       #   be there as well.
       #
       delim_is_auto = False
-      fields_list, n_cols = [ [] ], 0
+      fields_list, n_cols = [[]], 0
       s3_col_formset = None
 
       # Everything requires a valid file form
@@ -142,12 +139,12 @@ def import_wizard(request):
 
       # Exactly one of these should be True
       assert len(filter(None, (do_s2_auto_delim,
-                               do_s2_user_delim,
-                               do_s3_column_def,
-                               do_hive_create,
-                               cancel_s2_user_delim,
-                               cancel_s3_column_def))) == 1, 'Invalid form submission'
-                               
+          do_s2_user_delim,
+          do_s3_column_def,
+          do_hive_create,
+          cancel_s2_user_delim,
+          cancel_s3_column_def))) == 1, 'Invalid form submission'
+
       s2_delim_form = None
       #
       # Fix up what we should do in case any form is invalid
@@ -172,36 +169,36 @@ def import_wizard(request):
       if do_s2_auto_delim:
         delim_is_auto = True
         fields_list, n_cols, col_names, s2_delim_form = _delim_preview(
-                                              request.fs,
-                                              s1_file_form,
-                                              encoding,
-                                              [ reader.TYPE for reader in FILE_READERS ],
-                                              DELIMITERS,
-                                              True,
-                                              False,
-                                              None)
+            request.fs,
+            s1_file_form,
+            encoding,
+            [reader.TYPE for reader in FILE_READERS],
+            DELIMITERS,
+            True,
+            False,
+            None)
 
       if (do_s2_user_delim or do_s3_column_def or cancel_s3_column_def) and s2_delim_form.is_valid():
         # Delimit based on input
         fields_list, n_cols, col_names, s2_delim_form = _delim_preview(
-                                              request.fs,
-                                              s1_file_form,
-                                              encoding,
-                                              (s2_delim_form.cleaned_data['file_type'],),
-                                              (s2_delim_form.cleaned_data['delimiter'],),
-                                              s2_delim_form.cleaned_data.get('parse_first_row_as_header'),
-                                              s2_delim_form.cleaned_data.get('apply_excel_dialect'),
-                                              s2_delim_form.cleaned_data['path_tmp'])
+            request.fs,
+            s1_file_form,
+            encoding,
+            (s2_delim_form.cleaned_data['file_type'],),
+            (s2_delim_form.cleaned_data['delimiter'],),
+            s2_delim_form.cleaned_data.get('parse_first_row_as_header'),
+            s2_delim_form.cleaned_data.get('apply_excel_dialect'),
+            s2_delim_form.cleaned_data['path_tmp'])
       if do_s2_auto_delim or do_s2_user_delim or cancel_s3_column_def:
         return render('choose_delimiter.mako', request, dict(
-          action=urlresolvers.reverse(import_wizard),
-          delim_readable=DELIMITER_READABLE.get(s2_delim_form['delimiter'].data[0], s2_delim_form['delimiter'].data[1]),
-          initial=delim_is_auto,
-          file_form=s1_file_form,
-          delim_form=s2_delim_form,
-          fields_list=fields_list,
-          delimiter_choices=hcatalog.forms.TERMINATOR_CHOICES,
-          col_names=col_names,
+            action=urlresolvers.reverse(import_wizard),
+            delim_readable=DELIMITER_READABLE.get(s2_delim_form['delimiter'].data[0], s2_delim_form['delimiter'].data[1]),
+            initial=delim_is_auto,
+            file_form=s1_file_form,
+            delim_form=s2_delim_form,
+            fields_list=fields_list,
+            delimiter_choices=hcatalog.forms.TERMINATOR_CHOICES,
+            col_names=col_names,
         ))
 
       #
@@ -215,15 +212,15 @@ def import_wizard(request):
                 column_name=col_name,
                 column_type='string',
             ))
-            
+
           s3_col_formset = hcatalog.forms.ColumnTypeFormSet(prefix='cols', initial=columns)
         return render('define_columns.mako', request, dict(
-          action=urlresolvers.reverse(import_wizard),
-          file_form=s1_file_form,
-          delim_form=s2_delim_form,
-          column_formset=s3_col_formset,
-          fields_list=fields_list,
-          n_cols=n_cols,
+            action=urlresolvers.reverse(import_wizard),
+            file_form=s1_file_form,
+            delim_form=s2_delim_form,
+            column_formset=s3_col_formset,
+            fields_list=fields_list,
+            n_cols=n_cols,
         ))
 
       #
@@ -238,7 +235,7 @@ def import_wizard(request):
                           comment=s1_file_form.cleaned_data['comment'],
                           row_format='Delimited',
                           field_terminator=delim),
-            'columns': [ f.cleaned_data for f in s3_col_formset.forms ],
+            'columns': [f.cleaned_data for f in s3_col_formset.forms],
             'partition_columns': []
           }
         )
@@ -259,7 +256,7 @@ def import_wizard(request):
     action=urlresolvers.reverse(import_wizard),
     file_form=s1_file_form,
   ))
-  
+
 
 def _submit_create_and_load(request, create_hql, table_name, path, do_load):
   """
@@ -270,7 +267,8 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load):
     hcat_client().create_table("default", create_hql)
     tables = hcat_client().get_tables()
   except Exception, ex:
-    raise PopupException('Error on creating and loading table', title="Error on creating and loading table", detail=str(ex))
+    raise PopupException('Error on creating and loading table',
+        title="Error on creating and loading table", detail=str(ex))
   if do_load:
     if not table_name or not path:
       msg = 'Internal error: Missing needed parameter to load data into table'
@@ -278,7 +276,7 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load):
       raise PopupException(msg)
     LOG.debug("Auto loading data from %s into table %s" % (path, table_name))
     hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
-    hcatalog.views.do_load_table(request, hql)    
+    hcatalog.views.do_load_table(request, hql)
   return render("show_tables.mako", request, dict(tables=tables,))
 
 
@@ -310,8 +308,8 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
     raise PopupException('Delimiter preview exception', title="Delimiter preview exception", detail=error)
 
   col_names = []
-  n_cols = max([ len(row) for row in fields_list ])
-  
+  n_cols = max([len(row) for row in fields_list])
+
   # making column list and preview data part
   if parse_first_row_as_header and len(fields_list) > 0:
     col_names = fields_list[0]
@@ -322,7 +320,7 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
   elif not parse_first_row_as_header:
     for i in range(1, n_cols + 1):
       col_names.append('col_%s' % (i,))
- 
+
   # ``delimiter`` is a MultiValueField. delimiter_0 and delimiter_1 are the sub-fields.
   delimiter_0 = delim
   delimiter_1 = ''
@@ -332,13 +330,13 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
     delimiter_1 = delim
 
   delim_form = hcatalog.forms.CreateByImportDelimForm(dict(delimiter_0=delimiter_0,
-                                                          delimiter_1=delimiter_1,
-                                                          file_type=file_type,
-                                                          path_tmp=path_tmp,
-                                                          n_cols=n_cols,
-                                                          col_names=col_names,
-                                                          parse_first_row_as_header=parse_first_row_as_header,
-                                                          apply_excel_dialect=apply_excel_dialect))
+      delimiter_1=delimiter_1,
+      file_type=file_type,
+      path_tmp=path_tmp,
+      n_cols=n_cols,
+      col_names=col_names,
+      parse_first_row_as_header=parse_first_row_as_header,
+      apply_excel_dialect=apply_excel_dialect))
   if not delim_form.is_valid():
     assert False, _('Internal error when constructing the delimiter form: %(error)s' % {'error': delim_form.errors})
   return fields_list, n_cols, col_names, delim_form
@@ -356,7 +354,7 @@ def _parse_fields(fs, path, file_obj, encoding, filetypes, delimiters, parse_fir
 
   Return the best delimiter, filetype and the data broken down into rows of fields.
   """
-  file_readers = [ reader for reader in FILE_READERS if reader.TYPE in filetypes ]
+  file_readers = [reader for reader in FILE_READERS if reader.TYPE in filetypes]
 
   for reader in file_readers:
     LOG.debug("Trying %s for file: %s" % (reader.TYPE, path))
@@ -364,7 +362,7 @@ def _parse_fields(fs, path, file_obj, encoding, filetypes, delimiters, parse_fir
     lines = reader.readlines(file_obj, encoding)
     if lines is not None:
       delim, fields_list = _readfields(lines, delimiters)
-      
+
       # creating tmp file to import data from
       if fs.exists(path_tmp):
         fs.remove(path_tmp)
@@ -418,7 +416,7 @@ def _readfields(lines, delimiters):
     The score is always non-negative. The higher the better.
     """
     n_lines = len(fields_list)
-    len_list = [ len(fields) for fields in fields_list ]
+    len_list = [len(fields) for fields in fields_list]
 
     # All lines should break into multiple fields
     if min(len_list) == 1:
@@ -427,18 +425,16 @@ def _readfields(lines, delimiters):
     avg_n_fields = sum(len_list) / n_lines
     sq_of_exp = avg_n_fields * avg_n_fields
 
-    len_list_sq = [ l * l for l in len_list ]
+    len_list_sq = [l * l for l in len_list]
     exp_of_sq = sum(len_list_sq) / n_lines
     var = exp_of_sq - sq_of_exp
     # Favour more fields
     return (1000.0 / (var + 1)) + avg_n_fields
 
-
   max_score = -1
   res = (None, None)
-
   for delim in delimiters:
-    fields_list = [ ]
+    fields_list = []
     for line in lines:
       if line:
         # Unescape the delimiter back to its character value
@@ -481,7 +477,7 @@ class GzipFileReader(object):
       return unicode(data, encoding, errors='replace').split('\n')[:IMPORT_PEEK_NLINES]
     except UnicodeError:
       return None
-  
+
   @staticmethod
   def read_all_data(fileobj, encoding):
     """read_all_data(fileobj, encoding) -> list of lines"""
@@ -507,7 +503,7 @@ class TextFileReader(object):
       return unicode(data, encoding, errors='replace').split('\n')[:IMPORT_PEEK_NLINES]
     except UnicodeError:
       return None
-  
+
   @staticmethod
   def read_all_data(fileobj, encoding):
     """read_all_data(fileobj, encoding) -> list of lines"""

@@ -26,19 +26,19 @@ from hcat_client import hcat_client
 
 HIVE_IDENTIFER_REGEX = re.compile("^[a-zA-Z0-9]\w*$")
 
-DL_FORMATS = [ 'csv', 'xls' ]
+DL_FORMATS = ['csv', 'xls']
 
-SELECTION_SOURCE = [ '', 'table', 'constant', ]
+SELECTION_SOURCE = ['', 'table', 'constant', ]
 
-AGGREGATIONS = [ '', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX' ]
+AGGREGATIONS = ['', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX']
 
-JOIN_TYPES = [ '', 'LEFT OUTER JOIN', 'RIGHT OUTER JOIN', 'FULL OUTER JOIN', 'JOIN' ]
+JOIN_TYPES = ['', 'LEFT OUTER JOIN', 'RIGHT OUTER JOIN', 'FULL OUTER JOIN', 'JOIN']
 
-SORT_OPTIONS = [ '', 'ascending', 'descending' ]
+SORT_OPTIONS = ['', 'ascending', 'descending']
 
-RELATION_OPS_UNARY = [ 'IS NULL', 'IS NOT NULL', 'NOT' ]
+RELATION_OPS_UNARY = ['IS NULL', 'IS NOT NULL', 'NOT']
 
-RELATION_OPS = [ '=', '<>', '<', '<=', '>', '>=' ] + RELATION_OPS_UNARY
+RELATION_OPS = ['=', '<>', '<', '<=', '>', '>='] + RELATION_OPS_UNARY
 
 TERMINATORS = [
   # (hive representation, description, ascii value)
@@ -56,7 +56,7 @@ def to_choices(x):
   Maps [a, b, c] to [(a,a), (b,b), (c,c)].
   Useful for making ChoiceField's.
   """
-  return [ (y, y) for y in x ]
+  return [(y, y) for y in x]
 
 
 class HiveIdentifierField(forms.RegexField):
@@ -74,5 +74,3 @@ class HiveTableChoiceField(forms.ChoiceField):
     tables = hcat_client.get_tables()
     kwargs['choices'] = to_choices([''] + tables)
     forms.ChoiceField.__init__(self, *args, **kwargs)
-
-

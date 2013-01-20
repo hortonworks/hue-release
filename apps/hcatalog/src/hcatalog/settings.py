@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-DJANGO_APPS = [ "hcatalog" ]
+DJANGO_APPS = ["hcatalog"]
 NICE_NAME = "HCatalog"
 REQUIRES_HADOOP = False
 MENU_INDEX = 12

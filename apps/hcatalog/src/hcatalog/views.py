@@ -16,18 +16,15 @@
 # under the License.
 
 
-from django import forms
 from django.core import urlresolvers
-from django.db.models import Q
 from django.http import HttpResponse, QueryDict, Http404
-from django.shortcuts import redirect
-from django.utils.encoding import force_unicode
 from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 
 from desktop.lib import django_mako
 from desktop.lib.paginator import Paginator
-from desktop.lib.django_util import copy_query_dict, format_preserving_redirect, render
+from desktop.lib.django_util import (copy_query_dict,
+    format_preserving_redirect, render)
 from desktop.lib.django_util import login_notrequired, get_desktop_uri_prefix
 from desktop.lib.django_util import render_injected
 from desktop.lib.exceptions import PopupException
@@ -43,11 +40,11 @@ from hcatalog import common
 from hcatalog import models
 from hcat_client import hcat_client
 from beeswax.views import (authorized_get_design, safe_get_design, save_design,
-                           _strip_trailing_semicolon, get_parameterization,
-                           make_beeswax_query, explain_directly,
-                           expand_exception, make_query_context, authorized_get_history,
-                           _parse_query_context, _parse_out_hadoop_jobs, _get_browse_limit_clause,
-                           _get_server_id_and_state, download, parse_results)
+    _strip_trailing_semicolon, get_parameterization,
+    make_beeswax_query, explain_directly,
+    expand_exception, make_query_context, authorized_get_history,
+    _parse_query_context, _parse_out_hadoop_jobs, _get_browse_limit_clause,
+    _get_server_id_and_state, download, parse_results)
 from beeswax.views import execute_directly as e_d, explain_directly as expl_d
 from beeswax.forms import query_form, SaveResultsForm
 from beeswax import db_utils
@@ -55,8 +52,7 @@ from beeswax.models import MetaInstall, SavedQuery, QueryHistory
 from beeswax.design import HQLdesign
 from beeswaxd.ttypes import BeeswaxException, QueryHandle
 
-import time
-from datetime import date, datetime
+from datetime import datetime
 import logging
 import os
 
@@ -76,7 +72,7 @@ def describe_table(request, table):
     if is_table_partitioned:
       partitions = hcat_client().get_partitions(table)
       partitionColumns = table_desc_extended['partitionColumns']
-    table_obj = {'tableName':table, 'columns':table_desc_extended['columns'], 'partitionKeys':partitionColumns, 'partitions':partitions}
+    table_obj = {'tableName': table, 'columns': table_desc_extended['columns'], 'partitionKeys': partitionColumns, 'partitions': partitions}
   except Exception:
     import traceback
     error = traceback.format_exc()
@@ -101,7 +97,7 @@ def drop_table(request, table):
     except Exception, ex:
       raise PopupException('Drop table', title="Drop table", detail=str(ex))
     on_success_url = urlresolvers.reverse(show_tables)
-    result = {'on_success_url':on_success_url}
+    result = {'on_success_url': on_success_url}
     return HttpResponse(json.dumps(result))
 
 
@@ -115,7 +111,7 @@ def load_table(request, table):
     partitionColumns = []
     if is_table_partitioned:
       partitionColumns = table_desc_extended['partitionColumns']
-    table_obj = {'tableName':table, 'columns':table_desc_extended['columns'], 'partitionKeys':partitionColumns}
+    table_obj = {'tableName': table, 'columns': table_desc_extended['columns'], 'partitionKeys': partitionColumns}
   except Exception:
     import traceback
     error = traceback.format_exc()
@@ -137,7 +133,7 @@ def load_table(request, table):
           vals.append("%s='%s'" % (column_name, form.cleaned_data[key]))
         hql += ", ".join(vals)
         hql += ")"
-      hql += ";" 
+      hql += ";"
     try:
       do_load_table(request, hql)
     except Exception:
@@ -145,7 +141,7 @@ def load_table(request, table):
       error = traceback.format_exc()
       raise PopupException('Error loading data into the table', title="Error loading data into the table", detail=error)
     on_success_url = urlresolvers.reverse(describe_table, kwargs=dict(table=table))
-    result = {'on_success_url':on_success_url}
+    result = {'on_success_url': on_success_url}
     return HttpResponse(json.dumps(result))
   else:
     form = hcatalog.forms.LoadDataForm(table_obj)
@@ -153,14 +149,13 @@ def load_table(request, table):
 
 
 def do_load_table(request, create_hql):
-    # start_job(request, out_hql)
-    script_file = "/tmp/hive_%s.hcat" % datetime.now().strftime("%s")
-    file = open(script_file, 'w+')
-    file.write(create_hql)
-    file.close()
-    hcat_client().hive_cli(file=script_file)
-    if os.path.exists(script_file):
-        os.remove(script_file)
+  script_file = "/tmp/hive_%s.hcat" % datetime.now().strftime("%s")
+  file = open(script_file, 'w+')
+  file.write(create_hql)
+  file.close()
+  hcat_client().hive_cli(file=script_file)
+  if os.path.exists(script_file):
+    os.remove(script_file)
 
 
 def browse_partition(request, table):
@@ -170,7 +165,7 @@ def browse_partition(request, table):
       location = hcat_client().get_partition_location(table, partition_name)
       #location = hcat_client().describe_partition(table, partition_name)
       url = location_to_url(request, location)
-      result = {'url':url}
+      result = {'url': url}
       return HttpResponse(json.dumps(result))
     except Exception, ex:
       raise PopupException('Browse partition', title="Browse partition", detail=str(ex))
@@ -187,92 +182,90 @@ def drop_partition(request, table):
     except Exception, ex:
       raise PopupException('Drop partition', title="Drop partition", detail=str(ex))
     on_success_url = urlresolvers.reverse(describe_table, kwargs=dict(table=table))
-    result = {'on_success_url':on_success_url}
+    result = {'on_success_url': on_success_url}
     return HttpResponse(json.dumps(result))
 
 
 def pig_view(request, table=None):
-    try:
-        from pig.views import index as pig_view_for_hcat
-    except:
-        raise Http404
-    request.session['autosave'] = { "pig_script": 'A = LOAD \'{t}\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;'.format(t=table), 'title': '{t}'.format(t=table) }
-    return pig_view_for_hcat(request)
+  try:
+    from pig.views import index as pig_view_for_hcat
+  except:
+    raise Http404
+  request.session['autosave'] = {"pig_script": 'A = LOAD \'{t}\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;'.format(t=table), 'title': '{t}'.format(t=table)}
+  return pig_view_for_hcat(request)
 
 
 def hive_view(request, table=None):
-    tables = db_utils.meta_client().get_tables("default", ".*")
-    if not tables:
-        return render("show_tables.mako", request, dict(tables=[],))
-    else:
-        return execute_query(request, table=table)
+  tables = db_utils.meta_client().get_tables("default", ".*")
+  if not tables:
+    return render("show_tables.mako", request, dict(tables=[],))
+  else:
+    return execute_query(request, table=table)
 
 
 def execute_query(request, design_id=None, table=None):
-    authorized_get_design(request, design_id)
-    error_message, log = None, None
-    form = query_form()
-    action = request.path
-    design = safe_get_design(request, SavedQuery.HQL, design_id)
-    on_success_url = request.REQUEST.get('on_success_url')
- 
-    for _ in range(1):
-        if request.method == 'POST':
-            form.bind(request.POST)
- 
-            to_explain = request.POST.has_key('button-explain')
-            to_submit = request.POST.has_key('button-submit')
-            # Always validate the saveform, which will tell us whether it needs explicit saving
-            if not form.is_valid():
-                break
-            to_save = form.saveform.cleaned_data['save']
-            to_saveas = form.saveform.cleaned_data['saveas']
-            if to_saveas and not design.is_auto:
-                # Save As only affects a previously saved query
-                design = design.clone()
-            if to_submit or to_save or to_saveas or to_explain:
-                explicit_save = to_save or to_saveas
-                design = save_design(request, form, SavedQuery.HQL, design, explicit_save)
-                action = urlresolvers.reverse(execute_query, kwargs=dict(design_id=design.id))
- 
-            # We're not going to process the form. Simply re-render it.
-            if not to_explain and not to_submit:
-                break
- 
-            query_str = _strip_trailing_semicolon(form.query.cleaned_data["query"])
-            query_server = db_utils.get_query_server(form.query_servers.cleaned_data["server"])
-            # (Optional) Parameterization.
-            parameterization = get_parameterization(request, query_str, form, design, to_explain)
-            if parameterization:
-                return parameterization
- 
-            query_msg = make_beeswax_query(request, query_str, form)
-            try:
-                if to_explain:
-                    return expl_d(request, query_str, query_msg, design, query_server)
-                else:
-                    notify = form.query.cleaned_data.get('email_notify', False)
-                    return e_d(request, query_msg, design=design,
-                               on_success_url=on_success_url,
-                               notify=notify)
-            except BeeswaxException, ex:
-                error_message, log = expand_exception(ex)
-                # Fall through to re-render the execute form.
+  authorized_get_design(request, design_id)
+  error_message, log = None, None
+  form = query_form()
+  action = request.path
+  design = safe_get_design(request, SavedQuery.HQL, design_id)
+  on_success_url = request.REQUEST.get('on_success_url')
+
+  for _ in range(1):
+    if request.method == 'POST':
+      form.bind(request.POST)
+      to_explain = request.POST.has_key('button-explain')
+      to_submit = request.POST.has_key('button-submit')
+      # Always validate the saveform, which will tell us whether it needs explicit saving
+      if not form.is_valid():
+        break
+      to_save = form.saveform.cleaned_data['save']
+      to_saveas = form.saveform.cleaned_data['saveas']
+      if to_saveas and not design.is_auto:
+        # Save As only affects a previously saved query
+        design = design.clone()
+      if to_submit or to_save or to_saveas or to_explain:
+        explicit_save = to_save or to_saveas
+        design = save_design(request, form, SavedQuery.HQL, design, explicit_save)
+        action = urlresolvers.reverse(execute_query, kwargs=dict(design_id=design.id))
+
+      # We're not going to process the form. Simply re-render it.
+      if not to_explain and not to_submit:
+        break
+
+      query_str = _strip_trailing_semicolon(form.query.cleaned_data["query"])
+      query_server = db_utils.get_query_server(form.query_servers.cleaned_data["server"])
+      # (Optional) Parameterization.
+      parameterization = get_parameterization(request, query_str, form, design, to_explain)
+      if parameterization:
+        return parameterization
+
+      query_msg = make_beeswax_query(request, query_str, form)
+      try:
+        if to_explain:
+          return expl_d(request, query_str, query_msg, design, query_server)
         else:
-            # GET request
-            if design.id is not None:
-                data = HQLdesign.loads(design.data).get_query_dict()
-                form.bind(data)
-                form.saveform.set_data(design.name, design.desc)
-            else:
-                # New design
-                form.bind()
- 
- 
-    table='SELECT * FROM `{t}`'.format(t=table)
-    return render('execute.mako', request, {
-        'action': action, 'design': design, 'error_message': error_message,
-        'form': form, 'log': log, 'on_success_url': on_success_url, 'table': table})
+          notify = form.query.cleaned_data.get('email_notify', False)
+          return e_d(request, query_msg, design=design,
+            on_success_url=on_success_url,
+            notify=notify)
+      except BeeswaxException, ex:
+        error_message, log = expand_exception(ex)
+        # Fall through to re-render the execute form.
+    else:
+      # GET request
+      if design.id is not None:
+        data = HQLdesign.loads(design.data).get_query_dict()
+        form.bind(data)
+        form.saveform.set_data(design.name, design.desc)
+      else:
+        # New design
+        form.bind()
+
+  table = 'SELECT * FROM `{t}`'.format(t=table)
+  return render('execute.mako', request, {
+    'action': action, 'design': design, 'error_message': error_message,
+    'form': form, 'log': log, 'on_success_url': on_success_url, 'table': table})
 
 
 def read_table(request, table):
@@ -290,7 +283,7 @@ def read_table(request, table):
 
 
 def execute_directly(request, query_msg, design=None, tablename=None,
-                     on_success_url=None, on_success_params=None, **kwargs):
+    on_success_url=None, on_success_params=None, **kwargs):
   """
   execute_directly(request, query_msg, tablename, design) -> HTTP response for execution
 
@@ -342,8 +335,8 @@ def execute_directly(request, query_msg, design=None, tablename=None,
     get_dict.update(on_success_params)
 
   return format_preserving_redirect(request, watch_url, get_dict)
-  
-  
+
+
 def watch_query(request, id):
   """
   Wait for the query to finish and (by default) displays the results of query id.
@@ -396,14 +389,14 @@ def watch_query(request, id):
   # - Translate context into something more meaningful (type, data)
   context = _parse_query_context(context_param)
   return render('watch_wait.mako', request, {
-                      'query': query_history,
-                      'fwd_params': request.GET.urlencode(),
-                      'log': log,
-                      'hadoop_jobs': _parse_out_hadoop_jobs(log),
-                      'query_context': context,
-                    })
-  
-  
+    'query': query_history,
+    'fwd_params': request.GET.urlencode(),
+    'log': log,
+    'hadoop_jobs': _parse_out_hadoop_jobs(log),
+    'query_context': context,
+  })
+
+
 def view_results(request, id, first_row=0, last_result_len=0):
   """
   Returns the view for the results of the QueryHistory with the given id.
@@ -481,8 +474,8 @@ def view_results(request, id, first_row=0, last_result_len=0):
     'save_form': save_form,
     'can_save': query_history.owner == request.user,
   })
-  
-  
+
+
 def get_tables(request):
   """Returns a table list"""
   tables = []
@@ -491,10 +484,10 @@ def get_tables(request):
   try:
     tables = hcat_client().get_tables()
   except Exception, ex:
-    result = {'tables':tables, 'exception':str(ex)}
+    result = {'tables': tables, 'exception': str(ex)}
     return HttpResponse(json.dumps(result))
   for table in tables:
     describe_table_urls.append(urlresolvers.reverse(describe_table, kwargs=dict(table=table)))
     read_table_urls.append(urlresolvers.reverse(read_table, kwargs=dict(table=table)))
-  result = {'tables':tables, 'describe_table_urls':describe_table_urls, 'read_table_urls':read_table_urls}
+  result = {'tables': tables, 'describe_table_urls': describe_table_urls, 'read_table_urls': read_table_urls}
   return HttpResponse(json.dumps(result))

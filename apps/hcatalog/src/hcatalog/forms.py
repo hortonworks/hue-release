@@ -27,6 +27,7 @@ from hcat_client import hcat_client
 
 import filebrowser.forms
 
+
 def query_form():
   """Generates a multi form object for queries."""
   return MultiForm(
@@ -40,9 +41,8 @@ def query_form():
 class SaveForm(forms.Form):
   """Used for saving query design and report design."""
   name = forms.CharField(required=False,
-                        max_length=64,
-                        #initial=models.SavedQuery.DEFAULT_NEW_DESIGN_NAME,
-                        help_text='Change the name to save as a new design')
+      max_length=64,
+      help_text='Change the name to save as a new design')
   desc = forms.CharField(required=False, max_length=1024, label="Description")
   save = forms.BooleanField(widget=SubmitButton, required=False)
   saveas = forms.BooleanField(widget=SubmitButton, required=False)
@@ -81,16 +81,16 @@ class SaveResultsForm(DependencyAwareForm):
 
   SAVE_TYPES = (SAVE_TYPE_TBL, SAVE_TYPE_DIR) = ('to a new table', 'to HDFS directory')
   save_target = forms.ChoiceField(required=True,
-                                  choices=common.to_choices(SAVE_TYPES),
-                                  widget=forms.RadioSelect)
+      choices=common.to_choices(SAVE_TYPES),
+      widget=forms.RadioSelect)
   target_table = common.HiveIdentifierField(
-                                  label="Table Name",
-                                  required=False,
-                                  help_text="Name of the new table")
+      label="Table Name",
+      required=False,
+      help_text="Name of the new table")
   target_dir = filebrowser.forms.PathField(
-                                  label="Results Location",
-                                  required=False,
-                                  help_text="Empty directory in HDFS to put the results")
+      label="Results Location",
+      required=False,
+      help_text="Empty directory in HDFS to put the results")
   dependencies = [
     ('save_target', SAVE_TYPE_TBL, 'target_table'),
     ('save_target', SAVE_TYPE_DIR, 'target_dir'),
@@ -109,8 +109,8 @@ class SaveResultsForm(DependencyAwareForm):
 
 class HQLForm(forms.Form):
   query = forms.CharField(label="Query Editor",
-                          required=True,
-                          widget=forms.Textarea(attrs={'class':'beeswax_query'}))
+      required=True,
+      widget=forms.Textarea(attrs={'class': 'beeswax_query'}))
   is_parameterized = forms.BooleanField(required=False, initial=True)
   email_notify = forms.BooleanField(required=False, initial=False)
 
@@ -148,7 +148,8 @@ SettingFormSet = simple_formset_factory(SettingForm)
 
 
 # In theory, there are only 256 of these...
-TERMINATOR_CHOICES = [ (hive_val, desc) for hive_val, desc, _ in common.TERMINATORS ]
+TERMINATOR_CHOICES = [(hive_val, desc) for hive_val, desc, _ in common.TERMINATORS]
+
 
 class CreateTableForm(DependencyAwareForm):
   """
@@ -162,8 +163,8 @@ class CreateTableForm(DependencyAwareForm):
 
   # Row Formatting
   row_format = forms.ChoiceField(required=True,
-                                choices=common.to_choices([ "Delimited", "SerDe" ]),
-                                initial="Delimited")
+      choices=common.to_choices(["Delimited", "SerDe"]),
+      initial="Delimited")
 
   # Delimited Row
   # These initials are per LazySimpleSerDe.DefaultSeparators
@@ -182,8 +183,8 @@ class CreateTableForm(DependencyAwareForm):
   # Serde Row
   serde_name = forms.CharField(required=False, label="SerDe Name")
   serde_properties = forms.CharField(
-                        required=False,
-                        help_text="Comma-separated list of key-value pairs, eg., 'p1=v1, p2=v2'")
+      required=False,
+      help_text="Comma-separated list of key-value pairs, eg., 'p1=v1, p2=v2'")
 
   dependencies += [
     ("row_format", "SerDe", "serde_name"),
@@ -192,8 +193,8 @@ class CreateTableForm(DependencyAwareForm):
 
   # File Format
   file_format = forms.ChoiceField(required=False, initial="TextFile",
-                        choices=common.to_choices(["TextFile", "SequenceFile", "InputFormat"]),
-                        widget=forms.RadioSelect)
+      choices=common.to_choices(["TextFile", "SequenceFile", "InputFormat"]),
+      widget=forms.RadioSelect)
   input_format_class = forms.CharField(required=False, label="InputFormat Class")
   output_format_class = forms.CharField(required=False, label="OutputFormat Class")
 
@@ -237,7 +238,7 @@ def _clean_tablename(name):
 
 def _clean_terminator(val):
   if val is not None and len(val.decode('string_escape')) != 1:
-      raise forms.ValidationError('Terminator must be exactly one character')
+    raise forms.ValidationError('Terminator must be exactly one character')
   return val
 
 
@@ -250,8 +251,8 @@ class CreateByImportFileForm(forms.Form):
   # File info
   path = filebrowser.forms.PathField(label="Input File")
   do_import = forms.BooleanField(required=False, initial=True,
-                          label="Import data from file",
-                          help_text="Automatically load this file into the table after creation")
+      label="Import data from file",
+      help_text="Automatically load this file into the table after creation")
 
   def clean_name(self):
     return _clean_tablename(self.cleaned_data['name'])
@@ -263,11 +264,11 @@ class CreateByImportDelimForm(forms.Form):
   file_type = forms.CharField(widget=forms.HiddenInput, required=True)
   path_tmp = forms.CharField(widget=forms.HiddenInput, required=False)
   parse_first_row_as_header = forms.BooleanField(required=False, initial=True,
-                          label="Use the first row as a table header",
-                          help_text="Column list will be parsed from the first row of the data file")
+      label="Use the first row as a table header",
+      help_text="Column list will be parsed from the first row of the data file")
   apply_excel_dialect = forms.BooleanField(required=False, initial=False,
-                          label="Apply an 'excel' dialect",
-                          help_text="It allows to escape the possible double quotes of the compound values")
+      label="Apply an 'excel' dialect",
+      help_text="It allows to escape the possible double quotes of the compound values")
 
   def clean(self):
     # ChoiceOrOtherField doesn't work with required=True
@@ -278,13 +279,13 @@ class CreateByImportDelimForm(forms.Form):
     return self.cleaned_data
 
   def old(self):
-    if delimiter.isdigit():
+    if self.delimiter.isdigit():
       try:
-        chr(int(delimiter))
-        return int(delimiter)
+        chr(int(self.delimiter))
+        return int(self.delimiter)
       except ValueError:
         raise forms.ValidationError('Delimiter value must be smaller than 256')
-    val = delimiter.decode('string_escape')
+    val = self.delimiter.decode('string_escape')
     if len(val) != 1:
       raise forms.ValidationError('Delimiter must be exactly one character')
     return ord(val)
@@ -292,14 +293,16 @@ class CreateByImportDelimForm(forms.Form):
 
 # Note, struct is not currently supported.  (Because it's recursive, for example.)
 HIVE_TYPES = \
-    ( "string", "tinyint", "smallint", "int", "bigint", "boolean",
+    ("string", "tinyint", "smallint", "int", "bigint", "boolean",
       "float", "double", "array", "map",)
 HIVE_PRIMITIVE_TYPES = \
     ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double")
 
+
 class PartitionTypeForm(forms.Form):
   column_name = common.HiveIdentifierField(required=True)
   column_type = forms.ChoiceField(required=True, choices=common.to_choices(HIVE_PRIMITIVE_TYPES))
+
 
 class ColumnTypeForm(DependencyAwareForm):
   """
@@ -316,11 +319,11 @@ class ColumnTypeForm(DependencyAwareForm):
   array_type = forms.ChoiceField(required=False,
     choices=common.to_choices(HIVE_PRIMITIVE_TYPES), label="Array Value Type")
   map_key_type = forms.ChoiceField(required=False,
-                                   choices=common.to_choices(HIVE_PRIMITIVE_TYPES),
-                                   help_text="Specify if column_type is map.")
+      choices=common.to_choices(HIVE_PRIMITIVE_TYPES),
+      help_text="Specify if column_type is map.")
   map_value_type = forms.ChoiceField(required=False,
-                                     choices=common.to_choices(HIVE_PRIMITIVE_TYPES),
-                                     help_text="Specify if column_type is map.")
+      choices=common.to_choices(HIVE_PRIMITIVE_TYPES),
+      help_text="Specify if column_type is map.")
 
 ColumnTypeFormSet = simple_formset_factory(ColumnTypeForm, initial=[{}], add_label="add a column")
 # Default to no partitions
@@ -343,4 +346,3 @@ class LoadDataForm(forms.Form):
       char_field = forms.CharField(required=True, label="%s (partition key with type %s)" % (column['name'], column['type']))
       self.fields[name] = char_field
       self.partition_columns[name] = column['name']
-

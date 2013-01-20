@@ -16,6 +16,7 @@
 from setuptools import setup, find_packages
 import os
 
+
 def expand_package_data(src_dirs, strip=""):
   ret = []
   for src_dir in src_dirs:
@@ -34,7 +35,7 @@ setup(
   packages = find_packages('src'),
   package_dir = {'': 'src'},
   install_requires = ['setuptools', 'desktop'],
-  entry_points = { 'desktop.sdk.application': 'hcatalog=hcatalog' },
+  entry_points = {'desktop.sdk.application': 'hcatalog=hcatalog'},
   zip_safe = False,
   package_data = {
     # Include static resources.  Package_data doesn't
