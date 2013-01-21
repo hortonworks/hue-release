@@ -42,9 +42,9 @@ class Templeton(object):
         Make DELETE query to templeton url.
         """
         if data is not None:
-            data['user.name'] = self.user
+            data['user.name'] = "sandbox"
         else:
-            data = {"user.name": self.user}
+            data = {"user.name": "sandbox"}
         data = urllib.urlencode(data)
         opener = urllib2.build_opener(urllib2.HTTPHandler)
         req = urllib2.Request(TEMPLETON_URL + url + "?" + data)
