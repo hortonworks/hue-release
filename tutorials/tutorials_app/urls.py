@@ -9,6 +9,7 @@ urlpatterns = patterns('tutorials_app.views',
                        (r'^lesson/(\d+)/(\d+)/(.*)', 'lesson_static'),
                        (r'^content/(.*)$', 'content'),
                        (r'^sync/$', 'sync_location'),
+                       (r'^netinfo/$', 'network_info'),
                        (r'^file/(?P<path>.*)$', 'get_file'),
                        )
 

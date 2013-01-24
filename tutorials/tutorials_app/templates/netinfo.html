@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Network info</title>
+    </head>
+
+    <body>
+        % for cmd, value in info.items():
+            <b>${ cmd }</b><br>
+            <pre>${ value | h}</pre>
+        % endfor
+    </body>
+</html>

@@ -147,3 +147,17 @@ def get_file(request, path):
                             mimetype=mimetypes.guess_type(rfile)[0])
 
     return response
+
+def network_info(request):
+    import subprocess
+    commands = [
+        "route -n",
+        "getent ahosts",
+        "ip addr",
+        "cat /etc/resolv.conf",
+        ]
+
+    netinfo = {cmd: subprocess.check_output(cmd, shell=True)
+                for cmd in commands}
+
+    return render_to_response("netinfo.html", {'info': netinfo})
