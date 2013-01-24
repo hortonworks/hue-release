@@ -1,5 +1,6 @@
 import curses
 import sh
+import subprocess
 
 screen = None
 HINT_WIDTH = 3
@@ -58,6 +59,22 @@ def init_screen():
     make_ip_window()
     make_hint_window()
 
+def show_netinfo():
+    commands = [
+        "route -n",
+        "getent ahosts",
+        "ip addr",
+        "cat /etc/resolv.conf",
+        ]
+
+    f = file("/tmp/netinfo", "w")
+    for cmd in commands:
+        f.write("====  %s ==== \n" % cmd)
+        f.write(subprocess.check_output(cmd, shell=True))
+        f.write("\n")
+    f.close()
+    subprocess.call("less /tmp/netinfo", shell=True)
+
 
 def main():
     global screen
@@ -74,10 +91,16 @@ def main():
     else:
         while True:
             try:
-                screen.getch()
+                c = screen.getch()
+                if c == ord('n'):
+                    curses.endwin()
+                    show_netinfo()
+                    screen = curses.initscr()
+                    init_screen()
                 screen.refresh()
-            except KeyboardInterrupt:
+            except KeyboardInterrupt, e:
                 pass
+                # raise e
 
     curses.endwin()
 
