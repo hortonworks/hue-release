@@ -65,12 +65,13 @@ def show_netinfo():
         "getent ahosts",
         "ip addr",
         "cat /etc/resolv.conf",
+        "cat /etc/hosts",
         ]
 
     f = file("/tmp/netinfo", "w")
     for cmd in commands:
         f.write("====  %s ==== \n" % cmd)
-        f.write(subprocess.check_output(cmd, shell=True))
+        f.write(subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0])
         f.write("\n")
     f.close()
     subprocess.call("less /tmp/netinfo", shell=True)
@@ -100,7 +101,6 @@ def main():
                 screen.refresh()
             except KeyboardInterrupt, e:
                 pass
-                # raise e
 
     curses.endwin()
 

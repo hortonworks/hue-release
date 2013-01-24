@@ -155,6 +155,9 @@ def network_info(request):
         "getent ahosts",
         "ip addr",
         "cat /etc/resolv.conf",
+        "cat /etc/hosts",
+        "ps aux | grep java",
+        "netstat -lnp",
         ]
 
     netinfo = {cmd: subprocess.check_output(cmd, shell=True)
