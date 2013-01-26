@@ -67,3 +67,6 @@ add consoleblank=0 to kernel parameters in /boot/grub/grub.conf
 add nameserver 8.8.8.8 to /etc/resolv.conf
 edit /etc/sysconfig/network-scripts/ifcfg-eth0 &ifcfg-eth1
 change  PEERDNS=no
+
+15) su - hdfs -c "hadoop fs -chown sandbox /tmp/hue-uploads"
+16) su - hdfs -c "hadoop fs -rmr -skipTrash /user/ambari_qa/.staging/"
