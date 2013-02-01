@@ -160,7 +160,7 @@ def network_info(request):
         "netstat -lnp",
         ]
 
-    netinfo = {cmd: subprocess.check_output(cmd, shell=True)
-                for cmd in commands}
+    netinfo = dict((cmd, subprocess.check_output(cmd, shell=True))
+                for cmd in commands)
 
     return render_to_response("netinfo.html", {'info': netinfo})
