@@ -12,7 +12,7 @@ function listdir(_context){
   _context=_context[0];
 
   $.ajax({
-    url: "/proxy/localhost/50070/webhdfs/v1" + _context + "?op=LISTSTATUS&user.name=hue&doas=hdfs",
+    url: "/proxy/sandbox/50070/webhdfs/v1" + _context + "?op=LISTSTATUS&user.name=hue&doas=hdfs",
     type: "GET",
     dataType: "json",
     cache: false,
