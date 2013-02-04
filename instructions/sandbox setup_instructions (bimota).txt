@@ -59,7 +59,7 @@ to the end of the file
 a) Change dfs.block.access.token.enable to false
 b) Change dfs.permissions to false
 c) Change dfs.web.ugi to sandbox,sandbox
-d) Change dfs.http.adres to localhost:50070
+d) Change dfs.http.address to localhost:50070
 e) Add dfs.support.broken.append to true
 e) Add dfs.support.append to true
 
