@@ -2,7 +2,8 @@ import settings
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('tutorials_app.views',
-                       (r'^$', 'index'),
+                       (r'^$', 'landing'),
+                       (r'^tutorials/$', 'tutorials'),
                        (r'^lesson/$', 'lesson_list'),
                        (r'^lesson/(\d+)$', 'lesson_steps'),
                        (r'^lesson/(\d+)/(\d+)/$', 'lesson'),

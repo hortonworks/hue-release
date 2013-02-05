@@ -5,7 +5,7 @@ yum install python-setuptools
 
 cd /home/sandbox/tutorials && \
       easy_install pip && pip install virtualenv && virtualenv .env && \
-      . .env/bin/activate && pip install django==1.4 django-mako gunicorn
+      . .env/bin/activate && pip install django==1.4 django-mako gunicorn mysql-python
 
 cd /home/sandbox/tutorials/tutorials_app/run/ && sudo -u sandbox bash run.sh
 

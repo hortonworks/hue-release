@@ -23,7 +23,13 @@ def tutorials_last_url(tutorial_view):
     return save_user_location
 
 
-def index(request):
+def landing(request):
+    #Needs symbolic link from templates to landing-page folder
+    return render_to_response("landing/index.html",
+                    {'content' : location,
+                     'step_location': step_location})
+
+def tutorials(request):
     location = settings.CONTENT_FRAME_URL
     step_location = "/lesson/"
     if request.user.is_authenticated() \
