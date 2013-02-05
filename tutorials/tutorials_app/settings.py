@@ -4,6 +4,8 @@ TEMPLATE_DEBUG = DEBUG
 import os
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 
+REQUIRE_REGISTRATION = False
+
 LANDING_PATH = os.path.abspath(os.path.join(PROJECT_PATH, '../landing'))
 
 USERINFO_FILE_PATH = os.path.join(os.path.expanduser('~sandbox'), 'user_info.dat')

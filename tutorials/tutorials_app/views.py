@@ -15,7 +15,7 @@ from urlparse import urlparse
 import mimetypes
 
 def landing(request):
-    if userinfo.load_info():
+    if userinfo.load_info() or not settings.REQUIRE_REGISTRATION:
         landing_index = os.path.join(settings.LANDING_PATH, 'index.html')
 
         rfile = landing_index
