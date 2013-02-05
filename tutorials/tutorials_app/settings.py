@@ -4,6 +4,8 @@ TEMPLATE_DEBUG = DEBUG
 import os
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 
+LANDING_PATH = os.path.abspath(os.path.join(PROJECT_PATH, '../landing'))
+
 ADMINS = ()
 
 MANAGERS = ADMINS

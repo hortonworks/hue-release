@@ -14,9 +14,7 @@ from urlparse import urlparse
 
 def landing(request):
     #Needs symbolic link from templates to landing-page folder
-    return render_to_response("landing/index.html",
-                    {'content' : location,
-                     'step_location': step_location})
+    return render_to_response("landing/index.html", {})
 
 def tutorials(request):
     location = settings.CONTENT_FRAME_URL
@@ -60,18 +58,6 @@ def sync_location(request):
         return HttpResponse('')
     else:
         raise Http404
-
-def get_file(request, path):
-    import mimetypes
-    from django.core.servers.basehttp import FileWrapper
-
-    git_files = os.path.join(settings.PROJECT_PATH, 'run/git_files')
-
-    rfile = os.path.join(git_files, path)
-    response = HttpResponse(FileWrapper(file(rfile, 'rb')),
-                            mimetype=mimetypes.guess_type(rfile)[0])
-
-    return response
 
 def network_info(request):
     import subprocess

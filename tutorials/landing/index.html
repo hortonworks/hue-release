@@ -5,8 +5,9 @@
         <title>Hortonworks</title>
         <link rel="stylesheet" type="text/css" href="static/css/style.css"/>
         <script type="text/javascript">
-            function go_to_link(port) {
-                window.location = document.location.protocol + '//' + document.location.hostname + ':' + port;
+            function go_to_link(port, path) {
+                window.location = document.location.protocol + '//' + document.location.hostname + ':' + port +
+                                    '/' + (path?path:'');
             }
         </script>
     </head>
@@ -65,7 +66,7 @@
                                     Pig, Hive and HCatalog. Run the update<br/>
                                     function periodicaly to get new tutorials!<br/><br/>
                                 </div>
-                                <a href="#" class="button green" onclick="go_to_link(8888)">SEE MORE</a>
+                                <a href="#" class="button green" onclick="go_to_link(8888, 'tutorials')">SEE MORE</a>
                             </div>
                         </div>
                     </div>
