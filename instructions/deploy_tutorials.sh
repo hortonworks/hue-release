@@ -7,6 +7,8 @@ cd /home/sandbox/tutorials && \
       easy_install pip && pip install virtualenv && virtualenv .env && \
       . .env/bin/activate && pip install django==1.4 django-mako gunicorn mysql-python
 
+setcap 'cap_net_bind_service=+ep' /home/sandbox/tutorials/.env/bin/python
+
 cd /home/sandbox/tutorials/tutorials_app/run/ && sudo -u sandbox bash run.sh
 
 ln -s /home/sandbox/tutorials/hue_common_header.js \
@@ -27,7 +29,7 @@ fi
 echo
 cat << EOF >>$output
 [program:hue_tutorial]
-command=/home/sandbox/tutorials/.env/bin/python /home/sandbox/tutorials/manage.py  run_gunicorn 0:8888
+command=/home/sandbox/tutorials/.env/bin/python /home/sandbox/tutorials/manage.py  run_gunicorn 0:80
 autostart=true              ; start at supervisord start (default: true)
 autorestart=true            ; retstart at unexpected quit (default: true)
 user=sandbox                   ; setuid to this UNIX account to run the program

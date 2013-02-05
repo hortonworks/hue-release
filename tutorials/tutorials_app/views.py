@@ -1,20 +1,56 @@
 from djangomako.shortcuts import render_to_response
-from django.shortcuts import redirect
+from django.template import RequestContext
+from django.shortcuts import redirect, render
 from django.http import HttpResponse, Http404
+from django.core.servers.basehttp import FileWrapper
 
 from models import UserLocation
-
 import settings
+import userinfo
 
 import os
 import time
 import string
 from urlparse import urlparse
-
+import mimetypes
 
 def landing(request):
-    #Needs symbolic link from templates to landing-page folder
-    return render_to_response("landing/index.html", {})
+    if userinfo.load_info():
+        landing_index = os.path.join(settings.LANDING_PATH, 'index.html')
+
+        rfile = landing_index
+        response = HttpResponse(FileWrapper(file(rfile, 'rb')),
+                                mimetype=mimetypes.guess_type(rfile)[0])
+
+        return response
+    else:
+        return redirect('/register')
+
+def csrf_token(context):
+    csrf_token = context.get('csrf_token', '')
+    if csrf_token == 'NOTPROVIDED':
+        return ''
+    return u'<div style="display:none"><input type="hidden" name="csrfmiddlewaretoken" value="%s" /></div>' % (csrf_token)
+
+def register(request):
+    #Registration form
+    if request.method == 'POST':
+        form = userinfo.RegistrationForm(request.POST)
+        if form.is_valid():
+            userinfo.save(form.cleaned_data)
+            return redirect('/')
+    else:
+        if userinfo.load_info():
+            return redirect('/')
+
+        form = userinfo.RegistrationForm()
+
+    from django.core.context_processors import csrf
+
+    return render_to_response("registration.html",
+                {'form': form,
+                 'csrf': csrf_token(RequestContext(request))},
+                 context_instance=RequestContext(request))
 
 def tutorials(request):
     location = settings.CONTENT_FRAME_URL
