@@ -21,34 +21,23 @@ from django.http import HttpResponse, QueryDict, Http404
 from django.utils import simplejson as json
 from django.utils.translation import ugettext as _
 
-from desktop.lib import django_mako
-from desktop.lib.paginator import Paginator
-from desktop.lib.django_util import (copy_query_dict,
-    format_preserving_redirect, render)
-from desktop.lib.django_util import login_notrequired, get_desktop_uri_prefix
-from desktop.lib.django_util import render_injected
+from desktop.lib.django_util import (format_preserving_redirect, render)
 from desktop.lib.exceptions import PopupException
-from desktop.lib.django_util import render
 
-from hadoop.fs.exceptions import WebHdfsException
-from filebrowser.views import _do_newfile_save
-from jobsub.parameterization import find_variables, substitute_variables
 from filebrowser.views import location_to_url
 
 import hcatalog.forms
 from hcatalog import common
-from hcatalog import models
 from hcat_client import hcat_client
 from beeswax.views import (authorized_get_design, safe_get_design, save_design,
     _strip_trailing_semicolon, get_parameterization,
-    make_beeswax_query, explain_directly,
-    expand_exception, make_query_context, authorized_get_history,
+    make_beeswax_query, expand_exception, make_query_context, authorized_get_history,
     _parse_query_context, _parse_out_hadoop_jobs, _get_browse_limit_clause,
     _get_server_id_and_state, download, parse_results)
 from beeswax.views import execute_directly as e_d, explain_directly as expl_d
 from beeswax.forms import query_form, SaveResultsForm
 from beeswax import db_utils
-from beeswax.models import MetaInstall, SavedQuery, QueryHistory
+from beeswax.models import SavedQuery, QueryHistory
 from beeswax.design import HQLdesign
 from beeswaxd.ttypes import BeeswaxException, QueryHandle
 

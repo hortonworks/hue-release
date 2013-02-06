@@ -29,7 +29,6 @@ from hadoop.fs import hadoopfs
 
 import hcatalog.common
 import hcatalog.forms
-from hcatalog.views import describe_table, do_load_table
 from hcat_client import hcat_client
 
 import logging

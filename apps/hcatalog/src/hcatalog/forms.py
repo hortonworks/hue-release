@@ -20,9 +20,7 @@ import hive_metastore
 from django import forms
 from desktop.lib.django_forms import simple_formset_factory, DependencyAwareForm
 from desktop.lib.django_forms import ChoiceOrOtherField, MultiForm, SubmitButton
-from desktop.lib.exceptions import PopupException
 from hcatalog import common
-from hcatalog import models
 from hcat_client import hcat_client
 
 import filebrowser.forms

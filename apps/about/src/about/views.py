@@ -15,9 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.conf import settings
+import logging
 from desktop.lib.django_util import render
-from desktop.lib.exceptions import PopupException
 from django.http import HttpResponse
 from django.core import urlresolvers
 from django.utils import simplejson as json
@@ -25,12 +24,7 @@ from django.utils import simplejson as json
 from subprocess import Popen, PIPE
 import sandboxversions as versions
 
-import re
-import datetime
-import logging
-
 LOG = logging.getLogger(__name__)
-
 
 TUTORIAL_UPDATE_SCRIPT = 'bash /home/sandbox/tutorials/tutorials_app/run/run.sh'
 TUTORIAL_VERSION_FILE = '/tmp/tutorials_version.info'
@@ -46,6 +40,7 @@ def index(request):
     result = {'on_success_url':on_success_url, 'components':_get_components(), 'error':error}
     return HttpResponse(json.dumps(result))
   return render('index.mako', request, {'components':_get_components()})
+
 
 def _get_components():
   try:
@@ -90,6 +85,7 @@ def _get_components():
         {'name':'Pig', 'version':pigVer},
         {'name':'Hive', 'version':hiveVer},]
   return components
+
 
 def _updateTutorials():
   p = Popen(TUTORIAL_UPDATE_SCRIPT, shell=True, stdin=PIPE, stdout=None, stderr=PIPE, close_fds=True)
