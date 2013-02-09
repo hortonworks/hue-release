@@ -1,22 +1,25 @@
 %define prefix      /home/sandbox/tutorials
 
-Summary: Sandbox Tutorials
-Name: sandbox-tutorials
+Summary: Hortonworks Sandbox Tutorials
+Name: sandbox-tutorials-files
 Version: 2
 Release: 1
 License: Apache License, Version 2.0
 Group: Development/Libraries
 BuildArch: noarch
 Vendor: Hortonworks <UNKNOWN>
-Source: sandbox-tutorials-2.tgz
+Source: tutorials.tgz
+
+provides: sandbox-tutorials
 
 requires: python >= 2.6, python-setuptools, python-pip, python-virtualenv, supervisor
+conflicts: sandbox-tutorials-sl
 
 %description
-Sandbox Tutorials
+Sandbox Tutorials (with files)
 
 %prep
-%setup
+%setup -n tutorials
 
 %build
 
@@ -35,6 +38,9 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %{prefix}/*
 
 
+%pre
+
+rm -f %{prefix}/tutorials_app/db/lessons.db
 
 %post
 
@@ -43,4 +49,9 @@ bash %{prefix}/deploy/tutorials-post-install.sh %{prefix}
 
 
 %postun
-rm -rf %{prefix}
+
+if [ "$1" = "0" ]; then
+  rm -rf %{prefix}
+elif [ "$1" = "1" ]; then
+  # upgrade
+fi

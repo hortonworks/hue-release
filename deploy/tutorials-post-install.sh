@@ -8,10 +8,10 @@ echo "Updating tutorials..."
 sudo -u sandbox bash $1/tutorials_app/run/run.sh
 
 if [ `</etc/supervisord.conf grep 'tutorial\]'` ]; then
-	echo "Already set up in supervisord.conf"
+    echo "Already set up in supervisord.conf"
 else
     echo "Add to supervisord.conf"
-	cat << EOF >>/etc/supervisord.conf
+    cat << EOF >>/etc/supervisord.conf
 [program:hue_tutorial]
 command=/home/sandbox/tutorials/.env/bin/python /home/sandbox/tutorials/manage.py  run_gunicorn 0:80
 autostart=true              ; start at supervisord start (default: true)
