@@ -9,7 +9,6 @@ Vendor: Hortonworks <UNKNOWN>
 
 Requires: sandbox-tutorials sandbox
 
-
 %description
 Hortonworks Sandbox Metapackage
 
@@ -35,6 +34,8 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 
 %post
+
+iptables -F
 
 
 %postun

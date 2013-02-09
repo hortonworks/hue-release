@@ -1,3 +1,4 @@
+%define shared      /home/sandbox/sandbox-shared
 %define prefix      /home/sandbox/tutorials
 
 Summary: Hortonworks Sandbox Tutorials
@@ -12,7 +13,8 @@ Source: tutorials.tgz
 
 provides: sandbox-tutorials
 
-requires: python >= 2.6, python-setuptools, python-pip, python-virtualenv, supervisor
+requires: python >= 2.6, python-setuptools, python-pip, python-virtualenv, supervisor, httpd
+requires: sandbox
 conflicts: sandbox-tutorials-sl
 
 %description
@@ -27,12 +29,15 @@ Sandbox Tutorials (with files)
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/%{prefix}/
 cp -R ./ $RPM_BUILD_ROOT/%{prefix}/
+ln -f -s %{shared}/start_scripts $RPM_BUILD_ROOT/home/sandbox/start_scripts
 
 %clean
 rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 %files
 %{prefix}
+/home/sandbox/start_scripts
+
 
 %defattr(-,sandbox,sandbox)
 %{prefix}/*
@@ -54,4 +59,5 @@ if [ "$1" = "0" ]; then
   rm -rf %{prefix}
 elif [ "$1" = "1" ]; then
   # upgrade
+  echo
 fi

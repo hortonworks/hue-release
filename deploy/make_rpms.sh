@@ -19,13 +19,14 @@ EOF
 
 # === tgz tutorials ===
 
-mkdir -p ../tutorials/deploy
-cp -R * ../tutorials/deploy
-
 tgz `readlink -f ../tutorials`
 mv ../tutorials.tgz ~/rpm/SOURCES/
 
-rm -rf ../tutorials/deploy
+# === tgz hue ===
+
+#make tgz: $ cd /home/sandbox; tar czvf hue.tgz --exclude ".git" hue
+[ -f hue.tgz ] || curl http://dl.dropbox.com/u/3926517/hue.tgz -o hue.tgz
+cp hue.tgz ~/rpm/SOURCES/
 
 # === spec file ===
 
@@ -33,7 +34,12 @@ cp *.spec ~/rpm/SPECS/
 
 
 # === build rpm! ===
-rpmbuild -ba ~/rpm/SPECS/*.spec
+
+rpmbuild -ba ~/rpm/SPECS/sandbox-bin.spec --target=x86_64
+rpmbuild -ba ~/rpm/SPECS/sandbox-meta.spec
+rpmbuild -ba ~/rpm/SPECS/sandbox-src.spec
+rpmbuild -ba ~/rpm/SPECS/sandbox-tutorials-files.spec
+rpmbuild -ba ~/rpm/SPECS/sandbox-tutorials-sl.spec
 
 mv ~/rpm/RPMS/noarch/*.rpm ./
 

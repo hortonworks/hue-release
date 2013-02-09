@@ -13,12 +13,19 @@ else
     echo "Add to supervisord.conf"
     cat << EOF >>/etc/supervisord.conf
 [program:hue_tutorial]
-command=/home/sandbox/tutorials/.env/bin/python /home/sandbox/tutorials/manage.py  run_gunicorn 0:80
+command=/home/sandbox/tutorials/.env/bin/python /home/sandbox/tutorials/manage.py  run_gunicorn 0:8888
 autostart=true              ; start at supervisord start (default: true)
 autorestart=true            ; retstart at unexpected quit (default: true)
 user=sandbox                   ; setuid to this UNIX account to run the program
 log_stderr=true             ; if true, log program stderr (def false)
 logfile=/home/sandbox/tutorials/tut.log    ; child log path, use NONE for none; default AUTO
+
 EOF
+
+
+#Proxy to 8888 port
+LINE="ProxyPass / http://127.0.0.1:8888/"
+HTTPD_CONF=/etc/httpd/conf/httpd.conf
+[ `<$HTTPD_CONF grep "$LINE"` ] || echo "$LINE" >> $HTTPD_CONF
 
 fi
