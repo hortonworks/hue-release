@@ -29,3 +29,13 @@ HTTPD_CONF=/etc/httpd/conf/httpd.conf
 [ `<$HTTPD_CONF grep "$LINE"` ] || echo "$LINE" >> $HTTPD_CONF
 
 fi
+
+SHARED="/home/sandbox/sandbox-shared"
+TUTORIALS="/home/sandbox/tutorials"
+HUE="/home/sandbox/hue"
+
+ln -s $TUTORIALS/hue_common_header.js \
+            $HUE/desktop/core/static/js/hue_common_header.js
+
+
+patch $HUE/desktop/core/src/desktop/templates/common_header.mako < $SHARED/instructions/patches/common_header.mako.patch

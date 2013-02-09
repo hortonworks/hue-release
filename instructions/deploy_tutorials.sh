@@ -55,7 +55,7 @@ if [ "x$CONF" = "xyes" ] ; then
 fi
 
 
-patch -R /home/sandbox/hue/desktop/core/src/desktop/templates/common_header.mako < /home/sandbox/sandbox-shared/instructions/patches/common_header.mako.patch
+patch /home/sandbox/hue/desktop/core/src/desktop/templates/common_header.mako < /home/sandbox/sandbox-shared/instructions/patches/common_header.mako.patch
 echo
 echo
 echo

@@ -1,0 +1,7 @@
+98a99
+>   <script src="/static/js/hue_common_header.js"></script>
+115a117
+>       handleAutoLogin();
+142a145,146
+>             <li class="divider"></li>
+>             <li><a href="/accounts/logout/">${_('Sign Out')}</a></li>
