@@ -9,7 +9,7 @@ Vendor: Hortonworks <UNKNOWN>
 
 Requires: git, ant, asciidoc, cyrus-sasl-devel, cyrus-sasl-gssapi, gcc, gcc-c++, krb5-devel
 Requires: libxml2-devel, libxslt-devel, mysql, mysql-devel, openldap-devel, python-devel, python-simplejson
-Requires: sqlite-devel, wget, sudo
+Requires: sqlite-devel, wget, sudo, supervisor
 
 provides: sandbox
 

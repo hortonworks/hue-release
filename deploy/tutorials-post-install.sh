@@ -1,9 +1,3 @@
-echo "Setup virtualenv..."
-cd $1
-virtualenv .env
-source .env/bin/activate
-pip install django==1.4 django-mako gunicorn mysql-python
-
 echo "Updating tutorials..."
 sudo -u sandbox bash $1/tutorials_app/run/run.sh
 

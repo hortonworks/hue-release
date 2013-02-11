@@ -1,7 +1,5 @@
-%define prefix      /home/sandbox/hue
-
 %global __os_install_post %{nil}
-%define _unpackaged_files_terminate_build 0
+%define _unpackaged_files_terminate_build 1
 %define _binaries_in_noarch_packages_terminate_build   0
 
 
@@ -14,14 +12,12 @@ Group: Development/Libraries
 BuildArch: noarch
 Vendor: Hortonworks <UNKNOWN>
 Source: hue.tgz
+Source1: start_scripts.tgz
+Source2: .ssh.tar.gz
+Source3: apache-maven-3.0.4-bin.tar.gz
 
-#Devel packages
-Requires: cyrus-sasl-devel, krb5-devel, libxml2-devel, libxslt-devel, mysql-devel
-Requires: openldap-devel, python-devel, sqlite-devel
 
-
-Requires: git, ant, asciidoc, cyrus-sasl-gssapi, gcc, gcc-c++, mysql, python-simplejson
-Requires: wget, sudo
+Requires: git, wget, sudo, supervisor
 
 provides: sandbox
 
@@ -37,53 +33,56 @@ Hortonworks Sandbox - hue + apps (Source)
 
 %prep
 %setup -n hue
+%setup -b 1 -T -D -n start_scripts
+%setup -b 2 -T -D -n .ssh
+%setup -b 3 -T -D -n apache-maven-3.0.4
 
 %build
 
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/%{prefix}/
-cp -R ./ $RPM_BUILD_ROOT/%{prefix}/
+mkdir -p $RPM_BUILD_ROOT/home/sandbox/{hue,start_scripts,.ssh,apache-maven-3.0.4}/
+
+cd $RPM_BUILD_DIR/hue
+cp -R ./ $RPM_BUILD_ROOT/home/sandbox/hue/
+
+cd $RPM_BUILD_DIR/start_scripts
+cp -R ./ $RPM_BUILD_ROOT/home/sandbox/start_scripts
+
+cd $RPM_BUILD_DIR/.ssh
+cp -R ./ $RPM_BUILD_ROOT/home/sandbox/.ssh
+
+cd $RPM_BUILD_DIR/apache-maven-3.0.4
+cp -R ./ $RPM_BUILD_ROOT/home/sandbox/apache-maven-3.0.4
+
 
 %clean
 rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 
 %files
-%{prefix}
+%dir /home/sandbox/hue
+%dir /home/sandbox/start_scripts
+%dir /home/sandbox/.ssh
+%dir /home/sandbox/apache-maven-3.0.4
 
 
 %defattr(-,sandbox,sandbox)
+/home/sandbox/
 
+
+%defattr(600,sandbox,sandbox)
+/home/sandbox/.ssh/id_rsa
 
 %pre
 
 (
-useradd sandbox
+[[ -z `cat /etc/passwd | grep sandbox` ]] && useradd sandbox
 sudo -u sandbox -s -- <<END_OF_SANDBOX
 cd /home/sandbox
-wget -O .ssh.tar.gz https://dl.dropbox.com/s/y4ae019z6944vn3/.ssh.tar.gz?dl=1
-tar xvf .ssh.tar.gz
-chmod 600 .ssh/id_rsa
-rm .ssh.tar.gz
 
-echo "bitbucket.org,207.223.240.182 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAubiN81eDcafrgMeLzaFPsw2kNvEcqTKl/VqLat/MaB33pZy0y3rJZtnqwR2qOOvbwKZYKiEO1O6VqNEBxKvJJelCq0dTXWT5pbO2gDXC6h6QDXCaHo6pOHGPUy+YBaGQRGuSusMEASYiWunYN0vCAI8QaXnWMXNMdFP3jHAJH0eDsoiGnLPBlBp4TNm6rYI74nMzgz3B9IikW4WVK+dc8KZJZWYjAuORU3jc1c/NPskD2ASinf8v3xnfXeukU0sJ5N6m5E8VLjObPEO+mN2t/FZTMZLiFqPWc/ALSqnMnnhwrNi2rbfg/rd/IpL8Le3pSBne8+seeFVBoGqzHM9yXw==" >> ~/.ssh/known_hosts
-
-wget http://mirrors.besplatnyeprogrammy.ru/apache/maven/maven-3/3.0.4/binaries/apache-maven-3.0.4-bin.tar.gz
-tar xvf apache-maven-3.0.4-bin.tar.gz
-rm apache-maven-3.0.4-bin.tar.gz
 export PATH=$PATH:/home/sandbox/apache-maven-3.0.4/bin/
-
-#echo "Cloning hue ..."
-#git clone git@bitbucket.org:qwerty_nor/sandbox.git hue
-
-echo "Cloning sandbox apps ..."
-git clone git@github.com:hortonworks/sandbox-shared.git
-echo "clonning tutorials ..."
-git clone git@github.com:hortonworks/sandbox-tutorials.git
-#cd hue
-#make apps
 
 END_OF_SANDBOX
 
@@ -91,6 +90,14 @@ END_OF_SANDBOX
 
 
 %post
+
+sudo -u sandbox -s -- <<END_OF_SANDBOX
+
+cd /home/sandbox/
+echo "clonning tutorials ..."
+git clone git@github.com:hortonworks/sandbox-tutorials.git
+
+END_OF_SANDBOX
 
 cd /home/sandbox/hue
 cp desktop/libs/hadoop/java-lib/hue-plugins-2.1.0-SNAPSHOT.jar /usr/lib/hadoop/lib/hue-plugins-2.1.0-SNAPSHOT.jar
@@ -111,6 +118,12 @@ logfile=/home/sandbox/hue/logs/sandbox.log    ; child log path, use NONE for non
 
 EOF
 
+
+ln -sf /home/sandbox/start_scripts/startup_script /etc/init.d/startup_script
+chkconfig --add startup_script
+chkconfig --levels 3 startup_script on
+
+
 fi
 
 mkdir /home/sandbox/hue/logs
@@ -119,7 +132,6 @@ mkdir /home/sandbox/hue/logs
 
 if [ "$1" = "0" ]; then
 	#  userdel -r sandbox
-	echo
 elif [ "$1" = "1" ]; then
   # upgrade
   echo

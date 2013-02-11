@@ -35,7 +35,16 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 %post
 
+chkconfig iptables off
 iptables -F
+
+chkconfig httpd on
+service httpd start
+
+ln -s /home/sandbox/start_scripts/startup_script /etc/init.d/startup_script
+chkconfig --add startup_script
+chkconfig --levels 3 startup_script on
+
 
 
 %postun
