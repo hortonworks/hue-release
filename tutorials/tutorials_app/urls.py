@@ -6,6 +6,7 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns('tutorials_app.views',
                        (r'^$', 'landing'),
                        (r'^register/$', 'register'),
+                       (r'^register/skip/$', 'register_skip'),
                        (r'^tutorials/$', 'tutorials'),
                        (r'^content/(.*)$', 'content'),
                        (r'^sync/$', 'sync_location'),

@@ -2,6 +2,20 @@
 <html>
     <head>
         <title>Registration</title>
+
+        <style>
+            fieldset div {
+                overflow:hidden;
+                display:inline-block;
+            }
+            fieldset div {display:block;}
+            label {
+                float:left;
+                width:20em;
+            }
+
+        </style>
+
     </head>
     <body>
         <h1>Registration</h1>
@@ -9,5 +23,7 @@
         ${form.as_p()}
         <input type="submit" value="Submit" />
         </form>
+
+        <a href="/register/skip/">Skip registration</a>
     </body>
 </html>
