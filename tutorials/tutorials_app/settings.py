@@ -1,10 +1,10 @@
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 import os
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 
-REQUIRE_REGISTRATION = False
+REQUIRE_REGISTRATION = True
 
 LANDING_PATH = os.path.abspath(os.path.join(PROJECT_PATH, '../landing'))
 

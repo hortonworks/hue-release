@@ -25,8 +25,8 @@ cd $GIT_FILES
 [ ! -d .git ] && git init && git remote add origin $GIT_REPO
 echo -n "Pull...  "
 git fetch
-git checkout $BRANCH
-git pull origin $BRANCH # >/dev/null 2>&1
+git checkout $TUTORIALS_BRANCH
+git pull origin $TUTORIALS_BRANCH # >/dev/null 2>&1
 echo "Done"
 cd $RUN_DIR
 
