@@ -15,7 +15,8 @@ from urlparse import urlparse
 import mimetypes
 
 def landing(request):
-    if userinfo.load_info() or not settings.REQUIRE_REGISTRATION:
+    if userinfo.load_info() or not settings.REQUIRE_REGISTRATION or \
+        userinfo.is_skipped():
         landing_index = os.path.join(settings.LANDING_PATH, 'index.html')
 
         rfile = landing_index
@@ -51,6 +52,13 @@ def register(request):
                 {'form': form,
                  'csrf': csrf_token(RequestContext(request))},
                  context_instance=RequestContext(request))
+
+
+def register_skip(request):
+    with file(settings.USERINFO_FILE_PATH + ".skip", "w") as f:
+        f.write("")
+    return redirect('/')
+
 
 def tutorials(request):
     location = settings.CONTENT_FRAME_URL
