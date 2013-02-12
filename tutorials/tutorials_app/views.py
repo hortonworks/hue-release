@@ -35,6 +35,10 @@ def csrf_token(context):
 
 def register(request):
     #Registration form
+    skip_file = settings.USERINFO_FILE_PATH + ".skip"
+    if os.path.exists(skip_file):
+        os.remove(skip_file)
+    
     if request.method == 'POST':
         form = userinfo.RegistrationForm(request.POST)
         if form.is_valid():

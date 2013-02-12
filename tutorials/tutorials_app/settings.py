@@ -14,6 +14,8 @@ ADMINS = ()
 
 MANAGERS = ADMINS
 
+USE_X_FORWARDED_HOST = True
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
