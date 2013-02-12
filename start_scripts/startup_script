@@ -64,6 +64,10 @@ start)
     
     echo 0 > /proc/sys/kernel/hung_task_timeout_secs
 
+    
+    /etc/init.d/hdp-gmetad start
+    /etc/init.d/hdp-gmond start
+    /etc/init.d/nagios start
     ambari-server start
     ambari-agent start
 
