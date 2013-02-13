@@ -6,7 +6,7 @@ PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 REQUIRE_REGISTRATION = True
 
-LANDING_PATH = os.path.abspath(os.path.join(PROJECT_PATH, '../landing'))
+LANDING_PATH = os.path.join(os.path.expanduser('~sandbox'), 'sandbox-tutorials')
 
 USERINFO_FILE_PATH = os.path.join(os.path.expanduser('~sandbox'), 'user_info.dat')
 
