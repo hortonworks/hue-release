@@ -378,14 +378,7 @@ $("#displayText").click(function() {
   }
 });
 $(".udf_register").click(function() {
-  $('#id_pig_script').text('REGISTER ' + $(this).attr('value') + '\n' + $('#id_pig_script').val());
-  $('.CodeMirror').hide()
-  var editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
-    lineNumbers: true,
-    matchBrackets: true,
-    indentUnit: 4,
-    mode: "text/x-pig"
-  });
+  pig_editor.setValue('REGISTER ' + $(this).attr('value') + '\n'+ pig_editor.getValue());
 });
 
 function findPosition(curLine){
