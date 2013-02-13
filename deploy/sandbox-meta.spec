@@ -38,6 +38,8 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 chkconfig iptables off
 iptables -F
 
+chkconfig cups on
+
 chkconfig httpd on
 service httpd start
 

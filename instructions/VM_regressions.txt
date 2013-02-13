@@ -23,9 +23,11 @@ add to ~/.bashrc:
 
 4) httpd to landing page:
 
-DocumentRoot "/var/www/landing"
-RewriteEngine on
-RewriteRule ^/$ /splash.html
+# Proxy to tutorials
+ProxyPass /ganglia !
+ProxyPass /nagios !
+ProxyPass / http://127.0.0.1:8888/
+ProxyPassReverse / http://127.0.0.1:8888/
 
 
 5) python2.7, libs
@@ -36,7 +38,7 @@ yum list installed | grep devel
 
 rm -rf /var/cache/yum
 
-7) iptables disable
+7) iptables, cups disable
 
 8) /etc/issue add
 login: root
@@ -58,7 +60,7 @@ chown sandbox:sandbox -R /home/sandbox/sandbox-shared
 chown sandbox:sandbox -R /home/sandbox/sandbox-tutorials
 
 12) 2GB RAM
-VBoxManage modifyvm "SandboxBimiotaRC8v.2" --memory 2048
+VBoxManage modifyvm "SandboxBimiotaRC8v.2" --memory 2048 --cpus 2
 
 13) Disable console screensaver:
 add consoleblank=0 to kernel parameters in /boot/grub/grub.conf

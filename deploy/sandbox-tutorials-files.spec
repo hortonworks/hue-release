@@ -79,8 +79,21 @@ fi
 #Proxy to 8888 port
 LINE="ProxyPass / http://127.0.0.1:8888/"
 HTTPD_CONF=/etc/httpd/conf/httpd.conf
-[ `<$HTTPD_CONF grep "$LINE"` ] || echo "$LINE" >> $HTTPD_CONF
 
+if [ `<$HTTPD_CONF grep "Proxy to tutorials"` ]; then
+    echo "Already configured httpd"
+else
+
+  cat << EOF >>$HTTPD_CONF
+
+# Proxy to tutorials
+ProxyPass /ganglia !
+ProxyPass /nagios !
+ProxyPass / http://127.0.0.1:8888/
+ProxyPassReverse / http://127.0.0.1:8888/
+EOF
+
+fi
 
 TUTORIALS="/home/sandbox/tutorials"
 HUE="/home/sandbox/hue"
