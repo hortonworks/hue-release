@@ -25,7 +25,7 @@ def landing(request):
 
         return response
     else:
-        return redirect('/register')
+        return redirect('/register/')
 
 def csrf_token(context):
     csrf_token = context.get('csrf_token', '')
