@@ -65,12 +65,6 @@ start)
     echo 0 > /proc/sys/kernel/hung_task_timeout_secs
 
     
-    /etc/init.d/hdp-gmetad start
-    /etc/init.d/hdp-gmond start
-    /etc/init.d/nagios start
-    ambari-server start
-    ambari-agent start
-
     echo "You can now launch sandbox on http://$(getent ahosts `hostname` | awk '{print $1}' | head -n 1):8888/"
     stty -F /dev/tty1 -echo
     #open -c 1 -f -- python /home/sandbox/start_scripts/splash.py
