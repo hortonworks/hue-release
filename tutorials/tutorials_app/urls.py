@@ -14,11 +14,11 @@ urlpatterns = patterns('tutorials_app.views',
                        )
 
 urlpatterns += patterns('',
-                        (r'^static/(?P<path>.*)$', 'django.views.static.serve',
-                         {'document_root': os.path.join(settings.LANDING_PATH, 'static'),
-                          'show_indexes': False}),
-
                         (r'^file/(?P<path>.*)$', 'django.views.static.serve',
                          {'document_root': os.path.join(settings.PROJECT_PATH, 'run/git_files'),
                           'show_indexes': True}),
+
+                        (r'^(?P<path>.*)$', 'django.views.static.serve',
+                         {'document_root': settings.LANDING_PATH,
+                          'show_indexes': False}),
                         )

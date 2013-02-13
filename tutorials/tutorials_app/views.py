@@ -17,7 +17,7 @@ import mimetypes
 def landing(request):
     if userinfo.load_info() or not settings.REQUIRE_REGISTRATION or \
         userinfo.is_skipped():
-        landing_index = os.path.join(settings.LANDING_PATH, 'index.html')
+        landing_index = os.path.join(settings.LANDING_PATH, 'splash.html')
 
         rfile = landing_index
         response = HttpResponse(FileWrapper(file(rfile, 'rb')),
@@ -25,7 +25,7 @@ def landing(request):
 
         return response
     else:
-        return redirect('/register')
+        return redirect('/register/')
 
 def csrf_token(context):
     csrf_token = context.get('csrf_token', '')
