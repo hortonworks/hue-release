@@ -41,14 +41,16 @@ echo "Start hbase regionservers"
 su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver";sleep 5
 tail -$line  /var/log/hbase/hbase-hbase-regionserver-*.log
 
-echo "Start hcat server"
+echo "Start Hiveserver2"
 /etc/init.d/mysqld start
-su - hive -c  'env HADOOP_HOME=/usr nohup hive --service metastore > /var/log/hive/hive.out 2> /var/log/hive/hive.log & '
+#su - hive -c  'env HADOOP_HOME=/usr nohup hive --service hiveserver2 > /var/log/hive/hive.out 2> /var/log/hive/hive.log & '
+su - hive -c  'env JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startHiveserver2.sh /var/log/hive/hive-server2.out  /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid '
 tail -$line  /var/log/hive/hive.log
 
-echo "Start Hiveserver2"
-su - hive -c  'env HADOOP_HOME=/usr nohup hive --service hiveserver2 > /var/log/hive/hive.out 2> /var/log/hive/hive.log & '
+echo "Start hcat server"
+su - hive -c  'env HADOOP_HOME=/usr JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startMetastore.sh /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid '
 tail -$line  /var/log/hive/hive.log
+
 
 echo "Start templeton server"
 su - hcat -c '/usr/lib/hcatalog/sbin/webhcat_server.sh start'
@@ -59,8 +61,13 @@ su - oozie -c "cd /var/log/oozie; /usr/lib/oozie/bin/oozie-start.sh"
 tail -$line  /var/log/oozie/oozie.log
 
 echo "Starting Ganglia"
-/etc/init.d/hdp-gmetad start;sleep 5
-/etc/init.d/hdp-gmond start;sleep 5
+/usr/libexec/hdp/ganglia/setupGanglia.sh -c HDPJobTracker -m
+/usr/libexec/hdp/ganglia/setupGanglia.sh -c HDPNameNode -m
+/usr/libexec/hdp/ganglia/setupGanglia.sh -c HDPSlaves -m
+/usr/libexec/hdp/ganglia/setupGanglia.sh -t
+/usr/libexec/hdp/ganglia/setupGanglia.sh -c HDPHBaseMaster -m
+/etc/init.d/hdp-gmetad start
+
 
 echo "starting Nagios"
 /etc/init.d/nagios start;sleep 5
