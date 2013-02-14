@@ -61,12 +61,10 @@ su - oozie -c "cd /var/log/oozie; /usr/lib/oozie/bin/oozie-start.sh"
 tail -$line  /var/log/oozie/oozie.log
 
 echo "Starting Ganglia"
-/usr/libexec/hdp/ganglia/setupGanglia.sh -c HDPJobTracker -m
-/usr/libexec/hdp/ganglia/setupGanglia.sh -c HDPNameNode -m
-/usr/libexec/hdp/ganglia/setupGanglia.sh -c HDPSlaves -m
-/usr/libexec/hdp/ganglia/setupGanglia.sh -t
-/usr/libexec/hdp/ganglia/setupGanglia.sh -c HDPHBaseMaster -m
+/etc/init.d/gmetad stop
+/etc/init.d/gmond stop
 /etc/init.d/hdp-gmetad start
+/etc/init.d/hdp-gmond start
 
 
 echo "starting Nagios"
