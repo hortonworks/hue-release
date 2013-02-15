@@ -42,6 +42,9 @@ start)
     printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
     cd /home/sandbox/sandbox-shared
 
+    touch /home/sandbox/tutorials/registration_post.log
+    chown sandbox:sandbox /home/sandbox/tutorials/registration_post.log
+
     /home/sandbox/tutorials/.env/bin/python \
         /home/sandbox/start_scripts/registration_post.py
 

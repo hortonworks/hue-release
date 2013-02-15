@@ -10,6 +10,8 @@ LANDING_PATH = os.path.join(os.path.expanduser('~sandbox'), 'sandbox-tutorials')
 
 USERINFO_FILE_PATH = os.path.join(os.path.expanduser('~sandbox'), 'user_info.dat')
 
+START_SCRIPTS = os.path.join(os.path.expanduser('~sandbox'), 'start_scripts')
+
 ADMINS = ()
 
 MANAGERS = ADMINS
