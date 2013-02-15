@@ -10,6 +10,8 @@ LANDING_PATH = os.path.join(os.path.expanduser('~sandbox'), 'sandbox-tutorials')
 
 USERINFO_FILE_PATH = os.path.join(os.path.expanduser('~sandbox'), 'user_info.dat')
 
+START_SCRIPTS = os.path.join(os.path.expanduser('~sandbox'), 'start_scripts')
+
 ADMINS = ()
 
 MANAGERS = ADMINS
@@ -63,7 +65,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'tutorials_app.readonly_sessions_middleware.SessionMiddleware',
     'tutorials_app.auth_middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
