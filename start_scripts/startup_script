@@ -42,6 +42,9 @@ start)
     printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
     cd /home/sandbox/sandbox-shared
 
+    /home/sandbox/tutorials/.env/bin/python \
+        /home/sandbox/start_scripts/registration_post.py
+
     sed -i 1i"nameserver 8.8.8.8" /etc/resolv.conf
 
     sudo -u sandbox git fetch >> /var/log/startup_script.log 2>&1

@@ -1,0 +1,5 @@
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+HOME=/
+*/5 * * * * sandbox /home/sandbox/tutorials/.env/bin/python /home/sandbox/start_scripts/registration_post.py
