@@ -72,3 +72,5 @@ change  PEERDNS=no
 16) su - hdfs -c "hadoop fs -rmr -skipTrash /user/ambari_qa/.staging/"
 
 #17) setcap 'cap_net_bind_service=+ep' /home/sandbox/tutorials/.env/bin/python
+
+18) remove tutorials/registration_log

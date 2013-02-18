@@ -28,12 +28,13 @@ def do_post():
             request = urllib2.Request(MARKETO_URL)
             request.data = data
             try:
-                urllib2.urlopen(request)
+                res = urllib2.urlopen(request)
             except:
                 log("Failed to upload.")
             else:
+                log("Uploaded successful. Code: %s %s\n%s\n\nheaders: %s" %\
+                    (res.code, res.msg, res.read(), res.headers.dict))
                 os.rename(USERINFO_FILE_PATH, USERINFO_FILE_PATH + ".posted")
-                log("Uploaded successful.")
 
         elif not os.path.exists(USERINFO_FILE_PATH + ".posted"):
             #Not registered yet. Add script to cron
@@ -44,11 +45,12 @@ def do_post():
 
         else:
             #Registered. Remove cron task
-            os.remove(CRON_FILE)
+            if os.path.exists(CRON_FILE):
+                os.remove(CRON_FILE)
             log("Script removed from crontab")
 
 if __name__ == '__main__':
     do_post()
     uid = pwd.getpwnam('sandbox').pw_uid
-    gid = pwd.getgrnam('sandbox').gr_gid
+    gid = grp.getgrnam('sandbox').gr_gid
     os.chown(LOG_FILE, uid, gid)
