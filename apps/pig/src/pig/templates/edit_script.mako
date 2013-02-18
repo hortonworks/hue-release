@@ -74,11 +74,11 @@ udfs = UDF.objects.all()
                     </a>
                   </div>
                   <div id="collapseOne" class="accordion-body in collapse" style="height: auto;">
-                    <div class="accordion-inner">
+                    <div class="accordion-inner" style="text-transform: none;">
                        % for udf in udfs:
                           <a href="${url('udf_del', udf.id)}"  onclick="return confirm('Are you sure, you want to delete this udf?');">
                             <img src="/pig/static/art/delete.gif" alt="Delete" height="12" width="12" title="Delete UDF"> </a>
-                          <a class="udf_register" href="#" value="${udf.file_name}">${udf.file_name}</a>
+                          <a class="udf_register" href="#" value="${udf.file_name}">${udf.file_name}</a><br>
                       % endfor
                     </div>
                   </div>
