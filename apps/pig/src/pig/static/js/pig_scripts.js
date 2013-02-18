@@ -367,16 +367,7 @@ $(".email").bind(
       else
       {$('.intoemail').attr('value', 'no checked')};
     });
-$("#displayText").click(function() {
-  var ele = document.getElementById("toggleText");
-  var text = document.getElementById("displayText");
-  if(ele.style.display == "block") {
-    ele.style.display = "none";
-  }
-  else {
-    ele.style.display = "block";
-  }
-});
+
 $(".udf_register").click(function() {
   pig_editor.setValue('REGISTER ' + $(this).attr('value') + '\n'+ pig_editor.getValue());
 });

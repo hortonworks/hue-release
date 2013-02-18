@@ -19,7 +19,7 @@
 <%!from desktop.views import commonheader, commonfooter %>
 <%namespace name="shared" file="shared_components.mako" />
 <%namespace name="my_scripts" file="my_scripts.mako" />
-${commonheader("Pig", "pig", user, "100px")}
+${commonheader("Pig", "pig", user, "100px")| n,unicode}
 ${shared.menubar(section='My Scripts')}
 
 <%!
@@ -66,12 +66,28 @@ udfs = UDF.objects.all()
                    />
 	  </li>
 	  <li  class="nav-header">
-            <a id="displayText" href='javascript:void(0);'>User-defined Functions</a>
-          </li>
-	  <div id="toggleText" style="display: none">
-	  ${my_scripts.udfs(result['udfs'])}
-	  </div>
-	  <li>
+<div class="accordion" id="accordion2">
+                <div class="accordion-group">
+                  <div class="accordion-heading">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">
+                      User-defined Functions <i class="icon-chevron-down"></i>
+                    </a>
+                  </div>
+                  <div id="collapseOne" class="accordion-body in collapse" style="height: auto;">
+                    <div class="accordion-inner">
+                       % for udf in udfs:
+                          <a href="${url('udf_del', udf.id)}"  onclick="return confirm('Are you sure, you want to delete this udf?');">
+                            <img src="/pig/static/art/delete.gif" alt="Delete" height="12" width="12" title="Delete UDF"> </a>
+                          <a class="udf_register" href="#" value="${udf.file_name}">${udf.file_name}</a>
+                      % endfor
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+   
+    </li>
+	 <li>
 	    <form id="udfs" enctype="multipart/form-data"
                   action="${url('pig.views.piggybank')}"
                   method="post">
@@ -421,4 +437,4 @@ call_popup_var_edit().done(function() {
 
 </script>
 
-${commonfooter()}
+${commonfooter(messages)| n,unicode}
