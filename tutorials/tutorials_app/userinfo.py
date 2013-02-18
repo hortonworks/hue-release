@@ -19,7 +19,8 @@ def load_info():
 
 
 def is_skipped():
-    return os.path.exists(settings.USERINFO_FILE_PATH + ".skip")
+    # return os.path.exists(settings.USERINFO_FILE_PATH + ".skip")
+    return False
 
 
 def save(request):
