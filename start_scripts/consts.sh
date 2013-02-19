@@ -4,3 +4,4 @@ export GIT_REPO=git@github.com:hortonworks/sandbox-tutorials.git
 export GIT_FILES=/home/sandbox/sandbox-tutorials
 
 export BRANCH=master
+export TUTORIALS_BRANCH=master
