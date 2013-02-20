@@ -17,8 +17,5 @@ Vagrant::Config.run do |config|
     puppet.manifest_file  = "sandbox.pp"
   end
 
-  config.vm.network :hostonly, "192.168.56.100", :adapter => 2
-
-
   config.vm.customize ["modifyvm", :id, "--rtcuseutc", "on"]
 end
