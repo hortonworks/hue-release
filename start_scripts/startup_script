@@ -39,9 +39,6 @@ start)
     printf "%-50s\n" "Updating IP..." | tee -a $LOG
     bash $SCRIPTS_PATH/gen_hosts.sh
    
-    printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
-    cd /home/sandbox/sandbox-shared
-
     touch /home/sandbox/tutorials/registration_post.log
     chown sandbox:sandbox /home/sandbox/tutorials/registration_post.log
 
@@ -50,14 +47,20 @@ start)
 
     sed -i 1i"nameserver 8.8.8.8" /etc/resolv.conf
 
-    sudo -u sandbox git fetch >> /var/log/startup_script.log 2>&1
-    sudo -u sandbox git checkout $BRANCH >> /var/log/startup_script.log 2>&1
-    sudo -u sandbox git stash  >> /var/log/startup_script.log 2>&1
-    pull_res=$(sudo -u sandbox git pull origin $BRANCH 2>> $LOG)
-    echo $pull_res >> $LOG
+    if [ -d /home/sandbox/sandbox-shared ]; then
+        printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
+        cd /home/sandbox/sandbox-shared
 
-    chown sandbox:sandbox -R /home/sandbox/sandbox-shared
-    [ ! "$pull_res" = "Already up-to-date." ] && /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
+        sudo -u sandbox git fetch >> /var/log/startup_script.log 2>&1
+        sudo -u sandbox git checkout $BRANCH >> /var/log/startup_script.log 2>&1
+        sudo -u sandbox git stash  >> /var/log/startup_script.log 2>&1
+        pull_res=$(sudo -u sandbox git pull origin $BRANCH 2>> $LOG)
+        echo $pull_res >> $LOG
+
+        chown sandbox:sandbox -R /home/sandbox/sandbox-shared
+        [ ! "$pull_res" = "Already up-to-date." ] && /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
+    fi
+    
     sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
 
     echo "Starting HDP ..."
