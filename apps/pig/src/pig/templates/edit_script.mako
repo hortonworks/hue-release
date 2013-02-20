@@ -66,14 +66,14 @@ udfs = UDF.objects.all()
                    />
 	  </li>
 	  <li  class="nav-header">
-<div class="accordion" id="accordion2">
+<div class="accordion" id="accordion3">
                 <div class="accordion-group">
                   <div class="accordion-heading">
-                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion3" href="#collapseOne2">
                       User-defined Functions <i class="icon-chevron-down"></i>
                     </a>
                   </div>
-                  <div id="collapseOne" class="accordion-body in collapse" style="height: auto;">
+                  <div id="collapseOne2" class="accordion-body in collapse" style="height: auto;">
                     <div class="accordion-inner" style="text-transform: none;">
                        % for udf in udfs:
                           <a href="${url('udf_del', udf.id)}"  onclick="return confirm('Are you sure, you want to delete this udf?');">
