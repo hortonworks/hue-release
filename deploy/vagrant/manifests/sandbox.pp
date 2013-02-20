@@ -1,6 +1,5 @@
 Exec { path => [ "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/" ] }
 
-
 define line($file, $line, $ensure = 'present') {
     case $ensure {
         default : { err ( "unknown ensure value ${ensure}" ) }
@@ -20,6 +19,19 @@ define line($file, $line, $ensure = 'present') {
             #     onlyif => "/bin/grep -qFx '${line}' '${file}'"
             # }
         }
+    }
+}
+
+
+class network {
+    file { 'eth1':
+        path    => "/etc/sysconfig/network-scripts/ifcfg-eth1",
+        content => template("/vagrant/ifcfg-eth1"),
+    }
+
+    exec { "eth1":
+        command => "dhclient eth1",
+        require => File[eth1],
     }
 }
 
@@ -89,7 +101,9 @@ class splash {
 
     exec { 'splash':
         command => "initctl stop tty TTY=/dev/tty1; initctl start tty-splash TTY=/dev/tty1",
-        require => Class["splash_opts"],
+        require => [Class["splash_opts"],
+                    Class["network"],
+                    Class["sandbox"] ],
     }
 }
 
@@ -99,7 +113,7 @@ class tutorials {
 
     service { "httpd":
         ensure => running,
-        require => Class[sandbox_rpm],
+        require => [ Class[sandbox_rpm], Class["network"], ],
     }
 }
 
@@ -108,6 +122,7 @@ class sandbox {
 
     include sandbox_rpm
     include tutorials
+    include network
 
     file { 'startHiveserver2.sh':
         path    => "/tmp/startHiveserver2.sh",
@@ -124,6 +139,7 @@ class sandbox {
         require => [ File["startHiveserver2.sh"], 
                      File["startMetastore.sh"],
                      Class[sandbox_rpm],
+                     Class[network],
                     ],
     }
 

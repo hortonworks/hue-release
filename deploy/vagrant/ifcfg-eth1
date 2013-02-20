@@ -1,0 +1,11 @@
+DEVICE="eth1"
+BOOTPROTO="dhcp"
+NM_CONTROLLED="yes"
+ONBOOT=yes
+TYPE="Ethernet"
+DEFROUTE=yes
+PEERDNS=no
+PEERROUTES=yes
+IPV4_FAILURE_FATAL=yes
+IPV6INIT=no
+NAME="System eth1"
