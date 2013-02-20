@@ -12,6 +12,8 @@ USERINFO_FILE_PATH = os.path.join(os.path.expanduser('~sandbox'), 'user_info.dat
 
 START_SCRIPTS = os.path.join(os.path.expanduser('~sandbox'), 'start_scripts')
 
+HUE_PATH = os.path.join(os.path.expanduser('~sandbox'), 'hue')
+
 ADMINS = ()
 
 MANAGERS = ADMINS
@@ -24,12 +26,8 @@ DATABASES = {
         'NAME': os.path.join(PROJECT_PATH, 'db/lessons.db'),
     },
     'auth_db': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sandbox',
-        'USER': 'sandbox',
-        'PASSWORD': '1111',
-        'HOST': '127.0.0.1',
-        'PORT':' 3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(HUE_PATH, 'desktop/desktop.db'),
     }
 }
 
