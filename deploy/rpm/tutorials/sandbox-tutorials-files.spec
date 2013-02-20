@@ -18,8 +18,8 @@ AutoReqProv: no
 
 provides: sandbox-tutorials
 
-requires: python >= 2.6, python-setuptools, python-pip, python-virtualenv, supervisor, httpd
-requires: sandbox
+requires: python >= 2.6, supervisor, httpd
+requires: sandbox-hue
 conflicts: sandbox-tutorials-sl
 
 %description
@@ -46,7 +46,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %{prefix}
 
 %defattr(-,sandbox,sandbox)
-%dir %{prefix}
+%{prefix}
 
 
 %pre
@@ -77,7 +77,6 @@ EOF
 fi
 
 #Proxy to 8888 port
-LINE="ProxyPass / http://127.0.0.1:8888/"
 HTTPD_CONF=/etc/httpd/conf/httpd.conf
 
 if [ `<$HTTPD_CONF grep "Proxy to tutorials"` ]; then
@@ -89,11 +88,14 @@ else
 # Proxy to tutorials
 ProxyPass /ganglia !
 ProxyPass /nagios !
+ProxyPass /ambarinagios !
+ProxyPass /cgi-bin !
 ProxyPass / http://127.0.0.1:8888/
 ProxyPassReverse / http://127.0.0.1:8888/
 EOF
 
 fi
+
 
 TUTORIALS="/home/sandbox/tutorials"
 HUE="/home/sandbox/hue"
@@ -160,6 +162,11 @@ cat << EOF > /tmp/auth_views.py.patch
 EOF
 
 patch /home/sandbox/hue/desktop/core/src/desktop/auth/views.py < /tmp/auth_views.py.patch
+
+chkconfig httpd on
+service httpd start
+
+/etc/init.d/supervisord restart
 
 
 %postun

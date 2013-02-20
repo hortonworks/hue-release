@@ -4,7 +4,7 @@
 
 
 Summary: Hortonworks Sandbox (Source)
-Name: sandbox-bin
+Name: sandbox-hue-bin
 Version: 1.2.1
 Release: 1
 License: Apache License, Version 2.0
@@ -14,14 +14,14 @@ Vendor: Hortonworks <UNKNOWN>
 Source: hue.tgz
 Source1: start_scripts.tgz
 Source2: .ssh.tar.gz
-Source3: apache-maven-3.0.4-bin.tar.gz
+#Source3: apache-maven-3.0.4-bin.tar.gz
 
 
-Requires: git, wget, sudo, supervisor
+Requires: git, wget, sudo, supervisor, libxslt, python-lxml
 
-provides: sandbox
+provides: sandbox-hue
 
-conflicts: sandbox-src
+conflicts: sandbox-hue-src
 
 #No automatic binary dependencies
 AutoReqProv: no
@@ -35,14 +35,14 @@ Hortonworks Sandbox - hue + apps (Source)
 %setup -n hue
 %setup -b 1 -T -D -n start_scripts
 %setup -b 2 -T -D -n .ssh
-%setup -b 3 -T -D -n apache-maven-3.0.4
+#%setup -b 3 -T -D -n apache-maven-3.0.4
 
 %build
 
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/home/sandbox/{hue,start_scripts,.ssh,apache-maven-3.0.4}/
+mkdir -p $RPM_BUILD_ROOT/home/sandbox/{hue,start_scripts,.ssh}/ #apache-maven-3.0.4
 
 cd $RPM_BUILD_DIR/hue
 cp -R ./ $RPM_BUILD_ROOT/home/sandbox/hue/
@@ -53,8 +53,8 @@ cp -R ./ $RPM_BUILD_ROOT/home/sandbox/start_scripts
 cd $RPM_BUILD_DIR/.ssh
 cp -R ./ $RPM_BUILD_ROOT/home/sandbox/.ssh
 
-cd $RPM_BUILD_DIR/apache-maven-3.0.4
-cp -R ./ $RPM_BUILD_ROOT/home/sandbox/apache-maven-3.0.4
+#cd $RPM_BUILD_DIR/apache-maven-3.0.4
+#cp -R ./ $RPM_BUILD_ROOT/home/sandbox/apache-maven-3.0.4
 
 
 %clean
@@ -65,7 +65,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %dir /home/sandbox/hue
 %dir /home/sandbox/start_scripts
 %dir /home/sandbox/.ssh
-%dir /home/sandbox/apache-maven-3.0.4
+#%dir /home/sandbox/apache-maven-3.0.4
 
 
 %defattr(-,sandbox,sandbox)
@@ -82,7 +82,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 sudo -u sandbox -s -- <<END_OF_SANDBOX
 cd /home/sandbox
 
-export PATH=$PATH:/home/sandbox/apache-maven-3.0.4/bin/
+#export PATH=$PATH:/home/sandbox/apache-maven-3.0.4/bin/
 
 END_OF_SANDBOX
 
@@ -91,11 +91,14 @@ END_OF_SANDBOX
 
 %post
 
+(
 sudo -u sandbox -s -- <<END_OF_SANDBOX
 
 cd /home/sandbox/
 echo "clonning tutorials ..."
 git clone git@github.com:hortonworks/sandbox-tutorials.git
+
+mkdir /home/sandbox/hue/logs
 
 END_OF_SANDBOX
 
@@ -124,14 +127,23 @@ chkconfig --add startup_script
 chkconfig --levels 3 startup_script on
 
 
+chkconfig iptables off
+iptables -F
+
+echo "Update lxml"
+source build/env/bin/activate
+pip install lxml --upgrade
+
+
 fi
 
-mkdir /home/sandbox/hue/logs
+) | tee ~/sandbox-install.log
 
 %postun
 
 if [ "$1" = "0" ]; then
 	#  userdel -r sandbox
+    echo
 elif [ "$1" = "1" ]; then
   # upgrade
   echo
