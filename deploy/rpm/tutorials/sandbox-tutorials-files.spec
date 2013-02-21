@@ -118,47 +118,34 @@ patch $HUE/desktop/core/src/desktop/templates/common_header.mako < /tmp/common_h
 # Single user mode patch
 
 cat << EOF > /tmp/auth_views.py.patch
---- views.py.old	2012-11-28 16:03:17.497518739 +0200
-+++ views.py	2012-11-28 16:15:25.162905369 +0200
-@@ -20,7 +20,7 @@
- import django.contrib.auth.views
- from django.core import urlresolvers
- from django.core.exceptions import SuspiciousOperation
--from django.contrib.auth import login, get_backends
-+from django.contrib.auth import authenticate, login, get_backends
- from django.contrib.auth.models import User
- from django.contrib.sessions.models import Session
- from django.http import HttpResponseRedirect
-@@ -33,6 +33,8 @@
- 
- LOG = logging.getLogger(__name__)
- 
-+SINGLE_USER_MODE = True
-+
- 
- def get_current_users():
-   """Return dictionary of User objects and
-@@ -69,10 +71,16 @@
-   redirect_to = request.REQUEST.get('next', '/')
-   login_errors = False
-   is_first_login_ever = first_login_ever()
--  if request.method == 'POST':
--    form = django.contrib.auth.forms.AuthenticationForm(data=request.POST)
--    if form.is_valid():
--      login(request, form.get_user())
-+  if SINGLE_USER_MODE or request.method == 'POST':
-+    if not SINGLE_USER_MODE:
-+      form = django.contrib.auth.forms.AuthenticationForm(data=request.POST)
-+    if SINGLE_USER_MODE or form.is_valid():
-+      if SINGLE_USER_MODE:
-+        user = authenticate(username="sandbox", password="sandbox")  
-+      else:
-+        user = form.get_user()
-+
-+      login(request, user)
-       if request.session.test_cookie_worked():
-         request.session.delete_test_cookie()
-
+23c23
+< from django.contrib.auth import login, get_backends
+---
+> from django.contrib.auth import authenticate, login, get_backends
+38a39,40
+> SINGLE_USER_MODE = True
+> 
+75c77
+<   if request.method == 'POST':
+---
+>   if SINGLE_USER_MODE or request.method == 'POST':
+81c83,84
+<       auth_form = AuthenticationForm(data=request.POST)
+---
+>       if not SINGLE_USER_MODE: 
+>         auth_form = AuthenticationForm(data=request.POST)
+83c86
+<       if auth_form.is_valid():
+---
+>       if SINGLE_USER_MODE or auth_form.is_valid():
+86c89,93
+<         user = auth_form.get_user()
+---
+>         if not SINGLE_USER_MODE:
+>     user = auth_form.get_user()
+>         else:
+>           user = authenticate(username="hdfs", password="1111")
+> 
 EOF
 
 patch /home/sandbox/hue/desktop/core/src/desktop/auth/views.py < /tmp/auth_views.py.patch

@@ -23,19 +23,6 @@ define line($file, $line, $ensure = 'present') {
 }
 
 
-class network {
-    file { 'eth1':
-        path    => "/etc/sysconfig/network-scripts/ifcfg-eth1",
-        content => template("/vagrant/ifcfg-eth1"),
-    }
-
-    exec { "eth1":
-        command => "dhclient eth1",
-        require => File[eth1],
-    }
-}
-
-
 class sandbox_rpm {
     file { 'resolv.conf':
         path    => "/etc/resolv.conf",
@@ -102,7 +89,6 @@ class splash {
     exec { 'splash':
         command => "initctl stop tty TTY=/dev/tty1; initctl start tty-splash TTY=/dev/tty1",
         require => [Class["splash_opts"],
-                    Class["network"],
                     Class["sandbox"] ],
     }
 }
@@ -113,7 +99,7 @@ class tutorials {
 
     service { "httpd":
         ensure => running,
-        require => [ Class[sandbox_rpm], Class["network"], ],
+        require => [ Class[sandbox_rpm], ],
     }
 }
 
@@ -122,16 +108,19 @@ class sandbox {
 
     include sandbox_rpm
     include tutorials
-    include network
 
     file { 'startHiveserver2.sh':
         path    => "/tmp/startHiveserver2.sh",
         content => template("/vagrant/scripts/startHiveserver2.sh"),
+        owner   => hive,
+        group   => 755,
     }
 
     file { 'startMetastore.sh':
         path    => "/tmp/startMetastore.sh",
         content => template("/vagrant/scripts/startMetastore.sh"),
+        owner   => hive,
+        group   => 755,
     }
 
     exec { 'start':
@@ -139,7 +128,6 @@ class sandbox {
         require => [ File["startHiveserver2.sh"], 
                      File["startMetastore.sh"],
                      Class[sandbox_rpm],
-                     Class[network],
                     ],
     }
 
@@ -152,17 +140,15 @@ class sandbox {
 
 
 class java_home {
+    file { "/etc/bashrc": ensure => present, }
 
-file { "/etc/bashrc": ensure => present, }
-
-line { java_home:
-    file => "/etc/bashrc",
-    line => "export JAVA_HOME=/usr/jdk/jdk1.6.0_31/",
+    line { java_home:
+        file => "/etc/bashrc",
+        line => "export JAVA_HOME=/usr/jdk/jdk1.6.0_31/",
+    }
 }
 
-}
 
-
-
+include java_home
 include splash
 include sandbox

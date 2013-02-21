@@ -11,9 +11,9 @@ Vagrant::Config.run do |config|
   # Boot with a GUI so you can see the screen. (Default is headless)
   config.vm.boot_mode = :gui
 
-  config.vm.network :hostonly, "192.168.56.100", :adapter => 2
+  config.vm.network :hostonly, :dhcp, :ip => "192.168.56.1", :adapter => 2
 
-  config.vm.provision :puppet do |puppet|
+  config.vm.provision :puppet, :options => "--verbose" do |puppet|
     puppet.manifests_path = "manifests"
     puppet.manifest_file  = "sandbox.pp"
   end

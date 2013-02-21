@@ -130,9 +130,9 @@ chkconfig --levels 3 startup_script on
 chkconfig iptables off
 iptables -F
 
-echo "Update lxml"
-source build/env/bin/activate
-pip install lxml --upgrade
+#echo "Update lxml"
+#source build/env/bin/activate
+#pip install lxml --upgrade
 
 
 fi
