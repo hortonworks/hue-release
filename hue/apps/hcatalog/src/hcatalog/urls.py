@@ -1,0 +1,41 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+from django.conf.urls.defaults import patterns, url
+
+urlpatterns = patterns('hcatalog.views',
+  url(r'^$', 'show_tables', name='show_tables'),
+  url(r'^get_tables$', 'get_tables', name='get_tables'),
+  url(r'^tables/(?P<database>\w+)?$', 'show_tables', name='show_tables'),
+  url(r'^pig_view/(?P<database>\w+)/(?P<table>\w+)$', 'pig_view', name='pig_view'),
+  url(r'^hive_view/(?P<database>\w+)/(?P<table>\w+)$', 'hive_view', name='hive_view'),
+  url(r'^execute/(?P<design_id>\d+)?$', 'execute_query', name='execute_query'),
+  url(r'^table/(?P<database>\w+)/(?P<table>\w+)$', 'describe_table', name='describe_table'),
+  url(r'^table/(?P<database>\w+)/(?P<table>\w+)/load$', 'load_table', name='load_table'),
+  url(r'^table/(?P<database>\w+)/(?P<table>\w+)/read$', 'read_table', name='read_table'),
+  url(r'^table/(?P<database>\w+)/(?P<table>\w+)/drop$', 'drop_table', name='drop_table'),
+  url(r'^table/(?P<database>\w+)/(?P<table>\w+)/browse_partition$', 'browse_partition', name='browse_partition'),
+  url(r'^table/(?P<database>\w+)/(?P<table>\w+)/drop_partition$', 'drop_partition', name='drop_partition'),
+  url(r'^watch/(?P<id>\d+)$', 'watch_query', name='watch_query'),
+  url(r'^results/(?P<id>\d+)/(?P<first_row>\d+)$', 'view_results', name='view_results'),
+)
+                       
+urlpatterns += patterns(
+  'hcatalog.create_table',
+  url(r'^create/create_table/(?P<database>\w+)$', 'create_table', name='create_table'),
+  url(r'^create/import_wizard/(?P<database>\w+)$', 'import_wizard', name='import_wizard'),
+)
