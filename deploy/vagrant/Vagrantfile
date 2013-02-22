@@ -1,5 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+require 'vagrant-vbguest'
 
 Vagrant::Config.run do |config|
   config.vm.box = "sandbox"
