@@ -113,14 +113,14 @@ class sandbox {
         path    => "/tmp/startHiveserver2.sh",
         content => template("/vagrant/scripts/startHiveserver2.sh"),
         owner   => hive,
-        group   => 755,
+        mode   => 755,
     }
 
     file { 'startMetastore.sh':
         path    => "/tmp/startMetastore.sh",
         content => template("/vagrant/scripts/startMetastore.sh"),
         owner   => hive,
-        group   => 755,
+        mode  => 755,
     }
 
     exec { 'start':
