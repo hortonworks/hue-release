@@ -17,7 +17,8 @@
 # This file should be the one source of truth for for versions within HUE.
 # It is at least included by each of the default hue app's setup.py.
 
-HADOOP_VERSION="1.1.2.21"
-HCATALOG_VERSION="0.5.0.21"
-PIG_VERSION="0.10.1.21"
-HIVE_VERSION="0.10.0.21"
+HADOOP_VERSION = "1.1.2.21"
+HCATALOG_VERSION = "0.5.0.21"
+PIG_VERSION = "0.10.1.21"
+HIVE_VERSION = "0.10.0.21"
+SANDBOX_VERSION = "1.2.2"

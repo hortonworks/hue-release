@@ -44,7 +44,7 @@ from beeswax.server.dbms import expand_exception, get_query_server_config
 from datetime import datetime
 import logging
 import os
-import urllib2
+
 
 LOG = logging.getLogger(__name__)
 

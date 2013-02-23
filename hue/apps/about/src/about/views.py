@@ -19,22 +19,22 @@ import logging
 from desktop.lib.django_util import render
 from django.http import HttpResponse
 from django.core import urlresolvers
-from django.utils import simplejson as json
+import simplejson as json
 
-from subprocess import Popen, PIPE
+from sh import bash
 import sandboxversions as versions
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger("analitics")
 
-TUTORIAL_UPDATE_SCRIPT = 'bash /home/sandbox/tutorials/tutorials_app/run/run.sh'
-TUTORIAL_VERSION_FILE = '/tmp/tutorials_version.info'
+TUTORIAL_UPDATE_SCRIPT = '/home/sandbox/tutorials/tutorials_app/run/run.sh'
+TUTORIAL_VERSION_FILE = '/home/sandbox/sandbox-tutorials/version'
 
 def index(request):
   if request.method == 'POST':
     on_success_url = urlresolvers.reverse(index)
     error = ''
     try:
-      _updateTutorials()
+      bash(TUTORIAL_UPDATE_SCRIPT)
     except Exception, ex:
       error = str(ex)
     result = {'on_success_url':on_success_url, 'components':_get_components(), 'error':error}
@@ -44,54 +44,17 @@ def index(request):
 
 def _get_components():
   try:
-    file_obj = open(TUTORIAL_VERSION_FILE, 'r')
-    tutorial_version = file_obj.readlines()[0]
-    file_obj.close()
+    with open(TUTORIAL_VERSION_FILE, 'r') as file_obj:
+      tutorial_version = file_obj.readlines()[0]
   except IOError, ex:
     tutorial_version = "undefined"
     msg = "Failed to open file '%s': %s" % (TUTORIAL_VERSION_FILE, ex)
     LOG.exception(msg)
 
-  try: versions.SANDBOX_VERSION
-  except:
-    sandboxVer = 'undefined'
-  else:
-    sandboxVer = versions.SANDBOX_VERSION
-  try: versions.HADOOP_VERSION
-  except:
-    hadoopVer = 'undefined'
-  else:
-    hadoopVer = versions.HADOOP_VERSION
-  try: versions.HCATALOG_VERSION
-  except:
-    hcatalogVer = 'undefined'
-  else:
-    hcatalogVer = versions.HCATALOG_VERSION
-  try: pigVer = versions.PIG_VERSION
-  except:
-    pigVer = 'undefined'
-  else:
-    pigVer = versions.PIG_VERSION
-  try: versions.HIVE_VERSION
-  except:
-    hiveVer = 'undefined'
-  else:
-    hiveVer = versions.HIVE_VERSION
-
   components = [
-        {'name':'Hadoop', 'version':hadoopVer},
+        {'name':'Hadoop', 'version': versions.HADOOP_VERSION},
         {'name':'Tutorials', 'version':tutorial_version, 'updateButton':True},
-        {'name':'HCatalog', 'version':hcatalogVer},
-        {'name':'Pig', 'version':pigVer},
-        {'name':'Hive', 'version':hiveVer},]
+        {'name':'HCatalog', 'version': versions.HCATALOG_VERSION},
+        {'name':'Pig', 'version': versions.PIG_VERSION},
+        {'name':'Hive', 'version': versions.HIVE_VERSION},]
   return components
-
-
-def _updateTutorials():
-  p = Popen(TUTORIAL_UPDATE_SCRIPT, shell=True, stdin=PIPE, stdout=None, stderr=PIPE, close_fds=True)
-  answer, error = p.communicate()
-  if error:
-    msg = "Updating tutorials failed: %s" % (error)
-    LOG.error(msg)
-    if not 'FETCH_HEAD' in error:
-      raise Exception(str(error))
