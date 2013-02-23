@@ -65,7 +65,6 @@ def create_table(request, database='default'):
       )
       # Mako outputs bytestring in utf8
       proposed_query = proposed_query.decode('utf-8')
-      tablename = form.table.cleaned_data['name']
       tables = []
       try:
         hcat_client().create_table("default", proposed_query)

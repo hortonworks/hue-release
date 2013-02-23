@@ -250,7 +250,7 @@ class CreateByImportFileForm(forms.Form):
   def __init__(self, *args, **kwargs):
     self.table_list = kwargs.pop('table_list', None)
     super(CreateByImportFileForm, self).__init__(*args, **kwargs)
-    
+
   def clean_name(self):
     return _clean_tablename(self.table_list, self.cleaned_data['name'])
 
@@ -331,7 +331,6 @@ class LoadDataForm(forms.Form):
   """Form used for loading data into an existing table."""
   path = filebrowser.forms.PathField(label="Path")
   overwrite = forms.BooleanField(required=False, initial=False, label="Overwrite?")
-
 
   def __init__(self, table_obj, *args, **kwargs):
     super(LoadDataForm, self).__init__(*args, **kwargs)

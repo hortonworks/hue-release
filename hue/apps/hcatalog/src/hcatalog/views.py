@@ -82,7 +82,6 @@ def drop_table(request, database, table):
     title = "This may delete the underlying data as well as the metadata.  Drop table '%s'?" % table
     return render('confirm.html', request, dict(url=request.path, title=title))
   elif request.method == 'POST':
-    tables = []
     try:
       hcat_client().drop_table(table)
     except Exception, ex:
@@ -182,7 +181,10 @@ def pig_view(request, database='default', table=None):
     from pig.views import index as pig_view_for_hcat
   except:
     raise Http404
-  request.session['autosave'] = {"pig_script": 'A = LOAD \'{t}\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;'.format(t=table), 'title': '{t}'.format(t=table)}
+  request.session['autosave'] = {
+    "pig_script": 'A = LOAD \'{t}\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;'.format(t=table),
+    'title': '{t}'.format(t=table)
+  }
   return pig_view_for_hcat(request)
 
 
@@ -219,10 +221,10 @@ def execute_query(request, design_id=None, query_msg=''):
 
   if request.method == 'POST':
     form.bind(request.POST)
-    form.query.fields['database'].choices =  databases # Could not do it in the form
+    form.query.fields['database'].choices = databases  # Could not do it in the form
 
-    to_explain = request.POST.has_key('button-explain')
-    to_submit = request.POST.has_key('button-submit')
+    to_explain = 'button-explain' in request.POST
+    to_submit = 'button-submit' in request.POST
 
     # Always validate the saveform, which will tell us whether it needs explicit saving
     if form.is_valid():
@@ -251,7 +253,7 @@ def execute_query(request, design_id=None, query_msg=''):
           if to_explain:
             return explain_directly(request, query, design, query_server)
           else:
-            download = request.POST.has_key('download')
+            download = 'download' in request.POST
             return execute_directly(request, query, query_server, design, on_success_url=on_success_url, download=download)
         except BeeswaxException, ex:
           print ex.errorCode
@@ -265,7 +267,7 @@ def execute_query(request, design_id=None, query_msg=''):
     else:
       # New design
       form.bind()
-    form.query.fields['database'].choices = databases # Could not do it in the form
+    form.query.fields['database'].choices = databases  # Could not do it in the form
 
   return render('execute.mako', request, {
     'action': action,
@@ -397,7 +399,7 @@ def watch_query(request, id):
   if request.method == 'POST' or (not query_history.is_finished() and query_history.is_success() and not query_history.has_results):
     try:
       query_history = db.execute_next_statement(query_history)
-    except BeeswaxException, ex:
+    except BeeswaxException:
       pass
 
   # Check query state
@@ -424,7 +426,7 @@ def watch_query(request, id):
                 'log': log,
                 'hadoop_jobs': _parse_out_hadoop_jobs(log),
                 'query_context': query_context,
-              })
+  })
 
 
 def view_results(request, id, first_row=0):
@@ -457,7 +459,7 @@ def view_results(request, id, first_row=0):
   query_context = _parse_query_context(context_param)
 
   # To remove in Hue 2.3
-  download  = request.GET.get('download', '')
+  download = request.GET.get('download', '')
 
   # Update the status as expired should not be accessible
   expired = state == QueryHistory.STATE.expired
@@ -469,7 +471,7 @@ def view_results(request, id, first_row=0):
   try:
     if not download:
       results = db.fetch(handle, start_over, 100)
-      data = list(results.rows()) # Materialize results
+      data = list(results.rows())  # Materialize results
 
       # We display the "Download" button only when we know that there are results:
       downloadable = first_row > 0 or data
@@ -535,9 +537,10 @@ def get_tables(request):
   tables = _get_table_list(request)
   return HttpResponse(json.dumps(tables))
 
+
 def _get_table_list(request):
   """Returns a table list"""
-  database = request.POST.get('database', 'default') # Assume always 'default'
+  database = request.POST.get('database', 'default')  # Assume always 'default'
   db = dbms.get(request.user)
   tables = db.get_tables(database=database)
   return tables

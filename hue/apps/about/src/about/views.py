@@ -36,7 +36,7 @@ def index(request):
     try:
       bash(TUTORIAL_UPDATE_SCRIPT)
     except Exception, ex:
-      error = str(ex)
+      error = unicode(ex)
     result = {'on_success_url':on_success_url, 'components':_get_components(), 'error':error}
     return HttpResponse(json.dumps(result))
   return render('index.mako', request, {'components':_get_components()})
@@ -49,7 +49,7 @@ def _get_components():
   except IOError, ex:
     tutorial_version = "undefined"
     msg = "Failed to open file '%s': %s" % (TUTORIAL_VERSION_FILE, ex)
-    LOG.exception(msg)
+    LOG.error(msg)
 
   components = [
         {'name':'Hadoop', 'version': versions.HADOOP_VERSION},

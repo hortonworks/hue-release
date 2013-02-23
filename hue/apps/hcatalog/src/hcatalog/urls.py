@@ -33,7 +33,7 @@ urlpatterns = patterns('hcatalog.views',
   url(r'^watch/(?P<id>\d+)$', 'watch_query', name='watch_query'),
   url(r'^results/(?P<id>\d+)/(?P<first_row>\d+)$', 'view_results', name='view_results'),
 )
-                       
+
 urlpatterns += patterns(
   'hcatalog.create_table',
   url(r'^create/create_table/(?P<database>\w+)$', 'create_table', name='create_table'),
