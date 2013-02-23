@@ -1,10 +1,5 @@
-1) Go to VirtualBox's menu File -> Preferences...
-	Open tab Network and click "Add host-only network"
-
-	Press OK 
-
-2) Import ".ova" image into VirtualBox. While importing you can increase amount of RAM for appliance.
-
-3) Start imported machine, wait while booting.
-
-4) Open web browser and open link displayed on screen.
+1) Download and install Vagrant (http://downloads.vagrantup.com/tags/v1.0.6)
+2) cd sandbox-shared/deploy/vagrant
+3) vagrant gem install vagrant-vbguest
+4) vagrant box add sandbox <Box address>
+5) vagrant up (first time it would take some time to build VM).
