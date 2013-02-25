@@ -124,9 +124,8 @@ class sandbox {
     }
 
     file { 'hue-plugins-2.2.0-SNAPSHOT.jar':
-        path    => "/usr/lib/hadoop/lib/",
+        path    => "/usr/lib/hadoop/lib/hue-plugins-2.2.0-SNAPSHOT.jar",
         content => file("/vagrant/files/jars/hue-plugins-2.2.0-SNAPSHOT.jar"),
-        ensure => present,
     }
 
     exec { 'start':
