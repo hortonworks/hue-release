@@ -131,7 +131,7 @@ class sandbox {
     file {'/home/sandbox/hue/apps/shell/src/shell/build/setuid':   
         owner => sandbox,
         group => sandbox,
-        mode => 500,
+        mode => 4750,
         require => [Class[sandbox_rpm]],
     }
 
