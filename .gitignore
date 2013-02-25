@@ -15,7 +15,7 @@
 .\#*
 *_flymake.py
 
-
+.vagrant
 #virtualenv
 build/
 *.egg

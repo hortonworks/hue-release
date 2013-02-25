@@ -31,7 +31,7 @@ class sandbox_rpm {
 
     file { 'sandbox.repo':
         path    => "/etc/yum.repos.d/sandbox.repo",
-        content => template("/vagrant/sandbox.repo"),
+        content => template("/vagrant/files/sandbox.repo"),
         ensure  => file,
     }
 
@@ -58,17 +58,17 @@ class sandbox_rpm {
 class splash_opts {
     file { 'ttys':
         path    => "/etc/init/start-ttys.conf",
-        content => template("/vagrant/splash/start-ttys.conf"),
+        content => template("/vagrant/files/splash/start-ttys.conf"),
     }
 
     file { 'tty1':
         path    => "/etc/init/tty-splash.conf",
-        content => template("/vagrant/splash/tty-splash.conf"),
+        content => template("/vagrant/files/splash/tty-splash.conf"),
     }
 
     file { 'bashrc':
         path    => "/root/.bashrc",
-        content => template("/vagrant/splash/bashrc"),
+        content => template("/vagrant/files/splash/bashrc"),
     }
 
     package { 'python-pip':
@@ -111,16 +111,22 @@ class sandbox {
 
     file { 'startHiveserver2.sh':
         path    => "/tmp/startHiveserver2.sh",
-        content => template("/vagrant/scripts/startHiveserver2.sh"),
+        content => template("/vagrant/files/scripts/startHiveserver2.sh"),
         owner   => hive,
         mode   => 755,
     }
 
     file { 'startMetastore.sh':
         path    => "/tmp/startMetastore.sh",
-        content => template("/vagrant/scripts/startMetastore.sh"),
+        content => template("/vagrant/files/scripts/startMetastore.sh"),
         owner   => hive,
         mode  => 755,
+    }
+
+    file { 'hue-plugins-2.2.0-SNAPSHOT.jar':
+        path    => "/usr/lib/hadoop/lib/",
+        content => file("/vagrant/files/jars/hue-plugins-2.2.0-SNAPSHOT.jar"),
+        ensure => present,
     }
 
     exec { 'start':
