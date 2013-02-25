@@ -128,6 +128,13 @@ class sandbox {
         content => file("/vagrant/files/jars/hue-plugins-2.2.0-SNAPSHOT.jar"),
     }
 
+    file {'/home/sandbox/hue/apps/shell/src/shell/build/setuid':   
+        owner => sandbox,
+        group => sandbox,
+        mode => 4750,
+        require => [Class[sandbox_rpm]],
+    }
+
     exec { 'start':
         command => "/etc/init.d/startup_script start",
         require => [ File["startHiveserver2.sh"], 
