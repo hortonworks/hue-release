@@ -148,6 +148,12 @@ class sandbox {
         require => [ Class[tutorials],
                      Exec[start] ],
     }
+
+    service { "hue":
+        ensure => running,
+        require => [ Class[sandbox_rpm],
+                     Exec[start] ],
+    }
 }
 
 

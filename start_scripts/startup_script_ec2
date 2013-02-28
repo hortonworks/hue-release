@@ -1,6 +1,6 @@
 #!/bin/bash
 # startup script
-# chkconfig: 5 99 1
+# chkconfig: 5 98 1
 # description: startup script
 
 SCRIPTS_PATH="/home/sandbox/start_scripts"

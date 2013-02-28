@@ -106,25 +106,14 @@ cd /home/sandbox/hue
 cp desktop/libs/hadoop/java-lib/hue-plugins-2.1.0-SNAPSHOT.jar /usr/lib/hadoop/lib/hue-plugins-2.1.0-SNAPSHOT.jar
 
 
-if [ `</etc/supervisord.conf grep 'sandbox\]'` ]; then
-    echo "Already set up in supervisord.conf"
-else
-    echo "Add to supervisord.conf"
-    cat << EOF >>/etc/supervisord.conf
-[program:sandbox]
-command=/home/sandbox/hue/build/env/bin/supervisor ; the program (relative uses PATH, can take args)
-autostart=true              ; start at supervisord start (default: true)
-autorestart=true            ; retstart at unexpected quit (default: true)
-user=sandbox                 ; setuid to this UNIX account to run the program
-log_stderr=true             ; if true, log program stderr (def false)
-logfile=/home/sandbox/hue/logs/sandbox.log    ; child log path, use NONE for none; default AUTO
-
-EOF
-
-
 ln -sf /home/sandbox/start_scripts/startup_script /etc/init.d/startup_script
 chkconfig --add startup_script
 chkconfig --levels 3 startup_script on
+
+ln -sf /home/sandbox/start_scripts/hue /etc/init.d/hue
+chkconfig --add hue
+chkconfig --levels 3 hue on
+
 
 
 chkconfig iptables off

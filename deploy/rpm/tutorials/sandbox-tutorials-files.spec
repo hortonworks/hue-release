@@ -106,9 +106,9 @@ ln -s $TUTORIALS/hue_common_header.js \
 
 # Common header patch
 cat << EOF > /tmp/common_header.mako.patch
-98a99
+99a100
 >   <script src="/static/js/hue_common_header.js"></script>
-115a117
+117a120
 >       handleAutoLogin();
 EOF
 
@@ -142,9 +142,9 @@ cat << EOF > /tmp/auth_views.py.patch
 <         user = auth_form.get_user()
 ---
 >         if not SINGLE_USER_MODE:
->     user = auth_form.get_user()
+>           user = auth_form.get_user()
 >         else:
->           user = authenticate(username="hdfs", password="1111")
+>           user = authenticate(username="sandbox", password="1111")
 > 
 EOF
 
