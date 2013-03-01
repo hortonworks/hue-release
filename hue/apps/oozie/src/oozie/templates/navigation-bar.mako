@@ -28,7 +28,9 @@
         <li class="${utils.is_selected(section, 'dashboard')}"><a href="${url('oozie:list_oozie_workflows')}">${ _('Dashboard') }</a></li>
         <li class="${utils.is_selected(section, 'workflows')}"><a href="${url('oozie:list_workflows')}">${ _('Workflows') }</a></li>
         <li class="${utils.is_selected(section, 'coordinators')}"><a href="${url('oozie:list_coordinators')}">${ _('Coordinators') }</a></li>
+        <li class="${utils.is_selected(section, 'bundles')}"><a href="${url('oozie:list_bundles')}">${ _('Bundles') }</a></li>
         <li class="${utils.is_selected(section, 'history')}"><a href="${url('oozie:list_history')}">${ _('History') }</a></li>
+        <li><a href="http://oozie.apache.org/docs/3.3.0/index.html" target="_blank">${ _('Documentation') }</a></li>
       </ul>
     </div>
   </div>
@@ -40,6 +42,8 @@
   <ul class="nav nav-tabs">
     <li class="${utils.is_selected(section, 'workflows')}"><a href="${url('oozie:list_oozie_workflows')}">${ _('Workflows') }</a></li>
     <li class="${utils.is_selected(section, 'coordinators')}"><a href="${url('oozie:list_oozie_coordinators')}">${ _('Coordinators') }</a></li>
+    <li class="${utils.is_selected(section, 'bundles')}"><a href="${url('oozie:list_oozie_bundles')}">${ _('Bundles') }</a></li>
+    <li class="${utils.is_selected(section, 'oozie')}"><a href="${url('oozie:list_oozie_info')}">${ _('Oozie') }</a></li>
   </ul>
 </%def>
 

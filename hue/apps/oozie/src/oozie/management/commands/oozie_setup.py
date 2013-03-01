@@ -60,10 +60,6 @@ class Command(NoArgsCommand):
       sample_user = User.objects.get(username=USERNAME)
     except User.DoesNotExist:
       sample_user = User.objects.create(username=USERNAME, password='!', is_active=False, is_superuser=False, id=1100713, pk=1100713)
-    try:
-      sample_user = User.objects.get(pk=1100713)
-    except User.DoesNotExist:
-      sample_user = User.objects.create(username='sample', pk=1100713, id=1100713)
     management.call_command('loaddata', 'initial_oozie_examples.json', verbosity=2)
 
 

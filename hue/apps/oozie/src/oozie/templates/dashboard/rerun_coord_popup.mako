@@ -45,35 +45,34 @@
               ${ utils.render_field_no_popover(rerun_form['nocleanup'], show_label=True) }
             </div>
           </div>
-<div id="param-container">
-        ${ params_form.management_form | n,unicode }
+          <div id="param-container">
+            ${ params_form.management_form | n,unicode }
 
-        % if params_form.forms:
-          % if len(params_form.forms) > 1:
-            <h3>${ _('Variables') }</h3>
-          % endif
-          % for form in params_form.forms:
-            % for hidden in form.hidden_fields():
-              ${ hidden | n,unicode }
-            % endfor
-            <div class="fieldWrapper">
-              <div class="row-fluid
-                % if form['name'].form.initial.get('name') == 'oozie.use.system.libpath':
-                  hide
-                % endif
-                ">
-                <div class="span6">
-                  ${ form['name'].form.initial.get('name') }
+            % if params_form.forms:
+              % if len(params_form.forms) > 1:
+                <h3>${ _('Variables') }</h3>
+              % endif
+              % for form in params_form.forms:
+                % for hidden in form.hidden_fields():
+                  ${ hidden | n,unicode }
+                % endfor
+                <div class="fieldWrapper">
+                  <div class="row-fluid
+                    % if form['name'].form.initial.get('name') == 'oozie.use.system.libpath':
+                      hide
+                    % endif
+                    ">
+                    <div class="span6">
+                      ${ form['name'].form.initial.get('name') }
+                    </div>
+                    <div class="span6">
+                      ${ utils.render_field(form['value'], show_label=False) }
+                    </div>
+                  </div>
                 </div>
-                <div class="span6">
-                  ${ utils.render_field(form['value'], show_label=False) }
-                </div>
-              </div>
-            </div>
-          % endfor
-        % endif
-      </div>
-    </fieldset>
+              % endfor
+            % endif
+          </div>
         </div>
       </div>
     </fieldset>

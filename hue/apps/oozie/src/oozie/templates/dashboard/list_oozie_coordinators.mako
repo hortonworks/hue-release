@@ -58,11 +58,14 @@ ${layout.menubar(section='dashboard')}
     <table class="table table-condensed" id="running-table">
       <thead>
         <tr>
-          <th width="105%">${ _('Next submission') }</th>
+          <th width="10%">${ _('Next submission') }</th>
           <th width="10%">${ _('Status') }</th>
-          <th width="25%">${ _('Name') }</th>
-          <th width="10%">${ _('Progress') }</th>
-          <th width="15%">${ _('Submitter') }</th>
+          <th width="20%">${ _('Name') }</th>
+          <th width="5%">${ _('Progress') }</th>
+          <th width="10%">${ _('Submitter') }</th>
+          <th width="5%">${ _('Frequency') }</th>
+          <th width="5%">${ _('Time unit') }</th>
+          <th width="10%">${ _('Start Time') }</th>
           <th width="15%">${ _('Id') }</th>
           <th width="10%">${ _('Action') }</th>
         </tr>
@@ -78,11 +81,14 @@ ${layout.menubar(section='dashboard')}
     <table class="table table-condensed" id="completed-table" data-tablescroller-disable="true">
       <thead>
         <tr>
-          <th width="15%">${ _('Completion') }</th>
-          <th width="10%">${ _('Status') }</th>
-          <th width="30%">${ _('Name') }</th>
+          <th width="10%">${ _('Completion') }</th>
+          <th width="5%">${ _('Status') }</th>
+          <th width="25%">${ _('Name') }</th>
           <th width="10%">${ _('Duration') }</th>
-          <th width="15%">${ _('Submitter') }</th>
+          <th width="10%">${ _('Submitter') }</th>
+          <th width="5%">${ _('Frequency') }</th>
+          <th width="5%">${ _('Time unit') }</th>
+          <th width="10%">${ _('Start Time') }</th>
           <th width="20%">${ _('Id') }</th>
         </tr>
       </thead>
@@ -105,26 +111,29 @@ ${layout.menubar(section='dashboard')}
   </div>
 </div>
 
-<script src="/oozie/static/js/utils.js" type="text/javascript" charset="utf-8"></script>
+<script src="/oozie/static/js/bundles.utils.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/ext/js/datatables-paging-0.1.js" type="text/javascript" charset="utf-8"></script>
 
 <script type="text/javascript" charset="utf-8">
 
   var Coordinator = function (c) {
     return {
-      id:c.id,
-      endTime:c.endTime,
-      status:c.status,
-      statusClass:"label " + getStatusClass(c.status),
-      isRunning:c.isRunning,
-      duration:c.duration,
-      appName:decodeURIComponent(c.appName),
-      progress:c.progress,
-      progressClass:"bar " + getStatusClass(c.status, "bar-"),
-      user:c.user,
-      absoluteUrl:c.absoluteUrl,
-      canEdit:c.canEdit,
-      killUrl:c.killUrl
+      id: c.id,
+      endTime: c.endTime,
+      status: c.status,
+      statusClass: "label " + getStatusClass(c.status),
+      isRunning: c.isRunning,
+      duration: c.duration,
+      appName: decodeURIComponent(c.appName),
+      progress: c.progress,
+      progressClass: "bar " + getStatusClass(c.status, "bar-"),
+      user: c.user,
+      absoluteUrl: c.absoluteUrl,
+      canEdit: c.canEdit,
+      killUrl: c.killUrl,
+      frequency: c.frequency,
+      timeUnit: c.timeUnit,
+      startTime: c.startTime
     }
   }
 
@@ -139,6 +148,9 @@ ${layout.menubar(section='dashboard')}
         null,
         null,
         { "sSortDataType":"dom-sort-value", "sType":"numeric" },
+        null,
+        null,
+        null,
         null,
         null,
         { "bSortable":false }
@@ -174,6 +186,9 @@ ${layout.menubar(section='dashboard')}
         null,
         null,
         { "sSortDataType":"dom-sort-value", "sType":"numeric" },
+        null,
+        null,
+        null,
         null,
         null
       ],
@@ -337,9 +352,17 @@ ${layout.menubar(section='dashboard')}
                         '>${ _('Kill') }</a>';
               }
               if (['RUNNING', 'PREP', 'WAITING', 'SUSPENDED', 'PREPSUSPENDED', 'PREPPAUSED', 'PAUSED'].indexOf(coord.status) > -1) {
-                runningTable.fnAddData([coord.endTime, '<span class="' + coord.statusClass + '">' + coord.status + '</span>', coord.appName,
-                  '<div class="progress"><div class="' + coord.progressClass + '" style="width:' + coord.progress + '%">' + coord.progress + '%</div></div>', coord.user, '<a href="' + coord.absoluteUrl + '" data-row-selector="true">' + coord.id + '</a>',
-                  killCell]);
+                runningTable.fnAddData([
+                  coord.endTime, '<span class="' + coord.statusClass + '">' + coord.status + '</span>',
+                  coord.appName,
+                  '<div class="progress"><div class="' + coord.progressClass + '" style="width:' + coord.progress + '%">' + coord.progress + '%</div></div>',
+                  coord.user,
+				  coord.frequency,
+				  coord.timeUnit,
+				  coord.startTime,
+				  '<a href="' + coord.absoluteUrl + '" data-row-selector="true">' + coord.id + '</a>',
+                  killCell
+                ]);
               }
 
             }
@@ -367,13 +390,19 @@ ${layout.menubar(section='dashboard')}
         completedTable.fnClearTable();
         $(data).each(function (iWf, item) {
           var coord = new Coordinator(item);
-          completedTable.fnAddData([coord.endTime, '<span class="' + coord.statusClass + '">' + coord.status + '</span>', coord.appName,
-            coord.duration, coord.user, '<a href="' + coord.absoluteUrl + '" data-row-selector="true">' + coord.id + '</a>'], false);
+          completedTable.fnAddData([
+            coord.endTime, '<span class="' + coord.statusClass + '">' + coord.status + '</span>',
+            coord.appName,
+            coord.duration,
+            coord.user,
+            coord.frequency,
+            coord.timeUnit,
+            coord.startTime,
+            '<a href="' + coord.absoluteUrl + '" data-row-selector="true">' + coord.id + '</a>'], false);
         });
         completedTable.fnDraw();
       });
     }
-
   });
 </script>
 

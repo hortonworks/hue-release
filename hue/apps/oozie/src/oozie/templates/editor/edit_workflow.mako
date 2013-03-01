@@ -49,9 +49,9 @@ ${ layout.menubar(section='workflows') }
         <li><a href="#editWorkflow">${ _('Edit workflow') }</a></li>
         <li><a href="javascript:void(0)" class="import-jobsub-node-link" title="${ _('Click to import a Job Designer action and add it to the end of the flow') }" rel="tooltip" data-placement="right">${ _('Import action') }</a></li>
         % if user_can_edit_job:
-            <li>
-              <a data-bind="attr: {href: '/filebrowser/view' + deployment_dir() }" target="_blank" title="${ _('Upload additional files and libraries to the deployment directory') }" rel="tooltip" data-placement="right"><i class="icon-share-alt"></i> ${ _('Upload') }</a>
-            </li>
+          <li>
+            <a data-bind="attr: {href: '/filebrowser/view' + deployment_dir() }" target="_blank" title="${ _('Upload additional files and libraries to the deployment directory') }" rel="tooltip" data-placement="right"><i class="icon-share-alt"></i> ${ _('Upload') }</a>
+          </li>
         % endif
 
         % if user_can_edit_job:
@@ -78,22 +78,9 @@ ${ layout.menubar(section='workflows') }
     <div id="properties" class="section hide">
       <div class="alert alert-info"><h3>${ _('Properties') }</h3></div>
       <fieldset>
-      ${ utils.render_field(workflow_form['name'], extra_attrs={'data-bind': 'value: %s' % workflow_form['name'].name}) }
-      ${ utils.render_field(workflow_form['description'], extra_attrs={'data-bind': 'value: %s' % workflow_form['description'].name}) }
-      ${ utils.render_field(workflow_form['is_shared'], extra_attrs={'data-bind': 'checked: %s' % workflow_form['is_shared'].name}) }
-
-        <div class="control-group ">
-          <label class="control-label">
-            <a href="#" id="advanced-btn" onclick="$('#advanced-container').toggle('hide')">
-              <i class="icon-share-alt"></i> ${ _('advanced') }</a>
-          </label>
-          <div class="controls"></div>
-        </div>
-
-      <div id="advanced-container" class="hide">
-      % if user_can_edit_job:
-      ${ utils.render_field(workflow_form['deployment_dir'], extra_attrs={'data-bind': 'value: %s' % workflow_form['deployment_dir'].name}) }
-      % endif
+        ${ utils.render_field(workflow_form['name'], extra_attrs={'data-bind': 'value: %s' % workflow_form['name'].name}) }
+        ${ utils.render_field(workflow_form['description'], extra_attrs={'data-bind': 'value: %s' % workflow_form['description'].name}) }
+        ${ utils.render_field(workflow_form['is_shared'], extra_attrs={'data-bind': 'checked: %s' % workflow_form['is_shared'].name}) }
 
       <%
       workflows.key_value_field(workflow_form['parameters'], {
@@ -111,7 +98,20 @@ ${ layout.menubar(section='workflows') }
       })
       %>
 
-      ${ utils.render_field(workflow_form['job_xml'], extra_attrs={'data-bind': 'value: %s' % workflow_form['job_xml'].name}) }
+        <div class="control-group ">
+          <label class="control-label">
+            <a href="#" id="advanced-btn" onclick="$('#advanced-container').toggle('hide')">
+              <i class="icon-share-alt"></i> ${ _('advanced') }</a>
+          </label>
+          <div class="controls"></div>
+        </div>
+
+      <div id="advanced-container" class="hide">
+        % if user_can_edit_job:
+          ${ utils.render_field(workflow_form['deployment_dir'], extra_attrs={'data-bind': 'value: %s' % workflow_form['deployment_dir'].name}) }
+        % endif
+
+        ${ utils.render_field(workflow_form['job_xml'], extra_attrs={'data-bind': 'value: %s' % workflow_form['job_xml'].name}) }
       </div>
 
       </fieldset>
@@ -214,7 +214,7 @@ ${ layout.menubar(section='workflows') }
     <div id="listHistory" class="section hide">
       <div class="alert alert-info"><h3>${ _('History') }</h3></div>
       % if not history:
-      ${ _('N/A') }
+        ${ _('N/A') }
       % else:
         <table class="table">
           <thead>
@@ -228,7 +228,7 @@ ${ layout.menubar(section='workflows') }
           <tr>
             <td>
               <a href="${ url('oozie:list_history_record', record_id=record.id) }" data-row-selector="true"></a>
-            ${ utils.format_date(record.submission_date) }
+              ${ utils.format_date(record.submission_date) }
             </td>
             <td>${ record.oozie_job_id }</td>
           </tr>
@@ -282,6 +282,16 @@ ${ layout.menubar(section='workflows') }
 <script src="/static/ext/js/jquery/plugins/jquery-ui-draggable-droppable-sortable-1.8.23.min.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/ext/js/routie-0.3.0.min.js" type="text/javascript" charset="utf-8"></script>
 
+<link rel="stylesheet" href="/oozie/static/css/workflow.css">
+<script type="text/javascript" src="/oozie/static/js/workflow.utils.js"></script>
+<script type="text/javascript" src="/oozie/static/js/workflow.registry.js"></script>
+<script type="text/javascript" src="/oozie/static/js/workflow.modal.js"></script>
+<script type="text/javascript" src="/oozie/static/js/workflow.models.js"></script>
+<script type="text/javascript" src="/oozie/static/js/workflow.idgen.js"></script>
+<script type="text/javascript" src="/oozie/static/js/workflow.node-fields.js"></script>
+<script type="text/javascript" src="/oozie/static/js/workflow.node.js"></script>
+<script type="text/javascript" src="/oozie/static/js/workflow.js"></script>
+
 
 % for form_info in action_forms:
   ${ actions.action_form(action_form=form_info[1], node_type=form_info[0], template=True) }
@@ -296,8 +306,28 @@ ${ controls.decision_form(node_form, link_form, default_link_form, 'decision', T
 
 <script type="text/html" id="emptyTemplate"></script>
 
-<script type="text/html" id="startTemplate">
-  <div class="row-fluid" data-bind="template: { name: 'linkTemplate', foreach: links }"></div>
+<script type="text/html" id="disabledNodeTemplate">
+  <div class="node node-control row-fluid">
+    <div class="action span12">
+      <div class="row-fluid">
+        <div class="span12">
+          <h4 data-bind="text: (name()) ? name() : node_type() + '-' + id()"></h4>
+          <span data-bind="text: node_type" class="muted"></span>
+          <div class="node-description" data-bind="text: description"></div>
+        </div>
+      </div>
+
+      <div class="row-fluid node-action-bar">
+        <div class="span12" style="text-align:right">
+          &nbsp;
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ko if: links -->
+    <div class="row-fluid" data-bind="template: { name: 'linkTemplate', foreach: links }"></div>
+  <!-- /ko -->
 </script>
 
 <script type="text/html" id="nodeTemplate">
@@ -397,9 +427,6 @@ ${ controls.decision_form(node_form, link_form, default_link_form, 'decision', T
 <script type="text/html" id="linkTemplate">
   <div class="node-link">&nbsp;</div>
 </script>
-
-<link rel="stylesheet" href="/oozie/static/css/workflow.css">
-<script type="text/javascript" src="/oozie/static/js/workflow.js"></script>
 
 <script type="text/javascript">
 /**

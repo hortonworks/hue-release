@@ -139,6 +139,10 @@ class Job(models.Model):
       return self.coordinator
     except Coordinator.DoesNotExist:
       pass
+    try:
+      return self.bundle
+    except Bundle.DoesNotExist:
+      pass
 
   def get_type(self):
     return self.get_full_node().get_type()
@@ -245,6 +249,7 @@ class Workflow(Job):
   job_properties = models.TextField(default='[]', verbose_name=_t('Hadoop job properties'),
                                     help_text=_t('Job configuration properties used by all the actions of the workflow '
                                                  '(e.g. mapred.job.queue.name=production)'))
+  managed = models.BooleanField(default=True)
 
   objects = WorkflowManager()
 
@@ -412,14 +417,16 @@ class Workflow(Job):
   def gen_status_graph(self, oozie_workflow):
     from oozie.forms import NodeMetaForm  # Circular dependency
     actions = oozie_workflow.get_working_actions()
+    controls = oozie_workflow.get_control_flow_actions()
     WorkflowFormSet = inlineformset_factory(Workflow, Node, form=NodeMetaForm, max_num=0, can_order=False, can_delete=False)
     forms = WorkflowFormSet(instance=self).forms
     template='editor/gen/workflow-graph-status.xml.mako'
 
     index = dict([(form.instance.id, form) for form in forms])
     actions_index = dict([(action.name, action) for action in actions])
+    controls_index = dict([(control.name.strip(':'), control) for control in controls])
 
-    return django_mako.render_to_string(template, {'nodes': self.get_hierarchy(), 'index': index, 'actions': actions_index})
+    return django_mako.render_to_string(template, {'nodes': self.get_hierarchy(), 'index': index, 'actions': actions_index, 'controls': controls_index})
 
   @classmethod
   def gen_status_graph_from_xml(cls, user, oozie_workflow):
@@ -609,6 +616,11 @@ class Node(models.Model):
   def is_visible(self):
     return True
 
+  def add_node(self, child):
+    raise NotImplementedError(_("%(node_type)s has not implemented the 'add_node' method.") % {
+      'node_type': self.node_type
+    })
+
 
 class Action(Node):
   """
@@ -619,6 +631,13 @@ class Action(Node):
   class Meta:
     # Cloning does not work anymore if not abstract
     abstract = True
+
+  def add_node(self, child):
+    Link.objects.filter(parent=self, name='ok').delete()
+    Link.objects.create(parent=self, child=child, name='ok')
+    if not Link.objects.filter(parent=self, name='error').exists():
+      Link.objects.create(parent=self, child=Kill.objects.get(name='kill', workflow=self.workflow), name='error')
+
 
 # The fields with '[]' as default value are JSON dictionaries
 # When adding a new action, also update
@@ -715,6 +734,11 @@ class Java(Action):
                              help_text=_t('Refer to a Hadoop JobConf job.xml file bundled in the workflow deployment directory. '
                                           'Properties specified in the Job Properties element override properties specified in the '
                                           'files specified in the Job XML element.'))
+  capture_output = models.BooleanField(default=False, verbose_name=_t('Capture output'),
+                              help_text=_t('Capture output of the stdout of the %(program)s command execution. The %(program)s '
+                                           'command output must be in Java Properties file format and it must not exceed 2KB. '
+                                           'From within the workflow definition, the output of an %(program)s action node is accessible '
+                                           'via the String action:output(String node, String key) function') % {'program': node_type.title()})
 
   def get_properties(self):
     return json.loads(self.job_properties)
@@ -1026,22 +1050,35 @@ class ControlFlow(Node):
     return django_mako.render_to_string(self.get_template_name(), {})
 
   def is_visible(self):
-    return False
+    return True
 
 
 # Could not make this abstract
 class Start(ControlFlow):
   node_type = 'start'
 
+  def add_node(self, child):
+    Link.objects.filter(parent=self).delete()
+    link = Link.objects.create(parent=self, child=child, name='to')
+
 
 class End(ControlFlow):
   node_type = 'end'
+
+  def add_node(self, child):
+    raise RuntimeError(_("End should not have any children."))
 
 
 class Kill(ControlFlow):
   node_type = 'kill'
 
   message = models.CharField(max_length=256, blank=False, default='Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]')
+
+  def add_node(self, child):
+    raise RuntimeError(_("Kill should not have any children."))
+
+  def is_visible(self):
+    return False
 
 
 class Fork(ControlFlow):
@@ -1188,6 +1225,9 @@ class Coordinator(Job):
   throttle = models.PositiveSmallIntegerField(null=True, blank=True, choices=FREQUENCY_NUMBERS, verbose_name=_t('Throttle'),
                                  help_text=_t('The materialization or creation throttle value for its coordinator actions. '
                                               'How many maximum coordinator actions are allowed to be in WAITING state concurrently.'))
+  job_properties = models.TextField(default='[]', verbose_name=_t('Workflow properties'),
+                                    help_text=_t('Configuration properties to transmit to the workflow (e.g. limit=100, username=${coord:user()})'))
+
   HUE_ID = 'hue-id-c'
 
   def get_type(self):
@@ -1246,6 +1286,13 @@ class Coordinator(Job):
   @classmethod
   def get_application_filename(cls):
     return 'coordinator.xml'
+
+  def get_properties(self):
+    return json.loads(self.job_properties)
+
+  @property
+  def job_properties_escapejs(self):
+    return self._escapejs_parameters_list(self.job_properties)
 
   @property
   def start_utc(self):
@@ -1409,6 +1456,86 @@ class DataOutput(models.Model):
   unique_together = ('coordinator', 'name')
 
 
+class BundledCoordinator(models.Model):
+  bundle = models.ForeignKey('Bundle', verbose_name=_t('Bundle'),
+                             help_text=_t('The bundle regrouping all the coordinators.'))
+  coordinator = models.ForeignKey(Coordinator, verbose_name=_t('Coordinator'),
+                                  help_text=_t('The coordinator to batch with other coordinators.'))
+
+  parameters = models.TextField(default='[{"name":"oozie.use.system.libpath","value":"true"}]', verbose_name=_t('Oozie parameters'),
+                                help_text=_t('Constants used at the submission time (e.g. market=US, oozie.use.system.libpath=true).'))
+
+  def get_parameters(self):
+    return json.loads(self.parameters)
+
+
+class Bundle(Job):
+  """
+  http://oozie.apache.org/docs/3.3.0/BundleFunctionalSpec.html
+  """
+  kick_off_time = models.DateTimeField(default=datetime.today(), verbose_name=_t('Start'),
+                                       help_text=_t('When to start the first coordinators.'))
+  coordinators = models.ManyToManyField(Coordinator, through='BundledCoordinator')
+
+  HUE_ID = 'hue-id-b'
+
+  def get_type(self):
+    return 'bundle'
+
+  def to_xml(self, mapping=None):
+    if mapping is None:
+      mapping = {}
+    tmpl = "editor/gen/bundle.xml.mako"
+    return re.sub(re.compile('\s*\n+', re.MULTILINE), '\n', django_mako.render_to_string(tmpl, {'bundle': self, 'mapping': mapping}))
+
+  def clone(self, new_owner=None):
+    bundleds = BundledCoordinator.objects.filter(bundle=self)
+
+    copy = self
+    copy.pk = None
+    copy.id = None
+    copy.name += '-copy'
+    copy.deployment_dir = ''
+    if new_owner is not None:
+      copy.owner = new_owner
+    copy.save()
+
+    for bundled in bundleds:
+      bundled.pk = None
+      bundled.id = None
+      bundled.bundle = copy
+      bundled.save()
+
+    return copy
+
+  @classmethod
+  def get_application_path_key(cls):
+    return 'oozie.bundle.application.path'
+
+  @classmethod
+  def get_application_filename(cls):
+    return 'bundle.xml'
+
+  def get_absolute_url(self):
+    return reverse('oozie:edit_bundle', kwargs={'bundle': self.id})
+
+  def find_parameters(self):
+    params = {}
+
+    for bundled in self.coordinators.all():
+      for param in bundled.coordinator.find_parameters():
+        params[param] = ''
+
+      for param in find_parameters(bundled, ['parameters']):
+        params[param] = ''
+
+    return params
+
+  @property
+  def kick_off_time_utc(self):
+    return utc_datetime_format(self.kick_off_time)
+
+
 class HistoryManager(models.Manager):
   def create_from_submission(self, submission):
     History.objects.create(submitter=submission.user,
@@ -1438,6 +1565,8 @@ class History(models.Model):
 
     if self.oozie_job_id.endswith('C'):
       view = 'oozie:list_oozie_coordinator'
+    elif self.oozie_job_id.endswith('B'):
+      view = 'oozie:list_oozie_bundle'
 
     return reverse(view, kwargs={'job_id': self.oozie_job_id})
 

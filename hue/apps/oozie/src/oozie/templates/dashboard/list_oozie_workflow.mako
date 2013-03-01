@@ -32,8 +32,11 @@ ${ layout.menubar(section='dashboard') }
   ${ layout.dashboard_sub_menubar(section='workflows') }
 
   <h1>
+    % if oozie_bundle:
+      ${ _('Bundle') } <a href="${ oozie_bundle.get_absolute_url() }">${ oozie_bundle.appName }</a> :
+    % endif
     % if oozie_coordinator:
-      ${ _('Coordinator') } <a href="${ oozie_coordinator.get_absolute_url() }">${ oozie_coordinator.appName }</a> :
+      ${ _('Coordinator') } <a href="${ oozie_coordinator.get_absolute_url(oozie_bundle) }">${ oozie_coordinator.appName }</a> :
     % endif
 
     ${ _('Workflow') } ${ oozie_workflow.appName }
@@ -69,6 +72,9 @@ ${ layout.menubar(section='dashboard') }
               <div class="bar" style="width: 0">${ oozie_workflow.get_progress() }%</div>
             </div>
           </li>
+
+          <li class="nav-header">${ _('Id') }</li>
+          <li>${  oozie_workflow.id }</li>
 
           % if parameters and len(parameters) < 10:
               <li class="nav-header">${ _('Variables') }</li>
@@ -175,6 +181,7 @@ ${ layout.menubar(section='dashboard') }
               <th>${ _('End Time') }</th>
 
               <th>${ _('Retries') }</th>
+              <th>${ _('Error Code') }</th>
               <th>${ _('Error Message') }</th>
               <th>${ _('Transition') }</th>
 
@@ -198,7 +205,6 @@ ${ layout.menubar(section='dashboard') }
 
 
         <script id="actionTemplate" type="text/html">
-
           <tr>
             <td>
               <a data-bind="visible:externalId !='', attr: { href: log}" data-row-selector-exclude="true"><i class="icon-tasks"></i></a>
@@ -217,13 +223,13 @@ ${ layout.menubar(section='dashboard') }
             <td data-bind="text: endTime"></td>
 
             <td data-bind="text: retries"></td>
+            <td data-bind="text: errorCode"></td>
             <td data-bind="text: errorMessage"></td>
             <td data-bind="text: transition"></td>
 
             <td data-bind="text: data"></td>
 
           </tr>
-
         </script>
 
 
@@ -237,6 +243,10 @@ ${ layout.menubar(section='dashboard') }
             <tr>
               <td>${ _('External Id') }</td>
               <td>${ oozie_workflow.externalId or '-' }</td>
+            </tr>
+            <tr>
+              <td>${ _('Last Modification time') }</td>
+              <td>${ utils.format_time(oozie_workflow.lastModTime) }</td>
             </tr>
             <tr>
               <td>${ _('Start Time') }</td>
@@ -253,6 +263,10 @@ ${ layout.menubar(section='dashboard') }
             <tr>
               <td>${ _('Application Path') }</td>
               <td>${  utils.hdfs_link(oozie_workflow.appPath) }</td>
+            </tr>
+            <tr>
+              <td>${ _('Run') }</td>
+              <td>${  oozie_workflow.run }</td>
             </tr>
             </tbody>
           </table>
@@ -276,9 +290,7 @@ ${ layout.menubar(section='dashboard') }
       </div>
     </div>
 
-
   </div>
-
 
 </div>
 
@@ -293,7 +305,7 @@ ${ layout.menubar(section='dashboard') }
   </div>
 </div>
 
-<script src="/oozie/static/js/utils.js" type="text/javascript" charset="utf-8"></script>
+<script src="/oozie/static/js/bundles.utils.js" type="text/javascript" charset="utf-8"></script>
 <link rel="stylesheet" href="/oozie/static/css/workflow.css">
 <script src="/static/ext/js/knockout-2.1.0.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/ext/js/datatables-paging-0.1.js" type="text/javascript" charset="utf-8"></script>
@@ -327,6 +339,7 @@ ${ layout.menubar(section='dashboard') }
       endTime: action.endTime,
       retries: action.retries,
       errorMessage: action.errorMessage,
+      errorCode: action.errorCode,
       transition: action.transition,
       data: action.data
     }
@@ -447,7 +460,7 @@ ${ layout.menubar(section='dashboard') }
     var logsAtEnd = true;
 
     function refreshView() {
-      $.getJSON(window.location.href + "?format=json", function (data) {
+      $.getJSON("${ oozie_workflow.get_absolute_url() }" + "?format=json", function (data) {
 
         if (data.actions){
           viewModel.actions(ko.utils.arrayMap(data.actions, function (action) {
@@ -483,7 +496,7 @@ ${ layout.menubar(section='dashboard') }
         if (logsAtEnd) {
           _logsEl.scrollTop(_logsEl[0].scrollHeight - _logsEl.height());
         }
-        if (data.status != "RUNNING"){
+        if (data.status != "RUNNING" && data.status != "PREP"){
           return;
         }
         window.setTimeout(refreshView, 1000);

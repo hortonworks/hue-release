@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import logging
+from datetime import datetime,  timedelta
 
 from django import forms
 from django.db.models import Q
@@ -27,7 +28,7 @@ from django.utils.translation import ugettext_lazy as _t
 from desktop.lib.django_forms import MultiForm, SplitDateTimeWidget
 from oozie.models import Workflow, Node, Java, Mapreduce, Streaming, Coordinator,\
   Dataset, DataInput, DataOutput, Pig, Link, Hive, Sqoop, Ssh, Shell, DistCp, Fs,\
-  Email, SubWorkflow, Generic
+  Email, SubWorkflow, Generic, Bundle, BundledCoordinator
 
 
 LOG = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ LOG = logging.getLogger(__name__)
 
 class ParameterForm(forms.Form):
   name = forms.CharField(max_length=40, widget=forms.widgets.HiddenInput())
-  value = forms.CharField(max_length=100, required=False)
+  value = forms.CharField(max_length=1024, required=False)
 
   NON_PARAMETERS = (
       'user.name',
@@ -337,6 +338,7 @@ class CoordinatorForm(forms.ModelForm):
     widgets = {
       'description': forms.TextInput(attrs={'class': 'span5'}),
       'parameters': forms.widgets.HiddenInput(),
+      'job_properties': forms.widgets.HiddenInput(),
       'schema_version': forms.widgets.HiddenInput(),
       'timeout': NumberInput(),
     }
@@ -449,6 +451,55 @@ class RerunCoordForm(forms.Form):
     super(RerunCoordForm, self).__init__(*args, **kwargs)
 
     self.fields['actions'].choices = [(action.actionNumber, action.title) for action in reversed(oozie_coordinator.get_working_actions())]
+
+
+class RerunBundleForm(forms.Form):
+  refresh = forms.BooleanField(initial=True, required=False, help_text=_t('Used to indicate if user wants to cleanup output events for given rerun actions'))
+  nocleanup = forms.BooleanField(initial=True, required=False, help_text=_t("Used to indicate if user wants to refresh an action's input and output events"))
+  coordinators = forms.MultipleChoiceField(required=True)
+  start = forms.SplitDateTimeField(input_time_formats=[TIME_FORMAT], required=False, initial=datetime.today(),
+                                   widget=SplitDateTimeWidget(attrs={'class': 'input-small', 'id': 'rerun_start'},
+                                                              date_format=DATE_FORMAT, time_format=TIME_FORMAT))
+  end = forms.SplitDateTimeField(input_time_formats=[TIME_FORMAT], required=False, initial=datetime.today() + timedelta(days=3),
+                                 widget=SplitDateTimeWidget(attrs={'class': 'input-small', 'id': 'rerun_end'},
+                                                            date_format=DATE_FORMAT, time_format=TIME_FORMAT))
+
+  def __init__(self, *args, **kwargs):
+    oozie_bundle = kwargs.pop('oozie_bundle')
+
+    super(RerunBundleForm, self).__init__(*args, **kwargs)
+
+    self.fields['coordinators'].choices = [(action.name, action.name) for action in reversed(oozie_bundle.actions)]
+    self.fields['coordinators'].initial = [action.name for action in reversed(oozie_bundle.actions)]
+
+
+class BundledCoordinatorForm(forms.ModelForm):
+
+  def __init__(self, *args, **kwargs):
+    super(BundledCoordinatorForm, self).__init__(*args, **kwargs)
+    self.fields['coordinator'].empty_label = None
+
+  class Meta:
+    model = BundledCoordinator
+    exclude = ('bundle',)
+    widgets = {
+      'parameters': forms.widgets.HiddenInput(),
+    }
+
+
+class BundleForm(forms.ModelForm):
+  kick_off_time = forms.SplitDateTimeField(input_time_formats=[TIME_FORMAT],
+                                           widget=SplitDateTimeWidget(attrs={'class': 'input-small', 'id': 'bundle_kick_off_time'},
+                                                                      date_format=DATE_FORMAT, time_format=TIME_FORMAT))
+
+  class Meta:
+    model = Bundle
+    exclude = ('owner', 'coordinators')
+    widgets = {
+      'description': forms.TextInput(attrs={'class': 'span5'}),
+      'parameters': forms.widgets.HiddenInput(),
+      'schema_version': forms.widgets.HiddenInput(),
+    }
 
 
 def design_form_by_type(node_type, user, workflow):

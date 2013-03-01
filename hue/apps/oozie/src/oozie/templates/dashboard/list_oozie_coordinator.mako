@@ -29,7 +29,12 @@ ${ layout.menubar(section='dashboard') }
 <div class="container-fluid">
   ${ layout.dashboard_sub_menubar(section='coordinators') }
 
-  <h1>${ _('Coordinator') } ${ oozie_coordinator.appName }</h1>
+  <h1>
+    % if oozie_bundle:
+      ${ _('Bundle') } <a href="${ oozie_bundle.get_absolute_url() }">${ oozie_bundle.appName }</a> :
+    % endif
+    ${ _('Coordinator') } ${ oozie_coordinator.appName }
+  </h1>
 
 
 <div class="row-fluid">
@@ -64,11 +69,8 @@ ${ layout.menubar(section='dashboard') }
         <li class="nav-header">${ _('Next Materialized Time') }</li>
         <li id="nextTime">${ utils.format_time(oozie_coordinator.nextMaterializedTime) }</li>
 
-        <li class="nav-header">${ _('Start time') }</li>
-        <li>${ utils.format_time(oozie_coordinator.startTime) }</li>
-
-        <li class="nav-header">${ _('End time') }</li>
-        <li id="endTime">${ utils.format_time(oozie_coordinator.endTime) }</li>
+        <li class="nav-header">${ _('Id') }</li>
+        <li>${ oozie_coordinator.id }</li>
 
         % if coordinator:
             <li class="nav-header">${ _('Datasets') }</li>
@@ -134,6 +136,7 @@ ${ layout.menubar(section='dashboard') }
     <ul class="nav nav-tabs">
       <li class="active"><a href="#calendar" data-toggle="tab">${ _('Calendar') }</a></li>
       <li><a href="#actions" data-toggle="tab">${ _('Actions') }</a></li>
+      <li><a href="#details" data-toggle="tab">${ _('Details') }</a></li>
       <li><a href="#configuration" data-toggle="tab">${ _('Configuration') }</a></li>
       <li><a href="#log" data-toggle="tab">${ _('Log') }</a></li>
       <li><a href="#definition" data-toggle="tab">${ _('Definition') }</a></li>
@@ -189,6 +192,7 @@ ${ layout.menubar(section='dashboard') }
             <th>${ _('Type') }</th>
             <th>${ _('Status') }</th>
 
+            <th>${ _('Error Code') }</th>
             <th>${ _('Error Message') }</th>
             <th>${ _('Missing Dependencies') }</th>
 
@@ -226,6 +230,7 @@ ${ layout.menubar(section='dashboard') }
           <td data-bind="text: nominalTime"></td>
           <td data-bind="text: type"></td>
           <td><span data-bind="text: status, attr: {'class': statusClass}"></span></td>
+          <td data-bind="text: errorCode"></td>
           <td data-bind="text: errorMessage"></td>
           <td data-bind="text: missingDependencies"></td>
           <td data-bind="text: createdTime"></td>
@@ -238,6 +243,21 @@ ${ layout.menubar(section='dashboard') }
           </td>
         </tr>
       </script>
+
+      <div class="tab-pane" id="details">
+        <table class="table table-condensed">
+          <tbody>
+            <tr>
+              <td>${ _('Start time') }</td>
+              <td>${ utils.format_time(oozie_coordinator.startTime) }</td>
+            </tr>
+            <tr>
+              <td>${ _('End time') }</td>
+              <td>${ utils.format_time(oozie_coordinator.endTime) }</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <div class="tab-pane" id="configuration">
         ${ utils.display_conf(oozie_coordinator.conf_dict) }
@@ -277,7 +297,7 @@ ${ layout.menubar(section='dashboard') }
   </div>
 </div>
 
-<script src="/oozie/static/js/utils.js" type="text/javascript" charset="utf-8"></script>
+<script src="/oozie/static/js/bundles.utils.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/ext/js/knockout-2.1.0.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/ext/js/codemirror-3.0.js"></script>
 <link rel="stylesheet" href="/static/ext/css/codemirror.css">
@@ -309,6 +329,7 @@ ${ layout.menubar(section='dashboard') }
       createdTime: action.createdTime,
       lastModifiedTime: action.lastModifiedTime,
       errorMessage: action.errorMessage,
+      errorCode: action.errorCode,
       missingDependencies: action.missingDependencies
     }
   }
@@ -408,7 +429,7 @@ ${ layout.menubar(section='dashboard') }
     var logsAtEnd = true;
 
     function refreshView() {
-      $.getJSON("${ oozie_coordinator.get_absolute_url() }" + "?format=json", function (data) {
+      $.getJSON("${ oozie_coordinator.get_absolute_url(oozie_bundle) }" + "?format=json", function (data) {
         viewModel.isLoading(false);
         if (data.actions){
           viewModel.actions(ko.utils.arrayMap(data.actions, function (action) {
@@ -444,7 +465,7 @@ ${ layout.menubar(section='dashboard') }
         if (logsAtEnd) {
           _logsEl.scrollTop(_logsEl[0].scrollHeight - _logsEl.height());
         }
-        if (data.status != "RUNNING"){
+        if (data.status != "RUNNING" && data.status != "PREP"){
           return;
         }
         window.setTimeout(refreshView, 1000);
