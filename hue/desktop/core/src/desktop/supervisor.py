@@ -64,8 +64,8 @@ MAX_RESTARTS_IN_WINDOW = 3
 
 # User and group to setuid/setgid down to for any supervisees that don't have
 # the drop_root option set to False
-SETUID_USER = "hue"
-SETGID_GROUP = "hue"
+SETUID_USER = "sandbox"
+SETGID_GROUP = "sandbox"
 g_user_uid = None       # We figure out the numeric uid/gid later
 g_user_gid = None
 
