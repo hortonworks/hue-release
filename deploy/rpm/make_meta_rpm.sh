@@ -7,9 +7,9 @@ source env.sh
 
 # === sources ===
 
-cp *.spec ~/rpm/SPECS/
+cp *.spec $BB/rpm/SPECS/
 
 # === build ===
 
-rpmbuild -ba ~/rpm/SPECS/sandbox-meta.spec
-mv ~/rpm/RPMS/noarch/*.rpm ./
+rpmbuild --define "_topdir $BB/rpm" -ba $BB/rpm/SPECS/sandbox-meta.spec
+mv $BB/rpm/RPMS/noarch/*.rpm ./

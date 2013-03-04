@@ -124,8 +124,6 @@ iptables -F
 #pip install lxml --upgrade
 
 
-fi
-
 ) | tee ~/sandbox-install.log
 
 %postun

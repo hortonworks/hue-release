@@ -1,8 +1,10 @@
+export BB="~/rpmbuild"  # base directory
+
 # === create rpmbuild enviromnent ===
-mkdir -p ~/rpm ~/rpm/BUILD ~/rpm/RPMS ~/rpm/RPMS/i386 ~/rpm/RPMS/i686
-mkdir -p ~/rpm/RPMS/noarch ~/rpm/SOURCES ~/rpm/SPECS ~/rpm/SRPMS ~/rpm/tmp
+mkdir -p $BB/rpm $BB/rpm/BUILD $BB/rpm/RPMS $BB/rpm/RPMS/i386 $BB/rpm/RPMS/i686
+mkdir -p $BB/rpm/RPMS/noarch $BB/rpm/SOURCES $BB/rpm/SPECS $BB/rpm/SRPMS $BB/rpm/tmp
 
 cat << EOF > ~/.rpmmacros
-%_topdir               $HOME/rpm
-%_tmppath              $HOME/rpm/tmp
+%_topdir               $BB/rpm
+%_tmppath              $BB/rpm/tmp
 EOF
