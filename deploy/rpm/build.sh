@@ -21,6 +21,11 @@ git clone git@github.com:/hortonworks/sandbox-shared.git sandbox-shared
     cd sandbox-shared
     git checkout Caterpillar
 
+    yum -y install git ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql  mysql-devel openldap-devel python-devel python-simplejson sqlite-devel
+    useradd sandbox
+
+    easy_install virtualenv
+
     tar zcf $SRC/start_scripts.tgz start_scripts
     tar zcf $SRC/tutorials.tgz tutorials --exclude=".git"
 )
@@ -34,9 +39,7 @@ virtualenv .env
 tar zcf $SRC/tutorials-env.tgz .env
 
 # Build Hue
-( 
-    yum -y install git ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql  mysql-devel openldap-devel python-devel python-simplejson sqlite-devel
-    useradd sandbox
+(     
     cd $SRC
     wget http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz
     tar xvf apache-maven-3.0.5-bin.tar.gz
