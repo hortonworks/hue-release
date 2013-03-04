@@ -39,17 +39,16 @@ tar zcf $SRC/tutorials-env.tgz .env
     useradd sandbox
     su - sandbox
     cd /home/sandbox
-    wget http://mirrors.besplatnyeprogrammy.ru/apache/maven/maven-3/3.0.4/binaries/apache-maven-3.0.4-bin.tar.gz
-    tar xvf apache-maven-3.0.4-bin.tar.gz
-    rm apache-maven-3.0.4-bin.tar.gz
-    export PATH=$PATH:/home/sandbox/apache-maven-3.0.4/bin/
-    git clone git@github.com:hortonworks/sandbox-shared.git
+    wget http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz
+    tar xvf apache-maven-3.0.5-bin.tar.gz
+    rm apache-maven-3.0.5-bin.tar.gz
+    export PATH=$PATH:/home/sandbox/apache-maven-3.0.5/bin/
     cd sandbox-shared
     git checkout Caterpillar
     cd hue
     PREFIX=/home/sandbox make install
     #Building started ....
-    #After it's finished there would be a directory in /home/sandbox
+    #After it's finished there would be a directory /home/sandbox/hue
     bash /home/sandbox/tools/relocatable.sh
 
 
