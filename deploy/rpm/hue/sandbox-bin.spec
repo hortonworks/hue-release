@@ -75,6 +75,12 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %defattr(600,sandbox,sandbox)
 /home/sandbox/.ssh/id_rsa
 
+%defattr(755,sandbox,sandbox)
+/home/sandbox/start_scripts/hue
+/home/sandbox/start_scripts/startup_script
+/home/sandbox/start_scripts/startup_script_ec2
+
+
 %pre
 
 (

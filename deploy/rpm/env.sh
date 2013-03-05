@@ -1,4 +1,4 @@
-export BB="~/rpmbuild"  # base directory
+export BB="$HOME/rpmbuild"  # base directory
 
 # === create rpmbuild enviromnent ===
 mkdir -p $BB/rpm $BB/rpm/BUILD $BB/rpm/RPMS $BB/rpm/RPMS/i386 $BB/rpm/RPMS/i686
