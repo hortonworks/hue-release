@@ -21,7 +21,7 @@ git clone git@github.com:/hortonworks/sandbox-shared.git sandbox-shared
     cd sandbox-shared
     git checkout Caterpillar
 
-    yum -y install git ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql  mysql-devel openldap-devel python-devel python-simplejson sqlite-devel
+    yum -y install git rpm-build ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql  mysql-devel openldap-devel python-devel python-simplejson sqlite-devel
     
     if ! id -u sandbox >/dev/null 2>&1; then
         #If sandbox user doesn't exists - create it
