@@ -1,8 +1,8 @@
 set -x
 set -e
 
-export SRC=$HOME/rpmbuild/src
-export OUT=$HOME/rpmbuild/out
+SRC=~/rpmbuild/src
+OUT=~/rpmbuild/out
 
 rm -rf $SRC
 mkdir -p $SRC $OUT
@@ -21,12 +21,18 @@ git clone git@github.com:/hortonworks/sandbox-shared.git sandbox-shared
     cd sandbox-shared
     git checkout Caterpillar
 
+    yum -y install git rpm-build ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql  mysql-devel openldap-devel python-devel python-simplejson sqlite-devel
+    
+    if ! id -u sandbox >/dev/null 2>&1; then
+        #If sandbox user doesn't exists - create it
+        useradd sandbox
+    fi
+
+    easy_install virtualenv
+
     tar zcf $SRC/start_scripts.tgz start_scripts
     tar zcf $SRC/tutorials.tgz tutorials --exclude=".git"
 )
-
-yum -y install git rpm-build ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql  mysql-devel openldap-devel python-devel python-simplejson sqlite-devel
-easy_install virtualenv
 
 mkdir -p tutorials-env && cd tutorials-env
 virtualenv .env
@@ -37,16 +43,7 @@ virtualenv .env
 tar zcf $SRC/tutorials-env.tgz .env
 
 # Build Hue
-(
-    list="bin,dev,etc,lib,lib64,proc,sbin,sys,usr,var,root"
-    IFS=$' ,'; for x in `echo $list`; do
-        mkdir -p $OUT/env/$x
-        mount --bind /$x $OUT/env/$x
-    done
-    mkdir -p $OUT/env/home/sandbox
-    mkdir -p $OUT/env/{$SRC,$OUT}
-    chroot $OUT/env
-
+(     
     cd $SRC
     wget http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz
     tar xvf apache-maven-3.0.5-bin.tar.gz
@@ -58,12 +55,8 @@ tar zcf $SRC/tutorials-env.tgz .env
     #After it's finished there would be a directory /home/sandbox/hue
     bash /home/sandbox/hue/tools/relocatable.sh
 
-    exit # from chroot
-    IFS=$', '; for x in `echo $list`; do
-        umount $OUT/env/$x
-    done
 
-    cd $OUT/env/home/sandbox
+    cd /home/sandbox
     tar zcf $SRC/hue.tgz hue
 )
 
