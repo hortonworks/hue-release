@@ -53,7 +53,7 @@ tar zcf $SRC/tutorials-env.tgz .env
     PREFIX=/home/sandbox make install
     #Building started ....
     #After it's finished there would be a directory /home/sandbox/hue
-    bash /home/sandbox/tools/relocatable.sh
+    bash /home/sandbox/hue/tools/relocatable.sh
 
 
     cd /home/sandbox
