@@ -27,7 +27,7 @@ Sandbox Tutorials (with files)
 
 %prep
 %setup -n tutorials
-gzip -dc /root/rpm/SOURCES/tutorials-env.tgz | tar -xvvf -
+gzip -dc $BB/rpm/SOURCES/tutorials-env.tgz | tar -xvvf -
 
 
 %build
