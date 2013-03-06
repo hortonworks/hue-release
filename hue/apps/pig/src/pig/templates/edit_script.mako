@@ -107,12 +107,13 @@ udfs = UDF.objects.all()
             <input type="hidden" name="script_id"  value="${result.get('id','')}" >
             <label for="id_title">Title:</label>
             <div class="control-group">
-            <label for="id_text">Pig script:</label>
+            
               <div class="controls">
                 <input id="id_title" type="text" name="title" required="required"
                        maxlength="200" value="${result.get('title',"")}">
               </div>
             </div>
+            <label for="id_pig_script" id="pig_script_label" data-toggle="tooltip" data-placement="bottom" data-trigger="null" data-original-title="Press ctrl-space for autocompletion.">Pig script:</label>
             <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
             <div class="nav-collapse">
               <ul class="nav">
