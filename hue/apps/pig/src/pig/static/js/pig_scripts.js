@@ -4,7 +4,6 @@ var varSaveParamTrig = 0;
 var submitFormPopup=false;
 var table_fields={};
 var tmpDirList={path:"",list:[]};
-var showedTooltip = false;
 
 
 function ping_job(job_id){
@@ -246,12 +245,6 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
 
   },
   onChange : function (from, change){
-
-    if(!showedTooltip) {
-      $('#pig_script_label').tooltip('show');
-      showedTooltip = true;
-      setTimeout(function(){$('#pig_script_label').tooltip('destroy');}, 3000);
-    }
 
     $(".empty-codemirror-textarea-error").remove();
 

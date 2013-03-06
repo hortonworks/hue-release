@@ -113,7 +113,11 @@ udfs = UDF.objects.all()
                        maxlength="200" value="${result.get('title',"")}">
               </div>
             </div>
-            <label for="id_pig_script" id="pig_script_label" data-toggle="tooltip" data-placement="bottom" data-trigger="null" data-original-title="Press ctrl-space for autocompletion.">Pig script:</label>
+            <label for="id_pig_script" >Pig script:</label>
+            <ul>
+              <li class="text-success">Press ctrl+space for autocompletion</li>
+              <li class="text-success">To see table fields helper type table_name + "." (e.g. sample_07.)</li>
+            </ul>
             <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
             <div class="nav-collapse">
               <ul class="nav">
