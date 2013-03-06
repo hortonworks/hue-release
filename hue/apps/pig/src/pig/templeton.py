@@ -2,9 +2,7 @@
 import urllib
 import urllib2
 import simplejson as json
-
-
-TEMPLETON_URL = "http://localhost:50111/templeton/v1/"
+from hcatalog.conf import TEMPLETON_URL
 
 
 class Templeton(object):
@@ -52,7 +50,6 @@ class Templeton(object):
         response = opener.open(req)
         return json.loads(response.read())
 
-
     def pig_query(self, execute=None, pig_file=None, statusdir=None, callback=None):
         """
         Create and queue a Pig job.
@@ -70,7 +67,7 @@ class Templeton(object):
         Returns dict:
         id -- A string containing the job ID similar to "job_201110132141_0001".
         info -- A JSON object containing the information returned when the job was queued.
-        """        
+        """
         if not any([execute, pig_file]):
             raise Exception("""One of either "execcute" or "file" is required""")
         data = {}

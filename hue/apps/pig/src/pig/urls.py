@@ -33,6 +33,7 @@ urlpatterns = patterns('pig.views',
     url(r'notify/(?P<job_id>\w+)/$', 'notify_job_complited', name='notify_job_complited'),
     url(r'show_job_result/(?P<job_id>\w+)/$', 'show_job_result', name='show_job_result'),
     url(r'delete_job/(?P<job_id>\w+)/$', 'delete_job_object', name='delete_job_object'),
+    url(r'ping_job/(?P<job_id>\w+)/$', 'ping_job', name='ping_job'),
     url(r'(?P<obj_id>\d+)?/', 'index', name="view_script"),
     url(r'check_script_title', 'check_script_title', name='check_script_title'),
 

@@ -8,8 +8,8 @@ var showedTooltip = false;
 
 
 function ping_job(job_id){
-  var url = '/proxy/localhost/50111/templeton/v1/queue/';
-  $.get(url+job_id+'?user.name=hdfs',
+  var url = '/pig/ping_job/';
+  $.get(url+job_id,
       function(data) {
         if (data.exitValue !== null)
         {

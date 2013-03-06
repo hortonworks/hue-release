@@ -332,3 +332,8 @@ def download_job_result(request, job_id):
     response = HttpResponse(job_result['stdout'], content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename="%s_result.txt"' % job_id
     return response
+
+
+def ping_job(request, job_id):
+    t = Templeton(request.user.username)
+    return t.check_job(job_id)
