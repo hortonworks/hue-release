@@ -19,7 +19,7 @@ class Templeton(object):
         else:
             data = {"user.name": self.user}
         data = urllib.urlencode(data)
-        response = urllib2.urlopen(TEMPLETON_URL + url + "?" + data)
+        response = urllib2.urlopen(TEMPLETON_URL.get() + url + "?" + data)
         return json.loads(response.read())
 
     def post(self, url, data=None):
@@ -31,7 +31,7 @@ class Templeton(object):
         else:
             data = {"user.name": self.user}
         data = urllib.urlencode(data)
-        req = urllib2.Request(TEMPLETON_URL + url, data)
+        req = urllib2.Request(TEMPLETON_URL.get() + url, data)
         response = urllib2.urlopen(req)
         return json.loads(response.read())
 
@@ -45,7 +45,7 @@ class Templeton(object):
             data = {"user.name": "sandbox"}
         data = urllib.urlencode(data)
         opener = urllib2.build_opener(urllib2.HTTPHandler)
-        req = urllib2.Request(TEMPLETON_URL + url + "?" + data)
+        req = urllib2.Request(TEMPLETON_URL.get() + url + "?" + data)
         req.get_method = lambda: 'DELETE'
         response = opener.open(req)
         return json.loads(response.read())

@@ -336,4 +336,8 @@ def download_job_result(request, job_id):
 
 def ping_job(request, job_id):
     t = Templeton(request.user.username)
-    return t.check_job(job_id)
+    try:
+        result = t.check_job(job_id)
+    except Exception, ex:
+        result = {"status": {"failureInfo": unicode(ex)}}
+    return HttpResponse(json.dumps(result))

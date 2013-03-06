@@ -53,6 +53,11 @@ def show_tables(request, database='default'):
   return render("show_tables.mako", request, dict(database=database,))
 
 
+def describe_table_json(request, database, table):
+    table_desc_extended = hcat_client().describe_table_extended(table)
+    return HttpResponse(json.dumps(table_desc_extended))
+
+
 def describe_table(request, database, table):
   try:
     table_desc_extended = hcat_client().describe_table_extended(table)

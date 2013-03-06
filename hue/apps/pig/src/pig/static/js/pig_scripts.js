@@ -9,7 +9,7 @@ var showedTooltip = false;
 
 function ping_job(job_id){
   var url = '/pig/ping_job/';
-  $.get(url+job_id,
+  $.get(url+job_id + "/",
       function(data) {
         if (data.exitValue !== null)
         {
@@ -34,7 +34,7 @@ function ping_job(job_id){
           $(".bar").css("width", percent+"%");
         }
         globalTimer = window.setTimeout("ping_job('"+job_id+"');", 1000);
-      });
+      }, "json");
 
 }
 
@@ -105,7 +105,7 @@ function getTables(){
 
 function getTableFields(table,target){
 
-  $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
+  $.get("/hcatalog/table/default/"+table+"/json/", function(data){
     //$.get("table_f.php?con=" + table, function(data){
 
     if(typeof (data) !=="undefined" && data.hasOwnProperty("columns") && data.columns.length>0)
