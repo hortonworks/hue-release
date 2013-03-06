@@ -11,4 +11,4 @@ if [ -f /etc/bashrc ]; then
     . /etc/bashrc
 fi
 
-[ $(tty) = "/dev/tty1" ] && python /home/sandbox/start_scripts/splash.py
+[ $(tty) = "/dev/tty1" ] && bash /home/sandbox/start_scripts/post_start.sh
