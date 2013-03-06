@@ -63,14 +63,11 @@ start)
         [ ! "$pull_res" = "Already up-to-date." ] && /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
     fi
     
-    sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
-
     echo "Starting HDP ..."
     bash $SCRIPTS_PATH/start.sh
     sudo -u hdfs hadoop dfsadmin -safemode leave
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
-    cd /home/sandbox/hue
     /etc/init.d/supervisord start >> $LOG 2>&1
     
     echo 0 > /proc/sys/kernel/hung_task_timeout_secs
