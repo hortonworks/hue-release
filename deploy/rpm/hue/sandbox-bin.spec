@@ -130,6 +130,11 @@ iptables -F
 #pip install lxml --upgrade
 
 
+mkdir /etc/hue
+mv /home/sandbox/hue/desktop/conf /etc/hue/
+ln -s /etc/hue/conf /home/sandbox/hue/desktop/
+
+
 ) | tee ~/sandbox-install.log
 
 %postun
