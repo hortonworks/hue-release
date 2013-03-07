@@ -65,7 +65,7 @@ def register_skip(request):
 
 
 def tutorials(request):
-    location = settings.CONTENT_FRAME_URL
+    location = settings.CONTENT_FRAME_URL()
     step_location = "/lesson/"
     if request.user.is_authenticated() \
         and request.user.username != "AnonymousUser":

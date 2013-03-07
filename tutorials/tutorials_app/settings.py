@@ -32,7 +32,7 @@ DATABASES = {
 }
 
 from socket import gethostname,gethostbyname
-CONTENT_FRAME_URL = "http://%s:8000/" % gethostbyname(gethostname()) # HUE URL param
+CONTENT_FRAME_URL = lambda: "http://%s:8000/" % gethostbyname(gethostname()) # HUE URL param
 
 DATABASE_ROUTERS = ['tutorials_app.db_routers.AuthRouter']
 
