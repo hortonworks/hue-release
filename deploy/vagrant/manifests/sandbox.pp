@@ -103,11 +103,37 @@ class tutorials {
     }
 }
 
+class java_home {
+    file { "/etc/bashrc": ensure => present, }
+
+    line { java_home:
+        file => "/etc/bashrc",
+        line => "export JAVA_HOME=/usr/jdk/jdk1.6.0_31/",
+    }
+}
+
+
+class hdfs_prepare {
+      package { "wget":
+        ensure => present,    
+      }
+
+      file { 'hdfs_prepare.sh':
+        path    => "/tmp/hdfs_prepare.sh",
+        content => template("/vagrant/files/scripts/hdfs_prepare.sh"),
+      }
+
+      exec { "hdfs_prepare.sh": 
+        command => '/bin/sh /tmp/hdfs_prepare.sh > /var/log/hdfs_start.log',
+        require => File['hdfs_prepare.sh']
+      } 
+}
 
 class sandbox {
-
+    include java_home
     include sandbox_rpm
     include tutorials
+    include hdfs_prepare
 
     file { 'startHiveserver2.sh':
         path    => "/tmp/startHiveserver2.sh",
@@ -157,16 +183,9 @@ class sandbox {
 }
 
 
-class java_home {
-    file { "/etc/bashrc": ensure => present, }
-
-    line { java_home:
-        file => "/etc/bashrc",
-        line => "export JAVA_HOME=/usr/jdk/jdk1.6.0_31/",
-    }
-}
 
 
-include java_home
+
+
 include splash
 include sandbox

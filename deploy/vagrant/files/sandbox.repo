@@ -1,6 +1,6 @@
 [sandbox]
-name=HDP
-baseurl=http://dl.dropbox.com/u/3926517/RPM/1
+name=Sandbox repo
+baseurl=https://roman.rader%40gmail.com:storage_1@www.box.com/dav/HortonWorks/repo
 path=/
 enabled=1
 gpgcheck=0
