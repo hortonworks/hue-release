@@ -124,6 +124,8 @@ chkconfig --levels 3 hue on
 
 chkconfig iptables off
 iptables -F
+chkconfig ip6tables off
+ip6tables -F
 
 #echo "Update lxml"
 #source build/env/bin/activate
