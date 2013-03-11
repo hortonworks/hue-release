@@ -19,12 +19,9 @@ function listdir(_context){
     async: false,
     success: function(data) {
       //console.log(data);
-      if(data.hasOwnProperty("FileStatuses")){
-        for (var i = 0; i < data.FileStatuses.FileStatus.length; i++) {
-          if(data.FileStatuses.FileStatus[i].pathSuffix !="")
-            contentList.push(data.FileStatuses.FileStatus[i].pathSuffix);
+      for (var i = 0; i < data.length; i++) {          
+            contentList.push(data[i]);
         }
-      }
     },
     error: function() {
     	contentList.length = 0;
