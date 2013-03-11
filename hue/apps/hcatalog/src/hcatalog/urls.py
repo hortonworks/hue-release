@@ -20,6 +20,7 @@ from django.conf.urls.defaults import patterns, url
 urlpatterns = patterns('hcatalog.views',
   url(r'^$', 'show_tables', name='show_tables'),
   url(r'^get_tables$', 'get_tables', name='get_tables'),
+  url(r'^listdir/(?P<path>.*)$', 'listdir', name='listdir'),
   url(r'^tables/(?P<database>\w+)?$', 'show_tables', name='show_tables'),
   url(r'^pig_view/(?P<database>\w+)/(?P<table>\w+)$', 'pig_view', name='pig_view'),
   url(r'^hive_view/(?P<database>\w+)/(?P<table>\w+)$', 'hive_view', name='hive_view'),

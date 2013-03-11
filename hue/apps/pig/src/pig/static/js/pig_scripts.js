@@ -67,20 +67,18 @@ function listdir(_context){
 
 
   $.ajax({
-    //url: 'files.php/?con=' + _context,
-    url: "/proxy/sandbox/50070/webhdfs/v1" + _context + "?op=LISTSTATUS&user.name=hue&doas=hdfs",
+    //url: 'files.php/?con=' + _context,http://192.168.56.3:8000/filebrowser/view/apps?pagesize=45&pagenum=1&filter=&sortby=name&descending=false&format=json
+    url: "/hcatalog/listdir" + _context,
     type: "GET",
     dataType: "json",
     cache: false,
     async: false,
     success: function(data) {
       //console.log(data);
-      if(data.hasOwnProperty("FileStatuses")){
-        for (var i = 0; i < data.FileStatuses.FileStatus.length; i++) {
-          if(data.FileStatuses.FileStatus[i].pathSuffix !="")
-            contentList.push( data.FileStatuses.FileStatus[i].pathSuffix);
+        for (var i = 0; i < data.length; i++) {          
+            contentList.push(data[i]);
         }
-      }
+
     },
     error: function() {
     	contentList.length = 0;
@@ -219,18 +217,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     pig_editor.matchHighlight("CodeMirror-matchhighlight");
   },
   extraKeys: {
-    "Ctrl-Space": function(cm) { CodeMirror.simpleHint(cm, CodeMirror.pigHint);  }/*,
-     "Shift-4":function(cm){
-     $("#show-modal-for-dollar")
-     .modal("show")
-     .on('hide', function() {
-     if(dollarSaveParamTrig==1){
-     cm.replaceRange($("#show-modal-for-dollar").find("input").val(),cm.getCursor()  );
-     cm.focus();
-     }
-     dollarSaveParamTrig=0;
-     });
-     }*/
+    "Ctrl-Space": function(cm) { CodeMirror.simpleHint(cm, CodeMirror.pigHint);  }
   },
   onKeyEvent: function(cm,key){
     var lineNumber=cm.getCursor().line;

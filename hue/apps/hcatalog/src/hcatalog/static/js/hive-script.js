@@ -12,7 +12,7 @@ function listdir(_context){
   _context=_context[0];
 
   $.ajax({
-    url: "/proxy/sandbox/50070/webhdfs/v1" + _context + "?op=LISTSTATUS&user.name=hue&doas=hdfs",
+    url: "/hcatalog/listdir" + _context,
     type: "GET",
     dataType: "json",
     cache: false,
@@ -47,7 +47,7 @@ function getTables(){
 
 function getTableFields(table,target){
 
-    $.get("/proxy/localhost/50111/templeton/v1/ddl/database/default/table/"+table+"?user.name=hue", function(data){
+    $.get("/hcatalog/table/default/"+table+"/json/", function(data){
     //$.get("table_f.php?con=" + table, function(data){
 
       if(typeof (data) !=="undefined" && data.hasOwnProperty("columns") && data.columns.length>0)

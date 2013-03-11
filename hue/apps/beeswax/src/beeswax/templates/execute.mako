@@ -213,7 +213,10 @@ ${layout.menubar(section='query')}
             % else:
               <h1>${_('Query Editor')}</h1>
             % endif
-
+            <ul>
+              <li class="text-success">Press ctrl+space for autocompletion</li>
+              <li class="text-success">To see table fields helper type table_name + "." (e.g. sample_07.)</li>
+            </ul>
             % if error_messages or log:
                 <ul class="nav nav-tabs">
                     <li class="active">

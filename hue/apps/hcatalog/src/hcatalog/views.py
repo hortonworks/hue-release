@@ -549,3 +549,6 @@ def _get_table_list(request):
   db = dbms.get(request.user)
   tables = db.get_tables(database=database)
   return tables
+
+def listdir(request, path):
+  return HttpResponse(json.dumps(request.fs.listdir(path)))
