@@ -1,5 +1,7 @@
 1) Download and install Vagrant (http://downloads.vagrantup.com/tags/v1.0.6)
 2) cd sandbox-shared/deploy/vagrant
-3) vagrant gem install vagrant-vbguest
+3) 
+vagrant gem install vagrant-vbguest vagrant-hostmaster
+
 4) vagrant box add sandbox <Box address>
 5) vagrant up (first time it would take some time to build VM).

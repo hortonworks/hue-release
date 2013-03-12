@@ -227,27 +227,7 @@ ${layout.menubar(section='query')}
     </html>
   </textarea> <br>
   <iframe id=preview></iframe>
-    <script>
-      var delay;
-      // Initialize CodeMirror editor with a nice html5 canvas demo.
-      var editor = CodeMirror.fromTextArea(document.getElementById('vis_code'), {
-        mode: 'text/html',
-        tabMode: 'indent'
-      });
-      editor.on("change", function() {
-        clearTimeout(delay);
-        delay = setTimeout(updatePreview, 300);
-      });
-      
-      function updatePreview() {
-        var previewFrame = document.getElementById('preview');
-        var preview =  previewFrame.contentDocument ||  previewFrame.contentWindow.document;
-        preview.open();
-        preview.write(editor.getValue());
-        preview.close();
-      }
-      setTimeout(updatePreview, 300);
-    </script>
+
 
         </div>
         % endif
@@ -296,8 +276,14 @@ ${layout.menubar(section='query')}
 </div>
 %endif.resultTable
 
-
-
+<link href="/pig/static/css/codemirror.css" rel="stylesheet">
+<link href="/hcatalog/static/css/visualization.css" rel="stylesheet">
+<script src="/pig/static/js/codemirror.js"></script>
+<script src="/hcatalog/static/js/visualization.js"></script>
+<script src="/hcatalog/static/js/htmlmixed.js"></script>
+<script src="/hcatalog/static/js/xml.js"></script>
+<script src="/hcatalog/static/js/css.js"></script>
+<script src="/hcatalog/static/js/javascript.js"></script>
 
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function () {

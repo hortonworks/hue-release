@@ -65,7 +65,6 @@ ${layout.menubar(section='my queries')}
             <th width="1%"><div class="hueCheckbox selectAll" data-selectables="savedCheck"></div></th>
             <th>${_('Name')}</th>
             <th>${_('Desc')}</th>
-            <th>${_('Type')}</th>
             <th>${_('Last Modified')}</th>
           </tr>
         </thead>
@@ -87,9 +86,6 @@ ${layout.menubar(section='my queries')}
               % if design.desc:
               ${design.desc}
               % endif
-            </td>
-            <td>
-              ${_('Query')}
             </td>
             <td data-sort-value="${time.mktime(design.mtime.timetuple())}">${ timesince(design.mtime) } ${_('ago')}</td>
           </tr>
@@ -120,14 +116,14 @@ ${layout.menubar(section='my queries')}
           <tr>
             <td width="1%" data-row-selector-exclude="true">
               <div class="hueCheckbox runCheck"
-                data-edit-url="${ url(app_name + ':execute_query', design_id=design.id) }"
+                data-edit-url="${ url(app_name + ':execute_query', design_id=query.design.id) }"
                 % if qcontext and query.last_state != models.QueryHistory.STATE.expired.index:
                   data-view-url="${ url(app_name + ':watch_query', id=query.id) }?context=${qcontext|u}"
                 % endif
                 data-row-selector-exclude="true"></div>
             </td>
-            <td width="10%" data-sort-value="${time.mktime(query.submission_date.timetuple())}">${query.submission_date.strftime("%x %X")}</td>
-            <td width="20%"><a href="${ url(app_name + ':execute_query', design_id=design.id) }" data-row-selector="true">${design.name}</a></td>
+            <td width="10%" data-sort-value="${time.mktime(query.submission_date.timetuple())}">${ query.submission_date.strftime("%x %X") }</td>
+            <td width="20%"><a href="${ url(app_name + ':execute_query', design_id=query.design.id) }" data-row-selector="true">${ query.design.name }</a></td>
             <td width="60%">
               % if len(query.query) > 100:
               <code>${collapse_whitespace(query.query[:100])}...</code>
@@ -187,8 +183,7 @@ ${layout.menubar(section='my queries')}
       "aoColumns":[
         {"bSortable":false, "sWidth":"1%" },
         {"sWidth":"30%"},
-        {"sWidth":"40%"},
-        {"sWidth":"9%"},
+        {"sWidth":"49%"},
         { "sSortDataType":"dom-sort-value", "sType":"numeric", "sWidth":"20%" }
       ],
       "oLanguage":{
