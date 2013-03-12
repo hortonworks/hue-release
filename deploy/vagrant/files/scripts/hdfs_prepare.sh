@@ -7,3 +7,4 @@ su - hcat -c "hadoop fs -chmod 755 /apps/webhcat/pig.tar.gz"
 rm -f /tmp/pig.tar.gz
 touch /root/.hdfs_prepared
 )
+exit 0
