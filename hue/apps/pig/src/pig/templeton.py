@@ -50,7 +50,7 @@ class Templeton(object):
         response = opener.open(req)
         return json.loads(response.read())
 
-    def pig_query(self, execute=None, pig_file=None, statusdir=None, callback=None):
+    def pig_query(self, execute=None, pig_file=None, statusdir=None, callback=None, arg=None):
         """
         Create and queue a Pig job.
 
@@ -63,7 +63,7 @@ class Templeton(object):
         callback -- Define a URL to Optional be called upon job completion. You may embed a specific job
                     ID into this URL using $jobId. This tag will be replaced in the callback URL with this job's job
                     ID.
-
+        arg -- Set a program argument. Optional None
         Returns dict:
         id -- A string containing the job ID similar to "job_201110132141_0001".
         info -- A JSON object containing the information returned when the job was queued.
@@ -79,6 +79,8 @@ class Templeton(object):
             data['statusdir'] = statusdir
         if callback:
             data['callback'] = callback
+        if arg:
+            data['arg'] = arg
         return self.post("pig", data)
 
     def check_job(self, job_id):
