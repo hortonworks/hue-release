@@ -28,26 +28,28 @@ function ping_job(job_id){
         }
         else
         {
-	if (percent <5)
+	if (percent < 3)
           percent += 1;
           $(".bar").css("width", percent+"%");
         }
-        globalTimer = window.setTimeout("ping_job('"+job_id+"');", 1000);
+        globalTimer = window.setTimeout("ping_job('"+job_id+"');", 2000);
       }, "json");
 
-}
+    $("#kill_job").unbind('click');
+    $("#kill_job").click(function(){
+        clearTimeout(globalTimer);
+        $(this).hide();
+        $("#id_text").removeAttr("disabled");
+        $(".action_btn").show();
+        percent = 0;
+        $(".bar").css("width", percent+"%");
+        $.post("/pig/kill_job/",{job_id: job_id}, function(data){
+            $("#job_info").append("<br>"+data.text);
+        }, "json");
+    });
 
-function explain_progres(perc){
-  var t_out =300;
-  percent = perc;
-  if(perc==0) { t_out = 1000; }
-  $(".bar").css("width", perc+"%");
-  perc += 10;
-  if(perc==100) {
-    $(".bar").css("width", perc+"%");
-    return false; }
-  window.setTimeout("explain_progres("+perc+");", t_out);
-};
+
+}
 
 
 function autosave(){
@@ -67,7 +69,6 @@ function listdir(_context){
 
 
   $.ajax({
-    //url: 'files.php/?con=' + _context,http://192.168.56.3:8000/filebrowser/view/apps?pagesize=45&pagenum=1&filter=&sortby=name&descending=false&format=json
     url: "/hcatalog/listdir" + _context,
     type: "GET",
     dataType: "json",
@@ -129,7 +130,6 @@ function getTableFields(table,target){
 }
 
 function call_popup_var_edit(){
-
 
   var d = $.Deferred();
 

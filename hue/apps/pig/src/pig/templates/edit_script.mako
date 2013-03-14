@@ -193,6 +193,7 @@ udfs = UDF.objects.all()
             </div>
             % endif
 	<input type="hidden" name="email" class='intoemail' />
+        <input type="hidden" id="operation_type" />
 	<div class="actions">
 	  <input class="btn primary" type="submit" name="submit_action" id="save_button"
                  value="Save"
@@ -200,12 +201,14 @@ udfs = UDF.objects.all()
                  disabled="disabled"
                  % endif
                  />
-	  <input class="btn primary" type="button" id="start_job" name="submit_action"
+	  <input class="btn primary action_btn" type="button" id="start_job" name="submit_action"
 	  value="Execute" />
-          <input class="btn primary" type="button" id="kill_job"  value="Kill job" style="display:none" />
-	  <input class="btn primary explain" type="button"
+          <input class="btn primary " type="button"
+                 id="kill_job"  value="Kill job" style="display:none" />
+	  <input class="btn primary action_btn" type="button" 
                  id="explain" name="submit_action" value="Explain" />
-	  <input class="btn primary explain" name="submit_action" type="button" id="check" value="Syntax check" />
+	  <input class="btn primary action_btn" name="submit_action"
+                 type="button" value="Syntax check" id="syntax_check" />
 	</div>
 	</form>
       </div>
@@ -327,7 +330,7 @@ function get_job_result(job_id)
         $("#job_info").html(data.stdout);
         paginator(30);
         percent = 100;
-        $("#start_job").show();
+        $(".action_btn").show();
         $("#kill_job").hide();
         $(".bar").css("width", percent+"%");
     }, "json");
@@ -337,32 +340,6 @@ function get_job_result(job_id)
 
 
 $(document).ready(function(){
-
-    $('.explain').live("click", function(e){
-      var t_s = $(this).val();
-      call_popup_var_edit().done(function() {
-        if (!$("#pig_script_form").valid()) return false;
-        explain_progres(0);
-        $("#id_text, .explain, #start_job, #kill_job").attr("disabled", "disabled");
-        percent = 2;
-        $(".bar").css("width", percent+"%");
-	
-        pig_editor.save();
-        python_editor.save();
-        $.ajax({
-            url: "${url('explain')}?t_s=" + t_s,
-            dataType: "json",
-            type: "POST",
-            data: $("#pig_script_form").serialize(),
-            success: function(data){
-                $("#job_info").text('');
-                $("#job_info").append(data.text);
-                $("#id_text, .explain, #start_job, #kill_job").removeAttr("disabled");
-            }
-        });
-
-});
-            });
 
 % if result.get("job_id") and result.get("JOB_SUBMITED"):
 percent = 10;
@@ -396,25 +373,16 @@ success: function(label) {
 
     $(".collapse").collapse();
 
-    $("#kill_job").live('click', function(){
-        clearTimeout(globalTimer);
-        $(this).hide();
-        $("#id_text").removeAttr("disabled");
-        $("#start_job").show();
-        percent = 0;
-        $(".bar").css("width", percent+"%");
-        $.post("${url("kill_job")}",{job_id: job_id}, function(data){
-            $("#job_info").append("<br>"+data.text);
-        }, "json");
-    });
 
 
-    $("#start_job").live("click", function(e){
-call_popup_var_edit().done(function() {
+    $(".action_btn").live("click", function(e){
+$("#operation_type").attr("name", $(this).attr("id"));
+$("#operation_type").val(1);
+call_popup_var_edit($(this)).done(function() {
         $("#job_info_outer").html('<pre id="job_info"></pre>');
         $(".bar").attr("class", "bar");
         if (!$("#pig_script_form").valid()) return false;
-        $("#start_job").hide();
+        $(".action_btn").hide();
         percent = 0;
         $(".bar").css("width", percent+"%");
         pig_editor.save();

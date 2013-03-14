@@ -56,11 +56,22 @@ class Job(models.Model):
         (JOB_COMPLETED, "Complited"),
         (3, "Failed"),
     )
+
+    EXECUTE = 1
+    EXPLAINE = 2
+    SYNTAX_CHECK = 3
+    JOB_TYPE = (
+        (EXECUTE, "execute"),
+        (EXPLAINE, "explaine"),
+        (SYNTAX_CHECK, "syntax_check")
+    )
+
     start_time = models.DateTimeField(auto_now_add=True)
     job_id = models.CharField(max_length=50, primary_key=True)
     statusdir = models.CharField(max_length=100)
     script = models.ForeignKey(PigScript)
     status = models.SmallIntegerField(choices=JOB_STATUSES, default=1)
+    job_type = models.SmallIntegerField(choices=JOB_TYPE, default=EXECUTE)
     email_notification = models.BooleanField(default=True)
 
     def __unicode__(self):

@@ -29,7 +29,7 @@ from filebrowser.views import _do_newfile_save
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm, UDFForm
-from pig.pig_client import PigClient
+
 
 UDF_PATH = '/tmp/udfs/'
 FILE_PATTERN = re.compile(r"[^\w\d_\-\.]+")
@@ -65,18 +65,6 @@ def index(request, obj_id=None):
         for field in instance._meta.fields:
             result[field.name] = getattr(instance, field.name)
     return render('edit_script.mako', request, dict(result=result))
-
-
-def explain(request):
-    script_path = '/tmp/%s.pig' % re.sub(FILE_PATTERN, "",request.POST['title'])
-    pig_src = request.POST['pig_script']
-    pig_src = process_pig_script(pig_src, request)
-    pig_src = augmate_python_path(request.POST.get("python_script"), pig_src)
-    if request.GET.get('t_s') == 'Explain':
-        pig = PigClient("pig -e explain -script %s" % script_path, script_path, pig_src)
-    else:
-        pig = PigClient("pig -x local -check %s" % script_path, script_path, pig_src)
-    return HttpResponse(json.dumps({"text": pig.returnCode().replace("\n", "<br>")}))
 
 
 #Making normal path to our *.jar files
@@ -119,35 +107,36 @@ def script_clone(request, obj_id):
 
 
 def piggybank(request, obj_id=False):
-    if request.method == 'POST':
-        form = UDFForm(request.POST, request.FILES)
-        if not form.is_valid():
-            raise PopupException(_("Error in upload form: %s") % form.errors)
+    form = UDFForm(request.POST, request.FILES)
+    if not form.is_valid():
+        raise PopupException(_("Error in upload form: %s") % form.errors)
+    uploaded_file = request.FILES['hdfs_file']
+    dest = request.fs.join(UDF_PATH, re.sub(FILE_PATTERN, "", uploaded_file.name))
+    tmp_file = uploaded_file.get_temp_path()
+    username = request.user.username
 
-        uploaded_file = request.FILES['hdfs_file']
-        dest = request.fs.join(UDF_PATH, re.sub(FILE_PATTERN, "", uploaded_file.name))
-        tmp_file = uploaded_file.get_temp_path()
-        username = request.user.username
-
+    if not request.fs.exist(UDF_PATH):
         try:
-            # Temp file is created by superuser. Chown the file.
-            request.fs.do_as_superuser(request.fs.chmod, tmp_file, 0644)
-            request.fs.do_as_superuser(request.fs.chown, tmp_file, username, username)
+            request.fs.mkdir(UDF_PATH)
+        except:
+            pass
+    try:
+        # Temp file is created by superuser. Chown the file.
+        request.fs.do_as_superuser(request.fs.chmod, tmp_file, 0644)
+        request.fs.do_as_superuser(request.fs.chown, tmp_file, username, username)
+        # Move the file to where it belongs
+        request.fs.rename(uploaded_file.get_temp_path(), dest)
+    except IOError, ex:
+        try:
+            request.fs.exists(dest)
+            msg = _('Destination %(name)s already exists.' % {'name': dest})
+        except Exception:
+            msg = _('Copy to "%(name)s failed: %(error)s') % {'name': dest, 'error': ex}
+        raise PopupException(msg)
 
-            # Move the file to where it belongs
-            request.fs.rename(uploaded_file.get_temp_path(), dest)
-        except IOError, ex:
-            already_exists = False
-            try:
-                already_exists = request.fs.exists(dest)
-                msg = _('Destination %(name)s already exists.' % {'name': dest})
-            except Exception:
-                msg = _('Copy to "%(name)s failed: %(error)s') % {'name': dest, 'error': ex}
-            raise PopupException(msg)
-
-        UDF.objects.create(url=dest, file_name=uploaded_file.name,
-                           owner=request.user, description='111')
-        return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
+    UDF.objects.create(url=dest, file_name=uploaded_file.name,
+                       owner=request.user, description='111')
+    return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
 
 
 def udf_del(request, obj_id):
@@ -178,7 +167,16 @@ def start_job(request):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
     pig_script = process_pig_script(pig_script, request)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
-    job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"))
+    arg = None
+    job_type = Job.EXECUTE
+    if request.POST.get("explaine"):
+        arg = "-e explaine -script "
+        job_type = Job.EXPLAINE
+    if request.POST.get("check_syntax"):
+        arg = "-check"
+        job_type = Job.SYNTAX_CHECK
+
+    job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"), arg=arg)
 
     if request.POST.get("script_id"):
         script = PigScript.objects.get(pk=request.POST['script_id'])
@@ -190,6 +188,7 @@ def start_job(request):
     Job.objects.create(job_id=job['id'],
                        statusdir=statusdir,
                        script=script,
+                       job_type=job_type,
                        email_notification=bool(request.POST['email']))
     return HttpResponse(
         json.dumps(
