@@ -30,7 +30,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 	</div>
 
 	<div class="container-fluid">
-		<h1 id="describe-header">Hortonworks Sandbox 1.2</h1>
+		<h1 id="describe-header">Hortonworks Sandbox ${sandbox_version}</h1>
 		<div id="update-tutorials-spinner"><h1>Updating tutorials...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 		<h3 id="update-tutorials-msg"></h3>
 		<div class="span-3">
@@ -50,17 +50,18 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
     		</tr>
 			</thead>
 			<tbody>
-				% for component in components:
-    				<tr>
-      				<td>${component['name']}</td>
-      				% if 'updateButton' in component:
-        			<td><div id=${component['name']}>${component['version']}</div></td>
-        			<td><a href="#" class="btn" id="updateTutorialsBtn">Update</a></td>
-      				% else:
-        			<td colspan="2"><div id=${component['name']}>${component['version']}</div></td>
-      				% endif
-    				</tr>
-				% endfor
+			  % for component, version in components.iteritems():
+    			  <tr>
+      			    <td>${component}</td>
+                            % if component == 'tutorials':
+                            <td><div id=${component}>${version}</div></td>
+        		    <td><a href="#" class="btn"
+        		    id="updateTutorialsBtn">Update</a></td>
+                            % else:
+        		    <td colspan="2"><div id=${component}>${version}</div></td>
+                            % endif
+    			  </tr>
+			  % endfor
 			</tbody>
 			</table>
 		</div>

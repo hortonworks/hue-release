@@ -16,45 +16,55 @@
 # limitations under the License.
 
 import logging
+import os
 from desktop.lib.django_util import render
 from django.http import HttpResponse
 from django.core import urlresolvers
 import simplejson as json
 
 from sh import bash
-import sandboxversions as versions
+from about import conf
 
-LOG = logging.getLogger("analitics")
+LOG = logging.getLogger(__name__)
 
-TUTORIAL_UPDATE_SCRIPT = '/home/sandbox/tutorials/tutorials_app/run/run.sh'
-TUTORIAL_VERSION_FILE = '/home/sandbox/sandbox-tutorials/version'
 
 def index(request):
   if request.method == 'POST':
     on_success_url = urlresolvers.reverse(index)
     error = ''
     try:
-      bash(TUTORIAL_UPDATE_SCRIPT)
+      bash(conf.TUTORIAL_UPDATE_SCRIPT.get())
     except Exception, ex:
       error = unicode(ex)
-    result = {'on_success_url':on_success_url, 'components':_get_components(), 'error':error}
+    result = {
+      'on_success_url': on_success_url,
+      'components': _get_components(),
+      'error': error
+    }
     return HttpResponse(json.dumps(result))
-  return render('index.mako', request, {'components':_get_components()})
+  return render('index.mako', request, {
+    'components': _get_components(),
+    'sandbox_version': conf.SANDBOX_VERSION.get(),
+  })
 
 
 def _get_components():
-  try:
-    with open(TUTORIAL_VERSION_FILE, 'r') as file_obj:
-      tutorial_version = file_obj.readlines()[0]
-  except IOError, ex:
-    tutorial_version = "undefined"
-    msg = "Failed to open file '%s': %s" % (TUTORIAL_VERSION_FILE, ex)
-    LOG.error(msg)
+  components = {
+    'Hadoop': conf.HADOOP_VERSION.get(),
+    'HCatalog': conf.HCATALOG_VERSION.get(),
+    'Pig': conf.PIG_VERSION.get(),
+    'Hive': conf.HIVE_VERSION.get()
+  }
 
-  components = [
-        {'name':'Hadoop', 'version': versions.HADOOP_VERSION},
-        {'name':'Tutorials', 'version':tutorial_version, 'updateButton':True},
-        {'name':'HCatalog', 'version': versions.HCATALOG_VERSION},
-        {'name':'Pig', 'version': versions.PIG_VERSION},
-        {'name':'Hive', 'version': versions.HIVE_VERSION},]
+  if conf.TUTORIALS_INSTALLED.get():
+    TUTORIAL_VERSION_FILE = os.path.join(conf.TUTORIALS_PATH.get(), 'version')
+    try:
+      with open(TUTORIAL_VERSION_FILE, 'r') as file_obj:
+        tutorial_version = file_obj.readlines()[0]
+    except IOError, ex:
+      tutorial_version = "undefined"
+      msg = "Failed to open file '%s': %s" % (TUTORIAL_VERSION_FILE, ex)
+      LOG.error(msg)
+
+    components['tutorials'] = tutorial_version
   return components
