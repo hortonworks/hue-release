@@ -43,7 +43,7 @@ import subprocess
 import sys
 import threading
 import time
-import conf
+import desktop.conf as conf
 
 import desktop.lib.daemon_utils
 import desktop.lib.paths
@@ -65,8 +65,8 @@ MAX_RESTARTS_IN_WINDOW = 3
 
 # User and group to setuid/setgid down to for any supervisees that don't have
 # the drop_root option set to False
-SETUID_USER = conf.SERVER_USER.get()
-SETGID_GROUP = conf.SERVER_GROUP.get()
+SETUID_USER = "hue"
+SETGID_GROUP = "hadoop"
 g_user_uid = None       # We figure out the numeric uid/gid later
 g_user_gid = None
 
