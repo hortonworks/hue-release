@@ -115,7 +115,7 @@ def piggybank(request, obj_id=False):
     tmp_file = uploaded_file.get_temp_path()
     username = request.user.username
 
-    if not request.fs.exist(UDF_PATH):
+    if not request.fs.exists(UDF_PATH):
         try:
             request.fs.mkdir(UDF_PATH)
         except:
@@ -169,13 +169,12 @@ def start_job(request):
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
     arg = None
     job_type = Job.EXECUTE
-    if request.POST.get("explaine"):
-        arg = "-e explaine -script "
+    if request.POST.get("explain"):
+        arg = "-e explaine "
         job_type = Job.EXPLAINE
-    if request.POST.get("check_syntax"):
+    if request.POST.get("syntax_check"):
         arg = "-check"
-        job_type = Job.SYNTAX_CHECK
-
+        job_type = Job.SYNTAX_CHECK    
     job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"), arg=arg)
 
     if request.POST.get("script_id"):
@@ -232,6 +231,8 @@ def _job_result(request, job):
         error.close()
         stdout.close()
         exit_code.close()
+        if job.job_type == job.SYNTAX_CHECK:
+            result['stdout'] = result['error']
     except:
         raise Http404("Script data has been deleted.")
     return result
@@ -253,7 +254,7 @@ def query_history(request):
     return render(
         "query_history.mako",
         request,
-        dict(jobs=Job.objects.filter(script__user=request.user).order_by("-start_time").all())
+        dict(jobs=Job.objects.filter(script__user=request.user, job_type=Job.EXECUTE).order_by("-start_time").all())
     )
 
 

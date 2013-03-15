@@ -203,33 +203,42 @@ ${layout.menubar(section='query')}
         </div>
         <div class="tab-pane" id="visualizations">
            <textarea id="vis_code" name="code">
-<!doctype html>
-<html>
-  <head>
-    <meta charset=utf-8>
-    <title>HTML5 canvas demo</title>
-    <style>p {font-family: monospace;}</style>
-  </head>
-  <body>
-    <p>Canvas pane goes here:</p>
-    <canvas id=pane width=300 height=200></canvas>
-    <script>
-      var canvas = document.getElementById('pane');
-      var context = canvas.getContext('2d');
+             <%include file="visualization.html" />
+             <script> 
+                var x = "${columns[0]}";
+            /   *Set col name from csv file for x axis*/
+              var y = [
+                      % for col in columns[1:]:
+                        "${col}",
+                      % endfor
+                      ];
+            /*Set col names from csv file for y axis. Can be only integer*/
 
-      context.fillStyle = 'rgb(250,0,0)';
-      context.fillRect(10, 10, 55, 50);
-
-      context.fillStyle = 'rgba(0, 0, 250, 0.5)';
-      context.fillRect(30, 30, 55, 50);
-      </script>
-    </body>
-    </html>
-  </textarea> <br>
+            var c = new chart(x,y);
+            d3.csv("${download_urls["csv"]}", function(dataset) 
+            {
+              dataset.forEach(function(d,i) 
+              {
+                c.getData(d,i);
+              });
+              c.setGraph('line',true);
+              /*first options include: 'area', 'stack', 'bar', 'line', and 'scatterplot'.*/
+              /*second option set chart as stack(fasle) or unstack(true)*/
+            }); 
+            </script> 
+           </textarea> <br>
   <iframe id=preview></iframe>
 
 
         </div>
+        <link href="/pig/static/css/codemirror.css" rel="stylesheet">
+        <link href="/hcatalog/static/css/visualization.css" rel="stylesheet">
+        <script src="/pig/static/js/codemirror.js"></script>
+        <script src="/hcatalog/static/js/visualization.js"></script>
+        <script src="/hcatalog/static/js/htmlmixed.js"></script>
+        <script src="/hcatalog/static/js/xml.js"></script>
+        <script src="/hcatalog/static/js/css.js"></script>
+        <script src="/hcatalog/static/js/javascript.js"></script>
         % endif
       </div>
 
@@ -276,14 +285,7 @@ ${layout.menubar(section='query')}
 </div>
 %endif.resultTable
 
-<link href="/pig/static/css/codemirror.css" rel="stylesheet">
-<link href="/hcatalog/static/css/visualization.css" rel="stylesheet">
-<script src="/pig/static/js/codemirror.js"></script>
-<script src="/hcatalog/static/js/visualization.js"></script>
-<script src="/hcatalog/static/js/htmlmixed.js"></script>
-<script src="/hcatalog/static/js/xml.js"></script>
-<script src="/hcatalog/static/js/css.js"></script>
-<script src="/hcatalog/static/js/javascript.js"></script>
+
 
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function () {

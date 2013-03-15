@@ -1,0 +1,19 @@
+.x_label
+{
+		display:none;
+}
+#y_axis,#chart,#x_axis
+{
+	display:inline-block; 
+	vertical-align:top;
+	position: relative;
+}
+#x_axis
+{
+	left: 65px; 
+	bottom:50px;
+}
+#legend
+{
+	top:-550px;
+}
