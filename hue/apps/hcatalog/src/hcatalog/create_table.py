@@ -65,6 +65,7 @@ def create_table(request, database='default'):
       )
       # Mako outputs bytestring in utf8
       proposed_query = proposed_query.decode('utf-8')
+      tablename = form.table.cleaned_data['name']
       tables = []
       try:
         hcat_client().create_table("default", proposed_query)
@@ -84,6 +85,7 @@ def create_table(request, database='default'):
 
 
 IMPORT_PEEK_SIZE = 8192
+IMPORT_MAX_SIZE = 4294967296 # 4 gigabytes
 IMPORT_PEEK_NLINES = 10
 DELIMITERS = [hive_val for hive_val, _, _ in hcatalog.common.TERMINATORS]
 DELIMITER_READABLE = {'\\001': 'ctrl-As',
@@ -126,6 +128,7 @@ def import_wizard(request, database='default'):
       delim_is_auto = False
       fields_list, n_cols = [[]], 0
       s3_col_formset = None
+      col_names = []
 
       table_list = _get_table_list(request)
       # Everything requires a valid file form
@@ -234,6 +237,9 @@ def import_wizard(request, database='default'):
       #
       if do_hive_create:
         delim = s2_delim_form.cleaned_data['delimiter']
+        if not filter(lambda val: val[0] == delim, hcatalog.forms.TERMINATOR_CHOICES) and \
+                        len(delim) > 0 and delim[0] != '\\':
+          delim = '\\' + delim
         table_name = s1_file_form.cleaned_data['name']
         proposed_query = django_mako.render_to_string("create_table_statement.mako",
           {
@@ -252,7 +258,8 @@ def import_wizard(request, database='default'):
         path_tmp = s2_delim_form.cleaned_data['path_tmp']
         if request.fs.exists(path_tmp):
           if do_load_data:
-            path = path_tmp
+            request.fs.copyfile(path_tmp, path)
+            request.fs.remove(path_tmp)
           else:
             request.fs.remove(path_tmp)
         return _submit_create_and_load(request, proposed_query, database, table_name, path, do_load_data)
@@ -350,6 +357,17 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters, parse_first_
   return fields_list, n_cols, col_names, delim_form
 
 
+def unicode_csv_reader(encoding, unicode_csv_data, dialect=csv.excel, **kwargs):
+  csv_reader = csv.reader(custom_csv_encoder(encoding, unicode_csv_data), dialect=dialect, **kwargs)
+  for row in csv_reader:
+    yield [unicode(cell, encoding) for cell in row]
+
+
+def custom_csv_encoder(encoding, unicode_csv_data):
+  for line in unicode_csv_data:
+    yield line.encode(encoding)
+
+
 def _parse_fields(fs, path, file_obj, encoding, filetypes, delimiters, parse_first_row_as_header, apply_excel_dialect, path_tmp):
   """
   _parse_fields(fs, path, file_obj, encoding, filetypes, delimiters, parse_first_row_as_header, apply_excel_dialect, path_tmp)
@@ -380,7 +398,7 @@ def _parse_fields(fs, path, file_obj, encoding, filetypes, delimiters, parse_fir
           file_obj.seek(0, hadoopfs.SEEK_SET)
           all_data = reader.read_all_data(file_obj, encoding)
           if apply_excel_dialect:
-            csv_content = csv.reader(StringIO.StringIO('\n'.join(all_data)), delimiter=delim.decode('string_escape'))
+            csv_content = unicode_csv_reader(encoding, StringIO.StringIO('\n'.join(all_data)), delimiter=delim.decode('string_escape'))
             new_fields_list = []
             data_to_store = []
             for row in csv_content:
@@ -393,9 +411,9 @@ def _parse_fields(fs, path, file_obj, encoding, filetypes, delimiters, parse_fir
           if parse_first_row_as_header:
             if apply_excel_dialect:
               all_data = data_to_store
-            csvfile_tmp.write('\n'.join(all_data[1:]))
+            reader.write_all_data(csvfile_tmp, '\n'.join(all_data[1:]))
           else:
-            csvfile_tmp.write('\n'.join(all_data))
+            reader.write_all_data(csvfile_tmp, '\n'.join(all_data))
           csvfile_tmp.close()
         except IOError, ex:
           msg = "Failed to open file '%s': %s" % (path, ex)
@@ -482,7 +500,7 @@ class GzipFileReader(object):
     except IOError:
       return None
     try:
-      return unicode(data, encoding, errors='replace').split('\n')[:IMPORT_PEEK_NLINES]
+      return unicode(data, encoding, errors='ignore').splitlines()[:IMPORT_PEEK_NLINES]
     except UnicodeError:
       return None
 
@@ -491,11 +509,25 @@ class GzipFileReader(object):
     """read_all_data(fileobj, encoding) -> list of lines"""
     gz = gzip.GzipFile(fileobj=fileobj, mode='rb')
     try:
-      data = gz.read().splitlines()
+      data = gz.read()
     except IOError:
       return None
-    return data
+    try:
+      return unicode(data, encoding, errors='ignore').splitlines()
+    except UnicodeError:
+      return None
 
+  @staticmethod
+  def write_all_data(fileobj, data):
+    try:
+      data = data.encode('ascii', 'ignore')
+      try:
+        gz = gzip.GzipFile(fileobj=fileobj, mode='wb')
+        gz.write(data)
+      except IOError:
+        pass
+    except UnicodeError:
+      pass
 FILE_READERS.append(GzipFileReader)
 
 
@@ -508,7 +540,7 @@ class TextFileReader(object):
     """readlines(fileobj, encoding) -> list of lines"""
     try:
       data = fileobj.read(IMPORT_PEEK_SIZE)
-      return unicode(data, encoding, errors='replace').split('\n')[:IMPORT_PEEK_NLINES]
+      return unicode(data, encoding, errors='ignore').splitlines()[:IMPORT_PEEK_NLINES]
     except UnicodeError:
       return None
 
@@ -516,9 +548,23 @@ class TextFileReader(object):
   def read_all_data(fileobj, encoding):
     """read_all_data(fileobj, encoding) -> list of lines"""
     try:
-      data = fileobj.read().splitlines()
+      data = fileobj.read(IMPORT_MAX_SIZE)
     except IOError:
       return None
-    return data
+    try:
+      return unicode(data, encoding, errors='ignore').splitlines()
+    except UnicodeError:
+      return None
+
+  @staticmethod
+  def write_all_data(fileobj, data):
+    try:
+      data = data.encode('ascii', 'ignore')
+      try:
+        fileobj.write(data)
+      except IOError:
+        pass
+    except UnicodeError:
+      pass
 
 FILE_READERS.append(TextFileReader)

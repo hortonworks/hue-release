@@ -34,6 +34,7 @@ ${layout.menubar(section='tables')}
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Actions')}</li>
                     <li><a href="${ url(app_name + ':import_wizard', database=database)}">${_('Create a new table from a file')}</a></li>
+                    <li><a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file New')}</a></li>
                     <li><a href="${ url(app_name + ':create_table', database=database)}">${_('Create a new table manually')}</a></li>
                 </ul>
             </div>
@@ -92,7 +93,7 @@ ${layout.menubar(section='tables')}
                                     <thead>
                                     <tr>
                                             % for col_name in col_names:
-                                                <th>${col_name}</th>
+                                                <th>${_(col_name)}</th>
                                             % endfor
                                     </tr>
                                     </thead>
@@ -100,7 +101,7 @@ ${layout.menubar(section='tables')}
                                             % for row in fields_list:
                                             <tr>
                                                 % for val in row:
-                                                    <td>${val}</td>
+                                                    <td>${_(val)}}</td>
                                                 % endfor
                                             </tr>
                                             % endfor

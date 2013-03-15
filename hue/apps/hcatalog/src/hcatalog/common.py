@@ -20,6 +20,8 @@ Common utils for hcatalog.
 """
 
 import re
+from django.forms.fields import ChoiceField
+import desktop.lib.i18n
 
 from django import forms
 from hcat_client import hcat_client
@@ -41,36 +43,70 @@ RELATION_OPS_UNARY = ['IS NULL', 'IS NOT NULL', 'NOT']
 RELATION_OPS = ['=', '<>', '<', '<=', '>', '>='] + RELATION_OPS_UNARY
 
 TERMINATORS = [
-  # (hive representation, description, ascii value)
-  (r'\001', r"'^A' (\001)", 1),
-  (r'\002', r"'^B' (\002)", 2),
-  (r'\003', r"'^C' (\003)", 3),
-  (r'\t', r"Tab (\t)", 9),
-  (',', "Comma (,)", 44),
-  (' ', "Space", 32),
+    # (hive representation, description, ascii value)
+    (r'\001', r"'^A' (\001)", 1),
+    (r'\002', r"'^B' (\002)", 2),
+    (r'\003', r"'^C' (\003)", 3),
+    (r'\t', r"Tab (\t)", 9),
+    (',', "Comma (,)", 44),
+    (' ', "Space", 32),
 ]
 
 
 def to_choices(x):
-  """
-  Maps [a, b, c] to [(a,a), (b,b), (c,c)].
-  Useful for making ChoiceField's.
-  """
-  return [(y, y) for y in x]
+    """
+    Maps [a, b, c] to [(a,a), (b,b), (c,c)].
+    Useful for making ChoiceField's.
+    """
+    return [(y, y) for y in x]
 
 
 class HiveIdentifierField(forms.RegexField):
-  """
-  Corresponds to 'Identifier' in Hive.g (Hive's grammar)
-  """
-  def __init__(self, *args, **kwargs):
-    kwargs['regex'] = HIVE_IDENTIFER_REGEX
-    super(HiveIdentifierField, self).__init__(*args, **kwargs)
+    """
+    Corresponds to 'Identifier' in Hive.g (Hive's grammar)
+    """
+
+    def __init__(self, *args, **kwargs):
+        kwargs['regex'] = HIVE_IDENTIFER_REGEX
+        super(HiveIdentifierField, self).__init__(*args, **kwargs)
 
 
 class HiveTableChoiceField(forms.ChoiceField):
-  """To choose from a defined table"""
-  def __init__(self, *args, **kwargs):
-    tables = hcat_client.get_tables()
-    kwargs['choices'] = to_choices([''] + tables)
-    forms.ChoiceField.__init__(self, *args, **kwargs)
+    """To choose from a defined table"""
+    def __init__(self, *args, **kwargs):
+        tables = hcat_client.get_tables()
+        kwargs['choices'] = to_choices([''] + tables)
+        forms.ChoiceField.__init__(self, *args, **kwargs)
+
+
+class UnicodeEncodingField(ChoiceField):
+    """
+    The cleaned value of the field is the actual encoding, not a tuple
+    """
+    CHOICES = [
+        ('utf-8', 'Unicode UTF8'),
+        ('utf-16', 'Unicode UTF16'),
+        ('latin_1', 'Western ISO-8859-1'),
+        ('latin_9', 'Western ISO-8859-15'),
+        ('cyrillic', 'Cryrillic'),
+        ('arabic', 'Arabic'),
+        ('greek', 'Greek'),
+        ('hebrew', 'Hebrew'),
+        ('shift_jis', 'Japanese (Shift-JIS)'),
+        ('euc-jp', 'Japanese (EUC-JP)'),
+        ('iso2022_jp', 'Japanese (ISO-2022-JP)'),
+        ('euc-kr', 'Korean (EUC-KR)'),
+        ('iso2022-kr', 'Korean (ISO-2022-KR)'),
+        ('gbk', 'Chinese Simplified (GBK)'),
+        ('big5hkscs', 'Chinese Traditional (Big5-HKSCS)'),
+        ('ascii', 'ASCII'),
+    ]
+
+    def __init__(self, initial=None, *args, **kwargs):
+        ChoiceField.__init__(self, UnicodeEncodingField.CHOICES, initial, *args, **kwargs)
+
+    def clean(self, value):
+        encoding = value
+        if encoding and not desktop.lib.i18n.validate_encoding(encoding):
+            raise forms.ValidationError("'%s' encoding is not available" % (encoding,))
+        return encoding

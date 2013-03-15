@@ -41,3 +41,9 @@ urlpatterns += patterns(
   url(r'^create/create_table/(?P<database>\w+)$', 'create_table', name='create_table'),
   url(r'^create/import_wizard/(?P<database>\w+)$', 'import_wizard', name='import_wizard'),
 )
+
+urlpatterns += patterns(
+    'hcatalog.file_import',
+    url(r'^create/create_from_file/(?P<database>\w+)$', 'create_from_file', name='create_from_file'),
+
+    )

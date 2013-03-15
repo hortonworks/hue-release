@@ -160,6 +160,7 @@ class HCatClient(Templeton):
 
     def create_table(self, dbname, query):
         try:
+            LOG.debug("HCatalog client, create table query:\n%s" % (query))
             # create tmp file
             tmp_file_name = '/tmp/create_table_%d.hcat' % (int(time()))
             query_file = open(tmp_file_name, "w")
