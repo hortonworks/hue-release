@@ -41,7 +41,7 @@ ${layout.menubar(section='tables')}
                         <a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file New')}</a>
                     </li>
                     <li>
-                        <a href="${ url(app_name + ':create_manually', database=database)}">${_('Create a new table manually')}</a>
+                        <a href="${ url(app_name + ':create_table', database=database)}">${_('Create a new table manually')}</a>
                     </li>
                 </ul>
             </div>
