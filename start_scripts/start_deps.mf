@@ -1,9 +1,5 @@
 line = 50
 
-# all: postgresql namenode datanode  jobtracker historyserver\
-# 	tasktracker zookeeper hbase_master hbase_regionservers hive hcat templeton\
-# 	oozie ganglia nagios ambari_server ambari_agent
-
 all: HDFS MapReduce Zookeeper HBase Hive_Metastore Templeton Oozie Ganglia Nagios Ambari
 
 HDFS: namenode secondary_namenode datanode
