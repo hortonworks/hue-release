@@ -166,6 +166,7 @@ class sandbox {
         command => "/etc/init.d/startup_script start",
         require => [ File["startHiveserver2.sh"], 
                      File["startMetastore.sh"],
+                     File["hue-plugins-2.2.0-SNAPSHOT.jar"],
                      Class[sandbox_rpm],
                     ],
     }
