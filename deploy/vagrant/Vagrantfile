@@ -1,8 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-require 'vagrant-vbguest'
-require 'vagrant-hostmaster'
+#require 'vagrant-vbguest' #Comment since yet incopatible with vagrant 1.1
+#require 'vagrant-hostmaster'
 
 Vagrant::Config.run do |config|
   config.vm.box = "sandbox"
