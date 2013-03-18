@@ -64,7 +64,7 @@ start)
     fi
     
     echo "Starting HDP ..."
-    bash $SCRIPTS_PATH/start.sh
+    make --makefile $SCRIPTS_PATH/start_deps.mf -B -j 5 all
     sudo -u hdfs hadoop dfsadmin -safemode leave
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
