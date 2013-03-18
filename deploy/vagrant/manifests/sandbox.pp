@@ -125,7 +125,8 @@ class hdfs_prepare {
 
       exec { "hdfs_prepare.sh": 
         command => '/bin/bash /tmp/hdfs_prepare.sh > /var/log/hdfs_start.log',
-        require => [File['hdfs_prepare.sh'], Exec["start"]]
+        require => [File['hdfs_prepare.sh'], Exec["start"]],
+        timeout => 0
       } 
 }
 
