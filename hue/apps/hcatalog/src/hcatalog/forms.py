@@ -260,7 +260,7 @@ class CreateTableFromFileForm(forms.Form):
     """
 
     # Basic Data
-    name = common.HiveIdentifierField(label="Table Name", required=True)
+    name = common.HiveIdentifierField(label="Table Name", required=False)
     comment = forms.CharField(label="Description", required=False)
     field_terminator = ChoiceOrOtherField(required=False, initial=TERMINATOR_CHOICES[0][0], choices=TERMINATOR_CHOICES)
 
@@ -291,16 +291,6 @@ class CreateTableFromFileForm(forms.Form):
                                              label="Read column headers",
                                              help_text="")
 
-    def __init__(self, *args, **kwargs):
-        self.table_list = kwargs.pop('table_list', None)
-        super(CreateTableFromFileForm, self).__init__(*args, **kwargs)
-
-    def clean_field_terminator(self):
-        return _clean_terminator(self.cleaned_data.get('field_terminator'))
-
-    def clean_name(self):
-        return _clean_tablename(self.table_list, self.cleaned_data['name'])
-
 
 def _clean_tablename(table_list, name):
     if name in table_list:
@@ -312,7 +302,6 @@ def _clean_terminator(val):
     if val is not None and len(val.decode('string_escape')) != 1:
         raise forms.ValidationError('Terminator must be exactly one character')
     return val
-
 
 class CreateByImportFileForm(forms.Form):
     """Form for step 1 (specifying file) of the import wizard"""

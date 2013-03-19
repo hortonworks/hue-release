@@ -35,6 +35,16 @@ class Templeton(object):
         response = urllib2.urlopen(req)
         return json.loads(response.read())
 
+    def put(self, url, data=None, headers={}):
+        """
+        Make PUT query to templeton url.
+        """
+        username_data = {"user.name": self.user}
+        username_data = urllib.urlencode(username_data)
+
+        import requests
+        return requests.put(TEMPLETON_URL.get() + url + "?" + username_data, data=data, headers=headers)
+
     def delete(self, url, data=None):
         """
         Make DELETE query to templeton url.

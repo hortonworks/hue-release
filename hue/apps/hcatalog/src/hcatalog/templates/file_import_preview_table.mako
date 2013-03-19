@@ -30,8 +30,10 @@
                 ${comps.label(form["column_name"])}
                 ${comps.field(form["column_name"],
                 render_default=False,
+                klass="column",
                 placeholder=_("Column name")
                 )}
+                <span  class="help-inline error-inline hide">${_('This field is required.')}</span>
                     <br/><br/>
                 ${comps.label(form["column_type"])}
                 ${comps.field(form["column_type"],

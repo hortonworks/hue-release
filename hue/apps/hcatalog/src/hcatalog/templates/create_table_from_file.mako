@@ -67,6 +67,7 @@ ${layout.menubar(section='tables')}
                                         <div class="controls">
                                             ${comps.field(table_form["name"], attrs=dict(placeholder=_('table_name'), ))}
                                             <span class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed.')}</span>
+                                            <span  class="help-inline error-inline error-inline-bis hide">${_('Table with this name already exists. Table names must be globally unique.')}</span>
                                         </div>
                                     </div>
                                 </td>
@@ -317,6 +318,8 @@ function reactOnFilePathChange(newPath) {
     }
 }
 
+var tableList = [];
+
 $(document).ready(function () {
     $(document).resize()
     var zoom = document.documentElement.clientWidth / window.innerWidth;
@@ -375,6 +378,13 @@ $(document).ready(function () {
     $("#id_table-file_type").val("csv");
     $("#id_table-file_type").change();
 
+% if error is not None:
+    showMainError("${error}");
+% endif
+
+    $.post("${url(app_name + ':get_tables')}",function (data) {
+        tableList = data;
+    }, "json");
 
     $("#submit-preview").click(function () {
         hideMainError();
@@ -432,6 +442,7 @@ $(document).ready(function () {
     function validateOnCreateTable() {
         var scrollTo = 0;
         var isValid = true;
+        isValid = validateForm();
         $(".column").each(function () {
             var _field = $(this);
             if (!isDataValid($.trim(_field.val()))) {
@@ -470,12 +481,20 @@ $(document).ready(function () {
     function validateForm() {
         var isValid = true;
         var tableNameFld = $("input[name='table-name']");
-        if (!isDataValid($.trim(tableNameFld.val()))) {
+        var tableName = $.trim(tableNameFld.val());
+        if (!isDataValid(tableName)) {
             showFieldError(tableNameFld);
             isValid = false;
         }
         else {
             hideFieldError(tableNameFld);
+        }
+        if (tableList.indexOf(tableName) !== -1) {
+            showSecondFieldError(tableNameFld);
+            isValid = false;
+        }
+        else {
+            hideSecondFieldError(tableNameFld);
         }
 
         var filePath = $("input[name='table-path']");
@@ -527,14 +546,14 @@ $(document).ready(function () {
         field.nextAll(".error-inline").not(".error-inline-bis").removeClass("hide");
     }
 
-    function showSecondFieldError(field) {
-        field.nextAll(".error-inline-bis").removeClass("hide");
-    }
-
     function hideFieldError(field) {
         if (!(field.nextAll(".error-inline").hasClass("hide"))) {
             field.nextAll(".error-inline").addClass("hide");
         }
+    }
+
+    function showSecondFieldError(field) {
+        field.nextAll(".error-inline-bis").removeClass("hide");
     }
 
     function hideSecondFieldError(field) {

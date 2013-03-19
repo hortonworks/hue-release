@@ -66,7 +66,7 @@ ROW FORMAT \
 %   if table["row_format"] == "Delimited":
   DELIMITED
 %     if table.has_key('field_terminator'):
-    FIELDS TERMINATED BY '\${table["field_terminator"] | n}'
+    FIELDS TERMINATED BY '${table["field_terminator"] | n}'
 %     endif
 %     if table.has_key('collection_terminator'):
     COLLECTION ITEMS TERMINATED BY '${table["collection_terminator"] | n}'

@@ -22,13 +22,16 @@ from desktop.lib import django_mako, i18n
 from desktop.lib.django_util import render
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_forms import MultiForm
+from desktop.context_processors import get_app_name
 from hadoop.fs import hadoopfs
+from django.forms import ValidationError
+from django.http import HttpResponse
+
 
 import hcatalog.common
 import hcatalog.forms
 from hcatalog.views import _get_table_list
 from hcat_client import hcat_client
-from desktop.context_processors import get_app_name
 
 import logging
 import gzip
@@ -37,6 +40,7 @@ import StringIO
 from datetime import datetime
 import os.path
 import simplejson as json
+import re
 
 LOG = logging.getLogger(__name__)
 
@@ -44,20 +48,19 @@ LOG = logging.getLogger(__name__)
 def create_from_file(request, database='default'):
     """Create a table by import from file"""
     form = MultiForm(
-        table=hcatalog.forms.CreateTableFromFileForm
+        table=hcatalog.forms.CreateTableFromFileForm,
         # columns=hcatalog.forms.ColumnTypeFormSet,
         # partitions=hcatalog.forms.PartitionTypeFormSet
     )
-    col_formset = hcatalog.forms.ColumnTypeFormSet(prefix='cols', initial=[])
     if request.method == "POST":
-        from django.http import HttpResponse
-        # return HttpResponse(str(request.POST))
         form.bind(request.POST)
-        form.table.table_list = _get_table_list(request)
 
         action = request.POST.get('action')
         if form.is_valid():
             do_import_data = form.table.cleaned_data['import_data']
+            path = form.table.cleaned_data['path']
+            encoding = form.table.cleaned_data['encoding']
+            file_type = form.table.cleaned_data['file_type']
 
             if action == 'submitPreview':
                 preview_results = {}
@@ -80,72 +83,92 @@ def create_from_file(request, database='default'):
                              + str(form.table.cleaned_data['column_type']) + "\n" \
                              + str(form.table.cleaned_data['apply_excel_dialect'])
                     # return HttpResponse(str(params))
-                    file_type = form.table.cleaned_data['file_type']
-                    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_CSV_TSV:
-                        path = form.table.cleaned_data['path']
-                        encoding = form.table.cleaned_data['encoding']
-                        fields_list, n_cols, col_names = _delim_preview(
-                            request.fs,
-                            path,
-                            encoding,
-                            [reader.TYPE for reader in FILE_READERS],
-                            DELIMITERS,
-                            True,
-                            False,
-                            None)
 
-                        columns = []
-                        for col_name in col_names:
-                            columns.append(dict(column_name=col_name, column_type='string', ))
-                        col_formset = hcatalog.forms.ColumnTypeFormSet(prefix='cols', initial=columns)
+                    fields_list, n_cols, col_names, col_formset, columns = _delim_preview_ext(
+                        file_type,
+                        request.fs,
+                        path,
+                        None,
+                        encoding,
+                        [reader.TYPE for reader in FILE_READERS],
+                        DELIMITERS,
+                        True,
+                        False)
 
-                        preview_table_resp = django_mako.render_to_string("file_import_preview_table.mako", dict(
+                    preview_table_resp = django_mako.render_to_string("file_import_preview_table.mako", dict(
                             fields_list=fields_list,
                             column_formset=col_formset,
-                        ))
-                    elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_XLS_XLSX:
-                        pass
-                    elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_MS_ACCESS:
-                        pass
+                    ))
+
                 except Exception as ex:
                     preview_results['error'] = unicode(ex.message)
                 else:
                     preview_results['results'] = preview_table_resp
                 return HttpResponse(json.dumps(preview_results))
             if 'createTable' in request.POST:
+
+                user_def_columns = []
+                column_count = 0
+                while 'cols-%d-column_name' % column_count in request.POST \
+                    and 'cols-%d-column_type' % column_count in request.POST:
+                    user_def_columns.append(dict(column_name=request.POST.get('cols-%d-column_name' % column_count),
+                                        column_type=request.POST.get('cols-%d-column_type' % column_count), ))
+                    column_count += 1
+
                 delim = form.table.cleaned_data['delimiter']
                 if not filter(lambda val: val[0] == delim, hcatalog.forms.TERMINATOR_CHOICES) and len(delim) > 0 and delim[0] != '\\':
                     delim = '\\' + delim
                 table_name = form.table.cleaned_data['name']
-                proposed_query = django_mako.render_to_string("create_table_statement.mako",
+
+                try:
+                    fields_list, n_cols, col_names, col_formset, columns = _delim_preview_ext(
+                        file_type,
+                        request.fs,
+                        path,
+                        None,
+                        encoding,
+                        [reader.TYPE for reader in FILE_READERS],
+                        DELIMITERS,
+                        False,
+                        True)
+
+                    proposed_query = django_mako.render_to_string("create_table_templ_statement.mako",
                                                               {
                                                                   'table': dict(name=table_name,
-                                                                                comment=form.table.cleaned_data[
-                                                                                    'comment'],
+                                                                                comment=form.table.cleaned_data['comment'],
                                                                                 row_format='Delimited',
                                                                                 field_terminator=delim),
-                                                                  'columns': [f.cleaned_data for f in form.table.forms],
+                                                                  # 'columns': [f.cleaned_data for f in form.table.forms],
+                                                                  'columns': user_def_columns,
                                                                   'partition_columns': []
                                                               }
-                )
+                    )
+                    proposed_query = proposed_query.replace('\\', '\\\\')
+                    # do_load_data = s1_file_form.cleaned_data.get('do_import')
+                    path = form.table.cleaned_data['path']
+                    formatted_path = form.table.cleaned_data['formatted_path']
+                    if formatted_path != '' and request.fs.exists(formatted_path):
+                        if do_import_data:
+                            request.fs.copyfile(formatted_path, path)
+                            request.fs.remove(formatted_path)
+                        else:
+                            request.fs.remove(formatted_path)
+                    return _submit_create_and_load(request, proposed_query, database, table_name, path, do_import_data)
 
-                # do_load_data = s1_file_form.cleaned_data.get('do_import')
-                path = form.table.cleaned_data['path']
-                formatted_path = form.table.cleaned_data['formatted_path']
-                if formatted_path != '' and request.fs.exists(formatted_path):
-                    if do_import_data:
-                        request.fs.copyfile(formatted_path, path)
-                        request.fs.remove(formatted_path)
-                    else:
-                        request.fs.remove(formatted_path)
-                return _submit_create_and_load(request, proposed_query, table_name, path, do_import_data)
+                except Exception as ex:
+                    return render("create_table_from_file.mako", request, dict(
+                        action="#",
+                        database=database,
+                        table_form=form.table,
+                        error=unicode(ex.message),
+                    ))
     else:
         form.bind()
     return render("create_table_from_file.mako", request, dict(
             action="#",
             database=database,
             table_form=form.table,
-            column_formset=col_formset,
+            error=None,
         ))
 
 
@@ -167,26 +190,43 @@ def _submit_create_and_load(request, create_hql, database, table_name, path, do_
     """
     Submit the table creation, and setup the load to happen (if ``do_load``).
     """
-    tables = []
-    try:
-        hcat_client().create_table(database, create_hql)
-        tables = _get_table_list(request)
-    except Exception, ex:
-        raise PopupException('Error on creating and loading table',
-                             title="Error on creating and loading table", detail=str(ex))
+    # hcat_client().create_table(database, create_hql)
+    hcat_client().create_table_by_templeton(database, table_name, create_hql )
+    tables = _get_table_list(request)
     if do_load:
         if not table_name or not path:
             msg = 'Internal error: Missing needed parameter to load data into table'
             LOG.error(msg)
-            raise PopupException(msg)
-        LOG.debug("Auto loading data from %s into table %s" % (path, table_name))
+            raise Exception(msg)
+        LOG.info("Auto loading data from %s into table %s" % (path, table_name))
         hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
         hcatalog.views.do_load_table(request, hql)
     return render("show_tables.mako", request, dict(database=database, tables=tables, ))
 
+def _delim_preview_ext(file_type, fs, path, path_tmp, encoding, file_types, delimiters, parse_first_row_as_header, apply_excel_dialect):
 
-def _delim_preview(fs, path, encoding, file_types, delimiters, parse_first_row_as_header, apply_excel_dialect,
-                   path_tmp):
+    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_CSV_TSV:
+
+        fields_list, n_cols, col_names = _delim_preview(fs, path, path_tmp, encoding, file_types, delimiters, parse_first_row_as_header, apply_excel_dialect)
+        columns = []
+        auto_column_types = HiveTypeAutoDefine().defineColumnTypes(fields_list[:100])
+        if len(auto_column_types) == len(col_names):
+            for i, col_name in enumerate(col_names):
+                columns.append(dict(column_name=col_name, column_type=auto_column_types[i], ))
+        else:
+            for col_name in col_names:
+                columns.append(dict(column_name=col_name, column_type='string', ))
+
+        col_formset = hcatalog.forms.ColumnTypeFormSet(prefix='cols', initial=columns)
+
+    elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_XLS_XLSX:
+        pass
+    elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_MS_ACCESS:
+        pass
+
+    return fields_list, n_cols, col_names, col_formset, columns
+
+def _delim_preview(fs, path, path_tmp, encoding, file_types, delimiters, parse_first_row_as_header, apply_excel_dialect):
     if path_tmp is None:
         path_tmp = "/tmp/%s.tmp.%s" % (os.path.basename(path).replace(' ', ''), datetime.now().strftime("%s"))
     try:
@@ -453,3 +493,72 @@ class TextFileReader(object):
 
 
 FILE_READERS.append(TextFileReader)
+
+
+
+HIVE_PRIMITIVE_TYPES = ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double")
+
+HIVE_STRING_IDX = 0
+HIVE_TINYINT_IDX = 1
+HIVE_SMALLINT_IDX = 2
+HIVE_INT_IDX = 3
+HIVE_BIGINT_IDX = 4
+HIVE_BOOLEAN_IDX = 5
+HIVE_FLOAT_IDX = 6
+HIVE_DOUBLE_IDX = 7
+HIVE_PRIMITIVES_LEN = len(HIVE_PRIMITIVE_TYPES)
+
+
+class HiveTypeAutoDefine(object):
+
+    def isStrFloatingPointValue(self, strVal):
+        return re.match(r'(^[+-]?((?:\d+\.\d+)|(?:\.\d+))(?:[eE][+-]?\d+)?$)', strVal) != None
+
+    def isStrIntegerValue(self, strVal):
+        return re.match(r'(^[+-]?\d+(?:[eE][+]?\d+)?$)', strVal) != None
+
+    def isStrBooleanValue(self, strVal):
+        return strVal == 'TRUE' or strVal == 'FALSE'
+
+    def isIntHiveTinyint(self, intVal):
+        return -2**7 <= intVal <= 2**7 - 1
+
+    def isIntHiveSmallint(self, intVal):
+        return -2**15 <= intVal <= 2**15 - 1
+
+    def isIntHiveInt(self, intVal):
+        return -2**31 <= intVal <= 2**31 - 1
+
+    def isIntHiveBigint(self, intVal):
+        return -2**63 <= intVal <= 2**63 - 1
+
+    def defineFieldTypeIdx(self, strVal):
+        if self.isStrFloatingPointValue(strVal):
+            return HIVE_DOUBLE_IDX
+        elif self.isStrIntegerValue(strVal):
+            intVal = int(strVal)
+            if self.isIntHiveTinyint(intVal):
+                return HIVE_TINYINT_IDX
+            elif self.isIntHiveSmallint(intVal):
+                return HIVE_SMALLINT_IDX
+            elif self.isIntHiveInt(intVal):
+                return HIVE_INT_IDX
+            elif self.isIntHiveBigint(intVal):
+                return HIVE_BIGINT_IDX
+        elif self.isStrBooleanValue(strVal):
+            return HIVE_BOOLEAN_IDX
+        return HIVE_STRING_IDX
+
+    def defineFieldType(self, strVal):
+        return HIVE_PRIMITIVE_TYPES[self.defineFieldTypeIdx(strVal)]
+
+    def defineColumnTypes(self, matrix):
+        column_types = []
+        for row in matrix:
+            if len(row) > len(column_types):
+                for tmp in range(len(row) - len(column_types)):
+                    column_types.append([0] * HIVE_PRIMITIVES_LEN)
+            for i, field in enumerate(row):
+                column_types[i][self.defineFieldTypeIdx(field)] += 1
+        column_types = [ HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))] for types_list in column_types ]
+        return column_types

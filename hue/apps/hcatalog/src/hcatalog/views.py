@@ -49,13 +49,17 @@ import os
 LOG = logging.getLogger(__name__)
 
 
+def index(request):
+  return show_tables(request, database='default')
+
+
 def show_tables(request, database='default'):
   return render("show_tables.mako", request, dict(database=database,))
 
 
 def describe_table_json(request, database, table):
-    table_desc_extended = hcat_client().describe_table_extended(table)
-    return HttpResponse(json.dumps(table_desc_extended))
+  table_desc_extended = hcat_client().describe_table_extended(table)
+  return HttpResponse(json.dumps(table_desc_extended))
 
 
 def describe_table(request, database, table):
@@ -91,7 +95,7 @@ def drop_table(request, database, table):
       hcat_client().drop_table(table)
     except Exception, ex:
       raise PopupException('Drop table', title="Drop table", detail=str(ex))
-    on_success_url = urlresolvers.reverse(get_app_name(request) + ':show_tables', database=database)
+    on_success_url = urlresolvers.reverse(get_app_name(request) + ':index')
     result = {'on_success_url': on_success_url}
     return HttpResponse(json.dumps(result))
 

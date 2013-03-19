@@ -18,7 +18,7 @@
 from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('hcatalog.views',
-  url(r'^$', 'show_tables', name='show_tables'),
+  url(r'^$', 'index', name='index'),
   url(r'^get_tables$', 'get_tables', name='get_tables'),
   url(r'^listdir/(?P<path>.*)$', 'listdir', name='listdir'),
   url(r'^tables/(?P<database>\w+)?$', 'show_tables', name='show_tables'),
