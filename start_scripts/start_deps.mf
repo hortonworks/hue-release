@@ -1,6 +1,9 @@
 line = 50
 
-all: HDFS MapReduce Zookeeper HBase Hive_Metastore Templeton Oozie Ganglia Nagios Ambari
+all: Startup Ambari
+
+Startup: HDFS MapReduce Zookeeper HBase Hive_Metastore Templeton Oozie
+Ambari: ambari_server ambari_agent ganglia nagios
 
 HDFS: namenode secondary_namenode datanode
 MapReduce: jobtracker historyserver tasktracker
@@ -9,9 +12,6 @@ HBase: hbase_master hbase_regionservers
 Hive_Metastore: hive hcat
 Templeton: templeton
 Oozie: oozie
-Ganglia: ganglia
-Nagios: nagios
-Ambari: ambari_server ambari_agent
 
 
 postgresql:

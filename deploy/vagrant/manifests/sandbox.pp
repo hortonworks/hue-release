@@ -182,6 +182,12 @@ class sandbox {
         require => [ Class[sandbox_rpm],
                      Exec[start] ],
     }
+
+    file {'/root/start_ambari.sh':
+        ensure => link,
+        target => "/home/sandbox/start_scripts/start_ambari.sh",
+        mode => 0755,
+    }
 }
 
 
