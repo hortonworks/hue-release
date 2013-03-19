@@ -74,7 +74,7 @@ def create_directories(fs):
         # Home is 755
         fs.do_as_user(fs.DEFAULT_USER, fs.create_home_dir, remote_home_dir)
       # Shared by all the users
-      fs.do_as_user(fs.DEFAULT_USER, fs.mkdir, directory, 01777)
-      fs.do_as_user(fs.DEFAULT_USER, fs.chmod, directory, 01777) # To remove after https://issues.apache.org/jira/browse/HDFS-3491
+      fs.do_as_user(fs.DEFAULT_USER, fs.mkdir, directory, 0777)
+      fs.do_as_user(fs.DEFAULT_USER, fs.chmod, directory, 0777) # To remove after https://issues.apache.org/jira/browse/HDFS-3491
 
   return REMOTE_SAMPLE_DIR.get()

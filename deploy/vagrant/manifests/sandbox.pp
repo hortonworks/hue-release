@@ -125,7 +125,8 @@ class hdfs_prepare {
 
       exec { "hdfs_prepare.sh": 
         command => '/bin/bash /tmp/hdfs_prepare.sh > /var/log/hdfs_start.log',
-        require => [File['hdfs_prepare.sh'], Exec["start"]]
+        require => [File['hdfs_prepare.sh'], Exec["start"]],
+        timeout => 0
       } 
 }
 
@@ -165,6 +166,7 @@ class sandbox {
         command => "/etc/init.d/startup_script start",
         require => [ File["startHiveserver2.sh"], 
                      File["startMetastore.sh"],
+                     File["hue-plugins-2.2.0-SNAPSHOT.jar"],
                      Class[sandbox_rpm],
                     ],
     }

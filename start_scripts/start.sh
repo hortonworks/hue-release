@@ -4,8 +4,8 @@ line="50"
 
 #------- Start script ---------
 echo "Starting Postgresql"
-/etc/init.d/postgresql start
-sleep 5
+/etc/init.d/postgresql start;sleep 5
+
 echo "Start name node"
 su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode";sleep 5
 tail -$line  /var/log/hadoop/hdfs/hadoop-hdfs-namenode-*.log

@@ -1,6 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-require 'vagrant-vbguest'
+
+#require 'vagrant-vbguest' #Comment since yet incopatible with vagrant 1.1
+#require 'vagrant-hostmaster'
 
 Vagrant::Config.run do |config|
   config.vm.box = "sandbox"
@@ -22,4 +24,5 @@ Vagrant::Config.run do |config|
   end
 
   config.vm.customize ["modifyvm", :id, "--rtcuseutc", "on"]
+  config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--groups", "/HortonWorks"]
 end
