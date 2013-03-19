@@ -90,6 +90,7 @@ class splash {
         command => "initctl stop tty TTY=/dev/tty1; initctl start tty-splash TTY=/dev/tty1",
         require => [Class["splash_opts"],
                     Class["sandbox"] ],
+        unless => "initctl list | grep -q tty-splash",
     }
 }
 
@@ -187,6 +188,10 @@ class sandbox {
         ensure => link,
         target => "/home/sandbox/start_scripts/start_ambari.sh",
         mode => 0755,
+    }
+
+    package { 'acpid':
+        ensure => installed,
     }
 }
 
