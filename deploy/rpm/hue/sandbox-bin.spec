@@ -84,7 +84,8 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %pre
 
 (
-[[ -z `cat /etc/passwd | grep sandbox` ]] && useradd sandbox
+groupadd -f hadoop
+[[ -z `cat /etc/passwd | grep sandbox` ]] && useradd -G hadoop sandbox || usermod -a -G hadoop sandbox
 sudo -u sandbox -s -- <<END_OF_SANDBOX
 cd /home/sandbox
 
