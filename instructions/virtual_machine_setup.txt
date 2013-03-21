@@ -6,6 +6,7 @@ https://docs.google.com/a/hortonworks.com/file/d/0BzuJsGNSrhIAa01aU0czQi1DbEk/ed
 cd sandbox-shared
 git checkout Caterpillar
 cd deploy/vagrant
-5) vagrant plugin install vagrant-vbguest
+5) vagrant plugin install vagrant-vbguest 
+vagrant plugin install vagrant-hostmaster
 6) vagrant up (first time it would take some time to build VM).
 7) To connect to running VM simply run vagrant ssh

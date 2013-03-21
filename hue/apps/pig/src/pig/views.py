@@ -169,13 +169,15 @@ def start_job(request):
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
     arg = None
     job_type = Job.EXECUTE
+    execute = None
     if request.POST.get("explain"):
-        arg = "-e explaine "
+        execute = "explain -script %s" % (request.fs.fs_defaultfs + script_file)
         job_type = Job.EXPLAINE
+        script_file = None
     if request.POST.get("syntax_check"):
         arg = "-check"
-        job_type = Job.SYNTAX_CHECK    
-    job = t.pig_query(pig_file=script_file, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"), arg=arg)
+        job_type = Job.SYNTAX_CHECK
+    job = t.pig_query(pig_file=script_file, execute=execute, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"), arg=arg)
 
     if request.POST.get("script_id"):
         script = PigScript.objects.get(pk=request.POST['script_id'])
