@@ -90,7 +90,6 @@ class splash {
         command => "initctl stop tty TTY=/dev/tty1; initctl start tty-splash TTY=/dev/tty1",
         require => [Class["splash_opts"],
                     Class["sandbox"] ],
-        unless => "initctl list | grep -q tty-splash",
     }
 }
 
