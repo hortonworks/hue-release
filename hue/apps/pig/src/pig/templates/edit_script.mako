@@ -56,17 +56,17 @@ udfs = UDF.objects.all()
         ${my_scripts.my_scripts(result['scripts'])}
 
         <h2>Settings</h2>
-	<ul class="nav nav-list">
-	  <li>Email notification:</li>
-	  <li>
-	    <input class="email" type="checkbox"
+          <ul class="nav nav-list">
+            <li>Email notification:</li>
+            <li>
+              <input class="email" type="checkbox"
                    % if result.get("email_notification"):
                    checked="checked"
                    % endif
                    />
-	  </li>
-	  <li  class="nav-header">
-<div class="accordion" id="accordion3">
+            </li>
+            <li  class="nav-header">
+              <div class="accordion" id="accordion3">
                 <div class="accordion-group">
                   <div class="accordion-heading">
                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion3" href="#collapseOne2">
@@ -81,33 +81,33 @@ udfs = UDF.objects.all()
                 </div>
 
               </div>
-   
-    </li>
-	 <li>
-	    <form id="udfs" enctype="multipart/form-data"
+
+            </li>
+            <li>
+              <form id="udfs" enctype="multipart/form-data"
                   action="${url('pig.views.piggybank')}"
                   method="post">
-              <div class="fileupload fileupload-new" data-provides="fileupload">
-                <span class="btn btn-file">
-                  <span class="fileupload-new">Select UDF jar</span><span class="fileupload-exists">Change</span>
-                  <input type="file" id="id_hdfs_file" accept="application/java-archive" name="hdfs_file"></span>
-                <span class="fileupload-preview"></span>
-                <a href="#" class="close fileupload-exists" data-dismiss="fileupload" style="float: none">×</a>
-              </div>
-      	      <input class="btn" type="submit" name="submit" value="Add" />
-	    </form>
-          </li>
-	</ul>
+                <div class="fileupload fileupload-new" data-provides="fileupload">
+                  <span class="btn btn-file">
+                    <span class="fileupload-new">Select UDF jar</span><span class="fileupload-exists">Change</span>
+                    <input type="file" id="id_hdfs_file" accept="application/java-archive" name="hdfs_file"></span>
+                  <span class="fileupload-preview"></span>
+                  <a href="#" class="close fileupload-exists" data-dismiss="fileupload" style="float: none">×</a>
+                </div>
+                <input class="btn" type="submit" name="submit" value="Add" />
+              </form>
+            </li>
+          </ul>
       </div>
     </div>
     <div class="span9" style="float: left; width: 70%;">
       <div class="clearfix">
         <div class="input">
-	  <form action="${url("root_pig")}" method="post" id="pig_script_form">
+            <form action="${url("root_pig")}" method="post" id="pig_script_form">
             <input type="hidden" name="script_id"  value="${result.get('id','')}" >
             <label for="id_title">Title:</label>
             <div class="control-group">
-            
+
               <div class="controls">
                 <input id="id_title" type="text" name="title" required="required"
                        maxlength="200" value="${result.get('title',"")}">
@@ -127,25 +127,39 @@ udfs = UDF.objects.all()
                   </a>
                   <ul class="dropdown-menu" id="pig_helper">
                     <li class="dropdown-submenu">
-                      <a href="#">Aggregation functions</a>
+                      <a href="#">Eval Functions</a>
                       <ul class="dropdown-menu">
                         <li><a href="#">AVG(%VAR%)</a></li>
-                        <li><a href="#">SUM(%VAR%)</a></li>
+                        <li><a href="#">CONCAT(%VAR1%, %VAR2%)</a></li>
+                        <li><a href="#">COUNT(%VAR%)</a></li>
+                        <li><a href="#">COUNT_START(%VAR%)</a></li>
+                        <li><a href="#">IsEmpty(%VAR%)</a></li>
+                        <li><a href="#">DIFF(%VAR1%, %VAR2%)</a></li>
                         <li><a href="#">MAX(%VAR%)</a></li>
                         <li><a href="#">MIN(%VAR%)</a></li>
-                        <li><a href="#">COUNT(%VAR%)</a></li>
-
+                        <li><a href="#">SIZE(%VAR%)</a></li>
+                        <li><a href="#">SUM(%VAR%)</a></li>
+                        <li><a href="#">TOKENIZE(%VAR%, %DELIM%)</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
-                      <a href="#">Data processing functions</a>
+                      <a href="#">Relational Operators</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">FOREACH %DATA% GENERATE %NEW_DATA%</a></li>
-                        <li><a href="#">FILTER %VAR% BY %COND%</a></li>
-                        <li><a href="#">GROUP %VAR% BY %VAR%</a></li>
                         <li><a href="#">COGROUP %VAR% BY %VAR%</a></li>
+                        <li><a href="#">CROSS %VAR1%, %VAR2%;</a></li>
+                        <li><a href="#">DISTINCT %VAR%;</a></li>
+                        <li><a href="#">FILTER %VAR% BY %COND%</a></li>
+                        <li><a href="#">FLATTEN(%VAR%)</a></li>
+                        <li><a href="#">FOREACH %DATA% GENERATE %NEW_DATA%</a></li>
+                        <li><a href="#">FOREACH %DATA% {%NESTED_BLOCK%}</a></li>
+                        <li><a href="#">GROUP %VAR% BY %VAR%</a></li>
+                        <li><a href="#">GROUP %VAR% ALL</a></li>
                         <li><a href="#">JOIN %VAR% BY </a></li>
-                        <li><a href="#">LIMIT</a></li>
+                        <li><a href="#">LIMIT %VAR% %N%</a></li>
+                        <li><a href="#">ORDER %VAR% BY %FIELD%</a></li>
+                        <li><a href="#">SAMPLE %VAR% %SIZE%</a></li>
+                        <li><a href="#">SPLIT %VAR1% INTO %VAR2% IF %EXPRESSIONS%</a></li>
+                        <li><a href="#">UNION %VAR1%, %VAR2%</a></li>
                       </ul>
                     </li>
 
@@ -169,6 +183,61 @@ udfs = UDF.objects.all()
                       <a href="#">HCatalog</a>
                       <ul class="dropdown-menu">
                         <li><a href="#">LOAD '%TABLE%' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Math</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">ABS(%VAR%)</a></li>
+                        <li><a href="#">ACOS(%VAR%)</a></li>
+                        <li><a href="#">ASIN(%VAR%)</a></li>
+                        <li><a href="#">ATAN(%VAR%)</a></li>
+                        <li><a href="#">CBRT(%VAR%)</a></li>
+                        <li><a href="#">CEIL(%VAR%)</a></li>
+                        <li><a href="#">COS(%VAR%)</a></li>
+                        <li><a href="#">COSH(%VAR%)</a></li>
+                        <li><a href="#">EXP(%VAR%)</a></li>
+                        <li><a href="#">FLOOR(%VAR%)</a></li>
+                        <li><a href="#">LOG(%VAR%)</a></li>
+                        <li><a href="#">LOG10(%VAR%)</a></li>
+                        <li><a href="#">RANDOM(%VAR%)</a></li>
+                        <li><a href="#">ROUND(%VAR%)</a></li>
+                        <li><a href="#">SIN(%VAR%)</a></li>
+                        <li><a href="#">SINH(%VAR%)</a></li>
+                        <li><a href="#">SQRT(%VAR%)</a></li>
+                        <li><a href="#">TAN(%VAR%)</a></li>
+                        <li><a href="#">TANH(%VAR%)</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Tuple, Bag, Map Functions</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">TOTUPLE(%VAR%)</a></li>
+                        <li><a href="#">TOBAG(%VAR%)</a></li>
+                        <li><a href="#">TOMAP(%KEY%, %VALUE%)</a></li>
+                        <li><a href="#">TOP(%topN%, %COLUMN%, %RELATION%)</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">String Functions</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">INDEXOF(%STRING%, '%CHARACTER%', %STARTINDEX%)</a></li>
+                        <li><a href="#">LAST_INDEX_OF(%STRING%, '%CHARACTER%', %STARTINDEX%)</a></li>
+                        <li><a href="#">LOWER(%STRING%)</a></li>
+                        <li><a href="#">REGEX_EXTRACT(%STRING%, %REGEX%, %INDEX%)</a></li>
+                        <li><a href="#">REGEX_EXTRACT_ALL(%STRING%, %REGEX%)</a></li>
+                        <li><a href="#">REPLACE(%STRING%, '%oldChar%', '%newChar%')</a></li>
+                        <li><a href="#">STRSPLIT(%STRING%, %REGEX%, %LIMIT%)</a></li>
+                        <li><a href="#">SUBSTRING(%STRING%, %STARTINDEX%, %STOPINDEX%)</a></li>
+                        <li><a href="#">TRIM(%STRING%)</a></li>
+                        <li><a href="#">UCFIRST(%STRING%)</a></li>
+                        <li><a href="#">UPPER(%STRING%)</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Macros</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">IMPORT '%PATH_TO_MACRO%';</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">
@@ -205,7 +274,7 @@ udfs = UDF.objects.all()
 	  value="Execute" />
           <input class="btn primary " type="button"
                  id="kill_job"  value="Kill job" style="display:none" />
-	  <input class="btn primary action_btn" type="button" 
+	  <input class="btn primary action_btn" type="button"
                  id="explain" name="submit_action" value="Explain" />
 	  <input class="btn primary action_btn" name="submit_action"
                  type="button" value="Syntax check" id="syntax_check" />
