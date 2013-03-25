@@ -66,7 +66,7 @@ udfs = UDF.objects.all()
                    />
             </li>
             <li  class="nav-header">
-              <div class="accordion" id="accordion3">
+              <div class="accordion" id="accordion3" style="text-transform:none;">
                 <div class="accordion-group">
                   <div class="accordion-heading">
                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion3" href="#collapseOne2">

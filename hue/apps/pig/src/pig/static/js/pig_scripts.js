@@ -76,7 +76,7 @@ function listdir(_context){
     async: false,
     success: function(data) {
       //console.log(data);
-        for (var i = 0; i < data.length; i++) {          
+        for (var i = 0; i < data.length; i++) {
             contentList.push(data[i]);
         }
 
@@ -97,7 +97,7 @@ function getTables(){
           table_fields[data[i]]={};
         }
       }
-    
+
   },"json");
 }
 
@@ -254,9 +254,9 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
       if(complPart=="") {
         dirList=tmpDirList.list;
       }
-      else 
+      else
       {
-          for (var i = 0; i < tmpDirList.list.length; i++) 
+          for (var i = 0; i < tmpDirList.list.length; i++)
           {
             if(0 == tmpDirList.list[i].indexOf(complPart,0))
             	dirList.push(tmpDirList.list[i]);
@@ -345,18 +345,8 @@ var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code
 
 
 
-$(".email").bind(
-    'change', function(){
-      if($(this).attr('checked') == 'checked')
-      {$('.intoemail').attr('value', 'checked')}
-      else
-      {$('.intoemail').attr('value', 'no checked')};
-    });
 
-$(".udf_register").click(function() {
-    pig_editor.setValue('REGISTER ' + $(this).attr('value') + '\n'+ pig_editor.getValue());
 
-});
 
 function findPosition(curLine){
   var pos= curLine.indexOf("%");
@@ -368,14 +358,7 @@ function findPosition(curLine){
   return posArr;
 }
 
-$("#id_hdfs_file").change(function() {
-  str=$("#id_hdfs_file").val().toUpperCase();
-  suffix=".JAR";
-  if(!(str.indexOf(suffix, str.length - suffix.length) !== -1)){
-    alert('File type not allowed,\nAllowed file: *.jar');
-    $("#id_hdfs_file").val("");
-  }
-});
+
 
 function paginator(lines_per_page){
 
@@ -424,6 +407,28 @@ $(document).ready(function(){
 
   getTables();
 
+  $(".email").change(
+      function(){
+      if($(this).attr('checked') == 'checked')
+      {$('.intoemail').attr('value', 'checked')}
+      else
+      {$('.intoemail').attr('value', 'no checked')};
+    });
+
+  $("#id_hdfs_file").change(function() {
+  str=$("#id_hdfs_file").val().toUpperCase();
+  suffix=".JAR";
+  if(!(str.indexOf(suffix, str.length - suffix.length) !== -1)){
+    alert('File type not allowed,\nAllowed file: *.jar');
+    $("#id_hdfs_file").val("");
+  }
+});
+
+$(".udf_register").click(function() {
+    pig_editor.setValue('REGISTER ' + $(this).attr('value') + '\n'+ pig_editor.getValue());
+
+});
+
 $("#save_button").live("click", function(){
  if(percent > 0 && percent < 100) return confirm("Job is running. Are you sure, you want to switch to edit mode?");
 });
@@ -448,7 +453,7 @@ $("#save_button").live("click", function(){
 
       python_editor.refresh();
     }
-    var cur_val = pig_editor.getValue();    
+    var cur_val = pig_editor.getValue();
     pig_editor.setValue(cur_val+$(this).text());
     pig_editor.focus();
     //pig_editor.setCursor({line:pig_editor.lineCount(), ch:"0"});
