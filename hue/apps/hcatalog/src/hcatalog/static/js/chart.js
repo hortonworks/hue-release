@@ -23,8 +23,8 @@ function chart(x,y)
 
 		this.graph = new Rickshaw.Graph({
 			element: document.getElementById("chart"),
-			width: 1000,
-			height: 500,
+			width: 900,
+			height: 400,
 			renderer: type,
 			unstack: unstack,
 			series: 
@@ -52,7 +52,6 @@ function chart(x,y)
 			orientation: 'left',
 			element: document.getElementById('y_axis')
 		});
-		//alert(this.map[0]);
 		var format = function(n)
 		{
 			return map[n];
@@ -61,10 +60,15 @@ function chart(x,y)
 			graph: this.graph,
 			orientation: 'bottom',
 			element: document.getElementById('x_axis'),
-			pixelsPerTick: 200,
 			tickFormat:format
 
 		});
+
 		this.graph.render();
+
+		this.slider = new Rickshaw.Graph.RangeSlider({
+			graph: this.graph,
+			element: document.getElementById('slider')
+		});
 	}
 }
