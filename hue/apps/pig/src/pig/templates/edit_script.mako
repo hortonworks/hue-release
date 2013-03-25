@@ -66,14 +66,15 @@ udfs = UDF.objects.all()
                    />
             </li>
             <li  class="nav-header">
-              <div class="accordion" id="accordion3" style="text-transform:none;">
+              <div class="accordion" id="accordion3" >
                 <div class="accordion-group">
                   <div class="accordion-heading">
                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion3" href="#collapseOne2">
                       User-defined Functions <i class="icon-chevron-down"></i>
                     </a>
                   </div>
-                  <div id="collapseOne2" class="accordion-body in collapse" style="height: auto;">
+                  <div id="collapseOne2" class="accordion-body in collapse"
+                       style="height: auto; text-transform:none;">
                     <div class="accordion-inner">
                        ${my_scripts.udfs(result['udfs'])}
                     </div>
