@@ -272,9 +272,12 @@ class CreateTableFromFileForm(forms.Form):
     read_column_headers = forms.BooleanField(required=False, initial=False,
                                              label="Read column headers",
                                              help_text="")
-    import_data = forms.BooleanField(required=False, initial=False,
+    import_data = forms.BooleanField(required=False, initial=True,
                                      label="Import data",
                                      help_text="")
+    autodetect_delimiter = forms.BooleanField(required=False, initial=True,
+                                            label="Autodetect delimiter",
+                                            help_text="")
     ignore_whitespaces = forms.BooleanField(required=False, initial=False,
                                             label="Ignore whitespaces",
                                             help_text="")
@@ -287,7 +290,7 @@ class CreateTableFromFileForm(forms.Form):
                                              help_text="")
     column_type = forms.ChoiceField(required=False, choices=common.to_choices(HIVE_PRIMITIVE_TYPES))
 
-    apply_excel_dialect = forms.BooleanField(required=False, initial=False,
+    apply_excel_dialect = forms.BooleanField(required=False, initial=True,
                                              label="Read column headers",
                                              help_text="")
 

@@ -184,18 +184,20 @@ class HCatClient(Templeton):
         """
         Create table.
         """
-        LOG.info("HCatalog client, create table query:\n%s" % (query))
-        headers = {'content-type': 'application/json'}
+        LOG.info('HCatalog client, create table query:\n%s' % (query))
         resp = {}
         try:
-            resp = self.put("ddl/database/%s/table/%s" % (dbname, table), data=query, headers=headers).json()
+            resp = self.put('ddl/database/%s/table/%s' % (dbname, table), data=query)
         except Exception as ex:
             LOG.exception(unicode(ex))
-            raise Exception("HCatClient error on create table: %s" % unicode(ex))
+            raise Exception('HCatClient error on create table: %s' % unicode(ex))
         try:
             error = resp['error']
+            exec_error = ''
+            if 'exec' in resp and 'stderr' in resp['exec']:
+                exec_error = '\n%s' % resp['exec']['stderr']
             LOG.error(error)
-            raise Exception("HCatClient error on create table: %s" % error)
+            raise Exception('HCatClient error on create table: %s%s' % (error, exec_error))
         except KeyError:
             pass
 
@@ -222,7 +224,7 @@ class HCatClient(Templeton):
             p = Popen("hive -f " + file, shell=True,
                       stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
         answer, error = p.communicate()
-        LOG.error(error)
+        LOG.error("""HCatalog client, hcat_cli error:%s""" % error)
         return (answer, not answer, error)
 
 

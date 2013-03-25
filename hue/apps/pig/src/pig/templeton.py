@@ -35,15 +35,17 @@ class Templeton(object):
         response = urllib2.urlopen(req)
         return json.loads(response.read())
 
-    def put(self, url, data=None, headers={}):
+    def put(self, url, data=None):
         """
         Make PUT query to templeton url.
         """
-        username_data = {"user.name": self.user}
-        username_data = urllib.urlencode(username_data)
-
-        import requests
-        return requests.put(TEMPLETON_URL.get() + url + "?" + username_data, data=data, headers=headers)
+        req = urllib2.Request(TEMPLETON_URL.get() + url + "?user.name=" + self.user, data, {'Content-Type': 'application/json'})
+        req.get_method = lambda: 'PUT'
+        try:
+            response = urllib2.urlopen(req)
+            return json.loads(response.read())
+        except urllib2.HTTPError, error:
+            return json.loads(error.read())
 
     def delete(self, url, data=None):
         """

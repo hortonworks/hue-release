@@ -26,9 +26,8 @@ ${layout.menubar(section='tables')}
 
 <div class="container-fluid" id="container-fluid-top">
     <h1 id="describe-header">${_('Create a new table from a file')}</h1>
-
-    <div id="action-spinner"><h1>${_('Creating a table...')}&nbsp;<img src="/static/art/spinner.gif" width="16"
-                                                                       height="16"/></h1></div>
+    <div id="action-spinner-create"><h1>${_('Creating the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <div id="action-spinner-preview"><h1>${_('Processing the file to preview...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
@@ -153,9 +152,9 @@ ${layout.menubar(section='tables')}
                                     </td>
                                     <td>
                                         <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["ignore_whitespaces"])}
+                                            ${comps.bootstrapLabel(table_form["autodetect_delimiter"])}
                                             <div class="controls">
-                                                ${comps.field(table_form["ignore_whitespaces"], render_default=True)}
+                                                ${comps.field(table_form["autodetect_delimiter"], render_default=True)}
                                             </div>
                                         </div>
                                     </td>
@@ -185,6 +184,14 @@ ${layout.menubar(section='tables')}
                                             </div>
                                         </div>
                                     </td>
+                                    <td>
+                                        <div class="control-group">
+                                            ${comps.bootstrapLabel(table_form["ignore_whitespaces"])}
+                                            <div class="controls">
+                                                ${comps.field(table_form["ignore_whitespaces"], render_default=True)}
+                                            </div>
+                                        </div>
+                                    </td>
 
                                 </tr>
                             </table>
@@ -198,6 +205,9 @@ ${layout.menubar(section='tables')}
                 <div class="form-actions">
                     <input id="submit-create" type="submit" name="createTable" class="btn btn-primary disable-feedback"
                            value="${_('Create table')}"/>
+                </div>
+                <div id="hidden-form-box">
+                    ${comps.field(table_form["formatted_path"], render_default=True)}
                 </div>
             </form>
         </div>
@@ -289,7 +299,7 @@ ${layout.menubar(section='tables')}
         margin-bottom: 5px;
     }
 
-    #action-spinner {
+    #action-spinner-create, #action-spinner-preview, #hidden-form-box {
         display: none;
     }
 
@@ -332,6 +342,19 @@ $(document).ready(function () {
     });
     $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
 
+    $('#id_table-autodetect_delimiter').change(function(){
+        if($(this).is(":checked")) {
+            $("#id_table-delimiter_0").attr("disabled", "disabled");
+            $("#id_table-delimiter_1").attr("disabled", "disabled");
+         }
+        else {
+            $("#id_table-delimiter_0").removeAttr("disabled");
+            $("#id_table-delimiter_1").removeAttr("disabled");
+        }
+        $("#id_table-delimiter_0").change();
+    });
+    $("#id_table-autodetect_delimiter").change();
+
     $("#id_table-field_terminator_1").addClass("input-small");
     $("#id_table-field_terminator_1").css("margin-left", "4px").attr("placeholder", "${_('type here')}");
     $("#id_table-field_terminator_0").change(function () {
@@ -359,20 +382,22 @@ $(document).ready(function () {
     });
     $("#id_table-delimiter_0").change();
 
-
     $("#id_table-file_type").change(function () {
         $("#preview-div").hide();
         if ($(this).val() == "csv") {
             $("div.well#div-file-selector").addClass("div-file-selector");
             $("#file-options-csv").show();
+            unlockControls();
         }
         else if ($(this).val() == "xls") {
             $("#file-options-csv").hide();
             $("div.well#div-file-selector").removeClass("div-file-selector");
+            lockControls();
         }
         else if ($(this).val() == "msaccess") {
             $("#file-options-csv").hide();
             $("div.well#div-file-selector").removeClass("div-file-selector");
+            lockControls();
         }
     });
     $("#id_table-file_type").val("csv");
@@ -387,14 +412,14 @@ $(document).ready(function () {
     }, "json");
 
     $("#submit-preview").click(function () {
-        hideMainError();
+        submitPreviewStart();
         $("#preview-div").hide();
         if (!validateForm()) {
+            submitPreviewEnd();
             return;
         }
-        $("#submit-preview").attr("disabled", "disabled");
         var postQueryData = $('form#mainForm').serializeArray();
-        postQueryData.push({ name: "action", value: "submitPreview" });
+        postQueryData.push({ name: "submitPreviewAction", value: "" });
         $.post("${url(app_name + ':create_from_file', database=database)}", postQueryData,function (data) {
             if ("error" in data) {
                 showMainError(data["error"]);
@@ -406,9 +431,12 @@ $(document).ready(function () {
                     scrollTop: $("#preview-div").offset().top - $("#container-fluid-top").offset().top
                 }, 1000);
             }
-            $("#submit-preview").removeAttr("disabled");
+            if ("options" in data) {
+                updateOptions(data["options"]);
+            }
+            submitPreviewEnd();
         }, "json").error(function () {
-                    $("#submit-preview").removeAttr("disabled");
+                    submitPreviewEnd();
                 });
     });
 
@@ -433,11 +461,63 @@ $(document).ready(function () {
             event.preventDefault();
         }
         else {
-            $('#describe-header').hide();
-            $('#action-spinner').show();
-            $(window).scrollTop(0);
+            submitCreateStart();
         }
     });
+
+    function updateOption(optionName, options)
+    {
+        if(optionName in options ) {
+            $("#id_table-" + optionName).val(options[optionName])
+        }
+    }
+
+    function updateOptions(options)
+    {
+        updateOption("field_terminator_0", options);
+        updateOption("field_terminator_1", options);
+        updateOption("delimiter_0", options);
+        updateOption("delimiter_1", options);
+        updateOption("formatted_path", options);
+    }
+
+    function submitPreviewStart() {
+        hideMainError();
+        lockControls();
+        $('#action-spinner-preview').show();
+        $('#describe-header').hide();
+        $(window).scrollTop(0);
+    }
+
+    function submitPreviewEnd() {
+        $('#action-spinner-preview').hide();
+        $('#describe-header').show();
+        unlockControls();
+    }
+
+    function submitCreateStart() {
+        hideMainError();
+        lockControls();
+        $('#action-spinner-create').show();
+        $('#describe-header').hide();
+        $(window).scrollTop(0);
+    }
+
+    function submitCreateEnd() {
+        $('#action-spinner-create').hide();
+        $('#describe-header').show();
+        unlockControls();
+    }
+
+    function lockControls() {
+        $("#submit-preview").attr("disabled", "disabled");
+        $("#submit-create").attr("disabled", "disabled");
+    }
+
+    function unlockControls() {
+        $("#submit-preview").removeAttr("disabled");
+        $("#submit-create").removeAttr("disabled");
+    }
 
     function validateOnCreateTable() {
         var scrollTo = 0;
