@@ -9,6 +9,13 @@ TUTORIALS_PATH = Config(
   default="/home/sandbox/sandbox-tutorials/",
 )
 
+TUTORIALS_UPDATE_SCRIPT = Config(
+  key="tutorials_update_script",
+  help="Path where tutorials update script is located",
+  private=True,
+  default="/home/sandbox/tutorials/tutorials_app/run/run.sh",
+)
+
 TUTORIALS_INSTALLED = Config(
   key="tutorials_installed",
   help="Whether tutorials installed on server",

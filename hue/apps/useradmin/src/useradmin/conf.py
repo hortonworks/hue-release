@@ -26,3 +26,17 @@ DEFAULT_USER_GROUP = Config(
          "if the server is configured to authenticate against an external source.",
     type=str,
     default='default')
+
+
+DEFAULT_USERNAME = Config(
+    key="default_username",
+    help="The name of a default user",
+    type=str,
+    default='sandbox')
+
+
+DEFAULT_USER_PASSWORD = Config(
+    key="default_user_password",
+    help="The password of a default user",
+    type=str,
+    default='1111')

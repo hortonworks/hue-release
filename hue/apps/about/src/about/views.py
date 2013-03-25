@@ -33,7 +33,7 @@ def index(request):
     on_success_url = urlresolvers.reverse(index)
     error = ''
     try:
-      bash(conf.TUTORIAL_UPDATE_SCRIPT.get())
+      bash(conf.TUTORIALS_UPDATE_SCRIPT.get())
     except Exception, ex:
       error = unicode(ex)
     result = {

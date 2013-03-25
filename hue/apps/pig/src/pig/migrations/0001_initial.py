@@ -26,7 +26,7 @@ class Migration(SchemaMigration):
             ('file_name', self.gf('django.db.models.fields.CharField')(max_length=55)),
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('owner', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('description', self.gf('django.db.models.fields.TextField')()),
+            ('description', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
         ))
         db.send_create_signal('pig', ['UDF'])
 

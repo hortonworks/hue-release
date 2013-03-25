@@ -5,6 +5,13 @@ wget -O /tmp/pig.tar.gz https://www.dropbox.com/s/mkvv1xz89i5ykyt/pig.tar.gz
 su - hcat -c "hadoop fs -put /tmp/pig.tar.gz /apps/webhcat/pig.tar.gz"
 su - hcat -c "hadoop fs -chmod 755 /apps/webhcat/pig.tar.gz"
 rm -f /tmp/pig.tar.gz
+echo "Installing udfs"
+wget -O /tmp/udfs.tar.gz https://www.dropbox.com/s/8wx2pops8xw2kd8/udfs.tar.gz
+cd /tmp
+tar xvf udfs.tar.gz
+chown sandbox udfs
+su - sandbox -c "hadoop fs -copyFromLocal /tmp/udfs /tmp/udfs"
+su - sandbox -c "/home/sandbox/hue/build/env/bin/hue install_udfs"
 touch /root/.hdfs_prepared
 )
 exit 0

@@ -85,7 +85,7 @@ udfs = UDF.objects.all()
             </li>
             <li>
               <form id="udfs" enctype="multipart/form-data"
-                  action="${url('pig.views.piggybank')}"
+                  action="${url('pig.views.udf_create')}"
                   method="post">
                 <div class="fileupload fileupload-new" data-provides="fileupload">
                   <span class="btn btn-file">
@@ -238,6 +238,13 @@ udfs = UDF.objects.all()
                       <a href="#">Macros</a>
                       <ul class="dropdown-menu">
                         <li><a href="#">IMPORT '%PATH_TO_MACRO%';</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">HBase</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">LOAD 'hbase://%TABLE%' USING org.apache.pig.backend.hadoop.hbase.HBaseStorage('%columnList%')</a></li>
+                        <li><a href="#">STORE %VAR% INTO 'hbase://%TABLE%' USING org.apache.pig.backend.hadoop.hbase.HBaseStorage('%columnList%')</a></li>
                       </ul>
                     </li>
                     <li class="dropdown-submenu">

@@ -37,7 +37,7 @@ class PigScript(models.Model):
 class UDF(models.Model):
     url = models.CharField(max_length=255)
     file_name = models.CharField(max_length=55)
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
     owner = models.ForeignKey(User, verbose_name='Owner')
 
     class Meta:

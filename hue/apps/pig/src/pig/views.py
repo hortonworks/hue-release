@@ -29,9 +29,9 @@ from filebrowser.views import _do_newfile_save
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm, UDFForm
+from pig import conf
 
-
-UDF_PATH = '/tmp/udfs/'
+UDF_PATH = conf.UDF_PATH.get()
 FILE_PATTERN = re.compile(r"[^\w\d_\-\.]+")
 
 
@@ -106,12 +106,13 @@ def script_clone(request, obj_id):
     return redirect(reverse("root_pig"))
 
 
-def piggybank(request, obj_id=False):
+def udf_create(request):
     form = UDFForm(request.POST, request.FILES)
     if not form.is_valid():
         raise PopupException(_("Error in upload form: %s") % form.errors)
     uploaded_file = request.FILES['hdfs_file']
-    dest = request.fs.join(UDF_PATH, re.sub(FILE_PATTERN, "", uploaded_file.name))
+    file_name = re.sub(FILE_PATTERN, "", uploaded_file.name)
+    dest = request.fs.join(UDF_PATH, file_name)
     tmp_file = uploaded_file.get_temp_path()
     username = request.user.username
 
@@ -134,12 +135,11 @@ def piggybank(request, obj_id=False):
             msg = _('Copy to "%(name)s failed: %(error)s') % {'name': dest, 'error': ex}
         raise PopupException(msg)
 
-    UDF.objects.create(url=dest, file_name=uploaded_file.name,
-                       owner=request.user, description='111')
+    UDF.objects.create(url=dest, file_name=file_name, owner=request.user)
     return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
 
 
-def udf_del(request, obj_id):
+def udf_delete(request, obj_id):
     udf = get_object_or_404(UDF, pk=obj_id)
     try:
         request.fs.remove(udf.url)
