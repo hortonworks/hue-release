@@ -1,0 +1,139 @@
+<div class="nav-collapse">
+              <ul class="nav">
+                <li class="dropdown">
+                  <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                    PIG helper<b class="caret"></b>
+                  </a>
+                  <ul class="dropdown-menu" id="pig_helper">
+                    <li class="dropdown-submenu">
+                      <a href="#">Eval Functions</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">AVG(%VAR%)</a></li>
+                        <li><a href="#">CONCAT(%VAR1%, %VAR2%)</a></li>
+                        <li><a href="#">COUNT(%VAR%)</a></li>
+                        <li><a href="#">COUNT_START(%VAR%)</a></li>
+                        <li><a href="#">IsEmpty(%VAR%)</a></li>
+                        <li><a href="#">DIFF(%VAR1%, %VAR2%)</a></li>
+                        <li><a href="#">MAX(%VAR%)</a></li>
+                        <li><a href="#">MIN(%VAR%)</a></li>
+                        <li><a href="#">SIZE(%VAR%)</a></li>
+                        <li><a href="#">SUM(%VAR%)</a></li>
+                        <li><a href="#">TOKENIZE(%VAR%, %DELIM%)</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Relational Operators</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">COGROUP %VAR% BY %VAR%</a></li>
+                        <li><a href="#">CROSS %VAR1%, %VAR2%;</a></li>
+                        <li><a href="#">DISTINCT %VAR%;</a></li>
+                        <li><a href="#">FILTER %VAR% BY %COND%</a></li>
+                        <li><a href="#">FLATTEN(%VAR%)</a></li>
+                        <li><a href="#">FOREACH %DATA% GENERATE %NEW_DATA%</a></li>
+                        <li><a href="#">FOREACH %DATA% {%NESTED_BLOCK%}</a></li>
+                        <li><a href="#">GROUP %VAR% BY %VAR%</a></li>
+                        <li><a href="#">GROUP %VAR% ALL</a></li>
+                        <li><a href="#">JOIN %VAR% BY </a></li>
+                        <li><a href="#">LIMIT %VAR% %N%</a></li>
+                        <li><a href="#">ORDER %VAR% BY %FIELD%</a></li>
+                        <li><a href="#">SAMPLE %VAR% %SIZE%</a></li>
+                        <li><a href="#">SPLIT %VAR1% INTO %VAR2% IF %EXPRESSIONS%</a></li>
+                        <li><a href="#">UNION %VAR1%, %VAR2%</a></li>
+                      </ul>
+                    </li>
+
+                    <li class="dropdown-submenu">
+                      <a href="#">I/0</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">LOAD '%FILE%';</a></li>
+                        <li><a href="#">DUMP %VAR%;</a></li>
+                        <li><a href="#">STORE %VAR% INTO %PATH%;</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Debug</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">EXPLAIN %VAR%;</a></li>
+                        <li><a href="#">ILLUSTRATE %VAR%;</a></li>
+                        <li><a href="#">DESCRIBE %VAR%;</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">HCatalog</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">LOAD '%TABLE%' USING org.apache.hcatalog.pig.HCatLoader();</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Math</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">ABS(%VAR%)</a></li>
+                        <li><a href="#">ACOS(%VAR%)</a></li>
+                        <li><a href="#">ASIN(%VAR%)</a></li>
+                        <li><a href="#">ATAN(%VAR%)</a></li>
+                        <li><a href="#">CBRT(%VAR%)</a></li>
+                        <li><a href="#">CEIL(%VAR%)</a></li>
+                        <li><a href="#">COS(%VAR%)</a></li>
+                        <li><a href="#">COSH(%VAR%)</a></li>
+                        <li><a href="#">EXP(%VAR%)</a></li>
+                        <li><a href="#">FLOOR(%VAR%)</a></li>
+                        <li><a href="#">LOG(%VAR%)</a></li>
+                        <li><a href="#">LOG10(%VAR%)</a></li>
+                        <li><a href="#">RANDOM(%VAR%)</a></li>
+                        <li><a href="#">ROUND(%VAR%)</a></li>
+                        <li><a href="#">SIN(%VAR%)</a></li>
+                        <li><a href="#">SINH(%VAR%)</a></li>
+                        <li><a href="#">SQRT(%VAR%)</a></li>
+                        <li><a href="#">TAN(%VAR%)</a></li>
+                        <li><a href="#">TANH(%VAR%)</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Tuple, Bag, Map Functions</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">TOTUPLE(%VAR%)</a></li>
+                        <li><a href="#">TOBAG(%VAR%)</a></li>
+                        <li><a href="#">TOMAP(%KEY%, %VALUE%)</a></li>
+                        <li><a href="#">TOP(%topN%, %COLUMN%, %RELATION%)</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">String Functions</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">INDEXOF(%STRING%, '%CHARACTER%', %STARTINDEX%)</a></li>
+                        <li><a href="#">LAST_INDEX_OF(%STRING%, '%CHARACTER%', %STARTINDEX%)</a></li>
+                        <li><a href="#">LOWER(%STRING%)</a></li>
+                        <li><a href="#">REGEX_EXTRACT(%STRING%, %REGEX%, %INDEX%)</a></li>
+                        <li><a href="#">REGEX_EXTRACT_ALL(%STRING%, %REGEX%)</a></li>
+                        <li><a href="#">REPLACE(%STRING%, '%oldChar%', '%newChar%')</a></li>
+                        <li><a href="#">STRSPLIT(%STRING%, %REGEX%, %LIMIT%)</a></li>
+                        <li><a href="#">SUBSTRING(%STRING%, %STARTINDEX%, %STOPINDEX%)</a></li>
+                        <li><a href="#">TRIM(%STRING%)</a></li>
+                        <li><a href="#">UCFIRST(%STRING%)</a></li>
+                        <li><a href="#">UPPER(%STRING%)</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Macros</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">IMPORT '%PATH_TO_MACRO%';</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">HBase</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#">LOAD 'hbase://%TABLE%' USING org.apache.pig.backend.hadoop.hbase.HBaseStorage('%columnList%')</a></li>
+                        <li><a href="#">STORE %VAR% INTO 'hbase://%TABLE%' USING org.apache.pig.backend.hadoop.hbase.HBaseStorage('%columnList%')</a></li>
+                      </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a href="#">Python UDF</a>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <a href="#" data-python="true">REGISTER 'python_udf.py' USING jython AS myfuncs;
+                          </a>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+            </div>
