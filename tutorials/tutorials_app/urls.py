@@ -12,6 +12,7 @@ urlpatterns = patterns('tutorials_app.views',
                        (r'^content/(.*)$', 'content'),
                        (r'^sync/$', 'sync_location'),
                        (r'^netinfo/$', 'network_info'),
+                       (r'^refresh/$', 'refresh'),
                        )
 
 urlpatterns += patterns('',
