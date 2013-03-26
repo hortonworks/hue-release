@@ -1,7 +1,7 @@
 $(document).ready(function () {
 	  var delay;
       // Initialize CodeMirror editor with a nice html5 canvas demo.
-	  $('a[href="#visualizations"]').live('click',function(){editor.refresh(); updatePreview() });
+	  $('a[href="#visualizations"]').live('click',function(){editor.refresh(); preview.refresh();});
 		
       var editor = CodeMirror.fromTextArea(document.getElementById('vis_code'), {
         mode: 'text/html',
