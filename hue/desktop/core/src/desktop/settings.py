@@ -117,7 +117,6 @@ MIDDLEWARE_CLASSES = [
     'desktop.middleware.AppSpecificMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
     # 'debug_toolbar.middleware.DebugToolbarMiddleware'
-    'desktop.middleware.DisableClientSideCachingMiddleware',
 ]
 
 if os.environ.get(ENV_DESKTOP_DEBUG):

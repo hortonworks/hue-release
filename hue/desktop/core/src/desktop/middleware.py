@@ -32,7 +32,6 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.utils.translation import ugettext as _
 from django.utils.http import urlquote
 from django.utils.encoding import iri_to_uri
-from django.utils.cache import add_never_cache_headers
 import django.views.static
 import django.views.generic.simple
 
@@ -601,8 +600,3 @@ class HueRemoteUserMiddleware(RemoteUserMiddleware):
     if not 'RemoteUserDjangoBackend' in desktop.conf.AUTH.BACKEND.get():
       LOG.info('Unloading HueRemoteUserMiddleware')
       raise exceptions.MiddlewareNotUsed
-
-class DisableClientSideCachingMiddleware(object):
-  def process_response(self, request, response):
-    add_never_cache_headers(response)
-    return response
