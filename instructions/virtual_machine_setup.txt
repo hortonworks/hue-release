@@ -1,4 +1,4 @@
-1) Download and install Vagrant (http://downloads.vagrantup.com/tags/v1.1.0)
+1) Download and install latest Vagrant (http://downloads.vagrantup.com/tags/)
 2) Download basic box and (you would need to do it only once):
 https://docs.google.com/a/hortonworks.com/file/d/0BzuJsGNSrhIAa01aU0czQi1DbEk/edit?usp=sharing
 3) vagrant box add sandbox package.box
@@ -6,7 +6,6 @@ https://docs.google.com/a/hortonworks.com/file/d/0BzuJsGNSrhIAa01aU0czQi1DbEk/ed
 cd sandbox-shared
 git checkout Caterpillar
 cd deploy/vagrant
-5) vagrant plugin install vagrant-vbguest 
-vagrant plugin install vagrant-hostmaster
-6) vagrant up (first time it would take some time to build VM).
-7) To connect to running VM simply run vagrant ssh
+
+5) vagrant up (first time it would take some time to build VM).
+6) To connect to running VM simply run vagrant ssh
