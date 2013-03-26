@@ -113,6 +113,10 @@ cd /home/sandbox/hue
 cp desktop/libs/hadoop/java-lib/hue-plugins-2.1.0-SNAPSHOT.jar /usr/lib/hadoop/lib/hue-plugins-2.1.0-SNAPSHOT.jar
 
 
+ln -sf /home/sandbox/start_scripts/ambari /etc/init.d/ambari
+chkconfig --add ambari
+chkconfig ambari off
+
 ln -sf /home/sandbox/start_scripts/startup_script /etc/init.d/startup_script
 chkconfig --add startup_script
 chkconfig --levels 3 startup_script on

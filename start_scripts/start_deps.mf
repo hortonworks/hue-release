@@ -1,4 +1,4 @@
-line = 50
+line = 10
 
 all: Startup Ambari
 

@@ -66,17 +66,6 @@ start)
     echo "Starting HDP ..."
     make --makefile $SCRIPTS_PATH/start_deps.mf -B Startup -j -i
 
-    [ -f /root/.start_ambari ] && (
-        make --makefile $SCRIPTS_PATH/start_deps.mf -B Ambari -j -i
-        echo "===========================";
-        echo;
-        echo "To disable auto-start of Ambari do";
-        echo "  # rm /root/.start_ambari";
-        echo;
-        echo "===========================";
-        # bash $SCRIPTS_PATH/start_ambari.sh;
-    )
-
     sudo -u hdfs hadoop dfsadmin -safemode leave
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
