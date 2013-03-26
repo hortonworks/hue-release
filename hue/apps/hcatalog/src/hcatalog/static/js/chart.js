@@ -1,13 +1,3 @@
-document.write('<link rel="stylesheet" type="text/css" href="/hcatalog/static/css/detail.css">');
-document.write('<link rel="stylesheet" type="text/css" href="/hcatalog/static/css/graph.css">');
-document.write('<link rel="stylesheet" type="text/css" href="/hcatalog/static/css/legend.css">');
-document.write('<link rel="stylesheet" type="text/css" href="/hcatalog/static/css/chart.css">');
-document.write('<link rel="stylesheet" type="text/css" href="/hcatalog/static/css/jquery-ui.css">');
-document.write('<script src="/static/ext/js/jquery/jquery-1.8.1.min.js"></script> ');
-document.write('<script src="/hcatalog/static/js/jquery-ui.min.js"></script> ');
-document.write('<script src="/hcatalog/static/js/d3.v3.min.js"></script>');
-document.write('<script src="/hcatalog/static/js/lib/d3.layout.min.js"></script>');
-document.write('<script src="/hcatalog/static/js/lib/rickshaw.min.js"></script>');
 function chart(x,y)
 {
 	this.x = x;
@@ -29,12 +19,10 @@ function chart(x,y)
 
 	this.setGraph = function(type,unstack)
 	{
-
-
 		this.graph = new Rickshaw.Graph({
 			element: document.getElementById("chart"),
 			width: 900,
-			height: 400,
+			height: 350,
 			renderer: type,
 			unstack: unstack,
 			series:

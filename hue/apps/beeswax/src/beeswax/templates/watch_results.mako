@@ -126,7 +126,7 @@ ${layout.menubar(section='query')}
         <li><a href="#log" data-toggle="tab">${_('Log')}</a></li>
         % if not error:
         <li><a href="#columns" data-toggle="tab">${_('Columns')}</a></li>
-        <li><a href="#visualizations" data-toggle="tab">Visualizations</a></li>
+        <!--Visualization --><li><a href="#visualizations" data-toggle="tab">Visualizations</a></li><!--/Visualization -->
         % endif
       </ul>
 
@@ -201,10 +201,11 @@ ${layout.menubar(section='query')}
             </tbody>
           </table>
         </div>
+        <!--- Visualization -->
         <div class="tab-pane" id="visualizations">
            <textarea id="vis_code" name="code">
-             <%include file="visualization.html" />
-             <script> 
+             <script src="/hcatalog/static/js/include.js"></script>
+             <script>
                 var x = "${columns[0]}";
             /   *Set col name from csv file for x axis*/
               var y = [
@@ -215,19 +216,19 @@ ${layout.menubar(section='query')}
             /*Set col names from csv file for y axis. Can be only integer*/
 
             var c = new chart(x,y);
-            d3.csv("${download_urls["csv"]}", function(dataset) 
+            d3.csv("${download_urls["csv"]}", function(dataset)
             {
-              dataset.forEach(function(d,i) 
+              dataset.forEach(function(d,i)
               {
                 c.getData(d,i);
               });
               c.setGraph('line',true);
               /*first options include: 'area', 'stack', 'bar', 'line', and 'scatterplot'.*/
               /*second option set chart as stack(fasle) or unstack(true)*/
-            }); 
-            </script> 
+            });
+            </script>
            </textarea> <br>
-  <iframe id=preview></iframe>
+            <iframe id=preview></iframe>
 
 
         </div>
@@ -240,6 +241,7 @@ ${layout.menubar(section='query')}
         <script src="/hcatalog/static/js/css.js"></script>
         <script src="/hcatalog/static/js/javascript.js"></script>
         % endif
+        <!--/Visualization -->
       </div>
 
         </div>
