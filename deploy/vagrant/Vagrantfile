@@ -18,7 +18,7 @@ Vagrant::Config.run do |config|
   config.vm.host_name = "sandbox"
   config.vm.customize ["modifyvm", :id, "--memory", 3048] #For dev purpose
 
-  config.vm.provision :puppet, :options => "--verbose" do |puppet|
+  config.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
     puppet.manifests_path = "manifests"
     puppet.manifest_file  = "sandbox.pp"
   end

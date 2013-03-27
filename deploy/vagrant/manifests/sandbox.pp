@@ -1,3 +1,5 @@
+$HUE_HOME="/home/sandbox/hue"
+
 Exec { path => [ "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/" ] }
 
 define line($file, $line, $ensure = 'present') {
@@ -155,7 +157,7 @@ class sandbox {
         content => file("/vagrant/files/jars/hue-plugins-2.2.0-SNAPSHOT.jar"),
     }
 
-    file {'/home/sandbox/hue/apps/shell/src/shell/build/setuid':   
+    file {"${HUE_HOME}/apps/shell/src/shell/build/setuid":   
         owner => sandbox,
         group => sandbox,
         mode => 4750,
