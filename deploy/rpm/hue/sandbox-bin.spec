@@ -17,7 +17,7 @@ Source2: .ssh.tar.gz
 #Source3: apache-maven-3.0.4-bin.tar.gz
 
 
-Requires: git, wget, sudo, supervisor, libxslt, python-lxml
+Requires: wget, sudo, supervisor, libxslt, python-lxml
 
 provides: sandbox-hue
 
@@ -99,15 +99,7 @@ END_OF_SANDBOX
 %post
 
 (
-sudo -u sandbox -s -- <<END_OF_SANDBOX
-
-cd /home/sandbox/
-echo "clonning tutorials ..."
-git clone git@github.com:hortonworks/sandbox-tutorials.git
-
-mkdir /home/sandbox/hue/logs
-
-END_OF_SANDBOX
+sudo -u sandbox mkdir /home/sandbox/hue/logs
 
 cd /home/sandbox/hue
 cp desktop/libs/hadoop/java-lib/hue-plugins-2.1.0-SNAPSHOT.jar /usr/lib/hadoop/lib/hue-plugins-2.1.0-SNAPSHOT.jar

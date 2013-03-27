@@ -35,6 +35,71 @@ USER=sandbox
 EXEC=/home/sandbox/hue/build/env/bin/python
 DAEMON_OPTS="-p $PIDFILE -l $LOGDIR -d"
 
+
+parse_args() {
+    ARGS=$(getopt -o h:u:k:p:l: -l "HUEHOME:,USER:,LOCKFILE:,LOGDIR:,PIDFILE:" -- "$@");
+
+    if [ $? -ne 0 ];
+    then
+      exit 1
+    fi
+
+    eval set -- "$ARGS";
+
+    while true; do
+      case "$1" in
+        -h | --HUEHOME)
+          shift;
+          if [ -n "$1" ]; then
+            HUEHOME="$1"
+            DAEMON=$HUE_HOME/build/env/bin/supervisor
+            EXEC=$HUE_HOME/build/env/bin/python
+            shift;
+          fi
+          ;;
+        -u | --USER)
+          shift;
+          if [ -n "$1" ]; then
+            USER="$1"
+            shift;
+          fi
+          ;;
+        -k | --LOCKFILE)
+          shift;
+          if [ -n "$1" ]; then
+            LOCKFILE="$1"
+            shift;
+          fi
+          ;;
+        -l | --LOGDIR)
+          shift;
+          if [ -n "$1" ]; then
+            LOGDIR="$1"
+            shift;
+          fi
+          ;;
+        -p | --PIDFILE)
+          shift;
+          if [ -n "$1" ]; then
+            PIDFILE="$1"
+            shift;
+          fi
+          ;;
+        --)
+          shift;
+          break;
+          ;;
+        *)
+          shift;
+          ;;
+      esac
+    done
+
+}
+
+
+
+
 hue_start() {
         export PYTHON_EGG_CACHE='/tmp/.hue-python-eggs'
         RE_REGISTER=/usr/share/hue/.re_register
@@ -108,7 +173,12 @@ hue_restart() {
   hue_start
 }
 
-case "$1" in
+ACTION="$1"
+
+shift
+parse_args
+
+case "$ACTION" in
     start)
         hue_start
         ;;

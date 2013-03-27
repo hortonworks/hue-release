@@ -18,7 +18,7 @@ AutoReqProv: no
 
 provides: sandbox-tutorials
 
-requires: python >= 2.6, supervisor, httpd
+requires: python >= 2.6, supervisor, httpd, git
 requires: sandbox-hue
 conflicts: sandbox-tutorials-sl
 
@@ -52,6 +52,16 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %pre
 
 rm -f %{prefix}/tutorials_app/db/lessons.db
+
+sudo -u sandbox -s -- <<END_OF_SANDBOX
+
+cd /home/sandbox/
+echo "clonning tutorials ..."
+git clone git@github.com:hortonworks/sandbox-tutorials.git
+
+mkdir /home/sandbox/hue/logs
+
+END_OF_SANDBOX
 
 %post
 
