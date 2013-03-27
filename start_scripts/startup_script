@@ -3,7 +3,6 @@
 # chkconfig: 5 98 1
 # description: startup script
 
-SCRIPTS_PATH="/home/sandbox/start_scripts"
 NAME="startup_script"
 LOG="/var/log/startup_script.log"
 

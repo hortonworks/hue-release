@@ -1,0 +1,9 @@
+#!/bin/bash
+
+SCRIPTS_PATH=/home/sandbox/start_scripts
+source $SCRIPTS_PATH/consts.sh
+
+/etc/init.d/hue status &> /dev/null || exit 1
+
+$HUE_HOME_DIR/build/env/bin/hue smoke_test
+
