@@ -57,7 +57,7 @@ cd /home/sandbox/
 echo "clonning tutorials ..."
 git clone git@github.com:hortonworks/sandbox-tutorials.git
 
-mkdir /home/sandbox/hue/logs
+mkdir -p /home/sandbox/hue/logs
 
 END_OF_SANDBOX
 

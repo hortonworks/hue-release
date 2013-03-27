@@ -99,8 +99,7 @@ END_OF_SANDBOX
 sudo -u sandbox mkdir /home/sandbox/hue/logs
 
 cd /home/sandbox/hue
-cp desktop/libs/hadoop/java-lib/hue-plugins-2.1.0-SNAPSHOT.jar /usr/lib/hadoop/lib/hue-plugins-2.1.0-SNAPSHOT.jar
-
+mv desktop/libs/hadoop/java-lib/hue-plugins-*.jar /usr/lib/hadoop/lib/
 
 ln -sf /home/sandbox/start_scripts/ambari /etc/init.d/ambari
 chkconfig --add ambari
