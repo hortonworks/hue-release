@@ -21,5 +21,5 @@ cp *.spec $BB/rpm/SPECS/
 
 # === build ===
 
-rpmbuild --define "_topdir $BB/rpm" -ba $BB/rpm/SPECS/sandbox-bin.spec --target=x86_64
+rpmbuild --define "_topdir $BB/rpm" -ba $BB/rpm/SPECS/hue.spec --target=x86_64
 mv $BB/rpm/RPMS/noarch/*.rpm ./

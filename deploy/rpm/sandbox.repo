@@ -1,6 +1,0 @@
-[sandbox]
-name=sandbox
-baseurl=http://dl.dropbox.com/u/3926517/RPM/1
-path=/
-enabled=1
-gpgcheck=0

@@ -47,7 +47,7 @@ class sandbox_rpm {
         require => File['resolv.conf'],
     }
 
-    package { 'sandbox':
+    package { 'hue-tutorials':
         ensure => present,
         require => [ File['sandbox.repo'], 
                      Package['libxslt'],

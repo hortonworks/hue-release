@@ -3,27 +3,25 @@
 %define _unpackaged_files_terminate_build 1
 %define _binaries_in_noarch_packages_terminate_build   0
 
-Summary: Hortonworks Sandbox Tutorials
-Name: sandbox-tutorials-files
-Version: 2
+Summary: Hue Tutorials
+Name: hue-tutorials
+Version: 1.2.1
 Release: 1
 License: Apache License, Version 2.0
 Group: Development/Libraries
 BuildArch: noarch
-Vendor: Hortonworks <UNKNOWN>
 Source: tutorials.tgz
 Source1: tutorials-env.tgz
 AutoReqProv: no
 
 
-provides: sandbox-tutorials
+provides: hue-tutorials
 
 requires: python >= 2.6, supervisor, httpd, git
-requires: sandbox-hue
-conflicts: sandbox-tutorials-sl
+requires: hue
 
 %description
-Sandbox Tutorials (with files)
+Hue Tutorials
 
 %prep
 %setup -n tutorials

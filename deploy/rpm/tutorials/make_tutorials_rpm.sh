@@ -18,5 +18,5 @@ cp *.spec $BB/rpm/SPECS/
 
 # === build ===
 
-rpmbuild --define "_topdir $BB/rpm" -ba $BB/rpm/SPECS/sandbox-tutorials-files.spec
+rpmbuild --define "_topdir $BB/rpm" -ba $BB/rpm/SPECS/hue-tutorials.spec
 mv $BB/rpm/RPMS/noarch/*.rpm ./

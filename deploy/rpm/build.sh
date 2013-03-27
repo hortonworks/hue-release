@@ -87,11 +87,6 @@ cd $SRC/sandbox-shared/deploy/rpm
     mv *.rpm $OUT/
 )
 
-( #Meta-RPM
-    bash make_meta_rpm.sh
-    mv *.rpm $OUT/
-)
-
 ( #Hue RPM
     cd hue
     cp $SRC/hue.tgz $SRC/start_scripts.tgz ./

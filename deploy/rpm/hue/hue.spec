@@ -3,14 +3,13 @@
 %define _binaries_in_noarch_packages_terminate_build   0
 
 
-Summary: Hortonworks Sandbox (Source)
-Name: sandbox-hue-bin
+Summary: Hue
+Name: hue
 Version: 1.2.1
 Release: 1
 License: Apache License, Version 2.0
 Group: Development/Libraries
 BuildArch: noarch
-Vendor: Hortonworks <UNKNOWN>
 Source: hue.tgz
 Source1: start_scripts.tgz
 Source2: .ssh.tar.gz
@@ -19,9 +18,7 @@ Source2: .ssh.tar.gz
 
 Requires: wget, sudo, supervisor, libxslt, python-lxml
 
-provides: sandbox-hue
-
-conflicts: sandbox-hue-src
+provides: hue
 
 #No automatic binary dependencies
 AutoReqProv: no
@@ -29,7 +26,7 @@ AutoReqProv: no
 
 
 %description
-Hortonworks Sandbox - hue + apps (Source)
+Hue
 
 %prep
 %setup -n hue
