@@ -5,6 +5,7 @@
 
 NAME="startup_script"
 LOG="/var/log/startup_script.log"
+SCRIPTS_PATH="/home/sandbox/start_scripts"
 
 source /etc/rc.d/init.d/functions
 
