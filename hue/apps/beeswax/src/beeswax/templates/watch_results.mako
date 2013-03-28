@@ -201,6 +201,7 @@ ${layout.menubar(section='query')}
             </tbody>
           </table>
         </div>
+        % if columns:
         <!--- Visualization -->
         <div class="tab-pane" id="visualizations">
            <textarea id="vis_code" name="code">
@@ -239,9 +240,10 @@ ${layout.menubar(section='query')}
         <script src="/hcatalog/static/js/htmlmixed.js"></script>
         <script src="/hcatalog/static/js/xml.js"></script>
         <script src="/hcatalog/static/js/css.js"></script>
-        <script src="/hcatalog/static/js/javascript.js"></script>
-        % endif
+        <script src="/hcatalog/static/js/javascript.js"></script>        
         <!--/Visualization -->
+        % endif
+        % endif
       </div>
 
         </div>
