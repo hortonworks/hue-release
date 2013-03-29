@@ -16,7 +16,7 @@ mkdir -p $SRC $OUT
 cd $SRC
 
 git clone git@github.com:/hortonworks/sandbox-shared.git sandbox-shared
-(cd sandbox-shared; git checkout Caterpillar;)
+(cd sandbox-shared; git checkout move;)
 
 #Tutorials stuff
 ( 
@@ -56,6 +56,8 @@ export PATH=$PATH:$SRC/apache-maven-3.0.5/bin/
 set -x
 set -e
 
+rm -rf /usr/lib/hue
+
 cd $SRC
 wget http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz
 tar xvf apache-maven-3.0.5-bin.tar.gz
@@ -72,7 +74,7 @@ END_OF_CHROOT
         umount $SRC/env/$x
     done
 
-    cd $SRC/env/usr/lib
+    cd /usr/lib
     tar zcf $SRC/hue.tgz hue
 
 
@@ -80,18 +82,18 @@ cd $SRC/sandbox-shared/deploy/rpm
 
 #======= Making rpms =======
 
-( #Tutorials RPM
-    cd tutorials
-    cp $SRC/tutorials.tgz $SRC/tutorials-env.tgz ./
-    bash make_tutorials_rpm.sh
-    mv *.rpm $OUT/
-)
-
 ( #Hue RPM
     cd hue
     cp $SRC/hue.tgz $SRC/start_scripts.tgz ./
 
     bash make_hue_rpm.sh
+    mv *.rpm $OUT/
+)
+
+( #Tutorials RPM
+    cd tutorials
+    cp $SRC/tutorials.tgz $SRC/tutorials-env.tgz ./
+    bash make_tutorials_rpm.sh
     mv *.rpm $OUT/
 )
 
