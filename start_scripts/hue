@@ -1,4 +1,7 @@
 #!/bin/bash
+# Hue
+# chkconfig: 345 98 1
+# description: startup script
 
 . /etc/init.d/functions
 

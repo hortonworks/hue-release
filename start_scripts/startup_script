@@ -1,6 +1,6 @@
 #!/bin/bash
 # startup script
-# chkconfig: 5 98 1
+# chkconfig: 345 98 1
 # description: startup script
 
 NAME="startup_script"
