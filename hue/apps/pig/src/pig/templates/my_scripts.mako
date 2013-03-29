@@ -24,7 +24,9 @@
     % endfor
   </ul>
 </div>
-<a class="btn" href="${url('root_pig')}?new=true">New script</a>
+<a data-placement="right" rel="tooltip" title="New script" href="${url('root_pig')}?new=true">
+                <i class="icon-plus-sign"></i> New script
+</a>
 </%def>
 
 

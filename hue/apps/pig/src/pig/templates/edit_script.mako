@@ -114,12 +114,20 @@ udfs = UDF.objects.all()
                        maxlength="200" value="${result.get('title',"")}">
               </div>
             </div>
+            <div class="alert alert-success">
+              <i class="icon-question-sign" id="help"></i>
+              
+              <div id="help-content" class="hide">
+                <ul>
+                  <li class="text-success">Press ctrl+space for autocompletion</li>
+                  <li class="text-success">To see table fields helper type table_name + "." (e.g. sample_07.)</li>
+                </ul>
+              </div>
+              <%include file="pig_helper.html" />
+            </div>
             <label for="id_pig_script" >Pig script:</label>
-            <ul>
-              <li class="text-success">Press ctrl+space for autocompletion</li>
-              <li class="text-success">To see table fields helper type table_name + "." (e.g. sample_07.)</li>
-            </ul>
-            <%include file="pig_helper.html" />
+            
+            
             <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
             % if result.get("python_script"):
             <label>Python UDF</label>
@@ -133,7 +141,7 @@ udfs = UDF.objects.all()
             % endif
 	<input type="hidden" name="email" class='intoemail' />
         <input type="hidden" id="operation_type" />
-	<div class="actions">
+	<br><div class="actions">
 	  <input class="btn primary" type="submit" name="submit_action" id="save_button"
                  value="Save"
                  % if result.get("id"):
@@ -279,7 +287,7 @@ function get_job_result(job_id)
 
 
 $(document).ready(function(){
-
+$("#help").popover({'title': "${'Did you know?'}", 'content': $("#help-content").html(), 'trigger': 'hover', 'html': true});
 % if result.get("job_id") and result.get("JOB_SUBMITED"):
 percent = 10;
 ping_job("${result['job_id']}");

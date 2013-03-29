@@ -40,7 +40,7 @@
         ${ unicode(form.query["query"].errors) | n,unicode }
      % endif
     </div>
-
+    <br>
     <div class="actions">
         <a id="executeQuery" class="btn btn-primary" tabindex="0">${_('Execute')}</a>
         % if design and not design.is_auto and design.name:
@@ -187,18 +187,13 @@ ${layout.menubar(section='query')}
                                 <input type="checkbox" id="id_${form.query["email_notify"].html_name | n}" name="${form.query["email_notify"].html_name | n}" ${extract_field_data(form.query["email_notify"]) and "CHECKED" or ""}/>
                                 ${_("Email me on completion")}
                             </label>
-                          </li>
+                          </li>                          
                         </ul>
                     </ul>
                     <input type="hidden" name="${form.query["query"].html_name | n}" class="query" value="" />
                 </form>
             </div>
-            <div id="multiStatementsQuery" class="alert">
-              <button type="button" class="close" data-dismiss="alert">&times;</button>
-              <strong>${_('Did you know?')}</strong>
-              ${ _("You can execute queries with multiple SQL statements delimited by a semicolon ';'.") }
-              ${ _("Use '\\059' instead of ';' if you have some conflicts.") }
-            </div>
+
         </div>
         <div class="span9">
             % if on_success_url:
@@ -212,11 +207,17 @@ ${layout.menubar(section='query')}
               % endif
             % else:
               <h1>${_('Query Editor')}</h1>
-            % endif
-            <ul>
-              <li class="text-success">Press ctrl+space for autocompletion</li>
-              <li class="text-success">To see table fields helper type table_name + "." (e.g. sample_07.)</li>
-            </ul>
+            % endif 
+            <div class="control-group">
+                              <i class="icon-question-sign" id="help"></i>
+                              <div id="help-content" class="hide">
+                                <ul class="text-success">
+                                  <li>${ _("You can execute queries with multiple SQL statements delimited by a semicolon ';'.") }</li>
+                                  <li>Press ctrl+space for autocompletion</li>
+                                  <li>To see table fields helper type table_name + "." (e.g. sample_07.)</li>
+                                </ul>
+                              </div>
+            </div>         
             % if error_messages or log:
                 <ul class="nav nav-tabs">
                     <li class="active">
@@ -390,7 +391,7 @@ ${layout.menubar(section='query')}
         $("*[rel=tooltip]").tooltip({
             placement: 'bottom'
         });
-
+        $("#help").popover({'title': "${'Did you know?'}", 'content': $("#help-content").html(), 'trigger': 'hover', 'html': true});
         $("a[data-form-prefix]").each(function(){
             var _prefix = $(this).attr("data-form-prefix");
             var _nextID = 0;
