@@ -4,7 +4,7 @@ import os
 
 from fabric.api import env, run, local, cd, sudo
 from fabric.operations import get
-from fabric.contrib.files import exists
+from fabric.contrib.files import exists, sed
 
 from tinydav import WebDAVClient
 
@@ -13,8 +13,10 @@ env.password = 'hadoop'
 
 
 def update_rpm(branch):
+    sudo('cd /home/sandbox/rpm-shared/ && git reset --hard HEAD')
     sudo('cd /home/sandbox/rpm-shared/ && git fetch '
-        '&& git checkout {} && git pull'.format(branch), user='sandbox')
+        '&& git checkout %s && git pull' % branch, user='sandbox')
+    sed('/home/sandbox/rpm-shared/deploy/rpm/build.sh', '# export GIT_SSH', 'export GIT_SSH')
 
 
 def build_rpm():
@@ -53,4 +55,4 @@ def rpm(name="repo", branch="Caterpillar"):
 
 
 def hello(v='1'):
-    run('echo hello {}'.format(v))
+    run('echo hello %s' % v)
