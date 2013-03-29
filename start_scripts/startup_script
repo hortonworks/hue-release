@@ -7,7 +7,8 @@ NAME="startup_script"
 LOG="/var/log/startup_script.log"
 SCRIPTS_PATH="/home/sandbox/start_scripts"
 
-source /etc/rc.d/init.d/functions
+PATH="/sbin:/usr/sbin:/bin:/usr/bin"
+export PATH
 
 source $SCRIPTS_PATH/consts.sh
 
