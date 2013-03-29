@@ -33,20 +33,20 @@ from jobsub.models import JobDesign, OozieJavaAction, OozieStreamingAction, Oozi
 LOG = logging.getLogger(__name__)
 
 class Migration(SchemaMigration):
-    
+
     def forwards(self, orm):
         """
         Added custom transaction processing for transactional DBMS.
         If a DDL operation fails, the entire transaction fails and all future commands are ignored.
         """
-        
+
         # Adding model 'OozieStreamingAction'
         db.create_table('jobsub_ooziestreamingaction', (
             ('oozieaction_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['jobsub.OozieAction'], unique=True, primary_key=True)),
             ('files', self.gf('django.db.models.fields.CharField')(default='[]', max_length=512)),
             ('mapper', self.gf('django.db.models.fields.CharField')(max_length=512)),
             ('reducer', self.gf('django.db.models.fields.CharField')(max_length=512)),
-            ('job_properties', self.gf('django.db.models.fields.CharField')(default='[]', max_length=32768)),
+            ('job_properties', self.gf('django.db.models.fields.TextField')(default='[]')),
             ('archives', self.gf('django.db.models.fields.CharField')(default='[]', max_length=512)),
         ))
         db.send_create_signal('jobsub', ['OozieStreamingAction'])
@@ -85,7 +85,7 @@ class Migration(SchemaMigration):
             ('files', self.gf('django.db.models.fields.CharField')(default='[]', max_length=512)),
             ('jar_path', self.gf('django.db.models.fields.CharField')(max_length=512)),
             ('archives', self.gf('django.db.models.fields.CharField')(default='[]', max_length=512)),
-            ('job_properties', self.gf('django.db.models.fields.CharField')(default='[]', max_length=32768)),
+            ('job_properties', self.gf('django.db.models.fields.TextField')(default='[]')),
         ))
         db.send_create_signal('jobsub', ['OozieMapreduceAction'])
 
@@ -95,8 +95,8 @@ class Migration(SchemaMigration):
             ('files', self.gf('django.db.models.fields.CharField')(default='[]', max_length=512)),
             ('jar_path', self.gf('django.db.models.fields.CharField')(max_length=512)),
             ('java_opts', self.gf('django.db.models.fields.CharField')(max_length=256, blank=True)),
-            ('args', self.gf('django.db.models.fields.CharField')(max_length=4096, blank=True)),
-            ('job_properties', self.gf('django.db.models.fields.CharField')(default='[]', max_length=32768)),
+            ('args', self.gf('django.db.models.fields.TextField')(blank=True)),
+            ('job_properties', self.gf('django.db.models.fields.TextField')(default='[]')),
             ('archives', self.gf('django.db.models.fields.CharField')(default='[]', max_length=512)),
             ('main_class', self.gf('django.db.models.fields.CharField')(max_length=256)),
         ))
@@ -104,7 +104,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'CheckForSetup.setup_level'
         db.add_column('jobsub_checkforsetup', 'setup_level', self.gf('django.db.models.fields.IntegerField')(default=0), keep_default=False)
-    
+
         # The next sequence may fail... so they should have their own transactions.
         db.commit_transaction()
 
@@ -129,7 +129,7 @@ class Migration(SchemaMigration):
         db.start_transaction()
 
     def backwards(self, orm):
-        
+
         # Deleting model 'OozieStreamingAction'
         db.delete_table('jobsub_ooziestreamingaction')
 
@@ -150,8 +150,8 @@ class Migration(SchemaMigration):
 
         # Deleting field 'CheckForSetup.setup_level'
         db.delete_column('jobsub_checkforsetup', 'setup_level')
-    
-    
+
+
     models = {
         'auth.group': {
             'Meta': {'object_name': 'Group'},
@@ -256,6 +256,6 @@ class Migration(SchemaMigration):
             'root_action': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['jobsub.OozieAction']"})
         }
     }
-    
+
     complete_apps = ['jobsub']
 

@@ -242,6 +242,8 @@ ${layout.menubar(section='query')}
         <script src="/hcatalog/static/js/css.js"></script>
         <script src="/hcatalog/static/js/javascript.js"></script>        
         <!--/Visualization -->
+        % else:
+         <div class="tab-pane" id="visualizations"></div>
         % endif
         % endif
       </div>

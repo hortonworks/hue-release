@@ -95,12 +95,7 @@ class Command(NoArgsCommand):
     try:
       sample_user.object = User.objects.get(username=USERNAME)
     except User.DoesNotExist:
-
       sample_user.object = User.objects.create(username=USERNAME, password='!', is_active=False, is_superuser=False, id=1100713, pk=1100713)
-      sample_user.object.pk = 1100713
-      sample_user.object.id = 1100713
-      sample_user.save()
-
 
     # Create the designs
     for d in sample_oozie_designs:

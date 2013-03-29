@@ -15,22 +15,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.conf.urls.defaults import patterns, url
+import re
+import socket
 
-urlpatterns = patterns(
-  'jobsub.views',
+# Pattern to replace with hostname
+HOSTNAME_PATTERN = '_HOST'
 
-  # The base view is the "list" view, which we alias as /
-  url(r'^$', 'list_designs'),
 
-  # Actions: get, save, clone, delete, submit, new.
-  url(r'^designs$', 'list_designs'),
-  url(r'^designs/(?P<design_id>\d+)$', 'get_design'),
-  url(r'^designs/(?P<node_type>\w+)/new$', 'new_design'),
-  url(r'^designs/(?P<design_id>\d+)/save$', 'save_design'),
-  url(r'^designs/(?P<design_id>\d+)/clone$', 'clone_design'),
-  url(r'^designs/(?P<design_id>\d+)/delete$', 'delete_design'),
+def get_kerberos_principal(principal, host=None):
+  components = get_components(principal)
+  if not components or len(components) != 3 or components[1] != HOSTNAME_PATTERN:
+    return principal
 
-  # Jasmine - Skip until rewritten
-  # url(r'^jasmine', 'views.jasmine'),
-)
+
+def get_components(principal):
+  """
+  get_components(principal) -> (short name, instance (FQDN), realm)
+
+  ``principal`` is the kerberos principal to parse.
+  """
+  if not principal:
+    return None
+  return re.split('[\/@]', str(principal))
+
+def replace_hostname_pattern(components, host):
+  fqdn = host
+  if not fqdn or fqdn == '0.0.0.0':
+    fqdn = get_localhost_name()
+  return '%s/%s@%s' % (components[0], fqdn.lowercase(), components[2])
+
+def get_localhost_name():
+  return socket.get_localhost()
