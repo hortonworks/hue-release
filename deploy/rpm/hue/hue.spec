@@ -1,5 +1,5 @@
 %global __os_install_post %{nil}
-%define _unpackaged_files_terminate_build 1
+%define _unpackaged_files_terminate_build 0
 %define _binaries_in_noarch_packages_terminate_build   0
 
 
@@ -71,6 +71,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 %defattr(600,sandbox,sandbox)
 /home/sandbox/.ssh/id_rsa
+/home/sandbox/.ssh/id_rsa.pub
 
 %defattr(755,sandbox,sandbox)
 /home/sandbox/start_scripts/hue
