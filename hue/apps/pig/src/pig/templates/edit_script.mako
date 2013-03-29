@@ -85,17 +85,10 @@ udfs = UDF.objects.all()
 
             </li>
             <li>
-              <form id="udfs" enctype="multipart/form-data"
+              <form id="udfs_form" enctype="multipart/form-data"
                   action="${url('pig.views.udf_create')}"
                   method="post">
-                <div class="fileupload fileupload-new" data-provides="fileupload">
-                  <span class="btn btn-file">
-                    <span class="fileupload-new">Select UDF jar</span><span class="fileupload-exists">Change</span>
-                    <input type="file" id="id_hdfs_file" accept="application/java-archive" name="hdfs_file"></span>
-                  <span class="fileupload-preview"></span>
-                  <a href="#" class="close fileupload-exists" data-dismiss="fileupload" style="float: none">×</a>
-                </div>
-                <input class="btn" type="submit" name="submit" value="Add" />
+                  <div id="udf_file_upload"><i class="icon-upload icon-white"></i> Upload UDF jar</div>                
               </form>
             </li>
           </ul>
@@ -113,9 +106,13 @@ udfs = UDF.objects.all()
                 <input id="id_title" type="text" name="title" required="required"
                        maxlength="200" value="${result.get('title',"")}">
               </div>
-            </div>
-            <div class="alert alert-success">
-              <i class="icon-question-sign" id="help"></i>
+            </div>            
+           
+            <%include file="pig_helper.html" />
+            
+            <label for="id_pig_script" >Pig script:
+              <div >
+              <a href="javascript:void(0);" class="alert-success" ><i class="icon-question-sign" id="help"></i></a>
               
               <div id="help-content" class="hide">
                 <ul>
@@ -123,9 +120,9 @@ udfs = UDF.objects.all()
                   <li class="text-success">To see table fields helper type table_name + "." (e.g. sample_07.)</li>
                 </ul>
               </div>
-              <%include file="pig_helper.html" />
-            </div>
-            <label for="id_pig_script" >Pig script:</label>
+              
+            </div>  
+            </label>
             
             
             <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
@@ -287,7 +284,7 @@ function get_job_result(job_id)
 
 
 $(document).ready(function(){
-$("#help").popover({'title': "${'Did you know?'}", 'content': $("#help-content").html(), 'trigger': 'hover', 'html': true});
+$("#help").popover({'title': "${'Did you know?'}", 'content': $("#help-content").html(), 'html': true, delay: { hide: 500 }});
 % if result.get("job_id") and result.get("JOB_SUBMITED"):
 percent = 10;
 ping_job("${result['job_id']}");

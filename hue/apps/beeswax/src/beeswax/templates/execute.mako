@@ -209,7 +209,7 @@ ${layout.menubar(section='query')}
               <h1>${_('Query Editor')}</h1>
             % endif 
             <div class="control-group">
-                              <i class="icon-question-sign" id="help"></i>
+                              <a href="javascript:void(0);" class="alert-success" ><i class="icon-question-sign" id="help"></i></a>
                               <div id="help-content" class="hide">
                                 <ul class="text-success">
                                   <li>${ _("You can execute queries with multiple SQL statements delimited by a semicolon ';'.") }</li>
@@ -391,7 +391,7 @@ ${layout.menubar(section='query')}
         $("*[rel=tooltip]").tooltip({
             placement: 'bottom'
         });
-        $("#help").popover({'title': "${'Did you know?'}", 'content': $("#help-content").html(), 'trigger': 'hover', 'html': true});
+        $("#help").popover({'title': "${'Did you know?'}", 'content': $("#help-content").html(), 'html': true, 'placement': 'bottom'});
         $("a[data-form-prefix]").each(function(){
             var _prefix = $(this).attr("data-form-prefix");
             var _nextID = 0;

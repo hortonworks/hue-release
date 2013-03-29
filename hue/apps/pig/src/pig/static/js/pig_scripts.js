@@ -415,14 +415,28 @@ $(document).ready(function(){
       {$('.intoemail').attr('value', 'no checked')};
     });
 
-  $("#id_hdfs_file").change(function() {
-  str=$("#id_hdfs_file").val().toUpperCase();
-  suffix=".JAR";
-  if(!(str.indexOf(suffix, str.length - suffix.length) !== -1)){
-    alert('File type not allowed,\nAllowed file: *.jar');
-    $("#id_hdfs_file").val("");
-  }
-});
+  var uploader = new qq.FileUploader({
+          element: document.getElementById('udf_file_upload'),
+          allowedExtensions: ["jar"],
+          action: $("#udfs_form").attr("action"),
+          multiple: false,
+          template: '<div class="qq-uploader">'+
+                    '<div class="qq-upload-drop-area"><span></span></div>' +
+                    '<div class="qq-upload-button"><i class="icon-upload icon-white"></i> Upload UDF Jar </div>' +
+                    '<ul class="qq-upload-list"></ul>' +
+                    '</div>',
+          params:{
+            fileFieldLabel:"hdfs_file"
+          },
+          onComplete:function (id, fileName, response) {
+            if (response.status != 0) {
+              $.jHueNotify.error("Error: " + (response['error'] ? response['error'] : "Error occured"));
+            } else {
+              window.location.reload(true);
+            }
+          },
+  });
+
 
 $(".udf_register").click(function() {
     pig_editor.setValue('REGISTER ' + $(this).attr('value') + '\n'+ pig_editor.getValue());

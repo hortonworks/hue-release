@@ -109,7 +109,7 @@ def script_clone(request, obj_id):
 def udf_create(request):
     form = UDFForm(request.POST, request.FILES)
     if not form.is_valid():
-        raise PopupException(_("Error in upload form: %s") % form.errors)
+        return HttpResponse(json.dumps({"status": 500, "error": "Error in upload form: %s" % form.errors}))
     uploaded_file = request.FILES['hdfs_file']
     file_name = re.sub(FILE_PATTERN, "", uploaded_file.name)
     dest = request.fs.join(UDF_PATH, file_name)
@@ -133,10 +133,10 @@ def udf_create(request):
             msg = _('Destination %(name)s already exists.' % {'name': dest})
         except Exception:
             msg = _('Copy to "%(name)s failed: %(error)s') % {'name': dest, 'error': ex}
-        raise PopupException(msg)
+        return HttpResponse(json.dumps({"status": 500, "error": msg}))
 
     UDF.objects.create(url=dest, file_name=file_name, owner=request.user)
-    return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
+    return HttpResponse(json.dumps({"status": 0}))
 
 
 def udf_delete(request, obj_id):
