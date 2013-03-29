@@ -1,2 +1,2 @@
 #!/bin/sh
-exec ssh -i /usr/lib/.ssh/id_rsa "$@"
+exec ssh -i /home/sandbox/.ssh/id_rsa "$@"
