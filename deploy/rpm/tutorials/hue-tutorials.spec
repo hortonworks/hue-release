@@ -1,4 +1,4 @@
-%define prefix      /home/sandbox/tutorials
+%define prefix      /usr/lib/tutorials
 %global __os_install_post %{nil}
 %define _unpackaged_files_terminate_build 1
 %define _binaries_in_noarch_packages_terminate_build   0
@@ -53,11 +53,11 @@ rm -f %{prefix}/tutorials_app/db/lessons.db
 
 sudo -u sandbox -s -- <<END_OF_SANDBOX
 
-cd /home/sandbox/
+cd /usr/lib/
 echo "clonning tutorials ..."
 git clone git@github.com:hortonworks/sandbox-tutorials.git
 
-mkdir -p /home/sandbox/hue/logs
+mkdir -p /usr/lib/hue/logs
 
 END_OF_SANDBOX
 
@@ -73,12 +73,12 @@ else
     echo "Add to supervisord.conf"
     cat << EOF >>/etc/supervisord.conf
 [program:hue_tutorial]
-command=/home/sandbox/tutorials/.env/bin/python /home/sandbox/tutorials/manage.py  run_gunicorn 0:8888
+command=/usr/lib/tutorials/.env/bin/python /usr/lib/tutorials/manage.py  run_gunicorn 0:8888
 autostart=true              ; start at supervisord start (default: true)
 autorestart=true            ; retstart at unexpected quit (default: true)
 user=sandbox                   ; setuid to this UNIX account to run the program
 log_stderr=true             ; if true, log program stderr (def false)
-logfile=/home/sandbox/tutorials/tut.log    ; child log path, use NONE for none; default AUTO
+logfile=/usr/lib/tutorials/tut.log    ; child log path, use NONE for none; default AUTO
 
 EOF
 
@@ -105,8 +105,8 @@ EOF
 fi
 
 
-TUTORIALS="/home/sandbox/tutorials"
-HUE="/home/sandbox/hue"
+TUTORIALS="/usr/lib/tutorials"
+HUE="/usr/lib/hue"
 
 ln -s $TUTORIALS/hue_common_header.js \
             $HUE/desktop/core/static/js/hue_common_header.js
@@ -156,7 +156,7 @@ cat << EOF > /tmp/auth_views.py.patch
 > 
 EOF
 
-patch /home/sandbox/hue/desktop/core/src/desktop/auth/views.py < /tmp/auth_views.py.patch
+patch /usr/lib/hue/desktop/core/src/desktop/auth/views.py < /tmp/auth_views.py.patch
 
 chkconfig httpd on
 service httpd start

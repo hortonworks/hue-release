@@ -16,7 +16,7 @@ create /etc/init/tty-splash.conf:
 	exec /sbin/mingetty --autologin root --noclear $TTY
 
 add to ~/.bashrc:
-	[ $(tty) = "/dev/tty1" ] && python /home/sandbox/start_scripts/splash.py
+	[ $(tty) = "/dev/tty1" ] && python /usr/lib/start_scripts/splash.py
 
 
 3) pip install sh (in global env)
@@ -52,12 +52,12 @@ $ vim /etc/sysconfig/network-scripts/ifcfg-eth1
 
 remove UUID and HWADDR entries
 
-10) cd /home/sandbox/sandbox-shared && sudo -u sandbox git stash
-    cd /home/sandbox/sandbox-tutorials && sudo -u sandbox git stash
+10) cd /usr/lib/sandbox-shared && sudo -u sandbox git stash
+    cd /usr/lib/sandbox-tutorials && sudo -u sandbox git stash
 
 11) chown tutorials and shared with
-chown sandbox:sandbox -R /home/sandbox/sandbox-shared
-chown sandbox:sandbox -R /home/sandbox/sandbox-tutorials
+chown sandbox:sandbox -R /usr/lib/sandbox-shared
+chown sandbox:sandbox -R /usr/lib/sandbox-tutorials
 
 12) 2GB RAM
 VBoxManage modifyvm "SandboxBimiotaRC8v.2" --memory 2048 --cpus 2
@@ -73,6 +73,6 @@ change  PEERDNS=no
 15) su - hdfs -c "hadoop fs -chown sandbox /tmp/hue-uploads"
 16) su - hdfs -c "hadoop fs -rmr -skipTrash /user/ambari_qa/.staging/"
 
-#17) setcap 'cap_net_bind_service=+ep' /home/sandbox/tutorials/.env/bin/python
+#17) setcap 'cap_net_bind_service=+ep' /usr/lib/tutorials/.env/bin/python
 
 18) remove tutorials/registration_log

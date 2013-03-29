@@ -11,10 +11,10 @@ cd /tmp
 tar xvf udfs.tar.gz
 chown sandbox udfs
 su - sandbox -c "hadoop fs -copyFromLocal /tmp/udfs /tmp/udfs"
-su - sandbox -c "/home/sandbox/hue/build/env/bin/hue install_udfs"
-su - sandbox -c "/home/sandbox/hue/build/env/bin/hue oozie_setup"
-su - sandbox -c "/home/sandbox/hue/build/env/bin/hue jobsub_setup"
-su - sandbox -c "/home/sandbox/hue/build/env/bin/hue beeswax_install_examples"
+su - sandbox -c "/usr/lib/hue/build/env/bin/hue install_udfs"
+su - sandbox -c "/usr/lib/hue/build/env/bin/hue oozie_setup"
+su - sandbox -c "/usr/lib/hue/build/env/bin/hue jobsub_setup"
+su - sandbox -c "/usr/lib/hue/build/env/bin/hue beeswax_install_examples"
 rm /tmp/udfs.tar.gz
 rm  -rf /tmp/udfs
 touch /root/.hdfs_prepared

@@ -6,14 +6,14 @@ TUTORIALS_PATH = Config(
   key="tutorials_path",
   help="Path where tutorials are located",
   private=True,
-  default="/home/sandbox/sandbox-tutorials/",
+  default="/usr/lib/sandbox-tutorials/",
 )
 
 TUTORIALS_UPDATE_SCRIPT = Config(
   key="tutorials_update_script",
   help="Path where tutorials update script is located",
   private=True,
-  default="/home/sandbox/tutorials/tutorials_app/run/run.sh",
+  default="/usr/lib/tutorials/tutorials_app/run/run.sh",
 )
 
 TUTORIALS_INSTALLED = Config(

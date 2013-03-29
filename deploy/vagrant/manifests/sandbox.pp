@@ -1,4 +1,4 @@
-$HUE_HOME="/home/sandbox/hue"
+$HUE_HOME="/usr/lib/hue"
 
 Exec { path => [ "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/" ] }
 
@@ -187,7 +187,7 @@ class sandbox {
 
     file {'/root/start_ambari.sh':
         ensure => link,
-        target => "/home/sandbox/start_scripts/start_ambari.sh",
+        target => "/usr/lib/start_scripts/start_ambari.sh",
         mode => 0755,
     }
 

@@ -5,7 +5,7 @@
 
 NAME="startup_script"
 LOG="/var/log/startup_script.log"
-SCRIPTS_PATH="/home/sandbox/start_scripts"
+SCRIPTS_PATH="/usr/lib/start_scripts"
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin"
 export PATH
@@ -28,7 +28,7 @@ start)
     printf "%-50s\n" "Starting $NAME..." | tee -a $LOG
     
     mkdir /var/www/landing 2> /dev/null
-    mount --bind /home/sandbox/sandbox-tutorials /var/www/landing
+    mount --bind /usr/lib/sandbox-tutorials /var/www/landing
 
     echo "" > /etc/resolv.conf
     ethtool -K eth0 tso off
@@ -42,17 +42,17 @@ start)
     printf "%-50s\n" "Updating IP..." | tee -a $LOG
     bash $SCRIPTS_PATH/gen_hosts.sh
    
-    touch /home/sandbox/tutorials/registration_post.log
-    chown sandbox:sandbox /home/sandbox/tutorials/registration_post.log
+    touch /usr/lib/tutorials/registration_post.log
+    chown sandbox:sandbox /usr/lib/tutorials/registration_post.log
 
-    /home/sandbox/tutorials/.env/bin/python \
-        /home/sandbox/start_scripts/registration_post.py
+    /usr/lib/tutorials/.env/bin/python \
+        /usr/lib/start_scripts/registration_post.py
 
     sed -i 1i"nameserver 8.8.8.8" /etc/resolv.conf
 
-    if [ -d /home/sandbox/sandbox-shared ]; then
+    if [ -d /usr/lib/sandbox-shared ]; then
         printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
-        cd /home/sandbox/sandbox-shared
+        cd /usr/lib/sandbox-shared
 
         sudo -u sandbox git fetch >> /var/log/startup_script.log 2>&1
         sudo -u sandbox git checkout $BRANCH >> /var/log/startup_script.log 2>&1
@@ -60,8 +60,8 @@ start)
         pull_res=$(sudo -u sandbox git pull origin $BRANCH 2>> $LOG)
         echo $pull_res >> $LOG
 
-        chown sandbox:sandbox -R /home/sandbox/sandbox-shared
-        [ ! "$pull_res" = "Already up-to-date." ] && /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
+        chown sandbox:sandbox -R /usr/lib/sandbox-shared
+        [ ! "$pull_res" = "Already up-to-date." ] && /usr/lib/hue/build/env/bin/hue migrate  >> $LOG 2>&1
     fi
     
     echo "Starting HDP ..."
@@ -77,7 +77,7 @@ start)
     
     echo "You can now launch sandbox on http://$(getent ahosts `hostname` | awk '{print $1}' | head -n 1):8888/"
     stty -F /dev/tty1 -echo
-    #open -c 1 -f -- python /home/sandbox/start_scripts/splash.py
+    #open -c 1 -f -- python /usr/lib/start_scripts/splash.py
 ;;
 stop)
     date >> $LOG

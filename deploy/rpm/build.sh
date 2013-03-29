@@ -44,7 +44,7 @@ tar zcf $SRC/tutorials-env.tgz .env
         mkdir -p $SRC/env/$x
         mount --bind /$x $SRC/env/$x
     done
-    mkdir -p $SRC/env/home/sandbox
+    mkdir -p $SRC/env/usr/lib
     mkdir -p $SRC/env/{$SRC,$OUT}
 
 export SRC=$HOME/rpmbuild/src
@@ -61,10 +61,10 @@ wget http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0
 tar xvf apache-maven-3.0.5-bin.tar.gz
 rm apache-maven-3.0.5-bin.tar.gz
 cd $SRC/sandbox-shared/hue
-PREFIX=/home/sandbox make install
+PREFIX=/usr/lib make install
 #Building started ....
-#After it's finished there would be a directory /home/sandbox/hue
-bash /home/sandbox/hue/tools/relocatable.sh
+#After it's finished there would be a directory /usr/lib/hue
+bash /usr/lib/hue/tools/relocatable.sh
 
 END_OF_CHROOT
 
@@ -72,7 +72,7 @@ END_OF_CHROOT
         umount $SRC/env/$x
     done
 
-    cd $SRC/env/home/sandbox
+    cd $SRC/env/usr/lib
     tar zcf $SRC/hue.tgz hue
 
 

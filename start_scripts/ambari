@@ -3,7 +3,7 @@
 # chkconfig: 345 99 1
 # description: startup script
 
-SCRIPTS_PATH=/home/sandbox/start_scripts
+SCRIPTS_PATH=/usr/lib/start_scripts
 NAME="ambari"
 LOG="/var/log/$NAME_script.log"
 

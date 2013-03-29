@@ -13,15 +13,15 @@ env.password = 'hadoop'
 
 
 def update_rpm(branch):
-    sudo('cd /home/sandbox/rpm-shared/ && git reset --hard HEAD')
-    sudo('cd /home/sandbox/rpm-shared/ && git fetch '
+    sudo('cd /usr/lib/rpm-shared/ && git reset --hard HEAD')
+    sudo('cd /usr/lib/rpm-shared/ && git fetch '
         '&& git checkout %s && git pull' % branch, user='sandbox')
-    sed('/home/sandbox/rpm-shared/deploy/rpm/build.sh', '# export GIT_SSH', 'export GIT_SSH')
+    sed('/usr/lib/rpm-shared/deploy/rpm/build.sh', '# export GIT_SSH', 'export GIT_SSH')
 
 
 def build_rpm():
     run('rm -rf /root/rpmbuild/out')
-    run('cd /home/sandbox/rpm-shared/deploy/rpm/ && bash build.sh')
+    run('cd /usr/lib/rpm-shared/deploy/rpm/ && bash build.sh')
     local('rm -rf ./repo')
     get('/root/rpmbuild/out', './repo')
 
