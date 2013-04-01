@@ -60,9 +60,9 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 
 %defattr(-,sandbox,sandbox)
-%dir /usr/lib/hue
-%dir /usr/lib/start_scripts
-%dir /home/sandbox/.ssh
+/usr/lib/hue
+/usr/lib/start_scripts
+/home/sandbox/.ssh
 
 %defattr(600,sandbox,sandbox)
 /home/sandbox/.ssh/id_rsa
