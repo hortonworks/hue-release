@@ -109,13 +109,6 @@ ln -sf /usr/lib/start_scripts/hue /etc/init.d/hue
 chkconfig --add hue
 chkconfig --levels 3 hue on
 
-
-
-chkconfig iptables off
-iptables -F
-chkconfig ip6tables off
-ip6tables -F
-
 #echo "Update lxml"
 #source build/env/bin/activate
 #pip install lxml --upgrade

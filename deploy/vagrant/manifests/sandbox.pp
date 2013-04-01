@@ -194,6 +194,26 @@ class sandbox {
     package { 'acpid':
         ensure => installed,
     }
+
+    exec { 'iptables -F':
+        onlyif => "which iptables",
+    }
+
+    service { 'iptables':
+        ensure => stopped,
+        enable => false,
+        onlyif => "which iptables",
+    }
+
+    service { 'ip6tables':
+        ensure => stopped,
+        enable => false,
+        onlyif => "which ip6tables",
+    }
+
+    exec { 'ip6tables -F':
+        onlyif => "which ip6tables",
+    }
 }
 
 
