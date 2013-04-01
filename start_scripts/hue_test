@@ -1,6 +1,6 @@
 #!/bin/bash
 
-HUE_HOME_DIR=/home/sandbox/hue
+HUE_HOME_DIR=/usr/lib/hue
 
 /etc/init.d/hue status &> /dev/null || exit 1
 

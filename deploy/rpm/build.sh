@@ -3,8 +3,13 @@ set -e
 
 export SRC=$HOME/rpmbuild/src
 export OUT=$HOME/rpmbuild/out
+export PATH=$PATH:$SRC/apache-maven-3.0.5/bin/
 
-rm -rf $SRC
+BRANCH=Caterpillar
+
+# remove all src files (except of repository)
+find $SRC -maxdepth 1 | sed "1d" | grep -v "sandbox-shared" | xargs rm -rf
+
 mkdir -p $SRC $OUT
 
 # uncomment this line and change git_ssh.sh file if you need 
@@ -15,8 +20,8 @@ mkdir -p $SRC $OUT
 
 cd $SRC
 
-git clone git@github.com:/hortonworks/sandbox-shared.git sandbox-shared
-(cd sandbox-shared; git checkout Caterpillar;)
+[ ! -d $SRC/sandbox-shared ] && git clone git@github.com:/hortonworks/sandbox-shared.git sandbox-shared
+(cd sandbox-shared; git reset --hard HEAD; git checkout $BRANCH; git pull origin $BRANCH)
 
 #Tutorials stuff
 ( 
@@ -26,8 +31,8 @@ git clone git@github.com:/hortonworks/sandbox-shared.git sandbox-shared
     tar zcf $SRC/tutorials.tgz tutorials --exclude=".git"
 )
 
-yum -y install createrepo git rpm-build ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql  mysql-devel openldap-devel python-devel python-simplejson sqlite-devel
-easy_install virtualenv
+sudo yum -y install createrepo git rpm-build ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql  mysql-devel openldap-devel python-devel python-simplejson sqlite-devel
+sudo easy_install virtualenv
 
 mkdir -p tutorials-env && cd tutorials-env
 virtualenv .env
@@ -39,59 +44,42 @@ tar zcf $SRC/tutorials-env.tgz .env
 
 # Build Hue
 
-    list="bin,dev,etc,lib,lib64,proc,sbin,sys,usr,var,root"
-    IFS=$' ,'; for x in `echo $list`; do
-        mkdir -p $SRC/env/$x
-        mount --bind /$x $SRC/env/$x
-    done
-    mkdir -p $SRC/env/home/sandbox
-    mkdir -p $SRC/env/{$SRC,$OUT}
 
-export SRC=$HOME/rpmbuild/src
-export OUT=$HOME/rpmbuild/out
-export PATH=$PATH:$SRC/apache-maven-3.0.5/bin/
+mkdir -p $SRC/env/usr/lib
+mkdir -p $SRC/env/{$SRC,$OUT}
 
-    chroot $SRC/env /bin/bash -- << END_OF_CHROOT
-
-set -x
-set -e
+rm -rf $SRC/hue
 
 cd $SRC
 wget http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz
 tar xvf apache-maven-3.0.5-bin.tar.gz
 rm apache-maven-3.0.5-bin.tar.gz
 cd $SRC/sandbox-shared/hue
-PREFIX=/home/sandbox make install
+PREFIX=$SRC make install
 #Building started ....
-#After it's finished there would be a directory /home/sandbox/hue
-bash /home/sandbox/hue/tools/relocatable.sh
+#After it's finished there would be a directory /usr/lib/hue
+bash $SRC/hue/tools/relocatable.sh
 
-END_OF_CHROOT
-
-    IFS=$', '; for x in `echo $list`; do
-        umount $SRC/env/$x
-    done
-
-    cd $SRC/env/home/sandbox
-    tar zcf $SRC/hue.tgz hue
+cd $SRC
+tar zcf $SRC/hue.tgz hue
 
 
 cd $SRC/sandbox-shared/deploy/rpm
 
 #======= Making rpms =======
 
-( #Tutorials RPM
-    cd tutorials
-    cp $SRC/tutorials.tgz $SRC/tutorials-env.tgz ./
-    bash make_tutorials_rpm.sh
-    mv *.rpm $OUT/
-)
-
 ( #Hue RPM
     cd hue
     cp $SRC/hue.tgz $SRC/start_scripts.tgz ./
 
     bash make_hue_rpm.sh
+    mv *.rpm $OUT/
+)
+
+( #Tutorials RPM
+    cd tutorials
+    cp $SRC/tutorials.tgz $SRC/tutorials-env.tgz ./
+    bash make_tutorials_rpm.sh
     mv *.rpm $OUT/
 )
 

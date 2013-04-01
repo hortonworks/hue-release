@@ -6,11 +6,11 @@
 . /etc/init.d/functions
 
 LOCKFILE=/var/lock/subsys/hue
-DAEMON=/home/sandbox/hue/build/env/bin/supervisor # Introduce the server's location here
+DAEMON=/usr/lib/hue/build/env/bin/supervisor # Introduce the server's location here
 LOGDIR=/var/log/hue  # Log directory to use
 PIDFILE=/var/run/hue/supervisor.pid
 USER=sandbox
-EXEC=/home/sandbox/hue/build/env/bin/python
+EXEC=/usr/lib/hue/build/env/bin/python
 DAEMON_OPTS="-p $PIDFILE -l $LOGDIR -d"
 
 

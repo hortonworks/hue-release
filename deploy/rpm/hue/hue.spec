@@ -39,19 +39,17 @@ Hue
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/home/sandbox/{hue,start_scripts,.ssh}/ #apache-maven-3.0.4
+mkdir -p $RPM_BUILD_ROOT/usr/lib/{hue,start_scripts}/
+mkdir -p $RPM_BUILD_ROOT/home/sandbox/.ssh
 
 cd $RPM_BUILD_DIR/hue
-cp -R ./ $RPM_BUILD_ROOT/home/sandbox/hue/
+cp -R ./ $RPM_BUILD_ROOT/usr/lib/hue/
 
 cd $RPM_BUILD_DIR/start_scripts
-cp -R ./ $RPM_BUILD_ROOT/home/sandbox/start_scripts
+cp -R ./ $RPM_BUILD_ROOT/usr/lib/start_scripts
 
 cd $RPM_BUILD_DIR/.ssh
 cp -R ./ $RPM_BUILD_ROOT/home/sandbox/.ssh
-
-#cd $RPM_BUILD_DIR/apache-maven-3.0.4
-#cp -R ./ $RPM_BUILD_ROOT/home/sandbox/apache-maven-3.0.4
 
 
 %clean
@@ -59,24 +57,23 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 
 %files
-%dir /home/sandbox/hue
-%dir /home/sandbox/start_scripts
-%dir /home/sandbox/.ssh
-#%dir /home/sandbox/apache-maven-3.0.4
 
 
 %defattr(-,sandbox,sandbox)
-/home/sandbox/
-
+/usr/lib/hue
+/usr/lib/start_scripts
+/home/sandbox/.ssh
 
 %defattr(600,sandbox,sandbox)
 /home/sandbox/.ssh/id_rsa
 /home/sandbox/.ssh/id_rsa.pub
 
 %defattr(755,sandbox,sandbox)
-/home/sandbox/start_scripts/hue
-/home/sandbox/start_scripts/startup_script
-/home/sandbox/start_scripts/startup_script_ec2
+/usr/lib/start_scripts/hue
+/usr/lib/start_scripts/startup_script
+/usr/lib/start_scripts/startup_script_ec2
+
+%config /usr/lib/hue/desktop/desktop.db
 
 
 %pre
@@ -85,9 +82,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 groupadd -f hadoop
 [[ -z `cat /etc/passwd | grep sandbox` ]] && useradd -G hadoop sandbox || usermod -a -G hadoop sandbox
 sudo -u sandbox -s -- <<END_OF_SANDBOX
-cd /home/sandbox
-
-#export PATH=$PATH:/home/sandbox/apache-maven-3.0.4/bin/
+cd /usr/lib
 
 END_OF_SANDBOX
 
@@ -97,20 +92,20 @@ END_OF_SANDBOX
 %post
 
 (
-sudo -u sandbox mkdir /home/sandbox/hue/logs
+sudo -u sandbox mkdir /usr/lib/hue/logs
 
-cd /home/sandbox/hue
+cd /usr/lib/hue
 mv desktop/libs/hadoop/java-lib/hue-plugins-*.jar /usr/lib/hadoop/lib/
 
-ln -sf /home/sandbox/start_scripts/ambari /etc/init.d/ambari
+ln -sf /usr/lib/start_scripts/ambari /etc/init.d/ambari
 chkconfig --add ambari
 chkconfig ambari off
 
-ln -sf /home/sandbox/start_scripts/startup_script /etc/init.d/startup_script
+ln -sf /usr/lib/start_scripts/startup_script /etc/init.d/startup_script
 chkconfig --add startup_script
 chkconfig --levels 3 startup_script on
 
-ln -sf /home/sandbox/start_scripts/hue /etc/init.d/hue
+ln -sf /usr/lib/start_scripts/hue /etc/init.d/hue
 chkconfig --add hue
 chkconfig --levels 3 hue on
 
@@ -127,8 +122,8 @@ ip6tables -F
 
 
 mkdir /etc/hue
-mv /home/sandbox/hue/desktop/conf /etc/hue/
-ln -s /etc/hue/conf /home/sandbox/hue/desktop/
+mv /usr/lib/hue/desktop/conf /etc/hue/
+ln -s /etc/hue/conf /usr/lib/hue/desktop/
 
 
 ) | tee ~/sandbox-install.log

@@ -6,9 +6,9 @@ USERINFO_FILE_PATH = os.path.join(os.path.expanduser('~sandbox'),
                         'user_info.dat')
 MARKETO_URL = "http://app-l.marketo.com/index.php/leadCapture/save"
 CRON_FILE = "/etc/cron.d/1sandbox_registration"
-CRON_FILE_ORIGIN = "/home/sandbox/start_scripts/registration_post_cron"
+CRON_FILE_ORIGIN = "/usr/lib/start_scripts/registration_post_cron"
 
-LOG_FILE = "/home/sandbox/tutorials/registration_post.log"
+LOG_FILE = "/usr/lib/tutorials/registration_post.log"
 
 
 def do_post():
