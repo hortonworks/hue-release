@@ -17,7 +17,6 @@
 <%!
   from desktop.views import commonheader, commonfooter
   from django.utils.translation import ugettext as _
-  from django.template.defaultfilters import escapejs
 %>
 
 <%namespace name="layout" file="../navigation-bar.mako" />
@@ -272,7 +271,7 @@ ${ layout.menubar(section='workflows') }
 <div id="submit-wf-modal" class="modal hide"></div>
 
 
-<script src="/static/ext/js/codemirror-3.0.js"></script>
+<script src="/static/ext/js/codemirror-3.11.js"></script>
 <link rel="stylesheet" href="/static/ext/css/codemirror.css">
 <script src="/static/ext/js/codemirror-xml.js"></script>
 <script src="/static/ext/js/codemirror-closetag.js"></script>
@@ -736,7 +735,7 @@ $('#workflow').on('click', '.import-jobsub-node-link', function(e) {
 ko.bindingHandlers.fileChooser = {
   init: function(element, valueAccessor, allBindings, model) {
     var self = $(element);
-    self.after(getFileBrowseButton(self));
+    self.after(getFileBrowseButton(self, true));
   }
 };
 

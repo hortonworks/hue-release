@@ -32,12 +32,12 @@ from django.core.urlresolvers import reverse
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 from django.forms.models import inlineformset_factory
-from django.template.defaultfilters import escapejs
 from django.utils.translation import ugettext as _, ugettext_lazy as _t
 
 from desktop.log.access import access_warn
 from desktop.lib import django_mako
 from desktop.lib.exceptions_renderable import PopupException
+from desktop.lib.json_utils import JSONEncoderForHTML
 from hadoop.fs.exceptions import WebHdfsException
 
 from hadoop.fs.hadoopfs import Hdfs
@@ -158,10 +158,7 @@ class Job(models.Model):
     return self._escapejs_parameters_list(self.parameters)
 
   def _escapejs_parameters_list(self, parameters):
-    escaped = []
-    for item in json.loads(parameters):
-      escaped.append({"name": escapejs(item["name"]), "value": escapejs(item["value"])})
-    return json.dumps(escaped)
+    return json.dumps(json.loads(parameters), cls=JSONEncoderForHTML)
 
   @property
   def status(self):
@@ -230,7 +227,10 @@ class WorkflowManager(models.Manager):
 
   def destroy(self, workflow, fs):
     Submission(workflow.owner, workflow, fs, {}).remove_deployment_dir()
-    workflow.coordinator_set.update(workflow=None) # In Django 1.3 could do ON DELETE set NULL
+    try:
+      workflow.coordinator_set.update(workflow=None) # In Django 1.3 could do ON DELETE set NULL
+    except:
+      pass
     workflow.save()
     workflow.delete()
 
@@ -557,7 +557,6 @@ class Node(models.Model):
   # Can't use through relation directly with this Django version?
   # https://docs.djangoproject.com/en/1.2/topics/db/models/#intermediary-manytomany
   def get_link(self, name=None):
-    a = Link.objects.filter(parent=self)
     if name is None:
       return Link.objects.exclude(name__in=Link.META_LINKS).get(parent=self)
     else:
@@ -718,7 +717,7 @@ class Java(Action):
                               help_text=_t('Name or path to the %(program)s jar file on HDFS. E.g. examples.jar.') % {'program': 'Java'})
   main_class = models.CharField(max_length=256, blank=False, verbose_name=_t('Main class'),
                                 help_text=_t('Full name of the Java class. E.g. org.apache.hadoop.examples.Grep'))
-  args = models.CharField(max_length=4096, blank=True, verbose_name=_t('Arguments'),
+  args = models.TextField(blank=True, verbose_name=_t('Arguments'),
                           help_text=_t('Arguments of the main method. The value of each arg element is considered a single argument '
                                        'and they are passed to the main method in the same order.'))
   java_opts = models.CharField(max_length=256, blank=True, verbose_name=_t('Java options'),
@@ -1326,6 +1325,9 @@ class Coordinator(Job):
 
     for ds in self.dataoutput_set.all():
       params.pop(ds.name, None)
+
+    for wf_param in json.loads(self.job_properties):
+      params.pop(wf_param['name'], None)
 
     return params
 

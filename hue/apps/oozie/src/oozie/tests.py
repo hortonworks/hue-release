@@ -327,7 +327,7 @@ class TestAPI(OozieMockBase):
     OozieMockBase.setUp(self)
 
     # When updating wf, update wf_json as well!
-    self.wf = Workflow.objects.get(name='wf-name-1')
+    self.wf = Workflow.objects.get(name='wf-name-1', managed=True)
 
   def test_workflow_save(self):
     self.setup_simple_workflow()
@@ -492,7 +492,7 @@ class TestAPIWithOozie(OozieBase):
     OozieBase.setUp(self)
 
     # When updating wf, update wf_json as well!
-    self.wf = Workflow.objects.get(name='MapReduce').clone(self.cluster.fs, self.user)
+    self.wf = Workflow.objects.get(name='MapReduce', managed=True).clone(self.cluster.fs, self.user)
 
   def test_import_jobsub_actions(self):
     # Setup jobsub examples
@@ -523,7 +523,7 @@ class TestApiPermissionsWithOozie(OozieBase):
     OozieBase.setUp(self)
 
     # When updating wf, update wf_json as well!
-    self.wf = Workflow.objects.get(name='MapReduce').clone(self.cluster.fs, self.user)
+    self.wf = Workflow.objects.get(name='MapReduce', managed=True).clone(self.cluster.fs, self.user)
 
   def test_workflow_save(self):
     # Share
@@ -711,12 +711,12 @@ class TestEditor(OozieMockBase):
         "description":"Generate N number of records",
         "main_class":"org.apache.hadoop.examples.terasort.TeraGen",
         "args":"1000 ${output_dir}/teragen",
-        "files":"[]",
+        "files":'["my_file","my_file2"]',
         "job_xml":"",
         "java_opts":"-Dexample-property=natty",
         "jar_path":"/user/hue/oozie/workspaces/lib/hadoop-examples.jar",
-        "prepares":"[]",
-        "archives":"[]",
+        "prepares":'[{"value":"/test","type":"mkdir"}]',
+        "archives":'[{"dummy":"","name":"my_archive"},{"dummy":"","name":"my_archive2"}]',
         "capture_output": "on",
     })
     Link(parent=action1, child=self.wf.end, name="ok").save()
@@ -728,10 +728,17 @@ class TestEditor(OozieMockBase):
         <java>
             <job-tracker>${jobTracker}</job-tracker>
             <name-node>${nameNode}</name-node>
+            <prepare>
+                  <mkdir path="${nameNode}/test"/>
+            </prepare>
             <main-class>org.apache.hadoop.examples.terasort.TeraGen</main-class>
             <java-opts>-Dexample-property=natty</java-opts>
             <arg>1000</arg>
             <arg>${output_dir}/teragen</arg>
+            <file>my_file#my_file</file>
+            <file>my_file2#my_file2</file>
+            <archive>my_archive#my_archive</archive>
+            <archive>my_archive2#my_archive2</archive>
             <capture-output/>
         </java>
         <ok to="end"/>
@@ -749,7 +756,7 @@ class TestEditor(OozieMockBase):
         "mapper": "MyMapper",
         "reducer": "MyReducer",
         "files": '["my_file"]',
-        "archives":'["my_archive"]',
+        "archives":'[{"dummy":"","name":"my_archive"}]',
     })
     Link(parent=action1, child=self.wf.end, name="ok").save()
 
@@ -765,7 +772,7 @@ class TestEditor(OozieMockBase):
                 <reducer>MyReducer</reducer>
             </streaming>
             <file>my_file#my_file</file>
-            <archive>my_archive</archive>
+            <archive>my_archive#my_archive</archive>
         </map-reduce>
         <ok to="end"/>
         <error to="kill"/>
@@ -1078,6 +1085,10 @@ class TestEditor(OozieMockBase):
         '          <name>username</name>\n'
         '          <value>${coord:user()}</value>\n'
         '        </property>\n'
+        '        <property>\n'
+        '          <name>SLEEP</name>\n'
+        '          <value>1000</value>\n'
+        '        </property>\n'
         '      </configuration>\n'
         '   </workflow>\n'
         '  </action>\n'
@@ -1157,6 +1168,10 @@ class TestEditor(OozieMockBase):
           <name>username</name>
           <value>${coord:user()}</value>
         </property>
+        <property>
+          <name>SLEEP</name>
+          <value>1000</value>
+        </property>
       </configuration>
    </workflow>
   </action>
@@ -1225,7 +1240,7 @@ class TestEditor(OozieMockBase):
     create_dataset(coord, self.c)
     create_coordinator_data(coord, self.c)
 
-    assert_equal([{'name': u'output', 'value': ''}, {'name': u'SLEEP', 'value': ''}, {'name': u'market', 'value': u'US'}],
+    assert_equal([{'name': u'output', 'value': ''}, {'name': u'market', 'value': u'US'}],
                  coord.find_all_parameters())
 
 
@@ -1236,8 +1251,8 @@ class TestEditor(OozieMockBase):
 
 
   def test_xss_escape_js(self):
-    escaped = '[{"name": "oozie.use.system.libpath", "value": "true"}, {"name": "123\\\\u0022\\\\u003E\\\\u003Cscript\\\\u003Ealert(1)\\\\u003C/script\\\\u003E", "value": "hacked"}]'
-    hacked = '[{"name":"oozie.use.system.libpath","value":"true"}, {"name": "123\\"><script>alert(1)</script>", "value": "hacked"}]'
+    hacked = '[{"name":"oozie.use.system.libpath","value":"true"}, {"name": "123\\"><script>alert(1)</script>", "value": "\'hacked\'"}]'
+    escaped = '[{"name": "oozie.use.system.libpath", "value": "true"}, {"name": "123\\"\\u003e\\u003cscript\\u003ealert(1)\\u003c/script\\u003e", "value": "\'hacked\'"}]'
 
     self.wf.job_properties = hacked
     self.wf.parameters = hacked
@@ -1256,6 +1271,26 @@ class TestEditor(OozieMockBase):
     resp = self.c.get('/oozie/list_workflows/')
     assert_false('"><script>alert(1);</script>' in resp.content, resp.content)
     assert_true('&quot;&gt;&lt;script&gt;alert(1);&lt;/script&gt;' in resp.content, resp.content)
+
+
+  def test_submit_workflow(self):
+    # Check param popup
+    response = self.c.get(reverse('oozie:submit_workflow', args=[self.wf.id]))
+    assert_equal([{'name': u'output', 'value': ''},
+                  {'name': u'SLEEP', 'value': ''},
+                  {'name': u'market', 'value': u'US'}
+                  ],
+                  response.context['params_form'].initial)
+
+  def test_submit_coordinator(self):
+    coord = create_coordinator(self.wf, self.c)
+
+    # Check param popup, SLEEP is set by coordinator so not shown in the popup
+    response = self.c.get(reverse('oozie:submit_coordinator', args=[coord.id]))
+    assert_equal([{'name': u'output', 'value': ''},
+                  {'name': u'market', 'value': u'US'}
+                  ],
+                  response.context['params_form'].initial)
 
 
 class TestEditorBundle(OozieMockBase):
@@ -1687,7 +1722,7 @@ class TestPermissions(OozieBase):
       finish()
 
     # Share it !
-    self.wf = Workflow.objects.get(name='wf-name-1')
+    self.wf = Workflow.objects.get(name='wf-name-1', managed=True)
     self.wf.is_shared = True
     self.wf.save()
     Workflow.objects.check_workspace(self.wf, self.cluster.fs)
@@ -1788,7 +1823,7 @@ class TestPermissions(OozieBase):
       finish()
 
     # Share it !
-    wf = Workflow.objects.get(id=coord.workflow.id)
+    wf = Workflow.objects.get(id=coord.workflow.id, managed=True)
     wf.is_shared = True
     wf.save()
     Workflow.objects.check_workspace(wf, self.cluster.fs)
@@ -2076,7 +2111,7 @@ class TestImportWorkflow04WithOozie(OozieBase):
 class TestOozieSubmissions(OozieBase):
 
   def test_submit_mapreduce_action(self):
-    wf = Workflow.objects.get(name='MapReduce')
+    wf = Workflow.objects.get(name='MapReduce', managed=True)
     post_data = {u'form-MAX_NUM_FORMS': [u''], u'form-INITIAL_FORMS': [u'1'],
                  u'form-0-name': [u'REDUCER_SLEEP_TIME'], u'form-0-value': [u'1'], u'form-TOTAL_FORMS': [u'1']}
 
@@ -2106,7 +2141,7 @@ class TestOozieSubmissions(OozieBase):
 
 
   def test_submit_java_action(self):
-    wf = Workflow.objects.get(name='Sequential Java')
+    wf = Workflow.objects.get(name='Sequential Java', managed=True)
 
     response = self.c.post(reverse('oozie:submit_workflow', args=[wf.id]),
                            data={u'form-MAX_NUM_FORMS': [u''],
@@ -2119,7 +2154,7 @@ class TestOozieSubmissions(OozieBase):
 
 
   def test_submit_distcp_action(self):
-    wf = Workflow.objects.get(name='DistCp')
+    wf = Workflow.objects.get(name='DistCp', managed=True)
 
     response = self.c.post(reverse('oozie:submit_workflow', args=[wf.id]),
                            data= {u'form-MAX_NUM_FORMS': [u''], u'form-TOTAL_FORMS': [u'3'], u'form-INITIAL_FORMS': [u'3'],
@@ -2509,7 +2544,7 @@ class TestUtils(OozieMockBase):
     OozieMockBase.setUp(self)
 
     # When updating wf, update wf_json as well!
-    self.wf = Workflow.objects.get(name='wf-name-1')
+    self.wf = Workflow.objects.get(name='wf-name-1', managed=True)
 
 
   def test_workflow_to_dict(self):
@@ -2581,7 +2616,7 @@ COORDINATOR_DICT = {
     u'end_0': [u'07/04/2012'], u'end_1': [u'12:00 AM'],
     u'timezone': [u'America/Los_Angeles'],
     u'parameters': [u'[{"name":"market","value":"US"}]'],
-    u'job_properties': [u'[{"name":"username","value":"${coord:user()}"}]'],
+    u'job_properties': [u'[{"name":"username","value":"${coord:user()}"},{"name":"SLEEP","value":"1000"}]'],
     u'timeout': [u'100'],
     u'concurrency': [u'3'],
     u'execution': [u'FIFO'],
