@@ -264,7 +264,7 @@ AUTH = ConfigSection(
     BACKEND=Config("backend",
                    default="desktop.auth.backend.AllowFirstUserDjangoBackend",
                    help=_("Authentication backend.  Common settings are "
-                        "django.contrib.auth.backends.ModelBackend (fully Django backend), " + 
+                        "django.contrib.auth.backends.ModelBackend (fully Django backend), " +
                         "desktop.auth.backend.AllowAllBackend (allows everyone), " +
                         "desktop.auth.backend.AllowFirstUserDjangoBackend (relies on Django and user manager, after the first login). ")),
     USER_AUGMENTOR=Config("user_augmentor",
@@ -361,8 +361,8 @@ LOCAL_FILESYSTEMS = UnspecifiedConfigSection(
 
 def default_feedback_url():
   """A version-specific URL."""
-  return "http://groups.google.com/a/cloudera.org/group/hue-user"
-  
+  return "http://hortonworks.com/community/forums/forum/hortonworks-sandbox/"
+
 FEEDBACK_URL = Config(
   key="feedback_url",
   help=_("Link for 'feedback' tab."),
