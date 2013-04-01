@@ -95,6 +95,7 @@ function getTables(){
         for (var i = 0; i < data.length; i++) {
           pigKeywordsT.push(data[i]);
           table_fields[data[i]]={};
+          $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + data[i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
         }
       }
 
