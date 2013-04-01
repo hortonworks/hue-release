@@ -2,8 +2,8 @@ import os
 import pwd, grp
 from datetime import datetime
 
-USERINFO_FILE_PATH = os.path.join(os.path.expanduser('~sandbox'),
-                        'user_info.dat')
+USERINFO_FILE_PATH = os.path.join('/usr/lib/tutorials',
+                                  'user_info.dat')
 MARKETO_URL = "http://app-l.marketo.com/index.php/leadCapture/save"
 CRON_FILE = "/etc/cron.d/1sandbox_registration"
 CRON_FILE_ORIGIN = "/usr/lib/start_scripts/registration_post_cron"

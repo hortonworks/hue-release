@@ -6,13 +6,13 @@ PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 REQUIRE_REGISTRATION = True
 
-LANDING_PATH = os.path.join(os.path.expanduser('~sandbox'), 'sandbox-tutorials')
+LANDING_PATH = os.path.join('/usr/lib/tutorials', 'sandbox-tutorials')
 
-USERINFO_FILE_PATH = os.path.join(os.path.expanduser('~sandbox'), 'user_info.dat')
+USERINFO_FILE_PATH = os.path.join('/usr/lib/tutorials', 'user_info.dat')
 
-START_SCRIPTS = os.path.join(os.path.expanduser('~sandbox'), 'start_scripts')
+START_SCRIPTS = os.path.join('/usr/lib', 'start_scripts')
 
-HUE_PATH = os.path.join(os.path.expanduser('~sandbox'), 'hue')
+HUE_PATH = os.path.join('/usr/lib', 'hue')
 
 ADMINS = ()
 

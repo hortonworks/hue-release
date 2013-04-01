@@ -8,7 +8,7 @@ export PATH=$PATH:$SRC/apache-maven-3.0.5/bin/
 BRANCH=Caterpillar
 
 # remove all src files (except of repository)
-find $SRC -maxdepth 1 | sed "1d" | grep -v "sandbox-shared" | xargs rm -rf
+find $SRC -maxdepth 1 | sed "1d" | grep -v "sandbox-shared" | grep -v "tutorials-env" | xargs rm -rf
 
 mkdir -p $SRC $OUT
 

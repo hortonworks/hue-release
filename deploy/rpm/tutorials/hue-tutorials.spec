@@ -51,9 +51,12 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 rm -f %{prefix}/tutorials_app/db/lessons.db
 
+mkdir -p /usr/lib/tutorials
+chown -R sandbox:sandbox /usr/lib/tutorials
+
 sudo -u sandbox -s -- <<END_OF_SANDBOX
 
-cd /usr/lib/
+cd /usr/lib/tutorials/
 echo "clonning tutorials ..."
 git clone git@github.com:hortonworks/sandbox-tutorials.git
 
