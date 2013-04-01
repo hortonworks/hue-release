@@ -28,7 +28,7 @@ def build_rpm(name='repo'):
     run('cd /home/sandbox/rpm-shared/deploy/rpm/ && bash build.sh')
 
 
-def get_out(name):
+def get_out(name='repo'):
     local('rm -rf ./' + name)
     get('/home/sandbox/rpmbuild/out', './' + name)
 
@@ -46,7 +46,7 @@ def do_upload(client, path, location='/dav/HortonWorks/repo', remote=''):
         do_upload(client, "%s/%s" % (path, f), location=location, remote="%s/%s" % (remote, f))
 
 
-def upload(name):
+def upload(name='repo'):
     client = WebDAVClient("www.box.com", 443)
     client.setbasicauth("roman.rader@gmail.com", "storage_1")
     try:
@@ -67,5 +67,5 @@ def rpm(name="repo", branch="Caterpillar"):
            "@www.box.com/dav/HortonWorks/%s" % name)
 
 
-def hello(v='1'):
-    run('echo hello %s' % v)
+def vagrant():
+    local("cd ./vagrant; vagrant destroy -f; vagrant up; vagrant halt; vagrant up")
