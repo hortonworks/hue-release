@@ -17,8 +17,10 @@
 
 
 import gzip
+import xlrd
 import logging
 import re
+import string
 
 LOG = logging.getLogger(__name__)
 
@@ -279,29 +281,6 @@ class CommentsDetector():
     def get_comments(self):
         return self.java_fsm.memory['line_comments'] + self.java_fsm.memory['block_comments'] + self.custom_line_comments
 
-def main():
-
-    test_string1 = '''
-    //line comment/*d*/
-    text,text//,text
-    text,text,####text
-    /**
-    block //comment
-    block ##com'''
-    test_string2 = '''ment
-    */
-    test2,text2,text2
-    '''
-    test_string = test_string1 + test_string2
-    cd = CommentsDetector( java_line_comment=False, java_block_comment=True, custom_line_comment='##')
-    cd.process_buffer(test_string1)
-    cd.process_buffer(test_string2, index_offset=len(test_string1))
-    print test_string
-    print 'comments:'
-    for comment in cd.get_comments():
-        print '%s,%s' %(str(comment[0]), str(comment[1]))
-        print '\'%s\'' % test_string[comment[0]: comment[1]]
-
 
 DEFAULT_IMPORT_PEEK_SIZE = 8192
 DEFAULT_IMPORT_MAX_SIZE = 4294967296 # 4 gigabytes
@@ -458,6 +437,151 @@ class TextFileProcessor():
             data = data.encode(encoding, 'ignore')
             try:
                 fileobj.write(data)
+            except IOError:
+                pass
+        except UnicodeError:
+            pass
+
+
+def excel_col_to_index(col_name):
+    index = 0
+    div = 0
+    for i, c in enumerate(col_name[::-1]):
+        if c in string.ascii_letters:
+            index += (ord(c.upper()) - ord('A') + 1) * 26 ** (i - div)
+        else:
+            div += 1
+    return index - 1
+
+
+def index_to_excel_col(index):
+    col_name = ''
+    current = index
+    while current >= 0:
+        remainder = current % 26
+        col_name = chr(ord('A') + remainder) + col_name
+        current = current / 26 - 1
+    return col_name
+
+
+def excel_range_to_indexes(range_str):
+    '''
+    Converts input string range in excel format 'A3:B6' to set of zero-based indexes
+        like ((col_min_idx, col_max_idx), (row_min_idx, row_max_idx))
+    '''
+    range = re.match(r'^(?P<col_min_idx>[a-zA-Z]+)(?P<row_min_idx>\d+):(?P<col_max_idx>[a-zA-Z]+)(?P<row_max_idx>\d+$)',
+                     range_str)
+    if range:
+        col_min_idx = excel_col_to_index(range.group('col_min_idx'))
+        row_min_idx = int(range.group('row_min_idx')) - 1
+        col_max_idx = excel_col_to_index(range.group('col_max_idx'))
+        row_max_idx = int(range.group('row_max_idx')) - 1
+        return (col_min_idx, row_min_idx), (col_max_idx, row_max_idx)
+    return None
+
+
+class XlsFileProcessor():
+    TYPE = 'xls'
+
+    @staticmethod
+    def open(fileobj, max_size=None):
+        try:
+            if max_size:
+                data = fileobj.read(max_size)
+            else:
+                data = fileobj.read(DEFAULT_IMPORT_MAX_SIZE)
+        except IOError:
+            return None
+        return xlrd.open_workbook(file_contents=data)
+
+    @staticmethod
+    def get_sheet_list(xls_fileobj):
+        return [xls_fileobj.sheet_names()[idx] for idx in range(xls_fileobj.nsheets)]
+
+    def get_sheet_name(xls_fileobj, sheet_index):
+        return xls_fileobj.sheet_names()[sheet_index]
+
+    @staticmethod
+    def get_column_names(xls_fileobj, sheet_index=0, cell_range=None):
+        sh = xls_fileobj.sheet_by_index(sheet_index)
+        col_min_idx = 0
+        col_max_idx = sh.ncols - 1
+        if cell_range is not None and cell_range != '' and cell_range != '*':
+            excel_range = excel_range_to_indexes(cell_range)
+            if excel_range is not None:
+                col_min_idx = excel_range[0][0]
+                col_max_idx = excel_range[1][0]
+        return [index_to_excel_col(rx) for rx in range(col_min_idx, col_max_idx + 1)]
+
+    @staticmethod
+    def get_scope_data(xls_fileobj, scope_strg, cell_range=None, row_start_idx=None, row_end_idx=None):
+        '''
+        scope_strg - sheet name or '*' that means all sheets
+        cell_range - range string in an excel style 'B1:D10'
+        row_start_idx - row start index in result data when scope_strg and cell_range are applied
+        row_end_idx - row end index in result data when scope_strg and cell_range are applied
+        '''
+        try:
+            qscope = int(scope_strg)
+        except ValueError:
+            if scope_strg == "*":
+                qscope = None # means 'all'
+            else:
+                # so assume it's a sheet name ...
+                qscope = xls_fileobj.sheet_names().index(scope_strg)
+        data = []
+        for sh_idx in range(xls_fileobj.nsheets):
+            if qscope is None or sh_idx == qscope:
+                sh = xls_fileobj.sheet_by_index(sh_idx)
+                col_min_idx = 0
+                row_min_idx = 0
+                col_max_idx = sh.ncols - 1
+                row_max_idx = sh.nrows - 1
+                if cell_range is not None and cell_range != '' and cell_range != '*':
+                    excel_range = excel_range_to_indexes(cell_range)
+                    if excel_range is not None:
+                        (col_min_idx, row_min_idx), (col_max_idx, row_max_idx) = excel_range
+
+                if row_start_idx is not None and row_end_idx is not None:
+                    row_min_idx_cp = row_min_idx
+                    row_max_idx_cp = row_max_idx
+                    if 0 <= row_start_idx <= row_max_idx - row_min_idx:
+                        row_min_idx_cp = row_min_idx + row_start_idx
+                    elif row_start_idx > row_max_idx - row_min_idx:
+                        row_min_idx_cp = None
+                    if 0 <= row_end_idx <= row_max_idx - row_min_idx:
+                        row_max_idx_cp = row_min_idx + row_end_idx
+                    elif row_end_idx > row_max_idx - row_min_idx:
+                        row_max_idx_cp = row_max_idx
+                    row_min_idx = row_min_idx_cp
+                    row_max_idx = row_max_idx_cp
+
+                if row_min_idx is None or row_max_idx is None:
+                    return data
+
+                for rowx in range(row_min_idx, row_max_idx + 1):
+                    row = []
+                    for colx in range(col_min_idx, col_max_idx + 1):
+                        # cty = sh.cell_type(rowx, colx)
+                        cval = sh.cell_value(rowx, colx)
+                        row.append(cval)
+                    data.append(row)
+        return data
+
+    @staticmethod
+    def write_to_dsv_gzip(xls_fileobj, fileobj, data, field_terminator, newline_terminator='\n'):
+        try:
+            try:
+                gz = gzip.GzipFile(fileobj=fileobj, mode='wb')
+
+                data_to_store = []
+                for row in data:
+                    new_row = []
+                    for field in row:
+                        new_row.append(str(field).replace(field_terminator.decode('string_escape'), ''))
+                    data_to_store.append(field_terminator.decode('string_escape').join(new_row))
+
+                gz.write(newline_terminator.join(data_to_store))
             except IOError:
                 pass
         except UnicodeError:

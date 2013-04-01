@@ -34,10 +34,7 @@ ${layout.menubar(section='tables')}
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Actions')}</li>
                     <li>
-                        <a href="${ url(app_name + ':import_wizard', database=database)}">${_('Create a new table from a file')}</a>
-                    </li>
-                    <li>
-                        <a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file New')}</a>
+                        <a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file')}</a>
                     </li>
                     <li>
                         <a href="${ url(app_name + ':create_table', database=database)}">${_('Create a new table manually')}</a>
@@ -146,7 +143,6 @@ ${layout.menubar(section='tables')}
                                             <div class="controls">
                                                 ${comps.field(table_form["delimiter"], render_default=True)}
                                                 <span class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed. Terminator must be exactly one character.')}</span>
-                                                </span>
                                             </div>
                                         </div>
                                     </td>
@@ -196,9 +192,53 @@ ${layout.menubar(section='tables')}
                                 </tr>
                             </table>
                         </div>
+                        <div class="well" id="file-options-xls">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <div class="control-group">
+                                            ${comps.bootstrapLabel(table_form["xls_sheet"])}
+                                            <div class="controls">
+                                                ${comps.field(table_form["xls_sheet"], render_default=True)}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="control-group">
+                                            ${comps.bootstrapLabel(table_form["xls_cell_range"])}
+                                            <div class="controls">
+                                                ${comps.field(table_form["xls_cell_range"], attrs=dict(placeholder=_('e.g. A1:D30'),))}
+
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                    </td><span class="help-inline error-inline hide">${_('Cell range must be in excel format \'e.g. A1:D30\'. You could leave this parameter empty to match all cells.')}</span>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="control-group">
+                                            ${comps.bootstrapLabel(table_form["xls_read_column_headers"])}
+                                            <div class="controls">
+                                                ${comps.field(table_form["xls_read_column_headers"], render_default=True)}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                        </div>
+
                         <div id="preview-div">
                             <div class="alert alert-info">${_('Table preview')}</div>
                             <div class="scrollable"></div>
+                            <div class="pagination pull-right">
+                                <ul>
+                                    <li id="submit-preview-begin" class="prev"><a title="${_('Beginning of List')}" href="javascript:void(0)">&larr; ${_('Beginning of List')}</a></li>
+                                    <li id="submit-preview-next"><a title="${_('Next page')}" href= "javascript:void(0)">${_('Next Page')} &rarr;</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </fieldset>
                 </div>
@@ -206,9 +246,7 @@ ${layout.menubar(section='tables')}
                     <input id="submit-create" type="submit" name="createTable" class="btn btn-primary disable-feedback"
                            value="${_('Create table')}"/>
                 </div>
-                <div id="hidden-form-box">
-                    ${comps.field(table_form["formatted_path"], render_default=True)}
-                </div>
+                ${comps.field(table_form["formatted_path"], render_default=True)}
             </form>
         </div>
     </div>
@@ -260,6 +298,16 @@ ${layout.menubar(section='tables')}
         -moz-border-radius-topright: 0px;
     }
 
+    div.well#file-options-xls {
+        padding-top: 0px;
+        border-top-width: 0px;
+        box-shadow: 0 0 0;
+        -webkit-border-top-left-radius: 0px;
+        -webkit-border-top-right-radius: 0px;
+        -moz-border-radius-topleft: 0px;
+        -moz-border-radius-topright: 0px;
+    }
+
     .scrollable {
         overflow-x: auto;
         margin-top: 10px;
@@ -299,8 +347,12 @@ ${layout.menubar(section='tables')}
         margin-bottom: 5px;
     }
 
-    #action-spinner-create, #action-spinner-preview, #hidden-form-box {
+    #action-spinner-create, #action-spinner-preview {
         display: none;
+    }
+
+    .resultTable td, .resultTable th {
+        white-space: nowrap;
     }
 
 </style>
@@ -329,6 +381,9 @@ function reactOnFilePathChange(newPath) {
 }
 
 var tableList = [];
+var previewStartIdx = 0;
+var previewEndIdx = 0;
+var PreviewType = {"preview": 0, "preview_next": 1, "preview_beginning":2};
 
 $(document).ready(function () {
     $(document).resize()
@@ -337,7 +392,11 @@ $(document).ready(function () {
         var zoomNew = document.documentElement.clientWidth / window.innerWidth;
         if (zoom != zoomNew) {
             $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
-            zoom = zoomNew
+##            var helperDiv = $('<div />');
+##            $(".dataTables_wrapper").append(helperDiv);
+##            $(".dataTables_wrapper > div").first().css("max-width", helperDiv.width());
+##            helperDiv.remove();
+            zoom = zoomNew;
         }
     });
     $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
@@ -386,18 +445,17 @@ $(document).ready(function () {
         $("#preview-div").hide();
         if ($(this).val() == "csv") {
             $("div.well#div-file-selector").addClass("div-file-selector");
+            $("#file-options-xls").hide();
             $("#file-options-csv").show();
-            unlockControls();
         }
         else if ($(this).val() == "xls") {
             $("#file-options-csv").hide();
-            $("div.well#div-file-selector").removeClass("div-file-selector");
-            lockControls();
+            $("#file-options-xls").show();
+            $("div.well#div-file-selector").addClass("div-file-selector");
         }
         else if ($(this).val() == "msaccess") {
             $("#file-options-csv").hide();
             $("div.well#div-file-selector").removeClass("div-file-selector");
-            lockControls();
         }
     });
     $("#id_table-file_type").val("csv");
@@ -411,34 +469,94 @@ $(document).ready(function () {
         tableList = data;
     }, "json");
 
-    $("#submit-preview").click(function () {
+    function submitPreview(preview_type) {
         submitPreviewStart();
-        $("#preview-div").hide();
+        if(PreviewType.preview == preview_type){
+            $(window).scrollTop(0);
+            $("#preview-div").hide();
+        }
         if (!validateForm()) {
             submitPreviewEnd();
             return;
         }
         var postQueryData = $('form#mainForm').serializeArray();
-        postQueryData.push({ name: "submitPreviewAction", value: "" });
+        if(PreviewType.preview == preview_type){
+            postQueryData.push({ name: "submitPreviewAction", value: "" });
+        }
+        else if(PreviewType.preview_next == preview_type){
+            postQueryData.push({ name: "submitPreviewNext", value: "" });
+            postQueryData.push({ name: "preview_start_idx", value: previewStartIdx });
+            postQueryData.push({ name: "preview_end_idx", value: previewEndIdx });
+        }
+        else if(PreviewType.preview_beginning == preview_type){
+            postQueryData.push({ name: "submitPreviewBeginning", value: "" });
+            postQueryData.push({ name: "preview_start_idx", value: previewStartIdx });
+            postQueryData.push({ name: "preview_end_idx", value: previewEndIdx });
+        }
         $.post("${url(app_name + ':create_from_file', database=database)}", postQueryData,function (data) {
             if ("error" in data) {
                 showMainError(data["error"]);
             }
             else if ("results" in data) {
                 $('.scrollable').html(data["results"]);
+                $(".resultTable").dataTable({
+                    "bPaginate": false,
+                    "bLengthChange": false,
+                    "bInfo": false,
+                    "bFilter": false,
+                    "bSort": false,
+                    "oLanguage": {
+                        "sEmptyTable": "${_('No data available')}",
+                        "sZeroRecords": "${_('No matching records')}"
+                    },
+                    "fnDrawCallback": function( oSettings ) {
+                        $(".resultTable").jHueTableExtender({
+                            hintElement: "#jumpToColumnAlert",
+                            ##                            fixedHeader: true,
+                                                        firstColumnTooltip: true
+                        });
+                    }
+                });
+            ##                $(".dataTables_wrapper").css("min-height", "0pt");
+            ##                $(".dataTables_wrapper").css("overflow-y", "auto");
+            ##                $(".dataTables_wrapper").css("height", "400px");
+            ##                $(".dataTables_wrapper > div").first().css("position", "absolute");
+            ##                $(".dataTables_filter").hide();
+
                 $("#preview-div").show();
-                $('html, body').animate({
-                    scrollTop: $("#preview-div").offset().top - $("#container-fluid-top").offset().top
-                }, 1000);
+                if(PreviewType.preview == preview_type)
+                {
+                    $('html, body').animate({
+                        scrollTop: $("#preview-div").offset().top - $("#container-fluid-top").offset().top
+                    }, 1000);
+                }
             }
             if ("options" in data) {
                 updateOptions(data["options"]);
+                if ("preview_start_idx" in data["options"]) {
+                    previewStartIdx = data["options"]["preview_start_idx"];
+                }
+                if ("preview_end_idx" in data["options"]) {
+                    previewEndIdx = data["options"]["preview_end_idx"];
+                }
+                if ("preview_has_more" in data["options"]) {
+                    if(data["options"]["preview_has_more"]) {
+                        $("#submit-preview-next").show();
+                    }
+                    else {
+                        $("#submit-preview-next").hide();
+                    }
+                }
             }
             submitPreviewEnd();
         }, "json").error(function () {
                     submitPreviewEnd();
                 });
-    });
+    };
+
+    $("#submit-preview").click(function(){ submitPreview(PreviewType.preview)});
+    $("#submit-preview-next").click(function(){ submitPreview(PreviewType.preview_next)});
+    $("#submit-preview-begin").click(function(){ submitPreview(PreviewType.preview_beginning)});
 
     $(".fileChooserBtn").click(function (e) {
         e.preventDefault();
@@ -468,7 +586,18 @@ $(document).ready(function () {
     function updateOption(optionName, options)
     {
         if(optionName in options ) {
-            $("#id_table-" + optionName).val(options[optionName])
+            $("#id_table-" + optionName).val(options[optionName]);
+        }
+    }
+
+    function updateListOption(optionName, listOptionName, options)
+    {
+        if (optionName in options && listOptionName in options) {
+            var sel = $("#id_table-" + optionName);
+            sel.empty(options[optionName]);
+            for (var i = 0; i < options[listOptionName].length; i++) {
+                sel.append('<option value="' + options[listOptionName][i][0] + '">' + options[listOptionName][i][1] + '</option>');
+            }
         }
     }
 
@@ -479,6 +608,8 @@ $(document).ready(function () {
         updateOption("delimiter_0", options);
         updateOption("delimiter_1", options);
         updateOption("formatted_path", options);
+        updateListOption("xls_sheet", "xls_sheet_list", options);
+        updateOption("xls_sheet", options);
     }
 
     function submitPreviewStart() {
@@ -486,7 +617,6 @@ $(document).ready(function () {
         lockControls();
         $('#action-spinner-preview').show();
         $('#describe-header').hide();
-        $(window).scrollTop(0);
     }
 
     function submitPreviewEnd() {
@@ -584,6 +714,18 @@ $(document).ready(function () {
         }
         else {
             hideFieldError(filePath);
+        }
+
+        var fileType = $("input[name='table-file_type']");
+        if(fileType.val() == 'csv') {
+            var cellRange = $("input[name='table-xls_cell_range']");
+            if (cellRange.length > 0 && cellRange.match(/[a-zA-Z]+\d+:[a-zA-Z]+\d+/) == undefined) {
+                showFieldError(cellRange);
+                isValid = false;
+            }
+            else {
+                hideFieldError(cellRange);
+            }
         }
 
         var fieldTerminatorFld = $("#id_table-field_terminator_1");

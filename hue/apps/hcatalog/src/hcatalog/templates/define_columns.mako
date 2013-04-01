@@ -32,8 +32,7 @@ ${layout.menubar(section='tables')}
             <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Actions')}</li>
-                    <li><a href="${ url(app_name + ':import_wizard', database=database)}">${_('Create a new table from a file')}</a></li>
-                    <li><a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file New')}</a></li>
+                    <li><a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file')}</a></li>
                     <li><a href="${ url(app_name + ':create_table', database=database)}">${_('Create a new table manually')}</a></li>
                 </ul>
             </div>

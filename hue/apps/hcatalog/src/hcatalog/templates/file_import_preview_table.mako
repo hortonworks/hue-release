@@ -22,11 +22,12 @@
 
 <%namespace name="comps" file="beeswax_components.mako" />
 
-<table class="table table-striped">
+<table class="table table-striped table-condensed resultTable" cellpadding="0" cellspacing="0" data-tablescroller-min-height-disable="true" data-tablescroller-enforce-height="true">
+    <thead>
     <tr>
-        <td>&nbsp;</td>
+        <th>&nbsp;</th>
         % for form in column_formset.forms:
-                <td>
+                <th>
                 ${comps.label(form["column_name"])}
                 ${comps.field(form["column_name"],
                 render_default=False,
@@ -34,21 +35,24 @@
                 placeholder=_("Column name")
                 )}
                 <span  class="help-inline error-inline hide">${_('This field is required.')}</span>
-                    <br/><br/>
+                 <br/><br/>
                 ${comps.label(form["column_type"])}
                 ${comps.field(form["column_type"],
                 render_default=True
                 )}
                 ${unicode(form["_exists"]) | n}
-                </td>
+                </th>
         %endfor
     </tr>
+    </thead>
+    <tbody>
     % for i, row in enumerate(fields_list):
         <tr>
-            <td><em>${_('Row')} #${i + 1}</em></td>
+            <td><em>${_('Row')} #${row_start_index + i + 1}</em></td>
         % for val in row:
                 <td>${val}</td>
         % endfor
         </tr>
     % endfor
+    </tbody>
 </table>

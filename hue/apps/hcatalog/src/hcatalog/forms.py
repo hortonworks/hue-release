@@ -38,12 +38,12 @@ HIVE_PRIMITIVE_TYPES = \
 IMPORT_FILE_TYPE_CHOICES = [
     ('csv', 'CSV/TSV'),
     ('xls', 'XLS/XLSX'),
-    ('msaccess', 'MS Access'),
+    # ('msaccess', 'MS Access'),
 ]
 
 IMPORT_FILE_TYPE_CSV_TSV = IMPORT_FILE_TYPE_CHOICES[0][0]
 IMPORT_FILE_TYPE_XLS_XLSX = IMPORT_FILE_TYPE_CHOICES[1][0]
-IMPORT_FILE_TYPE_MS_ACCESS = IMPORT_FILE_TYPE_CHOICES[2][0]
+# IMPORT_FILE_TYPE_MS_ACCESS = IMPORT_FILE_TYPE_CHOICES[2][0]
 
 class ImportFileTypeField(ChoiceField):
     """Used for selecting import file type."""
@@ -254,6 +254,12 @@ class CreateTableForm(DependencyAwareForm):
         return _clean_tablename(self.table_list, self.cleaned_data['name'])
 
 
+class ChoiceFieldExtended(ChoiceField):
+
+    def validate(self, value):
+        pass
+
+
 class CreateTableFromFileForm(forms.Form):
     """
     Form used in the create table from file page
@@ -266,6 +272,8 @@ class CreateTableFromFileForm(forms.Form):
 
     path = filebrowser.forms.PathField(label="Input File")
     formatted_path = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    # csv/tsv files
     encoding = UnicodeEncodingField()
     file_type = ImportFileTypeField(initial='undef')
     delimiter = ChoiceOrOtherField(required=False, initial=TERMINATOR_CHOICES[0][0], choices=TERMINATOR_CHOICES)
@@ -288,9 +296,15 @@ class CreateTableFromFileForm(forms.Form):
     java_style_comments = forms.BooleanField(required=False, initial=False,
                                              label="Java-style comments",
                                              help_text="")
-    column_type = forms.ChoiceField(required=False, choices=common.to_choices(HIVE_PRIMITIVE_TYPES))
 
     apply_excel_dialect = forms.BooleanField(required=False, initial=True,
+                                             label="Read column headers",
+                                             help_text="")
+
+    # xls/xlsx files
+    xls_sheet = ChoiceFieldExtended(label="Sheet", required=False)
+    xls_cell_range = forms.CharField(label="Cell range", required=False)
+    xls_read_column_headers = forms.BooleanField(required=False, initial=False,
                                              label="Read column headers",
                                              help_text="")
 

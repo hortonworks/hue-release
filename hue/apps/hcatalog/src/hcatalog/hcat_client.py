@@ -19,6 +19,7 @@ import os
 from time import time
 from pig.templeton import Templeton
 from subprocess import Popen, PIPE
+from beeswax.conf import BEESWAX_HIVE_HOME_DIR
 
 import simplejson as json
 
@@ -215,13 +216,14 @@ class HCatClient(Templeton):
         return (answer, not answer, error)
 
     def hive_cli(self, execute=None, file=None):
+        hive_bin = os.path.join(BEESWAX_HIVE_HOME_DIR.get(), "bin/hive")
         if not any([execute, file]):
             raise Exception('hive cli error: one of either "execute" or "file" is required')
         if execute:
-            p = Popen("hive -e '" + execute + "'", shell=True,
+            p = Popen(hive_bin + " -e '" + execute + "'", shell=True,
                       stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
         if file:
-            p = Popen("hive -f " + file, shell=True,
+            p = Popen(hive_bin + " -f " + file, shell=True,
                       stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
         answer, error = p.communicate()
         LOG.error("""HCatalog client, hcat_cli error:%s""" % error)

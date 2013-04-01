@@ -31,7 +31,7 @@ from django.template.defaultfilters import escapejs
 import hcatalog.common
 import hcatalog.forms
 from hcatalog.views import _get_table_list
-from hcatalog.text_file_processing import GzipFileProcessor, TextFileProcessor
+from hcatalog.file_processing import GzipFileProcessor, TextFileProcessor, XlsFileProcessor
 from hcat_client import hcat_client
 
 import logging
@@ -49,6 +49,11 @@ FILE_PROCESSORS = []
 FILE_PROCESSORS.append(GzipFileProcessor)
 FILE_PROCESSORS.append(TextFileProcessor)
 
+XLS_FILE_PROCESSOR = XlsFileProcessor()
+
+def getXlsFileProcessor():
+    return XLS_FILE_PROCESSOR
+
 
 def create_from_file(request, database='default'):
     """Create a table by import from file"""
@@ -60,12 +65,20 @@ def create_from_file(request, database='default'):
 
         if form.is_valid():
             parser_options = {}
+
+            # table options
             table_name = form.table.cleaned_data['name']
             parser_options['field_terminator'] = form.table.cleaned_data['field_terminator']
-            parser_options['do_import_data'] = form.table.cleaned_data['import_data']
+
+            # common options
             parser_options['path'] = form.table.cleaned_data['path']
-            parser_options['encoding'] = form.table.cleaned_data['encoding']
             parser_options['file_type'] = form.table.cleaned_data['file_type']
+            parser_options['preview_start_idx'] = 0
+            parser_options['preview_end_idx'] = 0
+
+            # csv/tsv options
+            parser_options['do_import_data'] = form.table.cleaned_data['import_data']
+            parser_options['encoding'] = form.table.cleaned_data['encoding']
             parser_options['autodetect_delimiter'] = form.table.cleaned_data['autodetect_delimiter']
             parser_options['read_column_headers'] = form.table.cleaned_data['read_column_headers']
             parser_options['apply_excel_dialect'] = True
@@ -74,12 +87,16 @@ def create_from_file(request, database='default'):
             parser_options['single_line_comment'] = form.table.cleaned_data['single_line_comment']
             parser_options['java_style_comments'] = form.table.cleaned_data['java_style_comments']
 
+            # xls/xlsx options
+            parser_options['xls_sheet'] = form.table.cleaned_data['xls_sheet']
+            parser_options['xls_cell_range'] = form.table.cleaned_data['xls_cell_range']
+            parser_options['xls_read_column_headers'] = form.table.cleaned_data['xls_read_column_headers']
+
             parser_options['formatted_path'] = None
             if 'table-formatted_path' in request.POST:
                 parser_options['formatted_path'] = request.POST.get('table-formatted_path')
                 if parser_options['formatted_path'] == '' or not request.fs.exists(parser_options['formatted_path']):
                     parser_options['formatted_path'] = None
-
 
             parser_options['field_terminator_cleaned'] = form.table.cleaned_data['field_terminator']
             if not filter(lambda val: val[0] == parser_options['field_terminator'], hcatalog.forms.TERMINATOR_CHOICES) and \
@@ -92,7 +109,24 @@ def create_from_file(request, database='default'):
                 parser_options['delimiter'] = (form.table.cleaned_data['delimiter'],)
                 parser_options['delimiters'] = parser_options['delimiter']
 
-            if 'submitPreviewAction' in request.POST: # preview action
+            if parser_options['xls_read_column_headers'] and parser_options['preview_start_idx'] == 0:
+                parser_options['preview_start_idx'] = 1
+
+
+            is_preview_action = 'submitPreviewAction' in request.POST
+            is_preview_next = 'submitPreviewNext' in request.POST
+            is_preview_beginning = 'submitPreviewBeginning' in request.POST
+            if is_preview_action or is_preview_next or is_preview_beginning: # preview  action
+                if is_preview_next and 'preview_start_idx' in request.POST and 'preview_end_idx' in request.POST:
+                    parser_options['preview_start_idx'] = int(request.POST.get('preview_end_idx')) + 1
+                    parser_options['preview_end_idx'] = int(request.POST.get('preview_end_idx')) + IMPORT_PEEK_NLINES
+                else:
+                    parser_options['preview_start_idx'] = 0
+                    parser_options['preview_end_idx'] = IMPORT_PEEK_NLINES - 1
+                if parser_options['xls_read_column_headers']:
+                    parser_options['preview_start_idx'] += 1
+                    parser_options['preview_end_idx'] += 1
+
                 preview_results = {}
                 preview_table_resp = ''
                 fields_list, n_cols, col_names = ([], 0, [])
@@ -111,15 +145,17 @@ def create_from_file(request, database='default'):
                              + unicode(form.table.cleaned_data['ignore_tabs']) + "\n" \
                              + unicode(form.table.cleaned_data['single_line_comment']) + "\n" \
                              + unicode(form.table.cleaned_data['java_style_comments']) + "\n" \
-                             + unicode(form.table.cleaned_data['column_type']) + "\n" \
                              + unicode(form.table.cleaned_data['apply_excel_dialect'])
 
 
                     parser_options = _delim_preview_ext(request.fs, [processor.TYPE for processor in FILE_PROCESSORS], parser_options)
-
+                    row_start_index = parser_options['preview_start_idx']
+                    if parser_options['xls_read_column_headers']:
+                        row_start_index -= 1
                     preview_table_resp = django_mako.render_to_string("file_import_preview_table.mako", dict(
                             fields_list=parser_options['fields_list'],
                             column_formset=parser_options['col_formset'],
+                            row_start_index=row_start_index
                     ))
 
                 except Exception as ex:
@@ -128,10 +164,18 @@ def create_from_file(request, database='default'):
                     preview_results['results'] = preview_table_resp
                     options = {}
 
-                    options["delimiter_0"] = parser_options['delimiter_0']
-                    options["delimiter_1"] = parser_options['delimiter_1']
+                    file_type = parser_options['file_type']
+                    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_CSV_TSV:
+                        options["delimiter_0"] = parser_options['delimiter_0']
+                        options["delimiter_1"] = parser_options['delimiter_1']
                     # options["field_terminator_0"] = parser_options['delimiter_0']
                     # options["field_terminator_1"] = parser_options['delimiter_1']
+                    elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_XLS_XLSX:
+                        options["xls_sheet"] = parser_options['xls_sheet']
+                        options["xls_sheet_list"] = parser_options['xls_sheet_list']
+                        options["preview_start_idx"] = parser_options['preview_start_idx']
+                        options["preview_end_idx"] = parser_options['preview_end_idx']
+                        options["preview_has_more"] = parser_options['preview_has_more']
                     options["formatted_path"] = parser_options['formatted_path']
 
                     preview_results["options"] = options
@@ -146,6 +190,7 @@ def create_from_file(request, database='default'):
                     column_count += 1
 
                 try:
+                    parser_options['preview_and_create'] = True
                     parser_options= _delim_preview_ext(request.fs, [processor.TYPE for processor in FILE_PROCESSORS], parser_options)
 
 
@@ -161,13 +206,18 @@ def create_from_file(request, database='default'):
                     )
                     proposed_query = proposed_query.replace('\\', '\\\\')
                     path = form.table.cleaned_data['path']
-                    if parser_options['formatted_path'] != '' and request.fs.exists(parser_options['formatted_path']):
-                        if parser_options['do_import_data']:
-                            request.fs.copyfile(parser_options['formatted_path'], parser_options['path'])
-                            request.fs.remove(parser_options['formatted_path'])
-                        else:
-                            request.fs.remove(parser_options['formatted_path'])
-                    return _submit_create_and_load(request, proposed_query, database, table_name, parser_options['path'], parser_options['do_import_data'])
+                    file_type = parser_options['file_type']
+
+                    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_XLS_XLSX:
+                        path = parser_options['formatted_path']
+                    else:
+                        if parser_options['formatted_path'] != '' and request.fs.exists(parser_options['formatted_path']):
+                            if parser_options['do_import_data']:
+                                request.fs.copyfile(parser_options['formatted_path'], parser_options['path'])
+                                request.fs.remove(parser_options['formatted_path'])
+                            else:
+                                request.fs.remove(parser_options['formatted_path'])
+                    return _submit_create_and_load(request, proposed_query, database, table_name, path, parser_options['do_import_data'])
 
                 except Exception as ex:
                     return render("create_table_from_file.mako", request, dict(
@@ -227,25 +277,22 @@ def _delim_preview_ext(fs, file_types, parser_options):
 
     file_type = parser_options['file_type']
     if file_type == hcatalog.forms.IMPORT_FILE_TYPE_CSV_TSV:
-
         parser_options = _delim_preview(fs, file_types, parser_options)
-        auto_column_types = parser_options['auto_column_types'] if 'auto_column_types' in parser_options else []
-        col_names = parser_options['col_names'] if 'col_names' in parser_options else []
-        columns = []
-        if len(auto_column_types) == len(col_names):
-            for i, col_name in enumerate(col_names):
-                columns.append(dict(column_name=col_name, column_type=auto_column_types[i], ))
-        else:
-            for col_name in col_names:
-                columns.append(dict(column_name=col_name, column_type='string', ))
-
-        col_formset = hcatalog.forms.ColumnTypeFormSet(prefix='cols', initial=columns)
-
     elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_XLS_XLSX:
-        pass
+        parser_options = _xls_preview(fs, parser_options)
     elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_MS_ACCESS:
         pass
 
+    auto_column_types = parser_options['auto_column_types'] if 'auto_column_types' in parser_options else []
+    col_names = parser_options['col_names'] if 'col_names' in parser_options else []
+    columns = []
+    if len(auto_column_types) == len(col_names):
+        for i, col_name in enumerate(col_names):
+            columns.append(dict(column_name=col_name, column_type=auto_column_types[i], ))
+    else:
+        for col_name in col_names:
+            columns.append(dict(column_name=col_name, column_type='string', ))
+    col_formset = hcatalog.forms.ColumnTypeFormSet(prefix='cols', initial=columns)
     parser_options['col_formset'] = col_formset
     parser_options['columns'] = columns
     return parser_options
@@ -282,6 +329,78 @@ def _delim_preview(fs, file_types, parser_options):
 
     parser_options['fields_list'] = fields_list
     parser_options['n_cols'] = n_cols
+    parser_options['col_names'] = col_names
+    return parser_options
+
+
+def _xls_preview(fs, parser_options):
+    preview_and_create = 'preview_and_create' in parser_options
+    # if parser_options['formatted_path'] is None:
+    if preview_and_create:
+        parser_options['formatted_path'] = '/tmp/%s' % \
+            (os.path.splitext(os.path.basename(parser_options['path'].replace(' ', '')))[0] + 'dsv.gz')
+        result_file_obj = fs.open(parser_options['formatted_path'], 'w')
+
+    try:
+        file_obj = fs.open(parser_options['path'])
+        xls_sheet_selected = parser_options['xls_sheet']
+
+        xls_fileobj = getXlsFileProcessor().open(file_obj)
+        sheets = [[str(idx), name] for idx, name in enumerate(getXlsFileProcessor().get_sheet_list(xls_fileobj))]
+        if not xls_sheet_selected in [sh[0] for sh in sheets]:
+            xls_sheet_selected = '0'
+
+        xls_read_column_headers = parser_options['xls_read_column_headers']
+        xls_cell_range = parser_options['xls_cell_range']
+        col_names = []
+        if xls_read_column_headers:
+            fields_list = getXlsFileProcessor().get_scope_data(xls_fileobj, xls_sheet_selected,
+                                                               cell_range=xls_cell_range,
+                                                               row_start_idx=0,
+                                                               row_end_idx=0)
+            if len(fields_list) == 1:
+                col_names = fields_list[0]
+        else:
+            col_names = getXlsFileProcessor().get_column_names(xls_fileobj, int(xls_sheet_selected),
+                                                               cell_range=xls_cell_range)
+
+        row_start_idx = parser_options['preview_start_idx']
+        row_end_idx = parser_options['preview_end_idx'] + 1  # read one more row over to define has_more flag
+
+        if preview_and_create:
+            fields_list = getXlsFileProcessor().get_scope_data(xls_fileobj, xls_sheet_selected,
+                                                               cell_range=xls_cell_range)
+        else:
+            fields_list = getXlsFileProcessor().get_scope_data(xls_fileobj, xls_sheet_selected,
+                                                           cell_range=xls_cell_range,
+                                                           row_start_idx=row_start_idx,
+                                                           row_end_idx=row_end_idx)
+
+        preview_has_more = row_end_idx - row_start_idx == len(fields_list) - 1
+        if preview_has_more:
+            fields_list = fields_list[:-1]
+            row_end_idx -= 1
+
+        if preview_and_create:
+            getXlsFileProcessor().write_to_dsv_gzip(xls_fileobj, result_file_obj, fields_list, parser_options['field_terminator_cleaned'])
+            result_file_obj.close()
+
+        file_obj.close()
+
+    except IOError as ex:
+        msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
+        LOG.exception(msg)
+        raise Exception(msg)
+    except Exception as ex:
+        raise Exception('Delimiter preview error: %s' % unicode(ex))
+
+    parser_options['xls_sheet'] = xls_sheet_selected
+    parser_options['xls_sheet_list'] = sheets
+    parser_options['fields_list'] = fields_list
+    parser_options['preview_start_idx'] = row_start_idx
+    parser_options['preview_end_idx'] = row_end_idx
+    parser_options['preview_has_more'] = preview_has_more
+    parser_options['n_cols'] = len(col_names)
     parser_options['col_names'] = col_names
     return parser_options
 
