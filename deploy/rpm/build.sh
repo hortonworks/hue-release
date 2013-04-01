@@ -7,8 +7,6 @@ export PATH=$PATH:$SRC/apache-maven-3.0.5/bin/
 
 BRANCH=move
 
-find -maxdepth 1 | grep -v sandbox-shared
-
 # remove all src files (except of repository)
 find $SRC -maxdepth 1 | sed "1d" | grep -v "sandbox-shared" | xargs rm -rf
 
@@ -23,7 +21,7 @@ mkdir -p $SRC $OUT
 cd $SRC
 
 [ ! -d $SRC/sandbox-shared ] && git clone git@github.com:/hortonworks/sandbox-shared.git sandbox-shared
-(cd sandbox-shared; git reset --hard HEAD git checkout $BRANCH; git pull origin $BRANCH)
+(cd sandbox-shared; git reset --hard HEAD; git checkout $BRANCH; git pull origin $BRANCH)
 
 #Tutorials stuff
 ( 

@@ -73,6 +73,8 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 /usr/lib/start_scripts/startup_script
 /usr/lib/start_scripts/startup_script_ec2
 
+%config /usr/lib/hue/desktop/desktop.db
+
 
 %pre
 
