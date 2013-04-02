@@ -54,11 +54,11 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
     			  <tr>
       			    <td>${component}</td>
                             % if component == 'tutorials':
-                            <td><div id=${component}>${version}</div></td>
+                            <td><div id="${component}">${version}</div></td>
         		    <td><a href="#" class="btn"
         		    id="updateTutorialsBtn">Update</a></td>
                             % else:
-        		    <td colspan="2"><div id=${component}>${version}</div></td>
+        		    <td colspan="2"><div id="${component}">${version}</div></td>
                             % endif
     			  </tr>
 			  % endfor
@@ -106,31 +106,20 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 			$('#describe-header').hide();
        		$('#update-tutorials-spinner').show();
             $.post("${url("about.views.index")}", function(data){
-            if (data.on_success_url != "")
-            {
-                $('#update-tutorials-msg').text("");
-                //window.location.href = data.on_success_url
-                for (var i=0; i<data.components.length; i++)
-                {
-                    var cur = $('div#' + data.components[i].name);
-                    var curVersion = cur.text();
-                    //alert(curVersion + "|" + data.components[i].version );
-                    if(curVersion != data.components[i].version)
-                    {
-                        $('div#' + data.components[i].name).html(data.components[i].version);
-                        showError("Tutorials were successfully updated to " + data.components[i].version + " version");
-                        window.location.reload(true);
-                        return;
-                    }
-                }
-                if(data.error != ""){
+            if(data.error != ""){
                     showError("Update tutorials failed: " + data.error);
+                }
+            else {
+                var curVersion = $("#tutorials").text();
+                if (data.components.tutorials != curVersion) {
+                    showError("Tutorials were successfully updated to " + data.components.tutorials + " version");
+                    window.location.reload(true);
                 }
                 else{
                     showError("There are no available tutorial updates");
                 }
-                return;
             }
+            
             }, "json");
       });
 	});

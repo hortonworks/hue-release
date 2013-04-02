@@ -30,14 +30,12 @@ LOG = logging.getLogger(__name__)
 
 def index(request):
   if request.method == 'POST':
-    on_success_url = urlresolvers.reverse(index)
     error = ''
     try:
       bash(conf.TUTORIALS_UPDATE_SCRIPT.get())
     except Exception, ex:
       error = unicode(ex)
     result = {
-      'on_success_url': on_success_url,
       'components': _get_components(),
       'error': error
     }
@@ -60,7 +58,7 @@ def _get_components():
     TUTORIAL_VERSION_FILE = os.path.join(conf.TUTORIALS_PATH.get(), 'version')
     try:
       with open(TUTORIAL_VERSION_FILE, 'r') as file_obj:
-        tutorial_version = file_obj.readlines()[0]
+        tutorial_version = file_obj.readlines()[0].strip()
     except IOError, ex:
       tutorial_version = "undefined"
       msg = "Failed to open file '%s': %s" % (TUTORIAL_VERSION_FILE, ex)
