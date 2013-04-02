@@ -49,7 +49,7 @@ class sandbox_rpm {
 
     package { 'hue-tutorials':
         ensure => present,
-        require => [ File['sandbox.repo'], 
+        require => [ File['sandbox.repo'],
                      Package['libxslt'],
                      Package['python-lxml'],
                    ]
@@ -117,7 +117,7 @@ class java_home {
 
 class hdfs_prepare {
       package { "wget":
-        ensure => present,    
+        ensure => present,
       }
 
       file { 'hdfs_prepare.sh':
@@ -125,11 +125,11 @@ class hdfs_prepare {
         content => template("/vagrant/files/scripts/hdfs_prepare.sh"),
       }
 
-      exec { "hdfs_prepare.sh": 
+      exec { "hdfs_prepare.sh":
         command => '/bin/bash /tmp/hdfs_prepare.sh > /var/log/hdfs_start.log',
         require => [File['hdfs_prepare.sh'], Exec["start"]],
         timeout => 0
-      } 
+      }
 }
 
 class sandbox {
@@ -157,7 +157,7 @@ class sandbox {
         content => file("/vagrant/files/jars/hue-plugins-2.2.0-SNAPSHOT.jar"),
     }
 
-    file {"${HUE_HOME}/apps/shell/src/shell/build/setuid":   
+    file {"${HUE_HOME}/apps/shell/src/shell/build/setuid":
         owner => sandbox,
         group => sandbox,
         mode => 4750,
@@ -166,7 +166,7 @@ class sandbox {
 
     exec { 'start':
         command => "/etc/init.d/startup_script start",
-        require => [ File["startHiveserver2.sh"], 
+        require => [ File["startHiveserver2.sh"],
                      File["startMetastore.sh"],
                      File["hue-plugins-2.2.0-SNAPSHOT.jar"],
                      Class[sandbox_rpm],
@@ -195,24 +195,24 @@ class sandbox {
         ensure => installed,
     }
 
-    exec { 'iptables -F':
-        onlyif => "which iptables",
-    }
-
     service { 'iptables':
         ensure => stopped,
         enable => false,
+    }
+
+    exec { 'iptables -F':
         onlyif => "which iptables",
+        require => Service['iptables']
     }
 
     service { 'ip6tables':
         ensure => stopped,
         enable => false,
-        onlyif => "which ip6tables",
     }
 
     exec { 'ip6tables -F':
         onlyif => "which ip6tables",
+        require => Service['ip6tables']
     }
 }
 
