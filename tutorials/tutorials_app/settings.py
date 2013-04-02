@@ -4,7 +4,7 @@ TEMPLATE_DEBUG = DEBUG
 import os
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 
-REQUIRE_REGISTRATION = True
+REQUIRE_REGISTRATION = False
 
 LANDING_PATH = os.path.join('/usr/lib/tutorials', 'sandbox-tutorials')
 
