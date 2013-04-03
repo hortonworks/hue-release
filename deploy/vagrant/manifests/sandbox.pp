@@ -119,12 +119,7 @@ class hdfs_prepare {
       package { "wget":
         ensure => present,
       }
-
-      file {'/usr/lib/hcatalog/share/hcatalog/hcatalog-core.jar':
-        ensure => link,
-        target => "/usr/lib/hive/lib/hcatalog-core.jar",
-        mode => 0755,
-    }
+      
 
       file { 'hdfs_prepare.sh':
         path    => "/tmp/hdfs_prepare.sh",
@@ -143,6 +138,12 @@ class sandbox {
     include sandbox_rpm
     include tutorials
     include hdfs_prepare
+
+    file {"/usr/lib/hive/lib/hcatalog-core.jar":
+        ensure => link,
+        target => "/usr/lib/hcatalog/share/hcatalog/hcatalog-core.jar",
+        mode => 0755,
+      }
 
     file { 'startHiveserver2.sh':
         path    => "/tmp/startHiveserver2.sh",
@@ -174,6 +175,7 @@ class sandbox {
         command => "/etc/init.d/startup_script start",
         require => [ File["startHiveserver2.sh"],
                      File["startMetastore.sh"],
+                     File["/usr/lib/hive/lib/hcatalog-core.jar"],
                      File["hue-plugins-2.2.0-SNAPSHOT.jar"],
                      Class[sandbox_rpm],
                     ],
