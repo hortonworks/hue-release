@@ -60,7 +60,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 %defattr(-,sandbox,sandbox)
 /usr/lib/hue
-%exclude  /usr/lib/hue/desktop/desktop.db
+#%exclude  /usr/lib/hue/desktop/desktop.db
 
 %defattr(600,sandbox,sandbox)
 /home/sandbox/.ssh
@@ -68,7 +68,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %defattr(755,sandbox,sandbox)
 /usr/lib/start_scripts
 
-%config /usr/lib/hue/desktop/desktop.db
+#%config /usr/lib/hue/desktop/desktop.db
 
 
 %pre
