@@ -161,6 +161,19 @@ EOF
 
 patch /usr/lib/hue/desktop/core/src/desktop/auth/views.py < /tmp/auth_views.py.patch
 
+
+# set hue.ini configuration
+function ini_set() {
+    sed -i "s/\($2 *= *\).*/\1$3/" "$1"
+}
+
+HUEINI=/etc/hue/conf/hue.ini
+
+ini_set $HUEINI tutorials_path '\"\/usr\/lib\/sandbox-tutorials\"'
+ini_set $HUEINI tutorials_update_script '"\/usr\/lib\/tutorials\/tutorials_app\/run\/run.sh"'
+ini_set $HUEINI tutorials_installed True
+
+
 chkconfig httpd on
 service httpd start
 
