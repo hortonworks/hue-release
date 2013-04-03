@@ -51,8 +51,6 @@ cp -R ./ $RPM_BUILD_ROOT/usr/lib/start_scripts
 cd $RPM_BUILD_DIR/.ssh
 cp -R ./ $RPM_BUILD_ROOT/home/sandbox/.ssh
 
-mkdir -p $RPM_BUILD_ROOT/etc/init.d/
-cp /etc/init.d/functions $RPM_BUILD_ROOT/etc/init.d/functions
 
 %clean
 rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
@@ -71,7 +69,6 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 /usr/lib/start_scripts
 
 %config /usr/lib/hue/desktop/desktop.db
-%config /etc/init.d/functions
 
 
 %pre
