@@ -120,6 +120,12 @@ class hdfs_prepare {
         ensure => present,
       }
 
+      file {'/usr/lib/hcatalog/share/hcatalog/hcatalog-core.jar':
+        ensure => link,
+        target => "/usr/lib/hive/lib/hcatalog-core.jar",
+        mode => 0755,
+    }
+
       file { 'hdfs_prepare.sh':
         path    => "/tmp/hdfs_prepare.sh",
         content => template("/vagrant/files/scripts/hdfs_prepare.sh"),

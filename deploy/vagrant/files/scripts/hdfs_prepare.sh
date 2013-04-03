@@ -10,6 +10,7 @@ wget -O /tmp/udfs.tar.gz https://www.dropbox.com/s/8wx2pops8xw2kd8/udfs.tar.gz
 cd /tmp
 tar xvf udfs.tar.gz
 chown sandbox udfs
+usermod -a -G users sandbox
 su - sandbox -c "hadoop fs -copyFromLocal /tmp/udfs /tmp/udfs"
 su - sandbox -c "/usr/lib/hue/build/env/bin/hue install_udfs"
 su - sandbox -c "/usr/lib/hue/build/env/bin/hue oozie_setup"
