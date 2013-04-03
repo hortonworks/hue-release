@@ -16,7 +16,7 @@ def update_rpm(branch):
     if not exists('/home/sandbox/rpm-shared/'):
         run('cd /home/sandbox/ && git clone git@github.com:'
             '/hortonworks/sandbox-shared.git rpm-shared')
-    run('cd /home/sandbox/rpm-shared/ && git reset --hard HEAD')
+    run('cd /home/sandbox/rpm-shared/ && git reset --hard HEAD^^')
     run('cd /home/sandbox/rpm-shared/ && git fetch '
         '&& git checkout %s && git pull' % branch)
     sed('/home/sandbox/rpm-shared/deploy/rpm/build.sh', 'Caterpillar', branch)
@@ -68,4 +68,4 @@ def rpm(name="repo", branch="Caterpillar"):
 
 
 def vagrant():
-    local("cd ./vagrant; vagrant destroy -f; vagrant up; vagrant halt; vagrant up")
+    local("cd ./vagrant; vagrant destroy -f; vagrant up")

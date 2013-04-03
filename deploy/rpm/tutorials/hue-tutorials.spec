@@ -41,7 +41,6 @@ cp -R ./ $RPM_BUILD_ROOT/%{prefix}/
 rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 %files
-%{prefix}
 
 %defattr(-,sandbox,sandbox)
 %{prefix}

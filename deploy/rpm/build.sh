@@ -8,7 +8,7 @@ export PATH=$PATH:$SRC/apache-maven-3.0.5/bin/
 BRANCH=Caterpillar
 
 # remove all src files (except of repository)
-find $SRC -maxdepth 1 | sed "1d" | grep -v "sandbox-shared" | grep -v "tutorials-env" | xargs rm -rf
+find $SRC -maxdepth 1 | sed "1d" | grep -v -e "sandbox-shared" -e "tutorials-env" -e "apache-maven-3.0.5" | xargs rm -rf
 
 mkdir -p $SRC $OUT
 
@@ -45,15 +45,16 @@ tar zcf $SRC/tutorials-env.tgz .env
 # Build Hue
 
 
-mkdir -p $SRC/env/usr/lib
-mkdir -p $SRC/env/{$SRC,$OUT}
-
 rm -rf $SRC/hue
 
 cd $SRC
-wget http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz
-tar xvf apache-maven-3.0.5-bin.tar.gz
-rm apache-maven-3.0.5-bin.tar.gz
+
+if [ ! -d "apache-maven-3.0.5" ]; then
+    wget http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz
+    tar xvf apache-maven-3.0.5-bin.tar.gz
+    rm apache-maven-3.0.5-bin.tar.gz
+fi
+
 cd $SRC/sandbox-shared/hue
 PREFIX=$SRC make install
 #Building started ....
