@@ -1,5 +1,5 @@
 %global __os_install_post %{nil}
-%define _unpackaged_files_terminate_build 0
+%define _unpackaged_files_terminate_build 1
 %define _binaries_in_noarch_packages_terminate_build   0
 
 
@@ -59,21 +59,15 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 
 %files
-/etc/init.d/functions
 
 %defattr(-,sandbox,sandbox)
 /usr/lib/hue
-/usr/lib/start_scripts
-/home/sandbox/.ssh
 
 %defattr(600,sandbox,sandbox)
-/home/sandbox/.ssh/id_rsa
-/home/sandbox/.ssh/id_rsa.pub
+/home/sandbox/.ssh
 
 %defattr(755,sandbox,sandbox)
-/usr/lib/start_scripts/hue
-/usr/lib/start_scripts/startup_script
-/usr/lib/start_scripts/startup_script_ec2
+/usr/lib/start_scripts
 
 %config /usr/lib/hue/desktop/desktop.db
 %config /etc/init.d/functions
