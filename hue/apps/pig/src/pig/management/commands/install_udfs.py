@@ -23,8 +23,9 @@ class Command(BaseCommand):
             create_sandbox_user.Command().handle_noargs()
             default_user = User.objects.get(username=DEFAULT_USERNAME.get())
         fs = cluster.get_hdfs()
+        fs.setuser(default_user.username)
         if not fs.exists(UDF_PATH):
-            fs.mkdir(UDF_PATH)
+            fs.mkdir(UDF_PATH, 0777)
 
         for f in args:
           file_name = os.path.split(f)[-1]
@@ -38,4 +39,3 @@ class Command(BaseCommand):
             except UDF.DoesNotExist:
               path = fs.join(UDF_PATH, f)
               UDF.objects.create(url=path, file_name=f, owner=default_user)
-            
