@@ -168,7 +168,7 @@ function ini_set() {
 
 HUEINI=/etc/hue/conf/hue.ini
 
-ini_set $HUEINI tutorials_path '\"\/usr\/lib\/sandbox-tutorials\"'
+ini_set $HUEINI tutorials_path '\"\/usr\/lib\/tutorials\/sandbox-tutorials\"'
 ini_set $HUEINI tutorials_update_script '"\/usr\/lib\/tutorials\/tutorials_app\/run\/run.sh"'
 ini_set $HUEINI tutorials_installed True
 
