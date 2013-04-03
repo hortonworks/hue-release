@@ -297,8 +297,6 @@ ${layout.menubar(section='query')}
     </div>
 </div>
 
-<link rel="stylesheet" href="/static/ext/css/jquery-linedtextarea.css" type="text/css" media="screen" title="no title" charset="utf-8" />
-<script src="/static/ext/js/jquery/plugins/jquery-linedtextarea.js" type="text/javascript" charset="utf-8"></script>
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
 
 <style>
