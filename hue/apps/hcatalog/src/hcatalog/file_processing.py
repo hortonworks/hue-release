@@ -24,6 +24,90 @@ import string
 
 LOG = logging.getLogger(__name__)
 
+
+class IInterval():
+    def __repr__(self):
+        return '(%d, %d)' % (self.start, self.end)
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+
+def intervals_union(intervals):
+
+    if not intervals:
+        return None
+    elif len(intervals) == 1:
+        return intervals
+
+    intervals.sort(key=lambda self: self.start)
+    y = [intervals[0]]
+    for x in intervals[1:]:
+        if y[-1].end < x.start:
+            y.append(x)
+        elif y[-1].end == x.start:
+            y[-1].end = x.end
+    print y
+
+
+def intervals_intersection(intervals):
+
+    if not intervals:
+        return None
+    elif len(intervals) == 1:
+        return intervals
+
+    intervals.sort(key=lambda self: self.start)
+    y = intervals[0]
+    for x in intervals[1:]:
+        if y.end < x.start:
+            return []
+        elif y.end == x.start:
+            y.start = y.end
+        elif y.start <= x.start <= y.end <= x.end:
+            y.start = x.start
+        elif y.start <= x.start and y.end >= x.end:
+            y.start = x.start
+            y.end = x.end
+        elif x.start <= y.start and y.end <= x.end:
+            continue
+        elif x.start <= y.start <= x.end <= y.end:
+            y.end = x.end
+        elif y.start > x.end:
+            return []
+        elif y.start == x.end:
+            y.end = y.start
+
+    return [y]
+
+
+def intervals_subtraction(intervals, subtrahend):
+
+    if not intervals:
+        return None
+    elif len(intervals) == 1:
+        return intervals
+
+    intervals.sort(key=lambda self: self.start)
+    y = []
+    for x in intervals:
+        if subtrahend.end < x.start:
+            y.append(x)
+        elif subtrahend.start < x.start < subtrahend.end < x.end:
+            y.append(IInterval(subtrahend.end, x.end))
+        elif subtrahend.start < x.start and subtrahend.end > x.end:
+            continue
+        elif x.start < subtrahend.start and subtrahend.end < x.end:
+            y.append(IInterval(x.start, subtrahend.start))
+            y.append(IInterval(subtrahend.end, x.end))
+        elif x.start < subtrahend.start < x.end < subtrahend.end:
+            y.append(IInterval(x.start, subtrahend.start))
+        elif subtrahend.start > x.end:
+            y.append(x)
+
+    return y
+
 class ExceptionFSM(Exception):
     """
     FSM Exception class.
@@ -473,10 +557,15 @@ def excel_range_to_indexes(range_str):
                      range_str)
     if range:
         col_min_idx = excel_col_to_index(range.group('col_min_idx'))
-        row_min_idx = int(range.group('row_min_idx')) - 1
+        row_min_idx = int(range.group('row_min_idx'))
+        row_min_idx = row_min_idx - 1 if row_min_idx > 0 else 0
         col_max_idx = excel_col_to_index(range.group('col_max_idx'))
-        row_max_idx = int(range.group('row_max_idx')) - 1
-        return (col_min_idx, row_min_idx), (col_max_idx, row_max_idx)
+        row_max_idx = int(range.group('row_max_idx'))
+        row_max_idx = row_max_idx - 1 if row_max_idx > 0 else 0
+        return ((col_min_idx if col_min_idx < col_max_idx else col_max_idx,
+                row_min_idx if row_min_idx < row_max_idx else row_max_idx),
+                (col_max_idx if col_max_idx >= col_min_idx else col_min_idx,
+                row_max_idx if row_max_idx >= row_min_idx else row_min_idx ))
     return None
 
 
@@ -533,31 +622,37 @@ class XlsFileProcessor():
         for sh_idx in range(xls_fileobj.nsheets):
             if qscope is None or sh_idx == qscope:
                 sh = xls_fileobj.sheet_by_index(sh_idx)
+                if sh.ncols == 0 or sh.nrows == 0:
+                    continue
                 col_min_idx = 0
-                row_min_idx = 0
                 col_max_idx = sh.ncols - 1
+                row_min_idx = 0
                 row_max_idx = sh.nrows - 1
                 if cell_range is not None and cell_range != '' and cell_range != '*':
                     excel_range = excel_range_to_indexes(cell_range)
                     if excel_range is not None:
-                        (col_min_idx, row_min_idx), (col_max_idx, row_max_idx) = excel_range
+                        (new_col_min_idx, new_row_min_idx), (new_col_max_idx, new_row_max_idx) = excel_range
+                        col_intersection = intervals_intersection([IInterval(col_min_idx, col_max_idx),
+                                                                   IInterval(new_col_min_idx, new_col_max_idx)])
+                        row_intersection = intervals_intersection([IInterval(row_min_idx, row_max_idx),
+                                                                   IInterval(new_row_min_idx, new_row_max_idx)])
+                        if not col_intersection or not row_intersection:
+                            continue
+                        else:
+                            col_min_idx = col_intersection[0].start
+                            col_max_idx = col_intersection[0].end
+                            row_min_idx = row_intersection[0].start
+                            row_max_idx = row_intersection[0].end
 
                 if row_start_idx is not None and row_end_idx is not None:
-                    row_min_idx_cp = row_min_idx
-                    row_max_idx_cp = row_max_idx
-                    if 0 <= row_start_idx <= row_max_idx - row_min_idx:
-                        row_min_idx_cp = row_min_idx + row_start_idx
-                    elif row_start_idx > row_max_idx - row_min_idx:
-                        row_min_idx_cp = None
-                    if 0 <= row_end_idx <= row_max_idx - row_min_idx:
-                        row_max_idx_cp = row_min_idx + row_end_idx
-                    elif row_end_idx > row_max_idx - row_min_idx:
-                        row_max_idx_cp = row_max_idx
-                    row_min_idx = row_min_idx_cp
-                    row_max_idx = row_max_idx_cp
-
-                if row_min_idx is None or row_max_idx is None:
-                    return data
+                    row_intersection = intervals_intersection([IInterval(row_min_idx, row_max_idx),
+                                                               IInterval(row_min_idx + row_start_idx,
+                                                                         row_min_idx + row_end_idx)])
+                    if not row_intersection:
+                        continue
+                    else:
+                        row_min_idx = row_intersection[0].start
+                        row_max_idx = row_intersection[0].end
 
                 for rowx in range(row_min_idx, row_max_idx + 1):
                     row = []

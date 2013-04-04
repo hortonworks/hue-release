@@ -208,12 +208,12 @@ ${layout.menubar(section='tables')}
                                             ${comps.bootstrapLabel(table_form["xls_cell_range"])}
                                             <div class="controls">
                                                 ${comps.field(table_form["xls_cell_range"], attrs=dict(placeholder=_('e.g. A1:D30'),))}
-
+                                                <span class="help-inline error-inline hide">${_('Cell range must be in excel format (e.g. A1:D30). You could leave this parameter empty to match all cells.')}</span>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                    </td><span class="help-inline error-inline hide">${_('Cell range must be in excel format \'e.g. A1:D30\'. You could leave this parameter empty to match all cells.')}</span>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>
@@ -233,7 +233,7 @@ ${layout.menubar(section='tables')}
                         <div id="preview-div">
                             <div class="alert alert-info">${_('Table preview')}</div>
                             <div class="scrollable"></div>
-                            <div class="pagination pull-right">
+                            <div class="pagination pull-right" id="preview-pagination">
                                 <ul>
                                     <li id="submit-preview-begin" class="prev"><a title="${_('Beginning of List')}" href="javascript:void(0)">&larr; ${_('Beginning of List')}</a></li>
                                     <li id="submit-preview-next"><a title="${_('Next page')}" href= "javascript:void(0)">${_('Next Page')} &rarr;</a></li>
@@ -361,29 +361,30 @@ ${layout.menubar(section='tables')}
 
 <script type="text/javascript" charset="utf-8">
 
+var PreviewType = {"preview": 0, "preview_next": 1, "preview_beginning":2};
+var FileType = {"csv": "csv", "xls": "xls"};
+
+var tableList = [];
+var previewStartIdx = 0;
+var previewEndIdx = 0;
 var filePath = "";
 function reactOnFilePathChange(newPath) {
     ##    if(filePath !== newPath)
         {
         filePath = newPath;
-        var ext = filePath.toLowerCase().split('.').pop();
-        if (ext == "csv" || ext == "tsv") {
-            $("#id_table-file_type").val("csv");
+        if (filePath.indexOf(".csv") != -1 || filePath.indexOf(".tsv") != -1 ||
+                filePath.indexOf(".dsv") != -1 || filePath.indexOf(".txt") != -1 ) {
+            $("#id_table-file_type").val(FileType.csv);
         }
-        else if (ext == "xls" || ext == "xlsx") {
-            $("#id_table-file_type").val("xls");
+        else if (filePath.indexOf(".xls") != -1 || filePath.indexOf(".xlsx") != -1) {
+            $("#id_table-file_type").val(FileType.xls);
         }
         else {
-            $("#id_table-file_type").val("undef");
+            $("#id_table-file_type").val(FileType.csv);
         }
         $("#id_table-file_type").change();
     }
 }
-
-var tableList = [];
-var previewStartIdx = 0;
-var previewEndIdx = 0;
-var PreviewType = {"preview": 0, "preview_next": 1, "preview_beginning":2};
 
 $(document).ready(function () {
     $(document).resize()
@@ -443,13 +444,15 @@ $(document).ready(function () {
 
     $("#id_table-file_type").change(function () {
         $("#preview-div").hide();
-        if ($(this).val() == "csv") {
+        if ($(this).val() == FileType.csv) {
             $("div.well#div-file-selector").addClass("div-file-selector");
             $("#file-options-xls").hide();
+            $("#preview-pagination").hide();
             $("#file-options-csv").show();
         }
         else if ($(this).val() == "xls") {
             $("#file-options-csv").hide();
+            $("#preview-pagination").show();
             $("#file-options-xls").show();
             $("div.well#div-file-selector").addClass("div-file-selector");
         }
@@ -458,7 +461,7 @@ $(document).ready(function () {
             $("div.well#div-file-selector").removeClass("div-file-selector");
         }
     });
-    $("#id_table-file_type").val("csv");
+    $("#id_table-file_type").val(FileType.csv);
     $("#id_table-file_type").change();
 
 % if error is not None:
@@ -716,10 +719,10 @@ $(document).ready(function () {
             hideFieldError(filePath);
         }
 
-        var fileType = $("input[name='table-file_type']");
-        if(fileType.val() == 'csv') {
+        var fileType = $("select[name='table-file_type']");
+        if(fileType.val() == FileType.xls) {
             var cellRange = $("input[name='table-xls_cell_range']");
-            if (cellRange.length > 0 && cellRange.match(/[a-zA-Z]+\d+:[a-zA-Z]+\d+/) == undefined) {
+            if (cellRange.val().length > 0 && cellRange.val().match(/^[a-zA-Z]+\d+:[a-zA-Z]+\d+$/) == undefined) {
                 showFieldError(cellRange);
                 isValid = false;
             }
