@@ -27,3 +27,5 @@ tutorials/tutorials_app/db/db_version.txt
 local_settings.py
 tutorials/tutorials_app/run/git_files/
 dependency-reduced-pom.xml
+
+*.ova
