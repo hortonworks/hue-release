@@ -63,7 +63,7 @@ from django.utils.translation import ugettext as _
         <div class="row">
             <div class="span4 offset4">
                 %if credentials:
-                    <div class="alert alert-info">username: ${credentials['user']<br> password: ${credentials['pass']}</div>
+                    <div class="alert alert-info">username: ${credentials['user']}<br> password: ${credentials['pass']}</div>
                 %endif
 
                 <form method="POST" action="${action}" class="well">

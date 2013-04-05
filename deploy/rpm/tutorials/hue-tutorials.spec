@@ -55,6 +55,9 @@ chown -R sandbox:sandbox /usr/lib/tutorials
 
 sudo -u sandbox -s -- <<END_OF_SANDBOX
 
+echo '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/single_user_mode
+echo '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/show_credentials
+
 cd /usr/lib/tutorials/
 echo "clonning tutorials ..."
 git clone git@github.com:hortonworks/sandbox-tutorials.git
@@ -124,9 +127,6 @@ EOF
 
 patch $HUE/desktop/core/src/desktop/templates/common_header.mako < /tmp/common_header.mako.patch
 
-
-cat '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/single_user_mode
-cat '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/show_credentials
 
 # set hue.ini configuration
 function ini_set() {
