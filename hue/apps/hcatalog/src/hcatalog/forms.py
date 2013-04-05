@@ -36,8 +36,8 @@ HIVE_PRIMITIVE_TYPES = \
     ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double")
 
 IMPORT_FILE_TYPE_CHOICES = [
-    ('csv', 'CSV/TSV'),
-    ('xls', 'XLS/XLSX'),
+    ('csv', 'TEXT file'),
+    ('xls', 'XLS/XLSX file'),
     # ('msaccess', 'MS Access'),
 ]
 
@@ -271,7 +271,6 @@ class CreateTableFromFileForm(forms.Form):
     field_terminator = ChoiceOrOtherField(required=False, initial=TERMINATOR_CHOICES[0][0], choices=TERMINATOR_CHOICES)
 
     path = filebrowser.forms.PathField(label="Input File")
-    formatted_path = forms.CharField(widget=forms.HiddenInput, required=False)
 
     # csv/tsv files
     encoding = UnicodeEncodingField()

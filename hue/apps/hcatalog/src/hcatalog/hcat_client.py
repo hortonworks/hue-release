@@ -30,6 +30,9 @@ LOG = logging.getLogger("analitics")
 
 class HCatClient(Templeton):
 
+    def __init__(self, user="sandbox"):
+        self.user = user
+
     def get_databases(self):
         """
         List the databases.

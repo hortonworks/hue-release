@@ -657,7 +657,7 @@ class XlsFileProcessor():
                 for rowx in range(row_min_idx, row_max_idx + 1):
                     row = []
                     for colx in range(col_min_idx, col_max_idx + 1):
-                        # cty = sh.cell_type(rowx, colx)
+                        cty = sh.cell_type(rowx, colx)
                         cval = sh.cell_value(rowx, colx)
                         row.append(cval)
                     data.append(row)

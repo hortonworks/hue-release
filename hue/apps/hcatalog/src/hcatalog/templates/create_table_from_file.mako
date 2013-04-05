@@ -78,7 +78,7 @@ ${layout.menubar(section='tables')}
                                 </tr>
                                 <tr>
                                     <td>
-                                        <div class="control-group">
+                                        <div id="field_terminator-group" class="control-group">
                                             ${comps.bootstrapLabel(table_form["field_terminator"])}
                                             <div class="controls">
                                                 ${comps.field(table_form["field_terminator"], render_default=True)}
@@ -246,7 +246,6 @@ ${layout.menubar(section='tables')}
                     <input id="submit-create" type="submit" name="createTable" class="btn btn-primary disable-feedback"
                            value="${_('Create table')}"/>
                 </div>
-                ${comps.field(table_form["formatted_path"], render_default=True)}
             </form>
         </div>
     </div>
@@ -347,7 +346,7 @@ ${layout.menubar(section='tables')}
         margin-bottom: 5px;
     }
 
-    #action-spinner-create, #action-spinner-preview {
+    #action-spinner-create, #action-spinner-preview, #field_terminator-group {
         display: none;
     }
 
@@ -610,7 +609,6 @@ $(document).ready(function () {
         updateOption("field_terminator_1", options);
         updateOption("delimiter_0", options);
         updateOption("delimiter_1", options);
-        updateOption("formatted_path", options);
         updateListOption("xls_sheet", "xls_sheet_list", options);
         updateOption("xls_sheet", options);
     }
