@@ -576,7 +576,7 @@ $(document).ready(function () {
     });
 
 
-    $("#submit-create").click(function (event) {
+    $('form#mainForm').submit(function (event) {
         if (!validateOnCreateTable()) {
             event.preventDefault();
         }
