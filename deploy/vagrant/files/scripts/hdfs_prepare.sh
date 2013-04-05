@@ -12,6 +12,7 @@ tar xvf udfs.tar.gz
 chown sandbox udfs
 usermod -a -G users sandbox
 su - sandbox -c "hadoop fs -copyFromLocal /tmp/udfs /tmp/udfs"
+su - sandbox -c "hadoop fs -chmod -R 777 /tmp/udfs"
 su - sandbox -c "/usr/lib/hue/build/env/bin/hue install_udfs"
 su - sandbox -c "/usr/lib/hue/build/env/bin/hue oozie_setup"
 su - sandbox -c "/usr/lib/hue/build/env/bin/hue jobsub_setup"
