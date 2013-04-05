@@ -137,6 +137,7 @@ def dt_login(request):
 
 def dt_logout(request, next_page=None):
   """Log out the user"""
+  os.remove("/var/lib/hue/single_user_mode")
   return django.contrib.auth.views.logout(request, next_page)
 
 
