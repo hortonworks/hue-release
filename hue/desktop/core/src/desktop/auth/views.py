@@ -16,11 +16,13 @@
 # limitations under the License.
 
 import logging
+import os
+import json
 
 import django.contrib.auth.views
 from django.core import urlresolvers
 from django.core.exceptions import SuspiciousOperation
-from django.contrib.auth import login, get_backends
+from django.contrib.auth import authenticate, login, get_backends
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.http import HttpResponseRedirect
@@ -36,6 +38,15 @@ from desktop.log.access import access_warn, last_access_map
 
 LOG = logging.getLogger(__name__)
 
+
+SINGLE_USER_MODE = None
+SHOW_CREDENTIALS = None
+
+if os.path.exists("/var/lib/hue/single_user_mode"):
+    SINGLE_USER_MODE = json.load("/var/lib/hue/single_user_mode")
+
+if os.path.exists("/var/lib/hue/show_credentials"):
+    SHOW_CREDENTIALS = json.load("/var/lib/hue/show_credentials")
 
 def get_current_users():
   """Return dictionary of User objects and
@@ -72,18 +83,24 @@ def dt_login(request):
   redirect_to = request.REQUEST.get('next', '/')
   is_first_login_ever = first_login_ever()
 
-  if request.method == 'POST':
+  if SINGLE_USER_MODE or request.method == 'POST':
     # For first login, need to validate user info!
     first_user_form = is_first_login_ever and UserCreationForm(data=request.POST) or None
     first_user = first_user_form and first_user_form.is_valid()
 
     if first_user or not is_first_login_ever:
-      auth_form = AuthenticationForm(data=request.POST)
+      if not SINGLE_USER_MODE: 
+        auth_form = AuthenticationForm(data=request.POST)
 
-      if auth_form.is_valid():
+      if SINGLE_USER_MODE or auth_form.is_valid():
         # Must login by using the AuthenticationForm.
         # It provides 'backends' on the User object.
-        user = auth_form.get_user()
+        if not SINGLE_USER_MODE:
+          user = auth_form.get_user()
+        else:
+          user = authenticate(username=SINGLE_USER_MODE['user'],
+                              password=SINGLE_USER_MODE['pass'])
+
         login(request, user)
 
         if request.session.test_cookie_worked():
@@ -114,6 +131,7 @@ def dt_login(request):
     'next': redirect_to,
     'first_login_ever': is_first_login_ever,
     'login_errors': request.method == 'POST',
+    'credentials': SHOW_CREDENTIALS,
   })
 
 

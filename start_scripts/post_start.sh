@@ -4,7 +4,7 @@
 
 LOG="/var/log/startup_script.log"
 
-python /usr/lib/start_scripts/splash.py
+python /usr/lib/hue/tools/start_scripts/splash.py
 
 (
  nohup sudo -u sandbox bash /usr/lib/tutorials/tutorials_app/run/run.sh

@@ -16,7 +16,7 @@ create /etc/init/tty-splash.conf:
 	exec /sbin/mingetty --autologin root --noclear $TTY
 
 add to ~/.bashrc:
-	[ $(tty) = "/dev/tty1" ] && python /usr/lib/start_scripts/splash.py
+	[ $(tty) = "/dev/tty1" ] && python /usr/lib/hue/tools/start_scripts/splash.py
 
 
 3) pip install sh (in global env)

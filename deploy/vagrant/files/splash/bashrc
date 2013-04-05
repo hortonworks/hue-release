@@ -11,4 +11,4 @@ if [ -f /etc/bashrc ]; then
     . /etc/bashrc
 fi
 
-[[ $(tty) = "/dev/tty1" ]] && bash /usr/lib/start_scripts/post_start.sh
+[[ $(tty) = "/dev/tty1" ]] && bash /usr/lib/hue/tools/start_scripts/post_start.sh

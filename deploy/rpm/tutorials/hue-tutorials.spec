@@ -125,41 +125,8 @@ EOF
 patch $HUE/desktop/core/src/desktop/templates/common_header.mako < /tmp/common_header.mako.patch
 
 
-# Single user mode patch
-
-cat << EOF > /tmp/auth_views.py.patch
-23c23
-< from django.contrib.auth import login, get_backends
----
-> from django.contrib.auth import authenticate, login, get_backends
-38a39,40
-> SINGLE_USER_MODE = True
-> 
-75c77
-<   if request.method == 'POST':
----
->   if SINGLE_USER_MODE or request.method == 'POST':
-81c83,84
-<       auth_form = AuthenticationForm(data=request.POST)
----
->       if not SINGLE_USER_MODE: 
->         auth_form = AuthenticationForm(data=request.POST)
-83c86
-<       if auth_form.is_valid():
----
->       if SINGLE_USER_MODE or auth_form.is_valid():
-86c89,93
-<         user = auth_form.get_user()
----
->         if not SINGLE_USER_MODE:
->           user = auth_form.get_user()
->         else:
->           user = authenticate(username="sandbox", password="1111")
-> 
-EOF
-
-patch /usr/lib/hue/desktop/core/src/desktop/auth/views.py < /tmp/auth_views.py.patch
-
+cat '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/single_user_mode
+cat '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/show_credentials
 
 # set hue.ini configuration
 function ini_set() {

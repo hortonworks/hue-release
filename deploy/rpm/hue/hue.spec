@@ -39,14 +39,16 @@ Hue
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/usr/lib/{hue,start_scripts}/
+mkdir -p $RPM_BUILD_ROOT/usr/lib/hue/
+mkdir -p $RPM_BUILD_ROOT/var/lib/hue/
 mkdir -p $RPM_BUILD_ROOT/home/sandbox/.ssh
 
 cd $RPM_BUILD_DIR/hue
 cp -R ./ $RPM_BUILD_ROOT/usr/lib/hue/
 
 cd $RPM_BUILD_DIR/start_scripts
-cp -R ./ $RPM_BUILD_ROOT/usr/lib/start_scripts
+cp -R ./ $RPM_BUILD_ROOT/usr/lib/hue/tools/start_scripts
+mv $RPM_BUILD_ROOT/usr/lib/hue/tools/start_scripts/functions $RPM_BUILD_ROOT/usr/lib/hue/tools/
 
 cd $RPM_BUILD_DIR/.ssh
 cp -R ./ $RPM_BUILD_ROOT/home/sandbox/.ssh
@@ -60,13 +62,15 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 %defattr(-,sandbox,sandbox)
 /usr/lib/hue
-#%exclude  /usr/lib/hue/desktop/desktop.db
+%exclude  /usr/lib/hue/tools/start_scripts
+
+%dir /var/lib/hue
 
 %defattr(600,sandbox,sandbox)
 /home/sandbox/.ssh
 
 %defattr(755,sandbox,sandbox)
-/usr/lib/start_scripts
+/usr/lib/hue/tools/start_scripts
 
 #%config /usr/lib/hue/desktop/desktop.db
 
@@ -92,15 +96,15 @@ sudo -u sandbox mkdir /usr/lib/hue/logs
 cd /usr/lib/hue
 mv desktop/libs/hadoop/java-lib/hue-plugins-*.jar /usr/lib/hadoop/lib/
 
-ln -sf /usr/lib/start_scripts/ambari /etc/init.d/ambari
+ln -sf /usr/lib/hue/tools/start_scripts/ambari /etc/init.d/ambari
 chkconfig --add ambari
 chkconfig ambari off
 
-ln -sf /usr/lib/start_scripts/startup_script /etc/init.d/startup_script
+ln -sf /usr/lib/hue/tools/start_scripts/startup_script /etc/init.d/startup_script
 chkconfig --add startup_script
 chkconfig --levels 3 startup_script on
 
-ln -sf /usr/lib/start_scripts/hue /etc/init.d/hue
+ln -sf /usr/lib/hue/tools/start_scripts/hue /etc/init.d/hue
 chkconfig --add hue
 chkconfig --levels 3 hue on
 
