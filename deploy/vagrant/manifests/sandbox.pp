@@ -195,7 +195,7 @@ class sandbox {
 
     file {'/root/start_ambari.sh':
         ensure => link,
-        target => "/usr/lib/start_scripts/start_ambari.sh",
+        target => "/usr/lib/hue/tools/start_scripts/start_ambari.sh",
         mode => 0755,
     }
 

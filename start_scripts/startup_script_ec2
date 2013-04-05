@@ -3,7 +3,7 @@
 # chkconfig: 5 98 1
 # description: startup script
 
-SCRIPTS_PATH="/usr/lib/start_scripts"
+SCRIPTS_PATH="/usr/lib/hue/tools/start_scripts"
 NAME="startup_script"
 LOG="/var/log/startup_script.log"
 
@@ -56,8 +56,6 @@ start)
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
     cd /usr/lib/hue
     /etc/init.d/supervisord start >> $LOG 2>&1
-    
-    #open -c 1 -f -- python /usr/lib/start_scripts/splash.py
 ;;
 stop)
     date >> $LOG

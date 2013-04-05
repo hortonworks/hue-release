@@ -1,7 +1,7 @@
 #!/bin/bash
 
 touch /root/.start_ambari
-make --makefile /usr/lib/start_scripts/start_deps.mf -B Ambari -j -i
+make --makefile /usr/lib/hue/tools/start_scripts/start_deps.mf -B Ambari -j -i
 
 echo "======================================"
 echo

@@ -87,6 +87,6 @@ chkconfig --levels 3 httpd on
 
 echo "Start scripts:"
 echo
-ln -s /usr/lib/start_scripts/startup_script /etc/init.d/startup_script
+ln -s /usr/lib/hue/tools/start_scripts/startup_script /etc/init.d/startup_script
 chkconfig --add startup_script
 chkconfig --levels 3 startup_script on

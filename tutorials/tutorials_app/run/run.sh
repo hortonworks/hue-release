@@ -2,7 +2,7 @@
 
 set -e
 
-source /usr/lib/start_scripts/consts.sh
+source /usr/lib/hue/tools/start_scripts/consts.sh
 
 PYTHON=/usr/lib/tutorials/.env/bin/python
 

@@ -10,7 +10,7 @@ LANDING_PATH = os.path.join('/usr/lib/tutorials', 'sandbox-tutorials')
 
 USERINFO_FILE_PATH = os.path.join('/usr/lib/tutorials', 'user_info.dat')
 
-START_SCRIPTS = os.path.join('/usr/lib', 'start_scripts')
+START_SCRIPTS = os.path.join('/usr/lib/hue/tools', 'start_scripts')
 
 HUE_PATH = os.path.join('/usr/lib', 'hue')
 
