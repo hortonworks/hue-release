@@ -40,7 +40,7 @@ Hue
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/usr/lib/hue/
-mkdir -p $RPM_BUILD_ROOT/var/lib/hue/
+mkdir -p $RPM_BUILD_ROOT/var/lib/hue/tools
 mkdir -p $RPM_BUILD_ROOT/home/sandbox/.ssh
 
 cd $RPM_BUILD_DIR/hue
