@@ -17,7 +17,7 @@ AutoReqProv: no
 
 provides: hue-tutorials
 
-requires: python >= 2.6, supervisor, httpd, git
+requires: python >= 2.6, httpd, git
 requires: hue
 
 %description
@@ -72,23 +72,6 @@ sudo -u sandbox bash %{prefix}/tutorials_app/run/run.sh
 
 
 
-if [ `</etc/supervisord.conf grep 'tutorial\]'` ]; then
-    echo "Already set up in supervisord.conf"
-else
-    echo "Add to supervisord.conf"
-    cat << EOF >>/etc/supervisord.conf
-[program:hue_tutorial]
-command=/usr/lib/tutorials/.env/bin/python /usr/lib/tutorials/manage.py  run_gunicorn 0:8888
-autostart=true              ; start at supervisord start (default: true)
-autorestart=true            ; retstart at unexpected quit (default: true)
-user=sandbox                   ; setuid to this UNIX account to run the program
-log_stderr=true             ; if true, log program stderr (def false)
-logfile=/usr/lib/tutorials/tut.log    ; child log path, use NONE for none; default AUTO
-
-EOF
-
-fi
-
 #Proxy to 8888 port
 HTTPD_CONF=/etc/httpd/conf/httpd.conf
 
@@ -139,11 +122,12 @@ ini_set $HUEINI tutorials_path '\"\/usr\/lib\/tutorials\/sandbox-tutorials\"'
 ini_set $HUEINI tutorials_update_script '"\/usr\/lib\/tutorials\/tutorials_app\/run\/run.sh"'
 ini_set $HUEINI tutorials_installed True
 
+ln -sf /usr/lib/hue/tools/start_scripts/tutorials /etc/init.d/tutorials
+chkconfig --add tutorials
+chkconfig tutorials on
 
 chkconfig httpd on
 service httpd start
-
-/etc/init.d/supervisord restart
 
 
 %postun
