@@ -36,7 +36,7 @@
     %   else:
 ,\
     %   endif
-{"name": "${col["column_name"]|n}", "type": "${col_type(col)|n}"}
+{"name": "`${col["column_name"]|n}`", "type": "${col_type(col)|n}"}
 % endfor
 ]
 </%def>\
