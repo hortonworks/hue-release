@@ -84,6 +84,7 @@ parse_args() {
 
 hue_start() {
         chown  /usr/lib/hue $USER:$GROUP -R
+        chown  /var/lib/hue $USER:$GROUP -R
         ini_set $HUEINI server_user $USER
         ini_set $HUEINI server_group $GROUP
 
