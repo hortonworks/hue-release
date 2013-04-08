@@ -163,7 +163,7 @@ hue_restart() {
 ACTION="$1"
 
 shift
-parse_args
+parse_args $@
 
 case "$ACTION" in
     start)

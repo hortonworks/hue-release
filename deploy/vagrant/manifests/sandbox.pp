@@ -47,12 +47,26 @@ class sandbox_rpm {
         require => File['resolv.conf'],
     }
 
-    package { 'hue-tutorials':
-        ensure => present,
+    exec { 'yum-cache':
+        command => "yum clean all --disablerepo='*' --enablerepo='sandbox'",
+    }
+
+    package { 'hue':
+        ensure => latest,
         require => [ File['sandbox.repo'],
                      Package['libxslt'],
                      Package['python-lxml'],
-                   ]
+                     Exec['yum-cache'],
+                   ],
+    }
+
+    package { 'hue-tutorials':
+        ensure => latest,
+        require => [ File['sandbox.repo'],
+                     Package['libxslt'],
+                     Package['python-lxml'],
+                     Exec['yum-cache'],
+                   ],
     }
 }
 
@@ -89,7 +103,7 @@ class splash {
     include splash_opts
 
     exec { 'splash':
-        command => "initctl stop tty TTY=/dev/tty1; initctl start tty-splash TTY=/dev/tty1",
+        command => "initctl stop tty TTY=/dev/tty1; initctl start tty-splash TTY=/dev/tty1; true",
         require => [Class["splash_opts"],
                     Class["sandbox"] ],
     }
@@ -102,6 +116,13 @@ class tutorials {
     service { "httpd":
         ensure => running,
         require => [ Class[sandbox_rpm], ],
+    }
+
+    file { 'apache-hue.conf':
+        path    => "/etc/httpd/conf.d/hue.conf",
+        content => template("/vagrant/files/apache-hue.conf"),
+        ensure  => file,
+        notify  => Service['httpd'],
     }
 }
 
@@ -172,7 +193,7 @@ class sandbox {
     }
 
     exec { 'start':
-        command => "/etc/init.d/startup_script start",
+        command => "/etc/init.d/startup_script restart",
         require => [ File["startHiveserver2.sh"],
                      File["startMetastore.sh"],
                      File["/usr/lib/hive/lib/hcatalog-core.jar"],
@@ -181,13 +202,13 @@ class sandbox {
                     ],
     }
 
-    service { "supervisord":
+    service { "hue":
         ensure => running,
-        require => [ Class[tutorials],
+        require => [ Class[sandbox_rpm],
                      Exec[start] ],
     }
 
-    service { "hue":
+    service { "tutorials":
         ensure => running,
         require => [ Class[sandbox_rpm],
                      Exec[start] ],

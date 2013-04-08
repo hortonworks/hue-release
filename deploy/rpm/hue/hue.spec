@@ -6,7 +6,7 @@
 Summary: Hue
 Name: hue
 Version: 1.2.1
-Release: 4
+Release: 5
 License: Apache License, Version 2.0
 Group: Development/Libraries
 BuildArch: noarch
@@ -16,7 +16,7 @@ Source2: .ssh.tar.gz
 #Source3: apache-maven-3.0.4-bin.tar.gz
 
 
-Requires: wget, sudo, supervisor, libxslt, python-lxml
+Requires: wget, sudo, libxslt, python-lxml
 
 provides: hue
 
@@ -89,7 +89,7 @@ END_OF_SANDBOX
 (
 chmod -R 755 /usr/lib/hue/tools/start_scripts
 
-sudo -u sandbox mkdir /usr/lib/hue/logs
+sudo -u sandbox mkdir -p /usr/lib/hue/logs
 
 cd /usr/lib/hue
 mv desktop/libs/hadoop/java-lib/hue-plugins-*.jar /usr/lib/hadoop/lib/
@@ -111,9 +111,10 @@ chkconfig --levels 3 hue on
 #pip install lxml --upgrade
 
 
-mkdir /etc/hue
-mv /usr/lib/hue/desktop/conf /etc/hue/
-ln -s /etc/hue/conf /usr/lib/hue/desktop/
+mkdir -p /etc/hue
+[ ! -d /etc/hue/ ] && mv /usr/lib/hue/desktop/conf /etc/hue/ && \
+    ln -s /etc/hue/conf /usr/lib/hue/desktop/
+
 
 
 ) | tee ~/sandbox-install.log
