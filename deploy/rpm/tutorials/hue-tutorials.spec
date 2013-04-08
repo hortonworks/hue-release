@@ -45,6 +45,8 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %defattr(-,sandbox,sandbox)
 %{prefix}
 
+%config(noreplace) /usr/lib/tutorials/tutorials_app/db/lessons.db
+
 
 %pre
 

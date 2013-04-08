@@ -7,6 +7,8 @@
 SCRIPTS_PATH="/usr/lib/hue/tools/start_scripts"
 source $SCRIPTS_PATH/consts.sh
 
+
+DAEMON_PATH="$TUTORIALS_HOME/.env/bin"
 DAEMON="$TUTORIALS_HOME/.env/bin/python $TUTORIALS_HOME/manage.py  run_gunicorn 0:8888"
 
 NAME=tutorials
