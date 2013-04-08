@@ -70,7 +70,8 @@ END_OF_SANDBOX
 
 %post
 
-[ ! -f /usr/lib/tutorials/tutorials_app/db/lessons.db ] && sudo -u sandbox bash %{prefix}/tutorials_app/run/run.sh
+rm -f %{prefix}/tutorials_app/db/db_version.txt
+sudo -u sandbox bash %{prefix}/tutorials_app/run/run.sh
 
 
 TUTORIALS="/usr/lib/tutorials"
