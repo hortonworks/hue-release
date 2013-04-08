@@ -20,7 +20,6 @@ def update_rpm(branch):
     run('cd /home/sandbox/rpm-shared/ && git fetch '
         '&& git checkout %s && git pull' % branch)
     sed('/home/sandbox/rpm-shared/deploy/rpm/build.sh', 'Caterpillar', branch)
-    #sed('/home/sandbox/rpm-shared/deploy/rpm/build.sh', '# export GIT_SSH', 'export GIT_SSH')
 
 
 def build_rpm(name='repo'):
