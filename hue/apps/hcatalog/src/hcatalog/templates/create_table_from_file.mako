@@ -770,9 +770,11 @@ $(document).ready(function () {
     }
 
     function hideFieldError(field) {
-        if (!(field.nextAll(".error-inline").hasClass("hide"))) {
-            field.nextAll(".error-inline").addClass("hide");
-        }
+        field.nextAll(".error-inline").each(function() {
+            if(!($(this).hasClass("hide"))) {
+                $(this).addClass("hide");
+            }
+        });
     }
 
     function showSecondFieldError(field) {
