@@ -159,14 +159,10 @@ class sandbox {
         mode  => 755,
     }
 
-    file { 'hue-plugins-2.2.0-SNAPSHOT.jar':
-        path    => "/usr/lib/hadoop/lib/hue-plugins-2.2.0-SNAPSHOT.jar",
-        content => file("/vagrant/files/jars/hue-plugins-2.2.0-SNAPSHOT.jar"),
-    }
-
+    
     file {"${HUE_HOME}/apps/shell/src/shell/build/setuid":
         owner => sandbox,
-        group => sandbox,
+        group => users,
         mode => 4750,
         require => [Class[sandbox_rpm]],
     }
@@ -176,7 +172,6 @@ class sandbox {
         require => [ File["startHiveserver2.sh"],
                      File["startMetastore.sh"],
                      File["/usr/lib/hive/lib/hcatalog-core.jar"],
-                     File["hue-plugins-2.2.0-SNAPSHOT.jar"],
                      Class[sandbox_rpm],
                     ],
     }
