@@ -45,8 +45,6 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %defattr(-,sandbox,sandbox)
 %{prefix}
 
-%config(noreplace) /usr/lib/tutorials/tutorials_app/db/lessons.db
-
 
 %pre
 
@@ -72,7 +70,7 @@ END_OF_SANDBOX
 
 %post
 
-sudo -u sandbox bash %{prefix}/tutorials_app/run/run.sh
+[ ! -f /usr/lib/tutorials/tutorials_app/db/lessons.db ] && sudo -u sandbox bash %{prefix}/tutorials_app/run/run.sh
 
 
 TUTORIALS="/usr/lib/tutorials"
