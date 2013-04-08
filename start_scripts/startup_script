@@ -26,9 +26,6 @@ function restart() {
 case "$1" in
 start)
     printf "%-50s\n" "Starting $NAME..." | tee -a $LOG
-    
-    mkdir /var/www/landing 2> /dev/null
-    mount --bind /usr/lib/sandbox-tutorials /var/www/landing
 
     echo "" > /etc/resolv.conf
     ethtool -K eth0 tso off
@@ -70,7 +67,6 @@ start)
     sudo -u hdfs hadoop dfsadmin -safemode leave
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
-    /etc/init.d/supervisord start >> $LOG 2>&1
     
     echo 0 > /proc/sys/kernel/hung_task_timeout_secs
 
@@ -81,11 +77,11 @@ start)
 stop)
     date >> $LOG
     bash $SCRIPTS_PATH/stop.sh >> $LOG 2>&1
-    /etc/init.d/supervisord stop >> $LOG 2>&1
 ;;
 
 restart)
-    restart -r
+    $0 stop
+    $0 start
 ;;
 
 *)

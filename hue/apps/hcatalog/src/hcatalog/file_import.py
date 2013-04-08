@@ -387,10 +387,14 @@ def _xls_file_preview(fs, parser_options):
             row_end_idx -= 1
 
         if preview_and_create:
+            fields_list_start = 1 if parser_options['xls_read_column_headers'] else 0
+            fields_list = fields_list[fields_list_start:]
             get_xls_file_processor().write_to_dsv_gzip(xls_fileobj, result_file_obj, fields_list, parser_options['field_terminator_cleaned'])
             result_file_obj.close()
 
         file_obj.close()
+
+        auto_column_types = HiveTypeAutoDefine().defineColumnTypes(fields_list[:IMPORT_COLUMN_AUTO_NLINES])
 
     except IOError as ex:
         msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
@@ -407,6 +411,7 @@ def _xls_file_preview(fs, parser_options):
     parser_options['preview_has_more'] = preview_has_more
     parser_options['n_cols'] = len(col_names)
     parser_options['col_names'] = col_names
+    parser_options['auto_column_types'] = auto_column_types
     return parser_options
 
 
@@ -619,19 +624,19 @@ class HiveTypeAutoDefine(object):
     def isIntHiveBigint(self, intVal):
         return -2**63 <= intVal <= 2**63 - 1
 
-    def defineFieldTypeIdx(self, strVal):
-        if self.isStrFloatingPointValue(strVal):
-            return HIVE_DOUBLE_IDX
-        elif self.isStrIntegerValue(strVal):
+    def defineFieldTypeIdx(self, strVal, min_int_type=HIVE_TINYINT_IDX):
+        if self.isStrIntegerValue(strVal):
             intVal = int(strVal)
-            if self.isIntHiveTinyint(intVal):
+            if HIVE_TINYINT_IDX >= min_int_type and self.isIntHiveTinyint(intVal):
                 return HIVE_TINYINT_IDX
-            elif self.isIntHiveSmallint(intVal):
+            elif HIVE_SMALLINT_IDX >= min_int_type and self.isIntHiveSmallint(intVal):
                 return HIVE_SMALLINT_IDX
-            elif self.isIntHiveInt(intVal):
+            elif HIVE_INT_IDX >= min_int_type and self.isIntHiveInt(intVal):
                 return HIVE_INT_IDX
-            elif self.isIntHiveBigint(intVal):
+            elif HIVE_BIGINT_IDX >= min_int_type and self.isIntHiveBigint(intVal):
                 return HIVE_BIGINT_IDX
+        elif self.isStrFloatingPointValue(strVal):
+            return HIVE_DOUBLE_IDX
         elif self.isStrBooleanValue(strVal):
             return HIVE_BOOLEAN_IDX
         return HIVE_STRING_IDX
@@ -639,7 +644,7 @@ class HiveTypeAutoDefine(object):
     def defineFieldType(self, strVal):
         return HIVE_PRIMITIVE_TYPES[self.defineFieldTypeIdx(strVal)]
 
-    def defineColumnTypes(self, matrix):
+    def defineColumnTypes(self, matrix, min_int_type=HIVE_INT_IDX):
         column_types = []
         for row in matrix:
             if len(row) > len(column_types):
@@ -647,7 +652,7 @@ class HiveTypeAutoDefine(object):
                     column_types.append([0] * HIVE_PRIMITIVES_LEN)
             for i, field in enumerate(row):
                 if field:
-                    column_types[i][self.defineFieldTypeIdx(field)] += 1
+                    column_types[i][self.defineFieldTypeIdx(str(field), min_int_type=min_int_type)] += 1
         column_types = [HIVE_PRIMITIVE_TYPES[HIVE_STRING_IDX]
                         if types_list[HIVE_STRING_IDX] > 0
                         else HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))]

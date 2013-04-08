@@ -659,6 +659,9 @@ class XlsFileProcessor():
                     for colx in range(col_min_idx, col_max_idx + 1):
                         cty = sh.cell_type(rowx, colx)
                         cval = sh.cell_value(rowx, colx)
+                        if xlrd.XL_CELL_NUMBER == cty:
+                            if 0 == cval - int(cval):
+                                cval = int(cval)
                         row.append(cval)
                     data.append(row)
         return data

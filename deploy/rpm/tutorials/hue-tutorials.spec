@@ -6,7 +6,7 @@
 Summary: Hue Tutorials
 Name: hue-tutorials
 Version: 1.2.1
-Release: 1
+Release: 3
 License: Apache License, Version 2.0
 Group: Development/Libraries
 BuildArch: noarch
@@ -17,8 +17,8 @@ AutoReqProv: no
 
 provides: hue-tutorials
 
-requires: python >= 2.6, supervisor, httpd, git
-requires: hue
+requires: python >= 2.6, httpd, git
+requires: hue >= 1.2.1-5
 
 %description
 Hue Tutorials
@@ -60,7 +60,9 @@ echo '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/show_credentials
 
 cd /usr/lib/tutorials/
 echo "clonning tutorials ..."
-git clone git@github.com:hortonworks/sandbox-tutorials.git
+[ ! -d sandbox-tutorials ] && git clone git@github.com:hortonworks/sandbox-tutorials.git
+cd sandbox-tutorials
+git reset --hard HEAD && git pull origin master
 
 mkdir -p /usr/lib/hue/logs
 
@@ -69,45 +71,6 @@ END_OF_SANDBOX
 %post
 
 sudo -u sandbox bash %{prefix}/tutorials_app/run/run.sh
-
-
-
-if [ `</etc/supervisord.conf grep 'tutorial\]'` ]; then
-    echo "Already set up in supervisord.conf"
-else
-    echo "Add to supervisord.conf"
-    cat << EOF >>/etc/supervisord.conf
-[program:hue_tutorial]
-command=/usr/lib/tutorials/.env/bin/python /usr/lib/tutorials/manage.py  run_gunicorn 0:8888
-autostart=true              ; start at supervisord start (default: true)
-autorestart=true            ; retstart at unexpected quit (default: true)
-user=sandbox                   ; setuid to this UNIX account to run the program
-log_stderr=true             ; if true, log program stderr (def false)
-logfile=/usr/lib/tutorials/tut.log    ; child log path, use NONE for none; default AUTO
-
-EOF
-
-fi
-
-#Proxy to 8888 port
-HTTPD_CONF=/etc/httpd/conf/httpd.conf
-
-if [ `<$HTTPD_CONF grep "Proxy to tutorials"` ]; then
-    echo "Already configured httpd"
-else
-
-  cat << EOF >>$HTTPD_CONF
-
-# Proxy to tutorials
-ProxyPass /ganglia !
-ProxyPass /nagios !
-ProxyPass /ambarinagios !
-ProxyPass /cgi-bin !
-ProxyPass / http://127.0.0.1:8888/
-ProxyPassReverse / http://127.0.0.1:8888/
-EOF
-
-fi
 
 
 TUTORIALS="/usr/lib/tutorials"
@@ -139,11 +102,12 @@ ini_set $HUEINI tutorials_path '\"\/usr\/lib\/tutorials\/sandbox-tutorials\"'
 ini_set $HUEINI tutorials_update_script '"\/usr\/lib\/tutorials\/tutorials_app\/run\/run.sh"'
 ini_set $HUEINI tutorials_installed True
 
+ln -sf /usr/lib/hue/tools/start_scripts/tutorials /etc/init.d/tutorials
+chkconfig --add tutorials
+chkconfig tutorials on
 
 chkconfig httpd on
 service httpd start
-
-/etc/init.d/supervisord restart
 
 
 %postun
