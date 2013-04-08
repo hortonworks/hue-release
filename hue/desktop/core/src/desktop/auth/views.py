@@ -38,15 +38,22 @@ from desktop.log.access import access_warn, last_access_map
 
 LOG = logging.getLogger(__name__)
 
-
 SINGLE_USER_MODE = None
 SHOW_CREDENTIALS = None
 
-if os.path.exists("/var/lib/hue/single_user_mode"):
-    SINGLE_USER_MODE = json.load("/var/lib/hue/single_user_mode")
 
-if os.path.exists("/var/lib/hue/show_credentials"):
-    SHOW_CREDENTIALS = json.load("/var/lib/hue/show_credentials")
+def reload_config():
+  global SINGLE_USER_MODE, SHOW_CREDENTIALS
+  if os.path.exists("/var/lib/hue/single_user_mode"):
+    SINGLE_USER_MODE = json.load(open("/var/lib/hue/single_user_mode"))
+  else:
+    SINGLE_USER_MODE = None
+
+  if os.path.exists("/var/lib/hue/show_credentials"):
+    SHOW_CREDENTIALS = json.load(open("/var/lib/hue/show_credentials"))
+  else:
+    SHOW_CREDENTIALS = None
+
 
 def get_current_users():
   """Return dictionary of User objects and
@@ -80,6 +87,7 @@ def first_login_ever():
 @login_notrequired
 def dt_login(request):
   """Used by the non-jframe login"""
+  reload_config()
   redirect_to = request.REQUEST.get('next', '/')
   is_first_login_ever = first_login_ever()
 
@@ -137,7 +145,10 @@ def dt_login(request):
 
 def dt_logout(request, next_page=None):
   """Log out the user"""
-  os.remove("/var/lib/hue/single_user_mode")
+  try:
+    os.remove("/var/lib/hue/single_user_mode")
+  except:
+    pass
   return django.contrib.auth.views.logout(request, next_page)
 
 

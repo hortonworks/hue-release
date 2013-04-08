@@ -6,7 +6,7 @@
 Summary: Hue
 Name: hue
 Version: 1.2.1
-Release: 2
+Release: 4
 License: Apache License, Version 2.0
 Group: Development/Libraries
 BuildArch: noarch
@@ -47,7 +47,7 @@ cd $RPM_BUILD_DIR/hue
 cp -R ./ $RPM_BUILD_ROOT/usr/lib/hue/
 
 cd $RPM_BUILD_DIR/start_scripts
-cp -R ./ $RPM_BUILD_ROOT/usr/lib/hue/tools/start_scripts
+cp -R ./ $RPM_BUILD_ROOT/usr/lib/hue/tools/start_scripts/
 mv $RPM_BUILD_ROOT/usr/lib/hue/tools/start_scripts/functions $RPM_BUILD_ROOT/usr/lib/hue/tools/
 
 cd $RPM_BUILD_DIR/.ssh
@@ -62,15 +62,11 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 %defattr(-,sandbox,sandbox)
 /usr/lib/hue
-%exclude  /usr/lib/hue/tools/start_scripts
 
 %dir /var/lib/hue
 
 %defattr(600,sandbox,sandbox)
 /home/sandbox/.ssh
-
-%defattr(755,sandbox,sandbox)
-/usr/lib/hue/tools/start_scripts
 
 #%config /usr/lib/hue/desktop/desktop.db
 
@@ -91,6 +87,8 @@ END_OF_SANDBOX
 %post
 
 (
+chmod -R 755 /usr/lib/hue/tools/start_scripts
+
 sudo -u sandbox mkdir /usr/lib/hue/logs
 
 cd /usr/lib/hue
