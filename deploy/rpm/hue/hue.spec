@@ -6,7 +6,7 @@
 Summary: Hue
 Name: hue
 Version: 1.2.1
-Release: 3
+Release: 4
 License: Apache License, Version 2.0
 Group: Development/Libraries
 BuildArch: noarch

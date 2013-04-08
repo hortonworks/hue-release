@@ -6,7 +6,7 @@
 Summary: Hue Tutorials
 Name: hue-tutorials
 Version: 1.2.1
-Release: 1
+Release: 2
 License: Apache License, Version 2.0
 Group: Development/Libraries
 BuildArch: noarch
