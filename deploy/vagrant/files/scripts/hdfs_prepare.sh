@@ -20,5 +20,6 @@ su - sandbox -c "/usr/lib/hue/build/env/bin/hue beeswax_install_examples"
 rm /tmp/udfs.tar.gz
 rm  -rf /tmp/udfs
 touch /root/.hdfs_prepared
+/etc/init.d/hue restart
 )
 exit 0

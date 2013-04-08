@@ -6,7 +6,7 @@
 Summary: Hue Tutorials
 Name: hue-tutorials
 Version: 1.2.1
-Release: 2
+Release: 3
 License: Apache License, Version 2.0
 Group: Development/Libraries
 BuildArch: noarch
@@ -18,7 +18,7 @@ AutoReqProv: no
 provides: hue-tutorials
 
 requires: python >= 2.6, httpd, git
-requires: hue
+requires: hue >= 1.2.1-5
 
 %description
 Hue Tutorials
@@ -45,6 +45,8 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %defattr(-,sandbox,sandbox)
 %{prefix}
 
+%config(noreplace) /usr/lib/tutorials/tutorials_app/db/lessons.db
+
 
 %pre
 
@@ -60,7 +62,9 @@ echo '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/show_credentials
 
 cd /usr/lib/tutorials/
 echo "clonning tutorials ..."
-git clone git@github.com:hortonworks/sandbox-tutorials.git
+[ ! -d sandbox-tutorials ] && git clone git@github.com:hortonworks/sandbox-tutorials.git
+cd sandbox-tutorials
+git reset --hard HEAD && git pull origin master
 
 mkdir -p /usr/lib/hue/logs
 
@@ -69,28 +73,6 @@ END_OF_SANDBOX
 %post
 
 sudo -u sandbox bash %{prefix}/tutorials_app/run/run.sh
-
-
-
-#Proxy to 8888 port
-HTTPD_CONF=/etc/httpd/conf/httpd.conf
-
-if [ `<$HTTPD_CONF grep "Proxy to tutorials"` ]; then
-    echo "Already configured httpd"
-else
-
-  cat << EOF >>$HTTPD_CONF
-
-# Proxy to tutorials
-ProxyPass /ganglia !
-ProxyPass /nagios !
-ProxyPass /ambarinagios !
-ProxyPass /cgi-bin !
-ProxyPass / http://127.0.0.1:8888/
-ProxyPassReverse / http://127.0.0.1:8888/
-EOF
-
-fi
 
 
 TUTORIALS="/usr/lib/tutorials"
