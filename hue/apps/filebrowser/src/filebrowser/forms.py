@@ -17,7 +17,7 @@
 
 from django import forms
 from django.forms import FileField, CharField, BooleanField, Textarea
-from django.forms.formsets import formset_factory, BaseFormSet, ManagementForm
+from django.forms.formsets import formset_factory, BaseFormSet
 
 from desktop.lib import i18n
 from filebrowser.lib import rwx
