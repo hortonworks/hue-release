@@ -1,6 +1,6 @@
 #!/bin/bash
 # Hue
-# chkconfig: 345 98 1
+# chkconfig: 345 99 1
 # description: startup script
 
 . /usr/lib/hue/tools/functions
