@@ -181,13 +181,6 @@ class sandbox {
     }
 
     
-    file {"${HUE_HOME}/apps/shell/src/shell/build/setuid":
-        owner => sandbox,
-        group => users,
-        mode => 4750,
-        require => [Class[sandbox_rpm]],
-    }
-
     exec { 'start':
         command => "/etc/init.d/startup_script restart",
         require => [ File["startHiveserver2.sh"],
