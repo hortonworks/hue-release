@@ -1,6 +1,6 @@
 #!/bin/bash
 # Hue
-# chkconfig: 345 98 1
+# chkconfig: 345 99 1
 # description: startup script
 
 . /usr/lib/hue/tools/functions
@@ -83,8 +83,8 @@ parse_args() {
 }
 
 hue_start() {
-        chown  /usr/lib/hue $USER:$GROUP -R
-        chown  /var/lib/hue $USER:$GROUP -R
+        chown -R $USER:$GROUP /usr/lib/hue 
+        chown -R $USER:$GROUP /var/lib/hue 
         ini_set $HUEINI server_user $USER
         ini_set $HUEINI server_group $GROUP
 

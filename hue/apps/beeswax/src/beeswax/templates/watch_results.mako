@@ -204,32 +204,29 @@ ${layout.menubar(section='query')}
         % if columns:
         <!--- Visualization -->
         <div class="tab-pane" id="visualizations">
-           <textarea id="vis_code" name="code">
-             <script src="/hcatalog/static/js/include.js"></script>
-             <script>
-                var x = "${columns[0]}";
-            /   *Set col name from csv file for x axis*/
-              var y = [
-                      % for col in columns[1:]:
-                        "${col}",
-                      % endfor
-                      ];
-            /*Set col names from csv file for y axis. Can be only integer*/
-
-            var c = new chart(x,y);
-            d3.csv("${download_urls["csv"]}", function(dataset)
-            {
-              dataset.forEach(function(d,i)
-              {
-                c.getData(d,i);
-              });
-              c.setGraph('line',true);
-              /*first options include: 'area', 'stack', 'bar', 'line', and 'scatterplot'.*/
-              /*second option set chart as stack(fasle) or unstack(true)*/
-            });
-            </script>
+        <textarea id="vis_code" name="code"><script>
+var x = "${columns[0]}";
+/*Set col name from csv file for x axis*/
+var y = [
+% for col in columns[1:]:
+"${col}",
+% endfor
+];
+/*Set col names from csv file for y axis. Can be only integer*/
+var c = new chart(x,y);
+d3.csv("${download_urls["csv"]}", function(dataset)
+{
+dataset.forEach(function(d,i)
+{
+c.getData(d,i);
+});
+c.setGraph('line',true);
+/*first options include: 'area', 'stack', 'bar', 'line', and 'scatterplot'.*/
+/*second option set chart as stack(fasle) or unstack(true)*/
+});
+</script>
            </textarea> <br>
-            <iframe id=preview></iframe>
+			<iframe id="preview"></iframe>
 
 
         </div>
@@ -240,7 +237,8 @@ ${layout.menubar(section='query')}
         <script src="/hcatalog/static/js/htmlmixed.js"></script>
         <script src="/hcatalog/static/js/xml.js"></script>
         <script src="/hcatalog/static/js/css.js"></script>
-        <script src="/hcatalog/static/js/javascript.js"></script>        
+        <script src="/hcatalog/static/js/javascript.js"></script>
+
         <!--/Visualization -->
         % else:
          <div class="tab-pane" id="visualizations"></div>

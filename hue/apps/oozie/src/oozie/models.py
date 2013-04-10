@@ -185,7 +185,7 @@ class Job(models.Model):
 
 class WorkflowManager(models.Manager):
   def new_workflow(self, owner):
-    workflow = Workflow(owner=owner, schema_version='uri:oozie:workflow:0.4')
+    workflow = Workflow(owner=owner, schema_version='uri:oozie:workflow:0.3')
 
     kill = Kill(name='kill', workflow=workflow, node_type=Kill.node_type)
     end = End(name='end', workflow=workflow, node_type=End.node_type)

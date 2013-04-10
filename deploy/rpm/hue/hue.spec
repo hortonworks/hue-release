@@ -112,7 +112,7 @@ chkconfig --levels 3 hue on
 
 
 mkdir -p /etc/hue
-[ ! -d /etc/hue/ ] && mv /usr/lib/hue/desktop/conf /etc/hue/ && \
+[ ! -d /etc/hue/conf ] && mv /usr/lib/hue/desktop/conf /etc/hue/ && \
     ln -s /etc/hue/conf /usr/lib/hue/desktop/
 
 
