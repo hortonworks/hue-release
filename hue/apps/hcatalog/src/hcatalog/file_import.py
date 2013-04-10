@@ -127,8 +127,7 @@ def create_from_file(request, database='default'):
                 preview_results = {}
                 preview_table_resp = ''
                 fields_list, n_cols, col_names = ([], 0, [])
-                if True:
-                # try:
+                try:
                     parser_options = _delim_preview_ext(request.fs, [processor.TYPE for processor in FILE_PROCESSORS], parser_options)
                     row_start_index = parser_options['preview_start_idx']
                     if parser_options['xls_read_column_headers']:
@@ -139,17 +138,15 @@ def create_from_file(request, database='default'):
                             row_start_index=row_start_index
                     ))
 
-                # except Exception as ex:
-                #     preview_results['error'] = escapejs(ex.message)
-                # else:
+                except Exception as ex:
+                    preview_results['error'] = escapejs(ex.message)
+                else:
                     preview_results['results'] = preview_table_resp
                     options = {}
 
                     if file_type == hcatalog.forms.IMPORT_FILE_TYPE_CSV_TSV:
                         options["delimiter_0"] = parser_options['delimiter_0']
                         options["delimiter_1"] = parser_options['delimiter_1']
-                    # options["field_terminator_0"] = parser_options['delimiter_0']
-                    # options["field_terminator_1"] = parser_options['delimiter_1']
                     elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_XLS_XLSX:
                         options["xls_sheet"] = parser_options['xls_sheet']
                         options["xls_sheet_list"] = parser_options['xls_sheet_list']
@@ -167,8 +164,7 @@ def create_from_file(request, database='default'):
                     user_def_columns.append(dict(column_name=request.POST.get('cols-%d-column_name' % column_count),
                                         column_type=request.POST.get('cols-%d-column_type' % column_count), ))
                     column_count += 1
-                if True:
-                # try:
+                try:
                     parser_options['preview_and_create'] = True
                     parser_options = _delim_preview_ext(request.fs, [processor.TYPE for processor in FILE_PROCESSORS],
                                                         parser_options)
@@ -200,13 +196,13 @@ def create_from_file(request, database='default'):
                                 request.fs.remove(parser_options['results_path'])
                     return _submit_create_and_load(request, proposed_query, database, table_name, path, parser_options['do_import_data'])
 
-                # except Exception as ex:
-                #     return render("create_table_from_file.mako", request, dict(
-                #         action="#",
-                #         database=database,
-                #         table_form=form.table,
-                #         error=escapejs(ex.message)
-                #     ))
+                except Exception as ex:
+                    return render("create_table_from_file.mako", request, dict(
+                        action="#",
+                        database=database,
+                        table_form=form.table,
+                        error=escapejs(ex.message)
+                    ))
 
             return render("create_table_from_file.mako", request, dict(
                 action="#",
@@ -286,17 +282,16 @@ def _text_file_preview(fs, file_types, parser_options):
                     (os.path.basename(parser_options['path']).replace(' ', ''), datetime.now().strftime("%s"))
         parser_options['results_path'] = results_file_name
 
-    if True:
-    # try:
+    try:
         file_obj = fs.open(parser_options['path'])
         parser_options = _parse_fields(fs, file_obj, file_types, parser_options)
         file_obj.close()
-    # except IOError as ex:
-    #     msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
-    #     LOG.exception(msg)
-    #     raise Exception(msg)
-    # except Exception as ex:
-    #     raise Exception('Delimiter preview error: %s' % unicode(ex))
+    except IOError as ex:
+        msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
+        LOG.exception(msg)
+        raise Exception(msg)
+    except Exception as ex:
+        raise Exception('Delimiter preview error: %s' % unicode(ex))
 
     col_names = []
     fields_list = parser_options['fields_list']
@@ -326,8 +321,7 @@ def _xls_file_preview(fs, parser_options):
                     (os.path.splitext(os.path.basename(parser_options['path'].replace(' ', '')))[0] + '.dsv.gz')
         parser_options['results_path'] = file_name
         result_file_obj = fs.open(file_name, 'w')
-    if True:
-    # try:
+    try:
         file_obj = fs.open(parser_options['path'])
         xls_sheet_selected = parser_options['xls_sheet']
 
@@ -377,12 +371,12 @@ def _xls_file_preview(fs, parser_options):
 
         auto_column_types = HiveTypeAutoDefine().defineColumnTypes(fields_list[:IMPORT_COLUMN_AUTO_NLINES])
 
-    # except IOError as ex:
-    #     msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
-    #     LOG.exception(msg)
-    #     raise Exception(msg)
-    # except Exception as ex:
-    #     raise Exception('Delimiter preview error: %s' % unicode(ex))
+    except IOError as ex:
+        msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
+        LOG.exception(msg)
+        raise Exception(msg)
+    except Exception as ex:
+        raise Exception('Delimiter preview error: %s' % unicode(ex))
 
     parser_options['xls_sheet'] = xls_sheet_selected
     parser_options['xls_sheet_list'] = sheets
@@ -412,8 +406,7 @@ def _text_file_convert(fs, src_file_obj, processor, parser_options):
     if fs.exists(parser_options['results_path']):
         fs.remove(parser_options['results_path'])
     if parser_options['read_column_headers'] or parser_options['apply_excel_dialect']:
-        if True:
-        # try:
+        try:
             csvfile_tmp = fs.open(parser_options['results_path'], 'w')
             src_file_obj.seek(0, hadoopfs.SEEK_SET)
             all_data = processor.read_all_data(src_file_obj,
@@ -441,9 +434,9 @@ def _text_file_convert(fs, src_file_obj, processor, parser_options):
                 parser_options['auto_column_types'] = auto_column_types
             processor.write_all_data(csvfile_tmp, '\n'.join(data_to_store[fields_list_start:]), parser_options['encoding'])
             csvfile_tmp.close()
-        # except IOError as ex:
-        #     msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
-        #     LOG.exception(msg)
+        except IOError as ex:
+            msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
+            LOG.exception(msg)
 
 
 def _text_preview_convert(lines, parser_options):
