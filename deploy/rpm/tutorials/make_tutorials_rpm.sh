@@ -10,13 +10,13 @@ source ../env.sh
 [ -f tutorials-env.tgz ] || exit 1; # .env
 [ -f tutorials.tgz ] || exit 1; # tutorials without virtualenv
 
-cp tutorials-env.tgz ~/rpm/SOURCES/
-cp tutorials.tgz ~/rpm/SOURCES/
+cp tutorials-env.tgz $BB/rpm/SOURCES/
+cp tutorials.tgz $BB/rpm/SOURCES/
 
-cp *.spec ~/rpm/SPECS/
+cp *.spec $BB/rpm/SPECS/
 
 
 # === build ===
 
-rpmbuild -ba ~/rpm/SPECS/sandbox-tutorials-files.spec
-mv ~/rpm/RPMS/noarch/*.rpm ./
+rpmbuild --define "_topdir $BB/rpm" -ba $BB/rpm/SPECS/hue-tutorials.spec
+mv $BB/rpm/RPMS/noarch/*.rpm ./

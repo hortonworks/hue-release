@@ -4,15 +4,15 @@ TEMPLATE_DEBUG = DEBUG
 import os
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 
-REQUIRE_REGISTRATION = True
+REQUIRE_REGISTRATION = False
 
-LANDING_PATH = os.path.join(os.path.expanduser('~sandbox'), 'sandbox-tutorials')
+LANDING_PATH = os.path.join('/usr/lib/tutorials', 'sandbox-tutorials')
 
-USERINFO_FILE_PATH = os.path.join(os.path.expanduser('~sandbox'), 'user_info.dat')
+USERINFO_FILE_PATH = os.path.join('/usr/lib/tutorials', 'user_info.dat')
 
-START_SCRIPTS = os.path.join(os.path.expanduser('~sandbox'), 'start_scripts')
+START_SCRIPTS = os.path.join('/usr/lib/hue/tools', 'start_scripts')
 
-HUE_PATH = os.path.join(os.path.expanduser('~sandbox'), 'hue')
+HUE_PATH = os.path.join('/usr/lib', 'hue')
 
 ADMINS = ()
 
@@ -31,8 +31,8 @@ DATABASES = {
     }
 }
 
-from socket import gethostname,gethostbyname
-CONTENT_FRAME_URL = "http://%s:8000/" % gethostbyname(gethostname()) # HUE URL param
+# from socket import gethostname,gethostbyname
+CONTENT_FRAME_URL = lambda: "http://%s:8000/"  # % gethostbyname(gethostname()) # HUE URL param
 
 DATABASE_ROUTERS = ['tutorials_app.db_routers.AuthRouter']
 

@@ -1,0 +1,62 @@
+# Spanish translations for Hue.
+# Copyright (C) 2012 Cloudera, Inc
+# This file is distributed under the same license as the Hue project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Hue VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2013-01-31 16:56-0800\n"
+"PO-Revision-Date: 2012-11-07 13:05-0800\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
+
+#: src/hadoop/fs/hadoopfs.py:282
+#, python-format
+msgid "%(remote_dst)s already exists. Skipping."
+msgstr "%(remote_dst)s ya existe. Omitiendo."
+
+#: src/hadoop/fs/hadoopfs.py:285
+#, python-format
+msgid "%(remote_dst)s does not exist. Trying to copy."
+msgstr "%(remote_dst)s no existe. Intentando copiar"
+
+#: src/hadoop/fs/hadoopfs.py:295
+#, python-format
+msgid "Copied %s -> %s."
+msgstr "Copiado %s -> %s."
+
+#: src/hadoop/fs/hadoopfs.py:297
+#, python-format
+msgid "Copying %s -> %s failed."
+msgstr "Error al copiar %s -> %s."
+
+#: src/hadoop/fs/hadoopfs.py:302
+#, python-format
+msgid "Skipping %s (not a file)."
+msgstr "Omitiendo %s (no es un archivo)."
+
+#: src/hadoop/fs/hadoopfs.py:338 src/hadoop/fs/hadoopfs.py:341
+#: src/hadoop/fs/hadoopfs.py:344 src/hadoop/fs/hadoopfs.py:347
+#: src/hadoop/fs/hadoopfs.py:350 src/hadoop/fs/hadoopfs.py:353
+#: src/hadoop/fs/hadoopfs.py:356
+#, python-format
+msgid "%(function)s has not been implemented."
+msgstr "%(function)s no se ha implementado."
+
+#: src/hadoop/fs/webhdfs.py:455
+#, python-format
+msgid "File not found: %s"
+msgstr ""
+
+#: src/hadoop/fs/webhdfs.py:471
+#, python-format
+msgid "Destination file %s exists and is not a directory."
+msgstr ""
+

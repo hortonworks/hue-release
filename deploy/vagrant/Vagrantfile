@@ -1,23 +1,28 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-require 'vagrant-vbguest'
+
+#require 'vagrant-vbguest' #Comment since yet incopatible with vagrant 1.1
+#require 'vagrant-hostmaster'
 
 Vagrant::Config.run do |config|
-  config.vm.box = "sandbox"
+  config.vm.box = "sandbox-bianchi"
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
-  # config.vm.box_url = "http://domain.com/path/to/above.box"
+  config.vm.box_url = "http://content.wuala.com/contents/qwerty_nor/SandboxVM/sandbox-bianchi.box?dl=1"
 
   # Boot with a GUI so you can see the screen. (Default is headless)
   config.vm.boot_mode = :gui
 
-  config.vm.network :hostonly, :dhcp, :ip => "192.168.56.1", :adapter => 2
+  config.vm.network :hostonly, "192.168.56.101"
+  config.vm.host_name = "sandbox"
+  config.vm.customize ["modifyvm", :id, "--memory", 3048] #For dev purpose
 
-  config.vm.provision :puppet, :options => "--verbose" do |puppet|
+  config.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
     puppet.manifests_path = "manifests"
     puppet.manifest_file  = "sandbox.pp"
   end
 
   config.vm.customize ["modifyvm", :id, "--rtcuseutc", "on"]
+  config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--groups", "/HortonWorks"]
 end

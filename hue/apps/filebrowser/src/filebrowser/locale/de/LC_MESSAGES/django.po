@@ -1,0 +1,776 @@
+# German translations for Hue.
+# Copyright (C) 2012 Cloudera
+# This file is distributed under the same license as the Hue project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2013-01-31 16:57-0800\n"
+"PO-Revision-Date: 2012-07-30 18:52-0700\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: de <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
+
+#: src/filebrowser/conf.py:25
+msgid "Max snappy decompression size in bytes."
+msgstr ""
+
+#: src/filebrowser/forms.py:62
+msgid "File to edit"
+msgstr "Zu bearbeitende Datei"
+
+#: src/filebrowser/forms.py:63
+msgid "Contents"
+msgstr "Inhalt"
+
+#: src/filebrowser/forms.py:64
+msgid "Encoding"
+msgstr "Kodierung"
+
+#: src/filebrowser/forms.py:74
+msgid "File to rename"
+msgstr "Umzubenennende Datei"
+
+#: src/filebrowser/forms.py:74
+msgid "The file to rename."
+msgstr "Die umzubenennende Datei."
+
+#: src/filebrowser/forms.py:75
+#: src/filebrowser/templates/listdir_components.mako:164
+msgid "New name"
+msgstr "Neuer Name"
+
+#: src/filebrowser/forms.py:75
+msgid "Rename the file to:"
+msgstr "Datei umbenennen in:"
+
+#: src/filebrowser/forms.py:84
+#, fuzzy
+msgid "File to copy"
+msgstr "Zu entfernende Datei"
+
+#: src/filebrowser/forms.py:84
+#, fuzzy
+msgid "The file to copy."
+msgstr "Die umzubenennende Datei."
+
+#: src/filebrowser/forms.py:85
+#, fuzzy
+msgid "Destination location"
+msgstr "Zielpfad"
+
+#: src/filebrowser/forms.py:85
+#, fuzzy
+msgid "Copy the file to:"
+msgstr "Datei umbenennen in:"
+
+#: src/filebrowser/forms.py:95
+msgid "File to Upload"
+msgstr "Hochzuladende Datei"
+
+#: src/filebrowser/forms.py:96 src/filebrowser/forms.py:101
+msgid "Destination Path"
+msgstr "Zielpfad"
+
+#: src/filebrowser/forms.py:96
+msgid "Filename or directory to upload to."
+msgstr "Dateiname oder Verzeichnis, in das hochgeladen werden soll."
+
+#: src/filebrowser/forms.py:100
+msgid "Archive to Upload"
+msgstr "Archiv für Upload"
+
+#: src/filebrowser/forms.py:101
+msgid "Archive to upload to."
+msgstr "Archiv, in das hochgeladen wird."
+
+#: src/filebrowser/forms.py:105
+msgid "File to remove"
+msgstr "Zu entfernende Datei"
+
+#: src/filebrowser/forms.py:109
+msgid "Directory to remove"
+msgstr "Zu entfernendes Verzeichnis"
+
+#: src/filebrowser/forms.py:113
+msgid "Directory to remove (recursively)"
+msgstr "Zu entfernendes Verzeichnis (rekursiv)"
+
+#: src/filebrowser/forms.py:122
+msgid "Path in which to create the directory"
+msgstr "Pfad, in dem das Verzeichnis erstellt werden soll"
+
+#: src/filebrowser/forms.py:123
+#: src/filebrowser/templates/listdir_components.mako:371
+msgid "Directory Name"
+msgstr "Verzeichnisname"
+
+#: src/filebrowser/forms.py:127
+msgid "Path in which to create the file"
+msgstr "Pfad, in dem die Datei erstellt werden soll"
+
+#: src/filebrowser/forms.py:128
+#: src/filebrowser/templates/listdir_components.mako:395
+msgid "File Name"
+msgstr "Dateiname"
+
+#: src/filebrowser/forms.py:132
+msgid "Path to change user/group ownership"
+msgstr "Pfad zur Änderung des Eigentums von Benutzer/Gruppe"
+
+#: src/filebrowser/forms.py:135 src/filebrowser/templates/display.mako:79
+#: src/filebrowser/templates/listdir_components.mako:76
+#: src/filebrowser/templates/listdir_components.mako:195
+#: src/filebrowser/templates/listdir_components.mako:228
+msgid "User"
+msgstr "Benutzer"
+
+#: src/filebrowser/forms.py:136
+msgid "OtherUser"
+msgstr "OtherUser"
+
+#: src/filebrowser/forms.py:137 src/filebrowser/templates/display.mako:81
+#: src/filebrowser/templates/listdir_components.mako:77
+#: src/filebrowser/templates/listdir_components.mako:197
+#: src/filebrowser/templates/listdir_components.mako:229
+msgid "Group"
+msgstr "Gruppe"
+
+#: src/filebrowser/forms.py:138
+msgid "OtherGroup"
+msgstr "OtherGroup"
+
+#: src/filebrowser/forms.py:139
+#: src/filebrowser/templates/listdir_components.mako:200
+#: src/filebrowser/templates/listdir_components.mako:264
+msgid "Recursive"
+msgstr "Rekursiv"
+
+#: src/filebrowser/forms.py:154
+msgid "Path to change permissions"
+msgstr "Pfad zur Änderung von Berechtigungen"
+
+#: src/filebrowser/views.py:107 src/filebrowser/views.py:486
+#: src/filebrowser/views.py:516
+#, python-format
+msgid "File not found: %(path)s"
+msgstr "Datei nicht gefunden: %(path)s"
+
+#: src/filebrowser/views.py:109
+#, python-format
+msgid "'%(path)s' is not a file"
+msgstr "'%(path)s' ist keine Datei"
+
+#: src/filebrowser/views.py:144
+#, python-format
+msgid "Cannot access: %(path)s."
+msgstr "Kann nicht zugreifen auf: %(path)s."
+
+#: src/filebrowser/views.py:146 src/filebrowser/views.py:933
+#, python-format
+msgid ""
+" Note: you are a Hue admin but not a HDFS superuser (which is "
+"\"%(superuser)s\")."
+msgstr ""
+" Hinweis: Sie sind ein Hue-Admin, aber kein HDFS-Superuser (das ist "
+"\"%(superuser)s\")."
+
+#: src/filebrowser/views.py:172
+#, python-format
+msgid "Cannot edit a directory: %(path)s"
+msgstr "Kann ein Verzeichnis nicht bearbeiten: %(path)s"
+
+#: src/filebrowser/views.py:176
+#, python-format
+msgid "File too big to edit: %(path)s"
+msgstr "Datei zu groß zum Bearbeiten: %(path)s"
+
+#: src/filebrowser/views.py:186
+#, python-format
+msgid "File is not encoded in %(encoding)s; cannot be edited: %(path)s"
+msgstr ""
+"Datei ist nicht verschlüsselt in %(encoding)s; kann nicht bearbeitet "
+"werden: %(path)s"
+
+#: src/filebrowser/views.py:235
+#, python-format
+msgid "Saved %(path)s."
+msgstr "Gespeicherte %(path)s."
+
+#: src/filebrowser/views.py:330
+#, python-format
+msgid "Not a directory: %(path)s"
+msgstr "Kein Verzeichnis: %(path)s"
+
+#: src/filebrowser/views.py:537
+#, python-format
+msgid "Not a file: '%(path)s'"
+msgstr "Keine Datei: '%(path)s'"
+
+#: src/filebrowser/views.py:559
+msgid "First byte to display must be before last byte to display."
+msgstr "Erstes anzuzeigendes Byte muss vor letztem anzuzeigenden Byte sein."
+
+#: src/filebrowser/views.py:569
+msgid "Mode must be one of 'binary' or 'text'."
+msgstr "Modus muss entweder 'binary' oder 'text' sein."
+
+#: src/filebrowser/views.py:571
+msgid "Offset may not be less than zero."
+msgstr "Versatz darf nicht weniger sein als Null."
+
+#: src/filebrowser/views.py:573
+msgid "Length may not be less than zero."
+msgstr "Länge darf nicht weniger sein als Null."
+
+#: src/filebrowser/views.py:575
+#, python-format
+msgid "Cannot request chunks greater than %(bytes)d bytes"
+msgstr ""
+"Es kann keine Teile angefordert werden, die größer als %(bytes)d Bytes "
+"sind"
+
+#: src/filebrowser/views.py:660
+#, python-format
+msgid ""
+"Failed to validate snappy compressed file. File size is greater than "
+"allowed max snappy decompression size of %d"
+msgstr ""
+
+#: src/filebrowser/views.py:691
+#, fuzzy
+msgid "Failed to decompress snappy compressed file."
+msgstr "Datei konnte nicht dekomprimiert werden."
+
+#: src/filebrowser/views.py:696
+msgid "Failed to decompress snappy compressed file. Snappy is not installed!"
+msgstr ""
+
+#: src/filebrowser/views.py:699
+#, python-format
+msgid ""
+"Failed to decompress snappy compressed file. File size is greater than "
+"allowed max snappy decompression size of %d"
+msgstr ""
+
+#: src/filebrowser/views.py:723
+msgid "Failed to read Avro file."
+msgstr "Avro-Datei konnte nicht gelesen werden."
+
+#: src/filebrowser/views.py:730
+msgid "Offsets are not supported with Gzip compression."
+msgstr "Offsets werden mit Gzip-Komprimierung nicht unterstützt."
+
+#: src/filebrowser/views.py:735
+msgid "Failed to decompress file."
+msgstr "Datei konnte nicht dekomprimiert werden."
+
+#: src/filebrowser/views.py:746
+msgid "Failed to read file."
+msgstr "Datei konnte nicht gelesen werden."
+
+#: src/filebrowser/views.py:794 src/filebrowser/views.py:796
+#: src/filebrowser/templates/display.mako:97
+#: src/filebrowser/templates/display.mako:155
+msgid "First Block"
+msgstr "Erster Block"
+
+#: src/filebrowser/views.py:794 src/filebrowser/views.py:796
+#: src/filebrowser/templates/display.mako:98
+#: src/filebrowser/templates/display.mako:156
+msgid "Previous Block"
+msgstr "Vorheriger Block"
+
+#: src/filebrowser/views.py:799 src/filebrowser/views.py:802
+#: src/filebrowser/templates/display.mako:99
+#: src/filebrowser/templates/display.mako:157
+msgid "Next Block"
+msgstr "Nächster Block"
+
+#: src/filebrowser/views.py:799 src/filebrowser/views.py:802
+#: src/filebrowser/templates/display.mako:100
+#: src/filebrowser/templates/display.mako:158
+msgid "Last Block"
+msgstr "Letzter Block"
+
+#: src/filebrowser/views.py:931
+msgid "Cannot perform operation."
+msgstr "Operation kann nicht durchgeführt werden."
+
+#: src/filebrowser/views.py:966
+#, python-format
+msgid ""
+"Could not rename folder \"%s\" to \"%s\": Hashes are not allowed in "
+"filenames."
+msgstr ""
+"Ordner konnte nicht von \"%s\" in \"%s\" umbenannt werden: Rauten sind in"
+" Dateinamen nicht zulässig."
+
+#: src/filebrowser/views.py:980
+#, python-format
+msgid ""
+"Could not name folder \"%s\": Slashes or hashes are not allowed in "
+"filenames."
+msgstr ""
+"Ordner konnte nicht in \"%s\" umbenannt werden: Schrägstriche oder Rauten"
+" sind in Dateinamen nicht zulässig."
+
+#: src/filebrowser/views.py:990
+#, python-format
+msgid "Could not name file \"%s\": Slashes are not allowed in filenames."
+msgstr ""
+"Datei konnte nicht in \"%s\" umbenannt werden: Schrägstriche sind in "
+"Dateinamen nicht zulässig."
+
+#: src/filebrowser/views.py:1096 src/filebrowser/views.py:1173
+msgid "A POST request is required."
+msgstr "Eine POST-Anfrage ist erforderlich."
+
+#: src/filebrowser/views.py:1099 src/filebrowser/views.py:1176
+#, python-format
+msgid "%(destination)s upload succeeded"
+msgstr "%(destination)s-Upload war erfolgreich"
+
+#: src/filebrowser/views.py:1101 src/filebrowser/views.py:1178
+#, python-format
+msgid "Upload failed: %(data)s"
+msgstr "Upload fehlgeschlagen: %(data)s"
+
+#: src/filebrowser/views.py:1117 src/filebrowser/views.py:1196
+#, python-format
+msgid "Sorry, no \"%(sep)s\" in the filename %(name)s.sep"
+msgstr "Kein \"%(sep)s\" im Dateinamen %(name)s.sep"
+
+#: src/filebrowser/views.py:1137 src/filebrowser/views.py:1220
+#, python-format
+msgid "Destination %(name)s already exists."
+msgstr "Ziel %(name)s ist bereits vorhanden."
+
+#: src/filebrowser/views.py:1139 src/filebrowser/views.py:1222
+#, python-format
+msgid "Copy to %(name)s failed: %(error)s"
+msgstr "Kopieren nach %(name)s fehlgeschlagen: %(error)s"
+
+#: src/filebrowser/views.py:1149 src/filebrowser/views.py:1232
+#, python-format
+msgid "Error in upload form: %s"
+msgstr "Fehler im Upload-Formular: %s"
+
+#: src/filebrowser/views.py:1205
+msgid "Could not extract contents of file."
+msgstr "Dateiinhalt konnte nicht extrahiert werden."
+
+#: src/filebrowser/views.py:1211
+msgid "Could not interpret archive type."
+msgstr "Archivtyp konnte nicht interpretiert werden."
+
+#: src/filebrowser/lib/archives.py:40
+msgid "Must implement 'extract' method."
+msgstr "Methode 'extract' muss implementiert werden."
+
+#: src/filebrowser/templates/display.mako:31
+#: src/filebrowser/templates/edit.mako:29
+#, python-format
+msgid "%(filename)s - File Viewer"
+msgstr "%(filename)s - Datei-Anzeigeprogramm"
+
+#: src/filebrowser/templates/display.mako:46
+msgid "Actions"
+msgstr "Aktionen"
+
+#: src/filebrowser/templates/display.mako:48
+msgid "View As Text"
+msgstr "Als Text anzeigen"
+
+#: src/filebrowser/templates/display.mako:52
+msgid "View As Binary"
+msgstr "Als Binärdatei anzeigen"
+
+#: src/filebrowser/templates/display.mako:56
+msgid "Preview As Gzip"
+msgstr "Als Gzip anzeigen"
+
+#: src/filebrowser/templates/display.mako:60
+msgid "Preview As Avro"
+msgstr "Vorschau als Avro"
+
+#: src/filebrowser/templates/display.mako:64
+msgid "Stop preview"
+msgstr "Vorschau anhalten"
+
+#: src/filebrowser/templates/display.mako:68
+msgid "Edit File"
+msgstr "Datei bearbeiten"
+
+#: src/filebrowser/templates/display.mako:71
+#: src/filebrowser/templates/listdir.mako:44
+msgid "Download"
+msgstr "Herunterladen"
+
+#: src/filebrowser/templates/display.mako:72
+msgid "View File Location"
+msgstr "Speicherort der Datei anzeigen"
+
+#: src/filebrowser/templates/display.mako:73
+msgid "Refresh"
+msgstr "Aktualisieren"
+
+#: src/filebrowser/templates/display.mako:74
+msgid "Info"
+msgstr "Info"
+
+#: src/filebrowser/templates/display.mako:77
+msgid "Last Modified"
+msgstr "Zuletzt geändert"
+
+#: src/filebrowser/templates/display.mako:83
+#: src/filebrowser/templates/listdir_components.mako:75
+msgid "Size"
+msgstr "Größe"
+
+#: src/filebrowser/templates/display.mako:85
+msgid "Mode"
+msgstr "Modus"
+
+#: src/filebrowser/templates/display.mako:104
+msgid "Viewing Bytes:"
+msgstr "Angezeigte Bytes:"
+
+#: src/filebrowser/templates/display.mako:109
+#, python-format
+msgid "(%(length)s B block size)"
+msgstr "(%(length)s B-Blockgröße)"
+
+#: src/filebrowser/templates/display.mako:120
+msgid "Warning: some binary data has been masked out with '&#xfffd'."
+msgstr "Warnung: einige binäre Daten wurden mit '&#xfffd' ausgeblendet."
+
+#: src/filebrowser/templates/edit.mako:41
+msgid "View Location"
+msgstr "Speicherort anzeigen"
+
+#: src/filebrowser/templates/edit.mako:59
+#: src/filebrowser/templates/edit.mako:82
+msgid "Save"
+msgstr "Speichern"
+
+#: src/filebrowser/templates/edit.mako:60
+#: src/filebrowser/templates/edit.mako:69
+msgid "Save As"
+msgstr "Speichern als"
+
+#: src/filebrowser/templates/edit.mako:73
+msgid "Enter the location where you'd like to save the file."
+msgstr "Geben Sie den Ort an, an dem Sie die Datei speichern möchten"
+
+#: src/filebrowser/templates/edit.mako:77
+#: src/filebrowser/templates/listdir_components.mako:168
+#: src/filebrowser/templates/listdir_components.mako:207
+#: src/filebrowser/templates/listdir_components.mako:296
+#: src/filebrowser/templates/listdir_components.mako:322
+msgid "Name is required."
+msgstr "Der Name ist erforderlich."
+
+#: src/filebrowser/templates/edit.mako:81
+#: src/filebrowser/templates/listdir_components.mako:175
+#: src/filebrowser/templates/listdir_components.mako:209
+#: src/filebrowser/templates/listdir_components.mako:272
+#: src/filebrowser/templates/listdir_components.mako:298
+#: src/filebrowser/templates/listdir_components.mako:324
+#: src/filebrowser/templates/listdir_components.mako:381
+#: src/filebrowser/templates/listdir_components.mako:405
+#: src/filebrowser/templates/listdir_components.mako:1040
+#: src/filebrowser/templates/listdir_components.mako:1088
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: src/filebrowser/templates/fb_components.mako:23
+#: src/filebrowser/templates/fb_components.mako:35
+msgid "Home"
+msgstr "Startseite"
+
+#: src/filebrowser/templates/fb_components.mako:25
+msgid "Edit path"
+msgstr "Pfad bearbeiten"
+
+#: src/filebrowser/templates/fileop.mako:26
+msgid "File Operation"
+msgstr "Dateioperation"
+
+#: src/filebrowser/templates/listdir.mako:26
+#: src/filebrowser/templates/listdir.mako:29
+msgid "File Browser"
+msgstr "Datei-Browser"
+
+#: src/filebrowser/templates/listdir.mako:33
+msgid "Search for file name"
+msgstr "Nach Dateinamen suchen"
+
+#: src/filebrowser/templates/listdir.mako:37
+msgid "Rename"
+msgstr "Umbenennen"
+
+#: src/filebrowser/templates/listdir.mako:38
+msgid "Move"
+msgstr "Verschieben"
+
+#: src/filebrowser/templates/listdir.mako:39
+msgid "Copy"
+msgstr ""
+
+#: src/filebrowser/templates/listdir.mako:41
+#: src/filebrowser/templates/listdir_components.mako:190
+msgid "Change Owner / Group"
+msgstr "Eigentümer / Gruppe ändern"
+
+#: src/filebrowser/templates/listdir.mako:43
+msgid "Change Permissions"
+msgstr "Berechtigungen ändern"
+
+#: src/filebrowser/templates/listdir.mako:46
+msgid "Delete"
+msgstr "Löschen"
+
+#: src/filebrowser/templates/listdir.mako:51
+#: src/filebrowser/templates/listdir.mako:52
+msgid "Upload"
+msgstr "Hochladen"
+
+#: src/filebrowser/templates/listdir.mako:56
+msgid "Files"
+msgstr "Dateien"
+
+#: src/filebrowser/templates/listdir.mako:57
+msgid "Archive"
+msgstr "Archivieren"
+
+#: src/filebrowser/templates/listdir.mako:57
+msgid "Zip file"
+msgstr ""
+
+#: src/filebrowser/templates/listdir.mako:62
+msgid "New"
+msgstr "Neu"
+
+#: src/filebrowser/templates/listdir.mako:66
+msgid "File"
+msgstr "Datei"
+
+#: src/filebrowser/templates/listdir.mako:67
+msgid "Directory"
+msgstr "Verzeichnis"
+
+#: src/filebrowser/templates/listdir_components.mako:74
+msgid "Name"
+msgstr "Name"
+
+#: src/filebrowser/templates/listdir_components.mako:78
+msgid "Permissions"
+msgstr "Berechtigungen"
+
+#: src/filebrowser/templates/listdir_components.mako:79
+msgid "Date"
+msgstr "Datum"
+
+#: src/filebrowser/templates/listdir_components.mako:124
+msgid "Beginning of List"
+msgstr "Beginn der Liste"
+
+#: src/filebrowser/templates/listdir_components.mako:125
+msgid "Previous Page"
+msgstr "Vorherige Seite"
+
+#: src/filebrowser/templates/listdir_components.mako:128
+msgid "Next page"
+msgstr "Nächste Seite"
+
+#: src/filebrowser/templates/listdir_components.mako:128
+msgid "Next Page"
+msgstr "Nächste Seite"
+
+#: src/filebrowser/templates/listdir_components.mako:129
+msgid "End of List"
+msgstr "Ende der Liste"
+
+#: src/filebrowser/templates/listdir_components.mako:132
+msgid "Show"
+msgstr "Anzeigen"
+
+#: src/filebrowser/templates/listdir_components.mako:134
+msgid "items per page"
+msgstr "Elemente pro Seite"
+
+#: src/filebrowser/templates/listdir_components.mako:135
+msgid "Showing"
+msgstr "Anzeigen:"
+
+#: src/filebrowser/templates/listdir_components.mako:135
+msgid "to"
+msgstr "bis"
+
+#: src/filebrowser/templates/listdir_components.mako:135
+#: src/filebrowser/templates/listdir_components.mako:136
+msgid "of"
+msgstr "von"
+
+#: src/filebrowser/templates/listdir_components.mako:135
+msgid "items, page"
+msgstr "Element, Seite"
+
+#: src/filebrowser/templates/listdir_components.mako:143
+msgid "Confirm Delete"
+msgstr "Löschvorgang bestätigen"
+
+#: src/filebrowser/templates/listdir_components.mako:146
+msgid "Are you sure you want to delete these files?"
+msgstr "Möchten Sie diese Dateien wirklich löschen?"
+
+#: src/filebrowser/templates/listdir_components.mako:150
+msgid "No"
+msgstr "Nein"
+
+#: src/filebrowser/templates/listdir_components.mako:151
+msgid "Yes"
+msgstr "Ja"
+
+#: src/filebrowser/templates/listdir_components.mako:161
+msgid "Renaming:"
+msgstr "Umbenennen:"
+
+#: src/filebrowser/templates/listdir_components.mako:171
+#: src/filebrowser/templates/listdir_components.mako:379
+#: src/filebrowser/templates/listdir_components.mako:403
+msgid "already exists."
+msgstr ""
+
+#: src/filebrowser/templates/listdir_components.mako:176
+#: src/filebrowser/templates/listdir_components.mako:210
+#: src/filebrowser/templates/listdir_components.mako:273
+#: src/filebrowser/templates/listdir_components.mako:299
+#: src/filebrowser/templates/listdir_components.mako:325
+#: src/filebrowser/templates/listdir_components.mako:382
+#: src/filebrowser/templates/listdir_components.mako:406
+msgid "Submit"
+msgstr "Übermitteln"
+
+#: src/filebrowser/templates/listdir_components.mako:193
+#, python-format
+msgid ""
+"Note: Only the Hadoop superuser, \"%(superuser)s\" on this file system, "
+"may change the owner of a file."
+msgstr ""
+"Hinweis: Nur der Hadoop-Superuser, \"%(superuser)s\" auf diesem "
+"Dateisystem, darf den Eigentümer einer Datei ändern."
+
+#: src/filebrowser/templates/listdir_components.mako:221
+msgid "Change Permissions:"
+msgstr "Berechtigungen ändern:"
+
+#: src/filebrowser/templates/listdir_components.mako:230
+msgid "Other"
+msgstr "Andere"
+
+#: src/filebrowser/templates/listdir_components.mako:237
+msgid "Read"
+msgstr "Lesen"
+
+#: src/filebrowser/templates/listdir_components.mako:244
+msgid "Write"
+msgstr "Schreiben"
+
+#: src/filebrowser/templates/listdir_components.mako:251
+msgid "Execute"
+msgstr "Ausführen"
+
+#: src/filebrowser/templates/listdir_components.mako:258
+msgid "Sticky"
+msgstr "Sticky"
+
+#: src/filebrowser/templates/listdir_components.mako:283
+msgid "Move:"
+msgstr "Verschieben:"
+
+#: src/filebrowser/templates/listdir_components.mako:287
+#: src/filebrowser/templates/listdir_components.mako:313
+msgid "Destination"
+msgstr "Ziel"
+
+#: src/filebrowser/templates/listdir_components.mako:309
+msgid "Copy:"
+msgstr ""
+
+#: src/filebrowser/templates/listdir_components.mako:334
+#: src/filebrowser/templates/listdir_components.mako:350
+msgid "Uploading to:"
+msgstr "Hochladen zu:"
+
+#: src/filebrowser/templates/listdir_components.mako:339
+#: src/filebrowser/templates/listdir_components.mako:356
+msgid "Enable JavaScript to use the file uploader."
+msgstr "Aktivieren Sie JavaScript, um den Datei-Uploader zu verwenden."
+
+#: src/filebrowser/templates/listdir_components.mako:351
+msgid "The file will then be extracted in the path specified above."
+msgstr "Die Datei wird anschließend im oben angegebenen Pfad extrahiert."
+
+#: src/filebrowser/templates/listdir_components.mako:368
+msgid "Create Directory"
+msgstr "Verzeichnis erstellen"
+
+#: src/filebrowser/templates/listdir_components.mako:376
+msgid "Directory name is required."
+msgstr "Verzeichnisname ist erforderlich."
+
+#: src/filebrowser/templates/listdir_components.mako:392
+msgid "Create File"
+msgstr "Datei erstellen"
+
+#: src/filebrowser/templates/listdir_components.mako:400
+msgid "File name is required."
+msgstr "Dateiname ist erforderlich."
+
+#: src/filebrowser/templates/listdir_components.mako:473
+msgid "User is required."
+msgstr "Benutzer ist erforderlich."
+
+#: src/filebrowser/templates/listdir_components.mako:478
+msgid "Group is required."
+msgstr "Gruppe ist erforderlich."
+
+#: src/filebrowser/templates/listdir_components.mako:484
+msgid "Specify another group."
+msgstr "Geben Sie eine andere Gruppe an."
+
+#: src/filebrowser/templates/listdir_components.mako:490
+msgid "Specify another user."
+msgstr "Geben Sie einen anderen Benutzer an."
+
+#: src/filebrowser/templates/listdir_components.mako:679
+msgid "There was a problem with your request."
+msgstr "Bei Ihrer Anfrage ist ein Problem aufgetreten."
+
+#: src/filebrowser/templates/listdir_components.mako:1032
+#: src/filebrowser/templates/listdir_components.mako:1080
+msgid "Drop files here to upload"
+msgstr "Legen sie hochzuladende Dateien hier ab"
+
+#: src/filebrowser/templates/listdir_components.mako:1033
+msgid "Select files"
+msgstr ""
+
+#: src/filebrowser/templates/listdir_components.mako:1041
+#: src/filebrowser/templates/listdir_components.mako:1089
+msgid "Failed"
+msgstr "Fehlgeschlagen"
+
+#: src/filebrowser/templates/listdir_components.mako:1081
+#, fuzzy
+msgid "Upload a zip file"
+msgstr "Eine Datei hochladen"
+

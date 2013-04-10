@@ -1,4 +1,0 @@
-beeswax
-beeswaxd
-fb303
-hive_metastore

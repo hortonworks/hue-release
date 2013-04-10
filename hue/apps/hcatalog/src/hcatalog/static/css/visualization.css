@@ -1,0 +1,14 @@
+.CodeMirror {
+        float: left;
+        width: 95%;
+        border: 2px solid black;
+        margin-left: 5px;
+      }
+      iframe {
+        width: 95%;
+        float: left;
+        height: 600px;
+        border: 2px solid black;
+        margin-top: 5px;
+        margin-left: 5px;
+      }

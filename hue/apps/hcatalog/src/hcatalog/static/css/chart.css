@@ -1,0 +1,57 @@
+.x_label
+{
+	display:none;
+}
+#y_axis,#y_axis>svg
+{
+	width:80px!important;
+}
+#y_axis,#chart
+{
+	display:inline-block; 
+	vertical-align:top;
+	position: relative;
+}
+
+#x_axis,#slider
+{
+	position: relative;
+	left: 84px; 
+	bottom:30px;
+}
+#x_axis>svg
+{
+	height: 110px;
+}
+#slider
+{
+	width:900px;
+}
+#legend
+{
+	top:-450px;
+	float:right;
+}
+
+.chart_wrap
+{
+	width:1100px;
+	padding-top:50px;
+}
+
+#x_axis>svg>g>g>text{
+text-anchor:end!important;
+display:inline-block;
+transform: translate(0px,23px) rotate(340deg);
+-ms-transform: translate(0px,23px) rotate(340deg);
+-webkit-transform: translate(0px,23px) rotate(340deg); 
+-o-transform: translate(0px,23px) rotate(340deg); 
+-moz-transform: translate(0px,23px) rotate(340deg); 
+}
+		body
+	  {
+			height:600px;
+			overflow-y: hidden; 
+	  }
+
+    

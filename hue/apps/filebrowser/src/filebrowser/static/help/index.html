@@ -1,0 +1,240 @@
+<h1><a name="FileBrowser-IntroducingFileBrowser"></a>Introducing File Browser</h1>
+
+<p>The File Browser application lets you browse and manipulate files and directories in the Hadoop Distributed File System (HDFS) while using Hue. With File Browser, you can:</p>
+
+<ul>
+	<li>Create files and directories, upload and download files, upload zip archives, and rename, move, and delete files and directories. You can also change a file's or directory's owner, group, and permissions. See <a href="#FileBrowser-WorkingwithFilesandDirectories">Working with Files and Directories</a>.</li>
+	<li>Search for files, directories, owners, and groups. See <a href="#FileBrowser-SearchingforFilesandDirectories">Searching for Files and Directories</a>.</li>
+	<li>View and edit files as text or binary. See <a href="#FileBrowser-ViewingandEditingFiles">Viewing and Editing Files</a>.</li>
+</ul>
+
+
+
+
+<h3><a name="FileBrowser-Contents"></a>Contents</h3>
+
+<style type='text/css'>/*<![CDATA[*/
+div.rbtoc1359395607798 {margin-left: 1.5em;padding: 0px;}
+div.rbtoc1359395607798 ul {margin-left: 0px;padding-left: 20px;}
+div.rbtoc1359395607798 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='rbtoc1359395607798'>
+<ul>
+    <li><a href='#FileBrowser-IntroducingFileBrowser'>Introducing File Browser</a></li>
+    <li><a href='#FileBrowser-FileBrowserInstallationandConfiguration'>File Browser Installation and Configuration</a></li>
+    <li><a href='#FileBrowser-StartingFileBrowser'>  Starting File Browser</a></li>
+    <li><a href='#FileBrowser-WorkingwithFilesandDirectories'>  Working with Files and Directories</a></li>
+<ul>
+    <li><a href='#FileBrowser-CreatingDirectories'>Creating Directories</a></li>
+    <li><a href='#FileBrowser-ChangingDirectories'>Changing Directories</a></li>
+    <li><a href='#FileBrowser-CreatingFiles'>Creating Files</a></li>
+    <li><a href='#FileBrowser-UploadingFiles'>Uploading Files</a></li>
+    <li><a href='#FileBrowser-DownloadingFiles'>Downloading Files</a></li>
+    <li><a href='#FileBrowser-UploadingZipArchives'>Uploading Zip Archives</a></li>
+    <li><a href='#FileBrowser-Renaming%2CMoving%2CandDeletingFilesandDirectories'>Renaming, Moving, and Deleting Files and Directories</a></li>
+    <li><a href='#FileBrowser-ChangingaFile%27sorDirectory%27sOwner%2CGroup%2CorPermissions'>Changing a File's or Directory's Owner, Group, or Permissions</a></li>
+</ul>
+    <li><a href='#FileBrowser-SearchingforFilesandDirectories'>  Searching for Files and Directories</a></li>
+    <li><a href='#FileBrowser-ViewingandEditingFiles'>Viewing and Editing Files</a></li>
+</ul></div>
+<p><br class="atl-forced-newline" /></p>
+
+<p><a name="FileBrowser-FileBrowserInstallationandConfiguration"></a></p>
+
+<h1><a name="FileBrowser-FileBrowserInstallationandConfiguration"></a>File Browser Installation and Configuration</h1>
+
+<p>File Browser is one of the applications that can be installed as part of Hue. For information about installing and configuring Hue, see <a href="https://ccp.cloudera.com/display/CDH4DOC/Hue+Installation">Hue Installation</a>.</p>
+
+<h1><a name="FileBrowser-StartingFileBrowser"></a><a name="FileBrowser-StartingFileBrowser"></a> Starting File Browser</h1>
+
+<p>To start the File Browser application, click the <b>File Browser</b> icon (<span class="image-wrap" style=""><img src="/filebrowser/static/help/images/23888157.png" height="30" style="border: 0px solid black"/></span>) in the navigation bar at the top of the Hue browser page.</p>
+
+<h1><a name="FileBrowser-WorkingwithFilesandDirectories"></a><a name="FileBrowser-WorkingwithFilesandDirectories"></a> Working with Files and Directories</h1>
+
+<p>You can use File Browser to view the input and output files of your MapReduce jobs. Typically, you can save your output files in <tt>/tmp</tt> or in your home directory if your system administrator set one up for you. You must have the proper permissions to manipulate other user's files.</p>
+
+<h3><a name="FileBrowser-CreatingDirectories"></a>Creating Directories</h3>
+
+<p><b>To create a directory:</b></p>
+
+<ol>
+	<li>In the File Browser window, select <b>New &gt; Directory</b>.</li>
+	<li>In the <b>Create Directory</b> dialog box, enter a directory name and then click <b>Submit</b>.</li>
+</ol>
+
+
+<h3><a name="FileBrowser-ChangingDirectories"></a>Changing Directories</h3>
+
+<p>To change to a different directory, do one of the following:</p>
+
+<ul>
+	<li>Click the directory name or parent directory dots in the <b>File Browser</b> window.</li>
+	<li>Click the (<span class="image-wrap" style=""><img src="/filebrowser/static/help/images/23888454.png" height="30" style="border: 0px solid black"/></span>) icon, type a directory name, and press <b>Enter</b>.</li>
+</ul>
+
+
+<p>To change to your home directory, click <b>Home</b> in the path field at the top of the <b>File Browser</b> window.</p>
+
+<div class='panelMacro'><table class='noteMacro'><colgroup><col width='24'><col></colgroup><tr><td valign='top'><img src="/static/art/help/warning.gif" width="16" height="16" align="absmiddle" alt="" border="0"></td><td><b>Note</b><br />The <b>Home</b> button is disabled if you do not have a home directory. Ask a Hue administrator to create a home directory for you.</td></tr></table></div>
+
+<h3><a name="FileBrowser-CreatingFiles"></a>Creating Files</h3>
+
+<p><b>To create a file</b>:</p>
+
+<ol>
+	<li>In the File Browser window, select <b>New &gt; File</b>.</li>
+	<li>In the <b>Create File</b> dialog box, enter a file name and then click <b>Submit</b>.</li>
+</ol>
+
+
+<h3><a name="FileBrowser-UploadingFiles"></a>Uploading Files</h3>
+
+<p>You can upload text and binary files to the HDFS.</p>
+
+<p><b>To upload files:</b></p>
+
+<ol>
+	<li>In the <b>File Browser</b> window, browse to the directory where you want to upload the file.</li>
+	<li>Select <b>Upload &gt; Files</b>.</li>
+	<li>In the box that opens, click <b>Upload a File</b> to browse to and select the file(s) you want to upload, and then click <b>Open</b>.</li>
+</ol>
+
+
+<h3><a name="FileBrowser-DownloadingFiles"></a>Downloading Files</h3>
+
+<p>You can download text and binary files to the HDFS.</p>
+
+<p><b>To download files:</b></p>
+
+<ol>
+	<li>In the <b>File Browser</b> window, check the checkbox next to the file you want to download.</li>
+	<li>Click the <b>Download</b> button.</li>
+</ol>
+
+
+<h3><a name="FileBrowser-UploadingZipArchives"></a>Uploading Zip Archives</h3>
+
+<p>You can upload zip archives to the HDFS. The archive is uploaded and extracted to a directory named &lt;archivename&gt;.</p>
+
+<p><b>To upload a zip archives:</b></p>
+
+<ol>
+	<li>In the <b>File Browser</b> window, browse to the directory where you want to upload the archive.</li>
+	<li>Select <b>Upload &gt; Zip file</b>.</li>
+	<li>In the box that opens, click <b>Upload a zip file</b> to browse to and select the archive you want to upload, and then click <b>Open</b>.</li>
+</ol>
+
+
+<h3><a name="FileBrowser-Renaming%2CMoving%2CandDeletingFilesandDirectories"></a>Renaming, Moving, and Deleting Files and Directories</h3>
+
+<p><b>To rename a file or directory:</b></p>
+
+<ol>
+	<li>In the <b>File Browser</b> window, check the checkbox next to the file or directory you want to rename.</li>
+	<li>Click the <b>Rename</b> button.</li>
+	<li>Enter the new name and then click <b>Submit</b>.</li>
+</ol>
+
+
+<p><b>To move a file or directory:</b></p>
+
+<ol>
+	<li>In the <b>File Browser</b> window, check the checkbox next to the file or directory you want to move.</li>
+	<li>Click the <b>Move</b> button.</li>
+	<li>In the <b>Move</b> dialog box, browse to or type the new directory, and then click <b>Submit</b>.</li>
+</ol>
+
+
+<p><b>To delete a file or directory:</b></p>
+
+<ol>
+	<li>In the <b>File Browser</b> window, check the checkbox next to the file or directory you want to delete. If you select a directory, all of the files and subdirectories contained within that directory are also deleted.</li>
+	<li>Click the <b>Delete</b> button.</li>
+	<li>Click <b>Yes</b> to confirm the deletion.</li>
+</ol>
+
+
+<h3><a name="FileBrowser-ChangingaFile%27sorDirectory%27sOwner%2CGroup%2CorPermissions"></a>Changing a File's or Directory's Owner, Group, or Permissions</h3>
+
+<div class='panelMacro'><table class='noteMacro'><colgroup><col width='24'><col></colgroup><tr><td valign='top'><img src="/static/art/help/warning.gif" width="16" height="16" align="absmiddle" alt="" border="0"></td><td><b>Note</b><br />Only the Hadoop superuser can change a file's or directory's owner, group, or permissions. The user who starts Hadoop is the Hadoop superuser. The Hadoop superuser account is not necessarily the same as a Hue superuser account. If you create a Hue user (in User Admin) with the same user name and password as the Hadoop superuser, then that Hue user can change a file's or directory's owner, group, or permissions.</td></tr></table></div>
+
+<p><b>To change a file's or directory's owner or group:</b></p>
+
+<ol>
+	<li>In the <b>File Browser</b> window, check the checkbox next to the select the file or directory whose owner or group you want to change.</li>
+	<li>Choose <b>Change Owner/Group</b> from the Options menu.</li>
+	<li>In the <b>Change Owner/Group</b> dialog box:
+	<ul>
+		<li>Choose the new user from the <b>User</b> drop-down menu.</li>
+		<li>Choose the new group from the <b>Group</b> drop-down menu.</li>
+		<li>Check the <b>Recursive</b> checkbox to propagate the change.</li>
+	</ul>
+	</li>
+	<li>Click <b>Submit</b> to make the changes.</li>
+</ol>
+
+
+<p><b>To change a file's or directory's permissions:</b></p>
+
+<ol>
+	<li>In the <b>File Browser</b> window, check the checkbox next to the file or directory whose permissions you want to change.</li>
+	<li>Click the <b>Change Permissions</b> button.</li>
+	<li>In the <b>Change Permissions</b> dialog box, select the permissions you want to assign and then click <b>Submit</b>.</li>
+</ol>
+
+
+<h1><a name="FileBrowser-SearchingforFilesandDirectories"></a><a name="FileBrowser-SearchingforFilesandDirectories"></a> Searching for Files and Directories</h1>
+
+<p>You can search for files or directories by name using the query search box.</p>
+
+<p><b>To search for files and directories by name:</b></p>
+
+<ol>
+	<li>Enter the name of the file or directory in the query search box.
+<br class="atl-forced-newline" />
+File Browser lists the files or directories matching the search criteria.</li>
+</ol>
+
+
+<p><a name="FileBrowser-ViewingandEditingFiles"></a></p>
+
+<h1><a name="FileBrowser-ViewingandEditingFiles"></a>Viewing and Editing Files</h1>
+
+<p>You can view and edit files as text or binary.</p>
+
+<p><b>To view files:</b></p>
+
+<ol>
+	<li>In the <b>File Browser</b> window, click the file you want to view.
+<br class="atl-forced-newline" />
+File Browser displays the first 4,096 bytes of the file in the <b>File Viewer</b> window.
+	<ul>
+		<li>If the file is larger than 4,096 bytes, use the Block navigation buttons (First Block, Previous Block, Next Block, Last Block) to scroll through the file block by block.  The <b>Viewing Bytes</b> fields show the range of bytes you are currently viewing.</li>
+		<li>To switch the view from text to binary, click <b>View as Binary</b> to view a hexdump.</li>
+		<li>To switch the view from binary to text, click <b>View as Text</b>.</li>
+	</ul>
+	</li>
+</ol>
+
+
+<p><b>To edit files:</b></p>
+
+<ol>
+	<li>If you are viewing a text file, click <b>Edit File</b>.
+<br class="atl-forced-newline" />
+File Browser displays the contents of the file in the <b>File Editor</b> window.</li>
+	<li>Edit the file and then click <b>Save</b> or <b>Save As</b> to save the file.</li>
+</ol>
+
+
+<p>To view the file's location in the HDFS, click <b>View File Location</b>. 
+<br class="atl-forced-newline" />
+File Browser displays the file's location in the <b>File Browser</b> window.</p>
+
+				    					    <br/>
+                        </td>
+		    </tr>
+	    </table>
+	    
+    </body>
+</html>

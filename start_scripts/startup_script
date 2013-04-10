@@ -1,13 +1,14 @@
 #!/bin/bash
 # startup script
-# chkconfig: 5 99 1
+# chkconfig: 345 98 1
 # description: startup script
 
-SCRIPTS_PATH="/home/sandbox/start_scripts"
 NAME="startup_script"
 LOG="/var/log/startup_script.log"
+SCRIPTS_PATH="/usr/lib/hue/tools/start_scripts"
 
-source /etc/rc.d/init.d/functions
+PATH="/sbin:/usr/sbin:/bin:/usr/bin"
+export PATH
 
 source $SCRIPTS_PATH/consts.sh
 
@@ -25,11 +26,10 @@ function restart() {
 case "$1" in
 start)
     printf "%-50s\n" "Starting $NAME..." | tee -a $LOG
-    
-    mkdir /var/www/landing 2> /dev/null
-    mount --bind /home/sandbox/sandbox-tutorials /var/www/landing
 
     echo "" > /etc/resolv.conf
+    ethtool -K eth0 tso off
+    ethtool -K eth1 tso off
     dhclient &
 
     /etc/init.d/mysqld start >> $LOG  #To make run.sh work (tutorials update)
@@ -39,17 +39,17 @@ start)
     printf "%-50s\n" "Updating IP..." | tee -a $LOG
     bash $SCRIPTS_PATH/gen_hosts.sh
    
-    touch /home/sandbox/tutorials/registration_post.log
-    chown sandbox:sandbox /home/sandbox/tutorials/registration_post.log
+    touch /usr/lib/tutorials/registration_post.log
+    chown sandbox:sandbox /usr/lib/tutorials/registration_post.log
 
-    /home/sandbox/tutorials/.env/bin/python \
-        /home/sandbox/start_scripts/registration_post.py
+    /usr/lib/tutorials/.env/bin/python \
+        /usr/lib/hue/tools/start_scripts/registration_post.py
 
     sed -i 1i"nameserver 8.8.8.8" /etc/resolv.conf
 
-    if [ -d /home/sandbox/sandbox-shared ]; then
+    if [ -d /usr/lib/sandbox-shared ]; then
         printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
-        cd /home/sandbox/sandbox-shared
+        cd /usr/lib/sandbox-shared
 
         sudo -u sandbox git fetch >> /var/log/startup_script.log 2>&1
         sudo -u sandbox git checkout $BRANCH >> /var/log/startup_script.log 2>&1
@@ -57,35 +57,31 @@ start)
         pull_res=$(sudo -u sandbox git pull origin $BRANCH 2>> $LOG)
         echo $pull_res >> $LOG
 
-        chown sandbox:sandbox -R /home/sandbox/sandbox-shared
-        [ ! "$pull_res" = "Already up-to-date." ] && /home/sandbox/hue/build/env/bin/hue migrate  >> $LOG 2>&1
+        chown sandbox:sandbox -R /usr/lib/sandbox-shared
+        [ ! "$pull_res" = "Already up-to-date." ] && /usr/lib/hue/build/env/bin/hue migrate  >> $LOG 2>&1
     fi
     
-    sudo -u sandbox bash /home/sandbox/tutorials/tutorials_app/run/run.sh >> $LOG 2>&1
-
     echo "Starting HDP ..."
-    bash $SCRIPTS_PATH/start.sh
+    make --makefile $SCRIPTS_PATH/start_deps.mf -B Startup -j -i
+
     sudo -u hdfs hadoop dfsadmin -safemode leave
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
-    cd /home/sandbox/hue
-    /etc/init.d/supervisord start >> $LOG 2>&1
     
     echo 0 > /proc/sys/kernel/hung_task_timeout_secs
 
     
     echo "You can now launch sandbox on http://$(getent ahosts `hostname` | awk '{print $1}' | head -n 1):8888/"
     stty -F /dev/tty1 -echo
-    #open -c 1 -f -- python /home/sandbox/start_scripts/splash.py
 ;;
 stop)
     date >> $LOG
     bash $SCRIPTS_PATH/stop.sh >> $LOG 2>&1
-    /etc/init.d/supervisord stop >> $LOG 2>&1
 ;;
 
 restart)
-    restart -r
+    $0 stop
+    $0 start
 ;;
 
 *)

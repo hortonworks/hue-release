@@ -65,7 +65,7 @@ def register_skip(request):
 
 
 def tutorials(request):
-    location = settings.CONTENT_FRAME_URL
+    location = settings.CONTENT_FRAME_URL() % request.get_host().split(':')[0]
     step_location = "/lesson/"
     if request.user.is_authenticated() \
         and request.user.username != "AnonymousUser":
@@ -108,6 +108,13 @@ def sync_location(request):
         return HttpResponse('')
     else:
         raise Http404
+
+
+def refresh(request):
+    ustep = UserLocation.objects.get_or_create(user=request.user)[0]
+    ustep.hue_location = "%sabout" % (settings.CONTENT_FRAME_URL() % request.get_host().split(':')[0])
+    ustep.save()
+    return redirect('/tutorials/')
 
 
 def network_info(request):

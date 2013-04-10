@@ -2,9 +2,9 @@
 
 set -e
 
-source /home/sandbox/start_scripts/consts.sh
+source /usr/lib/hue/tools/start_scripts/consts.sh
 
-PYTHON=/home/sandbox/tutorials/.env/bin/python
+PYTHON=/usr/lib/tutorials/.env/bin/python
 
 
 if [[ "$1" == "--migrate" ]]; then
