@@ -179,6 +179,10 @@ SettingFormSet = simple_formset_factory(SettingForm)
 # In theory, there are only 256 of these...
 TERMINATOR_CHOICES = [(hive_val, desc) for hive_val, desc, _ in common.TERMINATORS]
 
+REPLACE_TERMINATOR_CHOICES = [('__field_terminator__', 'Field terminator'), ('__leave_as_is__', 'Leave as is')] + \
+                             [(hive_val, desc) for hive_val, desc, _ in common.TERMINATORS]
+
+
 
 class CreateTableForm(DependencyAwareForm):
     """
@@ -276,6 +280,9 @@ class CreateTableFromFileForm(forms.Form):
     encoding = UnicodeEncodingField()
     file_type = ImportFileTypeField(initial='undef')
     delimiter = ChoiceOrOtherField(required=False, initial=TERMINATOR_CHOICES[0][0], choices=TERMINATOR_CHOICES)
+    repl_delim_with_field_term = forms.BooleanField(required=False, initial=True,
+                                              label="Replace delimiter with field terminator",
+                                              help_text="")
     read_column_headers = forms.BooleanField(required=False, initial=False,
                                              label="Read column headers",
                                              help_text="")
@@ -318,58 +325,6 @@ def _clean_terminator(val):
     if val is not None and len(val.decode('string_escape')) != 1:
         raise forms.ValidationError('Terminator must be exactly one character')
     return val
-
-class CreateByImportFileForm(forms.Form):
-    """Form for step 1 (specifying file) of the import wizard"""
-    # Basic Data
-    name = common.HiveIdentifierField(label="Table Name", required=True)
-    comment = forms.CharField(label="Description", required=False)
-
-    # File info
-    path = filebrowser.forms.PathField(label="Input File")
-    do_import = forms.BooleanField(required=False, initial=True,
-                                   label="Import data from file",
-                                   help_text="Automatically load this file into the table after creation")
-
-    def __init__(self, *args, **kwargs):
-        self.table_list = kwargs.pop('table_list', None)
-        super(CreateByImportFileForm, self).__init__(*args, **kwargs)
-
-    def clean_name(self):
-        return _clean_tablename(self.table_list, self.cleaned_data['name'])
-
-
-class CreateByImportDelimForm(forms.Form):
-    """Form for step 2 (picking delimiter) of the import wizard"""
-    delimiter = ChoiceOrOtherField(required=False, initial=TERMINATOR_CHOICES[0][0], choices=TERMINATOR_CHOICES)
-    file_type = forms.CharField(widget=forms.HiddenInput, required=True)
-    path_tmp = forms.CharField(widget=forms.HiddenInput, required=False)
-    parse_first_row_as_header = forms.BooleanField(required=False, initial=True,
-                                                   label="Use the first row as a table header",
-                                                   help_text="Column list will be parsed from the first row of the data file")
-    apply_excel_dialect = forms.BooleanField(required=False, initial=False,
-                                             label="Apply an 'excel' dialect",
-                                             help_text="It allows to escape the possible double quotes of the compound values")
-
-    def clean(self):
-        # ChoiceOrOtherField doesn't work with required=True
-        delimiter = self.cleaned_data.get('delimiter')
-        if not delimiter:
-            raise forms.ValidationError('Delimiter value is required')
-        _clean_terminator(delimiter)
-        return self.cleaned_data
-
-    def old(self):
-        if self.delimiter.isdigit():
-            try:
-                chr(int(self.delimiter))
-                return int(self.delimiter)
-            except ValueError:
-                raise forms.ValidationError('Delimiter value must be smaller than 256')
-        val = self.delimiter.decode('string_escape')
-        if len(val) != 1:
-            raise forms.ValidationError('Delimiter must be exactly one character')
-        return ord(val)
 
 
 class PartitionTypeForm(forms.Form):

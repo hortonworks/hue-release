@@ -39,6 +39,13 @@ ${layout.menubar(section='tables')}
 </div>
 
 <div class="span9">
+% if error:
+<div id="alert-error-main" class="alert alert-error">
+    <p><strong>The following error(s) occurred:</strong></p>
+    <pre id="error-message">${ error | n,unicode }</pre>
+    <small></small>
+</div>
+% endif
 <ul class="nav nav-pills">
     <li class="active"><a href="#step1" class="step">${_('Step 1: Name')}</a></li>
     <li><a href="#step2" class="step">${_('Step 2: Record Format')}</a></li>
@@ -447,6 +454,10 @@ $(document).ready(function () {
     $(".removeBtn").first().hide();
   }
 
+  $('form#mainForm').submit(function (event) {
+      hideMainError();
+  });
+
   $(".fileChooserBtn").click(function (e) {
     e.preventDefault();
     var _destination = $(this).attr("data-filechooser-destination");
@@ -718,6 +729,16 @@ $(document).ready(function () {
     }
 
     return true;
+  }
+
+  function showMainError(errorMessage) {
+    $("#error-message").text(errorMessage);
+    $("#alert-error-main").show();
+    $(window).scrollTop(0);
+  }
+
+  function hideMainError() {
+    $("#alert-error-main").hide();
   }
 
   function isValid(str) {

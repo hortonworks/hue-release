@@ -14,79 +14,92 @@
 ## KIND, either express or implied.  See the License for the
 ## specific language governing permissions and limitations
 ## under the License.
-
-## TODO(philip): Check escaping more carefully?
-## TODO(philip): The whitespace management here is mediocre.
 ##
 ## |n is used throughout here, since this is not going to HTML.
 ##
-## Reference: http://wiki.apache.org/hadoop/Hive/LanguageManual/DDL#Create_Table
+## Reference: http://people.apache.org/~thejas/templeton_doc_latest/createtable.html
 <%!
-def col_type(col):
-  if col["column_type"] == "array":
-    return "array <%s>" % col["array_type"]
-  elif col["column_type"] == "map":
-    return "map <%s, %s>" % (col["map_key_type"], col["map_value_type"])
-  return col["column_type"]
+    def col_type(col):
+        if col["column_type"] == "array":
+            return "array <%s>" % col["array_type"]
+        elif col["column_type"] == "map":
+            return "map <%s, %s>" % (col["map_key_type"], col["map_value_type"])
+        return col["column_type"]
 %>\
 <%def name="column_list(columns)">\
-## Returns (foo int, bar string)-like data for columns
-(
-<% first = True %>\
+## Returns [{"foo": "int"}, {"bar": "string"}]-like data for columns
+[
+    <% first = True %>\
 % for col in columns:
-%   if first:
-<% first = False %>\
-%   else:
-,
-%   endif
-  `${col["column_name"]|n}` ${col_type(col)|n} \
-%   if col.get("comment"):
-COMMENT "${col["comment"]|n}" \
-%   endif
+    %   if first:
+        <% first = False %>\
+    %   else:
+,\
+    %   endif
+{"name": "`${col["column_name"]|n}`", "type": "${col_type(col)|n}"}
 % endfor
-) \
+]
 </%def>\
-#########################
-CREATE \
-% if not table.get("use_default_location", True):
-EXTERNAL \
-% endif
-TABLE `${ '%s.%s' % (database, table["name"]) | n }`
-${column_list(columns)|n}
+<%!
+  def escape_terminator(terminator):
+    if terminator == ';':
+        terminator = '\\\;'
+        return terminator
+    return terminator.replace('\\', '\\\\')
+%>\
+{
+"columns": ${column_list(columns)|n},
 % if table["comment"]:
-COMMENT "${table["comment"] | n}"
+"comment": "${table["comment"] | n}",
 % endif
 % if len(partition_columns) > 0:
-PARTITIONED BY ${column_list(partition_columns)|n}
+"partitionedBy": ${column_list(partition_columns)|n},
 % endif
 ## TODO: CLUSTERED BY here
 ## TODO: SORTED BY...INTO...BUCKETS here
-ROW FORMAT \
-% if table.has_key('row_format'):
-%   if table["row_format"] == "Delimited":
-  DELIMITED
-%     if table.has_key('field_terminator'):
-    FIELDS TERMINATED BY '${table["field_terminator"] | n}'
-%     endif
-%     if table.has_key('collection_terminator'):
-    COLLECTION ITEMS TERMINATED BY '${table["collection_terminator"] | n}'
-%     endif
-%     if table.has_key('map_key_terminator'):
-    MAP KEYS TERMINATED BY '${table["map_key_terminator"] | n}'
-%     endif
-%   else:
-  SERDE ${table["serde_name"] | n}
-%     if table["serde_properties"]:
-  WITH SERDEPROPERTIES ${table["serde_properties"] | n}
-%     endif
-%   endif
-% endif
+##"clusteredBy": {
+##"columnNames": ["id"],
+##"sortedBy": [
+##{ "columnName": "id", "order": "ASC" } ],
+##"numberOfBuckets": 10 },
+"format": {
 % if table.has_key('file_format'):
-  STORED AS ${table["file_format"] | n} \
+    "storedAs": "${table["file_format"] | n}",
 % endif
-% if table.get("file_format") == "InputFormat":
-INPUTFORMAT ${table["input_format_class"] | n} OUTPUTFORMAT ${table["output_format_class"] | n}
+% if table.has_key('row_format'):
+"rowFormat": {
+    % if table["row_format"] == "Delimited":
+        %     if table.has_key('field_terminator'):
+"fieldsTerminatedBy": "${escape_terminator(table["field_terminator"]) | n}"
+        %     endif
+        %     if table.has_key('collection_terminator'):
+,"collectionItemsTerminatedBy": "${escape_terminator(table["collection_terminator"]) | n}"
+        %     endif
+        %     if table.has_key('map_key_terminator'):
+,"mapKeysTerminatedBy": "${escape_terminator(table["map_key_terminator"]) | n}"
+        %     endif
+    % else:
+"serde": {
+        "name": "\"${table["serde_name"] | n}\""
+        %     if table["serde_properties"]:
+        <% serde_properties = table["serde_properties"].replace("=", ":") %>
+, "properties": {
+${serde_properties | n}
+}
+        %     endif
+}
+    % endif
+}
+    % if table.get("file_format") == "InputFormat":
+,"inputFormat": "${table["input_format_class"] | n}",
+"outputFormat": "${table["output_format_class"] | n}"
+    % endif
 % endif
-% if not table.get("use_default_location", True):
-LOCATION "${table["external_location"] | n}"
+},
+% if table.get("use_default_location", True):
+"external": "false"
+% else:
+"external": "true",
+"location": "${table["external_location"] | n}"
 % endif
+}

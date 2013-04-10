@@ -39,7 +39,6 @@ urlpatterns = patterns('hcatalog.views',
 urlpatterns += patterns(
   'hcatalog.create_table',
   url(r'^create/create_table/(?P<database>\w+)$', 'create_table', name='create_table'),
-  url(r'^create/import_wizard/(?P<database>\w+)$', 'import_wizard', name='import_wizard'),
 )
 
 urlpatterns += patterns(

@@ -78,7 +78,7 @@ ${layout.menubar(section='tables')}
                                 </tr>
                                 <tr>
                                     <td>
-                                        <div id="field_terminator-group" class="control-group">
+                                        <div class="control-group">
                                             ${comps.bootstrapLabel(table_form["field_terminator"])}
                                             <div class="controls">
                                                 ${comps.field(table_form["field_terminator"], render_default=True)}
@@ -156,9 +156,9 @@ ${layout.menubar(section='tables')}
                                     </td>
                                     <td>
                                         <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["ignore_tabs"])}
+                                            ${comps.bootstrapLabel(table_form["ignore_whitespaces"])}
                                             <div class="controls">
-                                                ${comps.field(table_form["ignore_tabs"], render_default=True)}
+                                                ${comps.field(table_form["ignore_whitespaces"], render_default=True)}
                                             </div>
                                         </div>
                                     </td>
@@ -182,13 +182,12 @@ ${layout.menubar(section='tables')}
                                     </td>
                                     <td>
                                         <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["ignore_whitespaces"])}
+                                            ${comps.bootstrapLabel(table_form["ignore_tabs"])}
                                             <div class="controls">
-                                                ${comps.field(table_form["ignore_whitespaces"], render_default=True)}
+                                                ${comps.field(table_form["ignore_tabs"], render_default=True)}
                                             </div>
                                         </div>
                                     </td>
-
                                 </tr>
                             </table>
                         </div>
@@ -346,7 +345,7 @@ ${layout.menubar(section='tables')}
         margin-bottom: 5px;
     }
 
-    #action-spinner-create, #action-spinner-preview, #field_terminator-group {
+    #action-spinner-create, #action-spinner-preview {
         display: none;
     }
 
@@ -368,21 +367,18 @@ var previewStartIdx = 0;
 var previewEndIdx = 0;
 var filePath = "";
 function reactOnFilePathChange(newPath) {
-    ##    if(filePath !== newPath)
-        {
-        filePath = newPath;
-        if (filePath.indexOf(".csv") != -1 || filePath.indexOf(".tsv") != -1 ||
-                filePath.indexOf(".dsv") != -1 || filePath.indexOf(".txt") != -1 ) {
-            $("#id_table-file_type").val(FileType.csv);
-        }
-        else if (filePath.indexOf(".xls") != -1 || filePath.indexOf(".xlsx") != -1) {
-            $("#id_table-file_type").val(FileType.xls);
-        }
-        else {
-            $("#id_table-file_type").val(FileType.csv);
-        }
-        $("#id_table-file_type").change();
+    filePath = newPath;
+    if (filePath.indexOf(".csv") != -1 || filePath.indexOf(".tsv") != -1 ||
+            filePath.indexOf(".dsv") != -1 || filePath.indexOf(".txt") != -1 ) {
+        $("#id_table-file_type").val(FileType.csv);
     }
+    else if (filePath.indexOf(".xls") != -1 || filePath.indexOf(".xlsx") != -1) {
+        $("#id_table-file_type").val(FileType.xls);
+    }
+    else {
+        $("#id_table-file_type").val(FileType.csv);
+    }
+    $("#id_table-file_type").change();
 }
 
 $(document).ready(function () {
@@ -392,10 +388,6 @@ $(document).ready(function () {
         var zoomNew = document.documentElement.clientWidth / window.innerWidth;
         if (zoom != zoomNew) {
             $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
-##            var helperDiv = $('<div />');
-##            $(".dataTables_wrapper").append(helperDiv);
-##            $(".dataTables_wrapper > div").first().css("max-width", helperDiv.width());
-##            helperDiv.remove();
             zoom = zoomNew;
         }
     });
@@ -414,32 +406,8 @@ $(document).ready(function () {
     });
     $("#id_table-autodetect_delimiter").change();
 
-    $("#id_table-field_terminator_1").addClass("input-small");
-    $("#id_table-field_terminator_1").css("margin-left", "4px").attr("placeholder", "${_('type here')}");
-    $("#id_table-field_terminator_0").change(function () {
-        if ($(this).val() == "__other__") {
-            $("#id_table-field_terminator_1").css("visibility", "visible");
-        }
-        else {
-            $("#id_table-field_terminator_1").css("visibility", "hidden");
-            $("#id_table-field_terminator_1").val('');
-        }
-    });
-    $("#id_table-field_terminator_0").change();
-
-
-    $("#id_table-delimiter_1").addClass("input-small");
-    $("#id_table-delimiter_1").css("margin-left", "4px").attr("placeholder", "${_('type here')}");
-    $("#id_table-delimiter_0").change(function () {
-        if ($(this).val() == "__other__") {
-            $("#id_table-delimiter_1").css("visibility", "visible");
-        }
-        else {
-            $("#id_table-delimiter_1").css("visibility", "hidden");
-            $("#id_table-delimiter_1").val('');
-        }
-    });
-    $("#id_table-delimiter_0").change();
+    terminatorFieldInit("field_terminator");
+    terminatorFieldInit("delimiter");
 
     $("#id_table-file_type").change(function () {
         $("#preview-div").hide();
@@ -519,11 +487,6 @@ $(document).ready(function () {
                         });
                     }
                 });
-            ##                $(".dataTables_wrapper").css("min-height", "0pt");
-            ##                $(".dataTables_wrapper").css("overflow-y", "auto");
-            ##                $(".dataTables_wrapper").css("height", "400px");
-            ##                $(".dataTables_wrapper > div").first().css("position", "absolute");
-            ##                $(".dataTables_filter").hide();
 
                 $("#preview-div").show();
                 if(PreviewType.preview == preview_type)
@@ -584,6 +547,23 @@ $(document).ready(function () {
             submitCreateStart();
         }
     });
+
+    function terminatorFieldInit(name) {
+        var field_0 = $("#id_table-" + name + "_0");
+        var field_1 = $("#id_table-" + name + "_1");
+        field_1.addClass("input-small");
+        field_1.css("margin-left", "4px").attr("placeholder", "${_('type here')}");
+        field_0.change(function () {
+            if ($(this).val() == "__other__") {
+                field_1.css("visibility", "visible");
+            }
+            else {
+                field_1.css("visibility", "hidden");
+                field_1.val('');
+            }
+        });
+        field_0.change();
+    }
 
     function updateOption(optionName, options)
     {
@@ -761,7 +741,7 @@ $(document).ready(function () {
         $(window).scrollTop(0);
     }
 
-    function hideMainError(errorMessage) {
+    function hideMainError() {
         $("#alert-error-main").hide();
     }
 

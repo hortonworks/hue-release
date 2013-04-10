@@ -16,14 +16,11 @@
 # under the License.
 
 
-from django.core import urlresolvers
-
 from desktop.lib import django_mako, i18n
 from desktop.lib.django_util import render
 from desktop.lib.django_forms import MultiForm
 from desktop.context_processors import get_app_name
 from hadoop.fs import hadoopfs
-from django.forms import ValidationError
 from django.http import HttpResponse
 from django.template.defaultfilters import escapejs
 
@@ -77,10 +74,12 @@ def create_from_file(request, database='default'):
 
             # table options
             table_name = form.table.cleaned_data['name']
-            parser_options['field_terminator'] = form.table.cleaned_data['field_terminator']
+            field_terminator = form.table.cleaned_data['field_terminator']
+            parser_options['field_terminator'] = field_terminator
 
             # common options
             parser_options['path'] = form.table.cleaned_data['path']
+            file_type = form.table.cleaned_data['file_type']
             parser_options['file_type'] = form.table.cleaned_data['file_type']
             parser_options['preview_start_idx'] = 0
             parser_options['preview_end_idx'] = 0
@@ -101,20 +100,15 @@ def create_from_file(request, database='default'):
             parser_options['xls_cell_range'] = form.table.cleaned_data['xls_cell_range']
             parser_options['xls_read_column_headers'] = form.table.cleaned_data['xls_read_column_headers']
 
-            parser_options['field_terminator_cleaned'] = form.table.cleaned_data['field_terminator']
-            if not filter(lambda val: val[0] == parser_options['field_terminator'], hcatalog.forms.TERMINATOR_CHOICES) and \
-                    len(parser_options['field_terminator']) > 0 and parser_options['field_terminator'][0] != '\\':
-                parser_options['field_terminator_cleaned'] = '\\' + parser_options['field_terminator_cleaned']
 
+            parser_options['delimiter'] = form.table.cleaned_data['delimiter']
             if parser_options['autodetect_delimiter']:
                 parser_options['delimiters'] = DELIMITERS
             else:
-                parser_options['delimiter'] = (form.table.cleaned_data['delimiter'],)
                 parser_options['delimiters'] = parser_options['delimiter']
 
             if parser_options['xls_read_column_headers'] and parser_options['preview_start_idx'] == 0:
                 parser_options['preview_start_idx'] = 1
-
 
             is_preview_action = 'submitPreviewAction' in request.POST
             is_preview_next = 'submitPreviewNext' in request.POST
@@ -133,24 +127,8 @@ def create_from_file(request, database='default'):
                 preview_results = {}
                 preview_table_resp = ''
                 fields_list, n_cols, col_names = ([], 0, [])
-                try:
-                    params = unicode(form.table.cleaned_data['name']) + "\n" \
-                             + unicode(form.table.cleaned_data['comment']) + "\n" \
-                             + unicode(form.table.cleaned_data['field_terminator']) + "\n" \
-                             + unicode(form.table.cleaned_data['path']) + "\n" \
-                             + unicode(form.table.cleaned_data['encoding']) + "\n" \
-                             + unicode(form.table.cleaned_data['file_type']) + "\n" \
-                             + unicode(form.table.cleaned_data['delimiter']) + "\n" \
-                             + unicode(form.table.cleaned_data['autodetect_delimiter']) + "\n" \
-                             + unicode(form.table.cleaned_data['read_column_headers']) + "\n" \
-                             + unicode(form.table.cleaned_data['import_data']) + "\n" \
-                             + unicode(form.table.cleaned_data['ignore_whitespaces']) + "\n" \
-                             + unicode(form.table.cleaned_data['ignore_tabs']) + "\n" \
-                             + unicode(form.table.cleaned_data['single_line_comment']) + "\n" \
-                             + unicode(form.table.cleaned_data['java_style_comments']) + "\n" \
-                             + unicode(form.table.cleaned_data['apply_excel_dialect'])
-
-
+                if True:
+                # try:
                     parser_options = _delim_preview_ext(request.fs, [processor.TYPE for processor in FILE_PROCESSORS], parser_options)
                     row_start_index = parser_options['preview_start_idx']
                     if parser_options['xls_read_column_headers']:
@@ -161,13 +139,12 @@ def create_from_file(request, database='default'):
                             row_start_index=row_start_index
                     ))
 
-                except Exception as ex:
-                    preview_results['error'] = escapejs(ex.message)
-                else:
+                # except Exception as ex:
+                #     preview_results['error'] = escapejs(ex.message)
+                # else:
                     preview_results['results'] = preview_table_resp
                     options = {}
 
-                    file_type = parser_options['file_type']
                     if file_type == hcatalog.forms.IMPORT_FILE_TYPE_CSV_TSV:
                         options["delimiter_0"] = parser_options['delimiter_0']
                         options["delimiter_1"] = parser_options['delimiter_1']
@@ -190,22 +167,25 @@ def create_from_file(request, database='default'):
                     user_def_columns.append(dict(column_name=request.POST.get('cols-%d-column_name' % column_count),
                                         column_type=request.POST.get('cols-%d-column_type' % column_count), ))
                     column_count += 1
-
-                try:
+                if True:
+                # try:
                     parser_options['preview_and_create'] = True
-                    parser_options= _delim_preview_ext(request.fs, [processor.TYPE for processor in FILE_PROCESSORS], parser_options)
+                    parser_options = _delim_preview_ext(request.fs, [processor.TYPE for processor in FILE_PROCESSORS],
+                                                        parser_options)
 
-                    proposed_query = django_mako.render_to_string("create_table_templ_statement.mako",
-                                                              {
-                                                                  'table': dict(name=table_name,
-                                                                                comment=form.table.cleaned_data['comment'],
-                                                                                row_format='Delimited',
-                                                                                field_terminator=parser_options['field_terminator_cleaned']),
-                                                                  'columns': user_def_columns if user_def_columns else parser_options['columns'],
-                                                                  'partition_columns': []
-                                                              }
-                    )
-                    proposed_query = proposed_query.replace('\\', '\\\\')
+                    proposed_query = django_mako.render_to_string("create_table_statement.mako",
+                                                                  {
+                                                                      'table': dict(name=table_name,
+                                                                                    comment=form.table.cleaned_data[
+                                                                                        'comment'],
+                                                                                    row_format='Delimited',
+                                                                                    field_terminator=parser_options[
+                                                                                        'field_terminator']),
+                                                                      'columns': user_def_columns if user_def_columns else
+                                                                      parser_options['columns'],
+                                                                      'partition_columns': []
+                                                                  })
+                    proposed_query = proposed_query.decode('utf-8')
                     path = form.table.cleaned_data['path']
                     file_type = parser_options['file_type']
 
@@ -220,13 +200,13 @@ def create_from_file(request, database='default'):
                                 request.fs.remove(parser_options['results_path'])
                     return _submit_create_and_load(request, proposed_query, database, table_name, path, parser_options['do_import_data'])
 
-                except Exception as ex:
-                    return render("create_table_from_file.mako", request, dict(
-                        action="#",
-                        database=database,
-                        table_form=form.table,
-                        error=escapejs(ex.message)
-                    ))
+                # except Exception as ex:
+                #     return render("create_table_from_file.mako", request, dict(
+                #         action="#",
+                #         database=database,
+                #         table_form=form.table,
+                #         error=escapejs(ex.message)
+                #     ))
 
             return render("create_table_from_file.mako", request, dict(
                 action="#",
@@ -262,7 +242,7 @@ def _submit_create_and_load(request, create_hql, database, table_name, path, do_
     """
     Submit the table creation, and setup the load to happen (if ``do_load``).
     """
-    hcat_client().create_table_by_templeton(database, table_name, create_hql )
+    hcat_client().create_table_by_templeton(database, table_name, create_hql)
     tables = _get_table_list(request)
     if do_load:
         if not table_name or not path:
@@ -306,16 +286,17 @@ def _text_file_preview(fs, file_types, parser_options):
                     (os.path.basename(parser_options['path']).replace(' ', ''), datetime.now().strftime("%s"))
         parser_options['results_path'] = results_file_name
 
-    try:
+    if True:
+    # try:
         file_obj = fs.open(parser_options['path'])
         parser_options = _parse_fields(fs, file_obj, file_types, parser_options)
         file_obj.close()
-    except IOError as ex:
-        msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
-        LOG.exception(msg)
-        raise Exception(msg)
-    except Exception as ex:
-        raise Exception('Delimiter preview error: %s' % unicode(ex))
+    # except IOError as ex:
+    #     msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
+    #     LOG.exception(msg)
+    #     raise Exception(msg)
+    # except Exception as ex:
+    #     raise Exception('Delimiter preview error: %s' % unicode(ex))
 
     col_names = []
     fields_list = parser_options['fields_list']
@@ -342,11 +323,11 @@ def _xls_file_preview(fs, parser_options):
     preview_and_create = 'preview_and_create' in parser_options
     if preview_and_create:
         file_name = get_hcat_hdfs_tmp_dir(fs) + '/%s' % \
-                    (os.path.splitext(os.path.basename(parser_options['path'].replace(' ', '')))[0] + 'dsv.gz')
+                    (os.path.splitext(os.path.basename(parser_options['path'].replace(' ', '')))[0] + '.dsv.gz')
         parser_options['results_path'] = file_name
         result_file_obj = fs.open(file_name, 'w')
-
-    try:
+    if True:
+    # try:
         file_obj = fs.open(parser_options['path'])
         xls_sheet_selected = parser_options['xls_sheet']
 
@@ -389,19 +370,19 @@ def _xls_file_preview(fs, parser_options):
         if preview_and_create:
             fields_list_start = 1 if parser_options['xls_read_column_headers'] else 0
             fields_list = fields_list[fields_list_start:]
-            get_xls_file_processor().write_to_dsv_gzip(xls_fileobj, result_file_obj, fields_list, parser_options['field_terminator_cleaned'])
+            get_xls_file_processor().write_to_dsv_gzip(xls_fileobj, result_file_obj, fields_list, parser_options['field_terminator'])
             result_file_obj.close()
 
         file_obj.close()
 
         auto_column_types = HiveTypeAutoDefine().defineColumnTypes(fields_list[:IMPORT_COLUMN_AUTO_NLINES])
 
-    except IOError as ex:
-        msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
-        LOG.exception(msg)
-        raise Exception(msg)
-    except Exception as ex:
-        raise Exception('Delimiter preview error: %s' % unicode(ex))
+    # except IOError as ex:
+    #     msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
+    #     LOG.exception(msg)
+    #     raise Exception(msg)
+    # except Exception as ex:
+    #     raise Exception('Delimiter preview error: %s' % unicode(ex))
 
     parser_options['xls_sheet'] = xls_sheet_selected
     parser_options['xls_sheet_list'] = sheets
@@ -431,7 +412,8 @@ def _text_file_convert(fs, src_file_obj, processor, parser_options):
     if fs.exists(parser_options['results_path']):
         fs.remove(parser_options['results_path'])
     if parser_options['read_column_headers'] or parser_options['apply_excel_dialect']:
-        try:
+        if True:
+        # try:
             csvfile_tmp = fs.open(parser_options['results_path'], 'w')
             src_file_obj.seek(0, hadoopfs.SEEK_SET)
             all_data = processor.read_all_data(src_file_obj,
@@ -442,25 +424,26 @@ def _text_file_convert(fs, src_file_obj, processor, parser_options):
                                                java_style_comments=parser_options['java_style_comments'])
             if parser_options['apply_excel_dialect']:
                 csv_content = unicode_csv_reader(parser_options['encoding'], StringIO.StringIO('\n'.join(all_data)),
-                                                 delimiter=parser_options['delimiter_cleaned'].decode('string_escape'),)
+                                                 delimiter=parser_options['delimiter'].decode('string_escape'),)
                 new_fields_list = []
                 fields_list_start = 1 if parser_options['read_column_headers'] else 0
                 data_to_store = []
-                for row in csv_content:
+                for row_idx, row in enumerate(csv_content):
                     new_row = []
                     for field in row:
-                        new_row.append(field.replace(parser_options['field_terminator_cleaned'].decode('string_escape'), ''))
-                    data_to_store.append(parser_options['field_terminator_cleaned'].decode('string_escape').join(new_row))
-                    new_fields_list.append(new_row)
+                        new_row.append(field.replace(parser_options['field_terminator'].decode('string_escape'), ''))
+                    data_to_store.append(parser_options['field_terminator'].decode('string_escape').join(new_row))
+                    if row_idx <= IMPORT_COLUMN_AUTO_NLINES:
+                        new_fields_list.append(new_row)
                 auto_column_types = HiveTypeAutoDefine().defineColumnTypes(new_fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
                 fields_list = new_fields_list[:IMPORT_PEEK_NLINES]
                 parser_options['fields_list'] = fields_list
                 parser_options['auto_column_types'] = auto_column_types
             processor.write_all_data(csvfile_tmp, '\n'.join(data_to_store[fields_list_start:]), parser_options['encoding'])
             csvfile_tmp.close()
-        except IOError as ex:
-            msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
-            LOG.exception(msg)
+        # except IOError as ex:
+        #     msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
+        #     LOG.exception(msg)
 
 
 def _text_preview_convert(lines, parser_options):
@@ -468,15 +451,13 @@ def _text_preview_convert(lines, parser_options):
     if parser_options['read_column_headers'] or parser_options['apply_excel_dialect']:
         if parser_options['apply_excel_dialect']:
             csv_content = unicode_csv_reader(parser_options['encoding'], StringIO.StringIO('\n'.join(lines)),
-                                             delimiter=parser_options['delimiter_cleaned'].decode('string_escape'),)
+                                             delimiter=parser_options['delimiter'].decode('string_escape'),)
             new_fields_list = []
             fields_list_start = 1 if parser_options['read_column_headers'] else 0
-            data_to_store = []
             for row in csv_content:
                 new_row = []
                 for field in row:
-                    new_row.append(field.replace(parser_options['field_terminator_cleaned'].decode('string_escape'), ''))
-                data_to_store.append(parser_options['field_terminator_cleaned'].decode('string_escape').join(new_row))
+                    new_row.append(field.replace(parser_options['field_terminator'].decode('string_escape'), ''))
                 new_fields_list.append(new_row)
             auto_column_types = HiveTypeAutoDefine().defineColumnTypes(new_fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
             fields_list = new_fields_list[:IMPORT_PEEK_NLINES]
@@ -509,19 +490,14 @@ def _parse_fields(fs, file_obj, filetypes, parser_options):
             # 'delimiter' is a MultiValueField. delimiter_0 and delimiter_1 are the sub-fields.
             delimiter_0 = delim
             delimiter_1 = ''
-            delimiter_cleaned = delim
             # If custom delimiter
             if not filter(lambda val: val[0] == delim, hcatalog.forms.TERMINATOR_CHOICES):
                 delimiter_0 = '__other__'
                 delimiter_1 = delim
-                if len(delim) > 0 and delim[0] != '\\':
-                    delimiter_1 = '\\' + delim
-                    delimiter_cleaned = '\\' + delim
 
             parser_options['delimiter_0'] = delimiter_0
             parser_options['delimiter_1'] = delimiter_1
-            parser_options['delimiter_cleaned'] = delimiter_cleaned
-            parser_options['field_terminator_cleaned'] = delimiter_cleaned
+            parser_options['delimiter'] = delim
 
             preview_and_create = 'preview_and_create' in parser_options
             if preview_and_create:
