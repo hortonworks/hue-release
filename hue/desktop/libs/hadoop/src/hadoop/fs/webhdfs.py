@@ -557,9 +557,11 @@ class WebHdfs(Hdfs):
     """
     if owner is None:
       owner = self.user
-
     src = self.abspath(src)
     dest = self.abspath(dest)
+
+    if src == dest:
+      raise IOError(errno.ENOENT, _("You can't copy directory into itself"))
 
     if not self.exists(src):
       raise IOError(errno.ENOENT, _("File not found: %s") % src)
