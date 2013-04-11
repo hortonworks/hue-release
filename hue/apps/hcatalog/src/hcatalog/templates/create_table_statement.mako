@@ -28,17 +28,17 @@
 %>\
 <%def name="column_list(columns)">\
 ## Returns [{"foo": "int"}, {"bar": "string"}]-like data for columns
-[
-    <% first = True %>\
+[\
+<% first = True %>\
 % for col in columns:
-    %   if first:
-        <% first = False %>\
-    %   else:
+    % if first:
+<% first = False %>\
+    % else:
 ,\
-    %   endif
-{"name": "`${col["column_name"]|n}`", "type": "${col_type(col)|n}"}
+    % endif
+{"name": "`${col["column_name"]|n}`", "type": "${col_type(col)|n}"}\
 % endfor
-]
+]\
 </%def>\
 <%!
   def escape_terminator(terminator):
@@ -64,36 +64,36 @@
 ##"numberOfBuckets": 10 },
 "format": {
 % if table.has_key('file_format'):
-    "storedAs": "${table["file_format"] | n}",
+    % if table.get("file_format") == "InputFormat":
+"storedAs": "INPUTFORMAT \"${table["input_format_class"] | n}\" OUTPUTFORMAT \"${table["output_format_class"] | n}\"",
+    % else:
+"storedAs": "${table["file_format"] | n}",
+    % endif
 % endif
-% if table.has_key('row_format'):
+% if 'row_format' in table:
 "rowFormat": {
     % if table["row_format"] == "Delimited":
-        %     if table.has_key('field_terminator'):
+        % if 'field_terminator' in table:
 "fieldsTerminatedBy": "${escape_terminator(table["field_terminator"]) | n}"
-        %     endif
-        %     if table.has_key('collection_terminator'):
+        % endif
+        % if 'collection_terminator' in table:
 ,"collectionItemsTerminatedBy": "${escape_terminator(table["collection_terminator"]) | n}"
-        %     endif
-        %     if table.has_key('map_key_terminator'):
+        % endif
+        % if 'map_key_terminator' in table:
 ,"mapKeysTerminatedBy": "${escape_terminator(table["map_key_terminator"]) | n}"
-        %     endif
+        % endif
     % else:
 "serde": {
-        "name": "\"${table["serde_name"] | n}\""
-        %     if table["serde_properties"]:
-        <% serde_properties = table["serde_properties"].replace("=", ":") %>
+"name": "\"${table["serde_name"] | n}\""
+        % if table["serde_properties"]:
+        <% serde_properties = table["serde_properties"].replace("=", ":") %>\
 , "properties": {
 ${serde_properties | n}
 }
-        %     endif
+        % endif
 }
     % endif
 }
-    % if table.get("file_format") == "InputFormat":
-,"inputFormat": "${table["input_format_class"] | n}",
-"outputFormat": "${table["output_format_class"] | n}"
-    % endif
 % endif
 },
 % if table.get("use_default_location", True):

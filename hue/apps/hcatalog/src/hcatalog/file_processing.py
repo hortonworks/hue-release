@@ -34,6 +34,15 @@ class IInterval():
         self.end = end
 
 
+class FInterval():
+    def __repr__(self):
+        return '(%f, %f)' % (self.start, self.end)
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+
 def intervals_union(intervals):
 
     if not intervals:
@@ -108,6 +117,7 @@ def intervals_subtraction(intervals, subtrahend):
 
     return y
 
+
 class ExceptionFSM(Exception):
     """
     FSM Exception class.
@@ -117,7 +127,7 @@ class ExceptionFSM(Exception):
         self.value = value
 
     def __str__(self):
-        return `self.value`
+        return repr(self.value)
 
 
 class TransitionTableFSM:
@@ -186,9 +196,9 @@ class TransitionTableFSM:
         Returns (action, next state) given an input_symbol and state.
         """
 
-        if self.state_transitions.has_key((input_symbol, state)):
+        if (input_symbol, state) in self.state_transitions:
             return self.state_transitions[(input_symbol, state)]
-        elif self.state_transitions_any.has_key(state):
+        elif state in self.state_transitions_any:
             return self.state_transitions_any[state]
         elif self.default_transition is not None:
             return self.default_transition
@@ -217,13 +227,12 @@ class TransitionTableFSM:
             self.process(s)
 
 
-import sys, os, traceback, optparse, time, string
-
 STATE_NONE = 'NONE'
 STATE_SLASH = 'SLASH'
 STATE_LINE_COMMENT = 'LINE_COMMENT'
 STATE_BLOCK_COMMENT = 'BLOCK_COMMENT'
 STATE_STAR = 'STAR'
+
 
 class CommentsDetector():
     """This class provides functionality to detect:
@@ -384,7 +393,6 @@ def remove_whitespaces(buffer):
 
 def remove_tabs(buffer):
     return re.sub(r'\t', '', buffer)
-
 
 
 def remove_java_style_comments(buffer):
