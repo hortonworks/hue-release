@@ -100,7 +100,6 @@ def create_from_file(request, database='default'):
             parser_options['xls_cell_range'] = form.table.cleaned_data['xls_cell_range']
             parser_options['xls_read_column_headers'] = form.table.cleaned_data['xls_read_column_headers']
 
-
             parser_options['delimiter'] = form.table.cleaned_data['delimiter']
             if parser_options['autodetect_delimiter']:
                 parser_options['delimiters'] = DELIMITERS
@@ -113,7 +112,7 @@ def create_from_file(request, database='default'):
             is_preview_action = 'submitPreviewAction' in request.POST
             is_preview_next = 'submitPreviewNext' in request.POST
             is_preview_beginning = 'submitPreviewBeginning' in request.POST
-            if is_preview_action or is_preview_next or is_preview_beginning: # preview  action
+            if is_preview_action or is_preview_next or is_preview_beginning:  # preview  action
                 if is_preview_next and 'preview_start_idx' in request.POST and 'preview_end_idx' in request.POST:
                     parser_options['preview_start_idx'] = int(request.POST.get('preview_end_idx')) + 1
                     parser_options['preview_end_idx'] = int(request.POST.get('preview_end_idx')) + IMPORT_PEEK_NLINES
@@ -128,14 +127,15 @@ def create_from_file(request, database='default'):
                 preview_table_resp = ''
                 fields_list, n_cols, col_names = ([], 0, [])
                 try:
-                    parser_options = _delim_preview_ext(request.fs, [processor.TYPE for processor in FILE_PROCESSORS], parser_options)
+                    parser_options = _delim_preview_ext(request.fs, [processor.TYPE for processor in FILE_PROCESSORS],
+                                                        parser_options)
                     row_start_index = parser_options['preview_start_idx']
                     if parser_options['xls_read_column_headers']:
                         row_start_index -= 1
                     preview_table_resp = django_mako.render_to_string("file_import_preview_table.mako", dict(
-                            fields_list=parser_options['fields_list'],
-                            column_formset=parser_options['col_formset'],
-                            row_start_index=row_start_index
+                        fields_list=parser_options['fields_list'],
+                        column_formset=parser_options['col_formset'],
+                        row_start_index=row_start_index
                     ))
 
                 except Exception as ex:
@@ -156,7 +156,7 @@ def create_from_file(request, database='default'):
 
                     preview_results["options"] = options
                 return HttpResponse(json.dumps(preview_results))
-            else: # create table action
+            else:  # create table action
                 user_def_columns = []
                 column_count = 0
                 while 'cols-%d-column_name' % column_count in request.POST \
@@ -204,12 +204,12 @@ def create_from_file(request, database='default'):
                         error=escapejs(ex.message)
                     ))
 
-            return render("create_table_from_file.mako", request, dict(
-                action="#",
-                database=database,
-                table_form=form.table,
-                error="User form is not valid. Please check all input parameters.",
-            ))
+        return render("create_table_from_file.mako", request, dict(
+            action="#",
+            database=database,
+            table_form=form.table,
+            error="User form is not valid. Please check all input parameters.",
+        ))
     else:
         form.bind()
     return render("create_table_from_file.mako", request, dict(
@@ -249,6 +249,7 @@ def _submit_create_and_load(request, create_hql, database, table_name, path, do_
         hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
         hcatalog.views.do_load_table(request, hql)
     return render("show_tables.mako", request, dict(database=database, tables=tables, ))
+
 
 def _delim_preview_ext(fs, file_types, parser_options):
     file_type = parser_options['file_type']
@@ -349,12 +350,12 @@ def _xls_file_preview(fs, parser_options):
 
         if preview_and_create:
             fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected,
-                                                               cell_range=xls_cell_range)
+                                                                  cell_range=xls_cell_range)
         else:
             fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected,
-                                                           cell_range=xls_cell_range,
-                                                           row_start_idx=row_start_idx,
-                                                           row_end_idx=row_end_idx)
+                                                                  cell_range=xls_cell_range,
+                                                                  row_start_idx=row_start_idx,
+                                                                  row_end_idx=row_end_idx)
 
         preview_has_more = row_end_idx - row_start_idx == len(fields_list) - 1
         if preview_has_more:
@@ -364,7 +365,8 @@ def _xls_file_preview(fs, parser_options):
         if preview_and_create:
             fields_list_start = 1 if parser_options['xls_read_column_headers'] else 0
             fields_list = fields_list[fields_list_start:]
-            get_xls_file_processor().write_to_dsv_gzip(xls_fileobj, result_file_obj, fields_list, parser_options['field_terminator'])
+            get_xls_file_processor().write_to_dsv_gzip(xls_fileobj, result_file_obj, fields_list,
+                                                       parser_options['field_terminator'])
             result_file_obj.close()
 
         file_obj.close()
@@ -405,38 +407,36 @@ def _text_file_convert(fs, src_file_obj, processor, parser_options):
 
     if fs.exists(parser_options['results_path']):
         fs.remove(parser_options['results_path'])
-    if parser_options['read_column_headers'] or parser_options['apply_excel_dialect']:
-        try:
-            csvfile_tmp = fs.open(parser_options['results_path'], 'w')
-            src_file_obj.seek(0, hadoopfs.SEEK_SET)
-            all_data = processor.read_all_data(src_file_obj,
-                                               parser_options['encoding'],
-                                               ignore_whitespaces=parser_options['ignore_whitespaces'],
-                                               ignore_tabs=parser_options['ignore_tabs'],
-                                               single_line_comment=parser_options['single_line_comment'],
-                                               java_style_comments=parser_options['java_style_comments'])
-            if parser_options['apply_excel_dialect']:
-                csv_content = unicode_csv_reader(parser_options['encoding'], StringIO.StringIO('\n'.join(all_data)),
-                                                 delimiter=parser_options['delimiter'].decode('string_escape'),)
-                new_fields_list = []
-                fields_list_start = 1 if parser_options['read_column_headers'] else 0
-                data_to_store = []
-                for row_idx, row in enumerate(csv_content):
-                    new_row = []
-                    for field in row:
-                        new_row.append(field.replace(parser_options['field_terminator'].decode('string_escape'), ''))
-                    data_to_store.append(parser_options['field_terminator'].decode('string_escape').join(new_row))
-                    if row_idx <= IMPORT_COLUMN_AUTO_NLINES:
-                        new_fields_list.append(new_row)
-                auto_column_types = HiveTypeAutoDefine().defineColumnTypes(new_fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
-                fields_list = new_fields_list[:IMPORT_PEEK_NLINES]
-                parser_options['fields_list'] = fields_list
-                parser_options['auto_column_types'] = auto_column_types
-            processor.write_all_data(csvfile_tmp, '\n'.join(data_to_store[fields_list_start:]), parser_options['encoding'])
-            csvfile_tmp.close()
-        except IOError as ex:
-            msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
-            LOG.exception(msg)
+    try:
+        csvfile_tmp = fs.open(parser_options['results_path'], 'w')
+        src_file_obj.seek(0, hadoopfs.SEEK_SET)
+        all_data = processor.read_all_data(src_file_obj,
+                                           parser_options['encoding'],
+                                           ignore_whitespaces=parser_options['ignore_whitespaces'],
+                                           ignore_tabs=parser_options['ignore_tabs'],
+                                           single_line_comment=parser_options['single_line_comment'],
+                                           java_style_comments=parser_options['java_style_comments'])
+        csv_content = unicode_csv_reader(parser_options['encoding'], StringIO.StringIO('\n'.join(all_data)),
+                                         delimiter=parser_options['delimiter'].decode('string_escape'),)
+        new_fields_list = []
+        fields_list_start = 1 if parser_options['read_column_headers'] else 0
+        data_to_store = []
+        for row_idx, row in enumerate(csv_content):
+            new_row = []
+            for field in row:
+                new_row.append(field.replace(parser_options['field_terminator'].decode('string_escape'), ''))
+            data_to_store.append(parser_options['field_terminator'].decode('string_escape').join(new_row))
+            if row_idx <= IMPORT_COLUMN_AUTO_NLINES:
+                new_fields_list.append(new_row)
+        auto_column_types = HiveTypeAutoDefine().defineColumnTypes(new_fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
+        fields_list = new_fields_list[:IMPORT_PEEK_NLINES]
+        parser_options['fields_list'] = fields_list
+        parser_options['auto_column_types'] = auto_column_types
+        processor.write_all_data(csvfile_tmp, '\n'.join(data_to_store[fields_list_start:]), parser_options['encoding'])
+        csvfile_tmp.close()
+    except IOError as ex:
+        msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
+        LOG.exception(msg)
 
 
 def _text_preview_convert(lines, parser_options):

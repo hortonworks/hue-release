@@ -21,26 +21,44 @@ import xlrd
 import logging
 import re
 import string
+from datetime import datetime, date, time
 
 LOG = logging.getLogger(__name__)
 
 
 class IInterval():
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
     def __repr__(self):
         return '(%d, %d)' % (self.start, self.end)
 
+    def __getitem__(self, key):
+        if 0 == key:
+            return self.start
+        elif 1 == key:
+            return self.end
+        else:
+            return None
+
+class FInterval():
+
     def __init__(self, start, end):
         self.start = start
         self.end = end
 
-
-class FInterval():
     def __repr__(self):
         return '(%f, %f)' % (self.start, self.end)
 
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
+    def __getitem__(self, key):
+        if 0 == key:
+            return self.start
+        elif 1 == key:
+            return self.end
+        else:
+            return None
 
 
 def intervals_union(intervals):
@@ -57,7 +75,7 @@ def intervals_union(intervals):
             y.append(x)
         elif y[-1].end == x.start:
             y[-1].end = x.end
-    print y
+    return y
 
 
 def intervals_intersection(intervals):
@@ -260,23 +278,24 @@ class CommentsDetector():
             self.custom_line_comment = None
 
         def do_default(fsm):
-            print 'Processing default state, state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            pass
+            # print 'Processing default state, state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
 
         def do_other(fsm):
-            print 'do_other current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_other current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
             if fsm.current_state == STATE_SLASH:
                 fsm.memory['cur_line_comment'] = [None, None]
                 fsm.memory['cur_block_comment'] = [None, None]
 
         def do_slash_line_only(fsm):
-            print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
             if fsm.current_state == STATE_NONE:
                 fsm.memory['cur_line_comment'][0] = fsm.memory['cur_symbol_pos']
             elif fsm.current_state == STATE_SLASH:
                 fsm.memory['cur_block_comment'] = [None, None]
 
         def do_slash_block_only(fsm):
-            print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
             if fsm.current_state == STATE_NONE:
                 fsm.memory['cur_block_comment'][0] = fsm.memory['cur_symbol_pos']
             elif fsm.current_state == STATE_STAR:
@@ -285,7 +304,7 @@ class CommentsDetector():
                 fsm.memory['cur_block_comment'] = [None, None]
 
         def do_slash_line_and_block(fsm):
-            print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
             if fsm.current_state == STATE_NONE:
                 fsm.memory['cur_line_comment'][0] = fsm.memory['cur_symbol_pos']
                 fsm.memory['cur_block_comment'][0] = fsm.memory['cur_symbol_pos']
@@ -297,12 +316,12 @@ class CommentsDetector():
                 fsm.memory['cur_block_comment'] = [None, None]
 
         def do_star(fsm):
-            print 'do_star current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_star current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
             if fsm.current_state == STATE_SLASH:
                 fsm.memory['cur_line_comment'] = [None, None]
 
         def do_eol(fsm):
-            print 'do_eol current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_eol current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
             if fsm.current_state == STATE_LINE_COMMENT:
                 fsm.memory['cur_line_comment'][1] = fsm.memory['cur_symbol_pos'] + 1
                 fsm.memory['line_comments'].append(fsm.memory['cur_line_comment'])
@@ -345,7 +364,7 @@ class CommentsDetector():
     def reset(self):
         self.java_fsm.reset()
 
-    def process_buffer(self, buffer, index_offset=0):
+    def process_buffer(self, buf, index_offset=0):
         if self.custom_line_comment is not None and self.custom_line_comment is not '':
             loc_start = 0
             custom_line_comment_len = len(self.custom_line_comment)
@@ -354,25 +373,28 @@ class CommentsDetector():
                     loc_start = 0
                     self.custom_comment_end_in_next = False
                 else:
-                    loc_start = buffer.find(self.custom_line_comment, loc_start)
+                    loc_start = buf.find(self.custom_line_comment, loc_start)
                 if loc_start != -1:
-                    loc_end = buffer.find('\n', loc_start)
+                    loc_end = buf.find('\n', loc_start)
                     if loc_end != -1:
                         self.custom_line_comments.append([index_offset + loc_start, index_offset + loc_end + 1])
                         loc_start = loc_end + 1
                     else:
-                        self.custom_line_comments.append([index_offset + loc_start, index_offset + len(buffer) + 1])
+                        self.custom_line_comments.append([index_offset + loc_start, index_offset + len(buf) + 1])
                         self.custom_comment_end_in_next = True
                         loc_start = custom_line_comment_len
                         break
 
         if self.java_line_comment or self.java_block_comment:
-            for idx, symbol in enumerate(buffer):
+            for idx, symbol in enumerate(buf):
                 self.java_fsm.memory['cur_symbol_pos'] = idx + index_offset
                 self.java_fsm.process(symbol if symbol in self.defined_symbols else 'other')
 
     def get_comments(self):
-        return self.java_fsm.memory['line_comments'] + self.java_fsm.memory['block_comments'] + self.custom_line_comments
+        comments = self.java_fsm.memory['line_comments'] + self.java_fsm.memory['block_comments'] + \
+               self.custom_line_comments
+        comments = intervals_union([IInterval(c[0], c[1]) for c in comments])
+        return comments
 
 
 DEFAULT_IMPORT_PEEK_SIZE = 8192
@@ -380,34 +402,29 @@ DEFAULT_IMPORT_MAX_SIZE = 4294967296 # 4 gigabytes
 DEFAULT_IMPORT_PEEK_NLINES = 10
 
 
-JAVA_COMMENTS_DETECTOR = CommentsDetector()
+def remove_whitespaces(buf):
+    return re.sub(r'\s+', '', buf)
 
 
-def java_comment_detector():#re.sub(r'\\[tn]', '', s)
-    return JAVA_COMMENTS_DETECTOR
+def remove_tabs(buf):
+    return re.sub(r'\t', '', buf)
 
 
-def remove_whitespaces(buffer):
-    return re.sub(r'\s+', '', buffer)
-
-
-def remove_tabs(buffer):
-    return re.sub(r'\t', '', buffer)
-
-
-def remove_java_style_comments(buffer):
-    java_comment_detector().reset()
-    java_comment_detector().process_buffer(buffer)
-    comments = java_comment_detector().get_comments()
+def remove_comments(buf, java_line_comment, java_block_comment, custom_line_comment):
+    comment_detector = CommentsDetector(java_line_comment=java_line_comment,
+                                        java_block_comment=java_block_comment,
+                                        custom_line_comment=custom_line_comment)
+    comment_detector.process_buffer(buf)
+    comments = comment_detector.get_comments()
     if comments:
         new_buffer = ''
         end_comment_pos = 0
         for comment in comments:
-            new_buffer += buffer[end_comment_pos : comment[0]]
+            new_buffer += buf[end_comment_pos : comment[0]]
             end_comment_pos = comment[1]
-        new_buffer += buffer[end_comment_pos : len(buffer)]
+        new_buffer += buf[end_comment_pos : len(buf)]
         return new_buffer
-    return buffer
+    return buf
 
 
 class GzipFileProcessor():
@@ -425,8 +442,11 @@ class GzipFileProcessor():
                 data = gz.read(import_peek_size)
             else:
                 data = gz.read(DEFAULT_IMPORT_PEEK_SIZE)
-            if java_style_comments:
-                data = remove_java_style_comments(data)
+            if java_style_comments or single_line_comment:
+                data = remove_comments(data,
+                                       java_line_comment=java_style_comments,
+                                       java_block_comment=java_style_comments,
+                                       custom_line_comment=single_line_comment)
             if ignore_whitespaces:
                 data = remove_whitespaces(data)
             if ignore_tabs:
@@ -449,8 +469,11 @@ class GzipFileProcessor():
         gz = gzip.GzipFile(fileobj=fileobj, mode='rb')
         try:
             data = gz.read()
-            if java_style_comments:
-                data = remove_java_style_comments(data)
+            if java_style_comments or single_line_comment:
+                data = remove_comments(data,
+                                       java_line_comment=java_style_comments,
+                                       java_block_comment=java_style_comments,
+                                       custom_line_comment=single_line_comment)
             if ignore_whitespaces:
                 data = remove_whitespaces(data)
             if ignore_tabs:
@@ -488,8 +511,11 @@ class TextFileProcessor():
                 data = fileobj.read(import_peek_size)
             else:
                 data = fileobj.read(DEFAULT_IMPORT_PEEK_SIZE)
-            if java_style_comments:
-                data = remove_java_style_comments(data)
+            if java_style_comments or single_line_comment:
+                data = remove_comments(data,
+                                       java_line_comment=java_style_comments,
+                                       java_block_comment=java_style_comments,
+                                       custom_line_comment=single_line_comment)
             if ignore_whitespaces:
                 data = remove_whitespaces(data)
             if ignore_tabs:
@@ -510,8 +536,11 @@ class TextFileProcessor():
                 data = fileobj.read(max_size)
             else:
                 data = fileobj.read(DEFAULT_IMPORT_MAX_SIZE)
-            if java_style_comments:
-                data = remove_java_style_comments(data)
+            if java_style_comments or single_line_comment:
+                data = remove_comments(data,
+                                       java_line_comment=java_style_comments,
+                                       java_block_comment=java_style_comments,
+                                       custom_line_comment=single_line_comment)
             if ignore_whitespaces:
                 data = remove_whitespaces(data)
             if ignore_tabs:
@@ -557,25 +586,52 @@ def index_to_excel_col(index):
 
 
 def excel_range_to_indexes(range_str):
-    '''
+    """
     Converts input string range in excel format 'A3:B6' to set of zero-based indexes
         like ((col_min_idx, col_max_idx), (row_min_idx, row_max_idx))
-    '''
-    range = re.match(r'^(?P<col_min_idx>[a-zA-Z]+)(?P<row_min_idx>\d+):(?P<col_max_idx>[a-zA-Z]+)(?P<row_max_idx>\d+$)',
+    """
+    excel_range = re.match(r'^(?P<col_min_idx>[a-zA-Z]+)(?P<row_min_idx>\d+):(?P<col_max_idx>[a-zA-Z]+)(?P<row_max_idx>\d+$)',
                      range_str)
-    if range:
-        col_min_idx = excel_col_to_index(range.group('col_min_idx'))
-        row_min_idx = int(range.group('row_min_idx'))
+    if excel_range:
+        col_min_idx = excel_col_to_index(excel_range.group('col_min_idx'))
+        row_min_idx = int(excel_range.group('row_min_idx'))
         row_min_idx = row_min_idx - 1 if row_min_idx > 0 else 0
-        col_max_idx = excel_col_to_index(range.group('col_max_idx'))
-        row_max_idx = int(range.group('row_max_idx'))
+        col_max_idx = excel_col_to_index(excel_range.group('col_max_idx'))
+        row_max_idx = int(excel_range.group('row_max_idx'))
         row_max_idx = row_max_idx - 1 if row_max_idx > 0 else 0
         return ((col_min_idx if col_min_idx < col_max_idx else col_max_idx,
                 row_min_idx if row_min_idx < row_max_idx else row_max_idx),
                 (col_max_idx if col_max_idx >= col_min_idx else col_min_idx,
-                row_max_idx if row_max_idx >= row_min_idx else row_min_idx ))
+                row_max_idx if row_max_idx >= row_min_idx else row_min_idx))
     return None
 
+
+def showable_cell_value(celltype, cellvalue, datemode):
+    if celltype == xlrd.XL_CELL_DATE:
+        try:
+            dt = xlrd.xldate_as_tuple(cellvalue, datemode)
+            if len(dt) >= 6:
+                if 0 == dt[3] == dt[4] == dt[5]:
+                    showval = str(date(*(dt[0:3])))
+                elif 0 == dt[0] == dt[1] == dt[2]:
+                    showval = str(time(*(dt[3:6])))
+                else:
+                    showval = str(datetime(*(dt[0:6])))
+            else:
+                showval = ''
+
+        except xlrd.XLDateError:
+            showval = ''
+    elif celltype == xlrd.XL_CELL_NUMBER:
+        if 0 == cellvalue - int(cellvalue):
+            showval = int(cellvalue)
+        else:
+            showval = cellvalue
+    elif celltype == xlrd.XL_CELL_ERROR:
+        showval = ''
+    else:
+        showval = cellvalue
+    return showval
 
 class XlsFileProcessor():
     TYPE = 'xls'
@@ -595,6 +651,7 @@ class XlsFileProcessor():
     def get_sheet_list(xls_fileobj):
         return [xls_fileobj.sheet_names()[idx] for idx in range(xls_fileobj.nsheets)]
 
+    @staticmethod
     def get_sheet_name(xls_fileobj, sheet_index):
         return xls_fileobj.sheet_names()[sheet_index]
 
@@ -612,21 +669,22 @@ class XlsFileProcessor():
 
     @staticmethod
     def get_scope_data(xls_fileobj, scope_strg, cell_range=None, row_start_idx=None, row_end_idx=None):
-        '''
+        """
         scope_strg - sheet name or '*' that means all sheets
         cell_range - range string in an excel style 'B1:D10'
         row_start_idx - row start index in result data when scope_strg and cell_range are applied
         row_end_idx - row end index in result data when scope_strg and cell_range are applied
-        '''
+        """
         try:
             qscope = int(scope_strg)
         except ValueError:
             if scope_strg == "*":
-                qscope = None # means 'all'
+                qscope = None  # means 'all'
             else:
                 # so assume it's a sheet name ...
                 qscope = xls_fileobj.sheet_names().index(scope_strg)
         data = []
+        datemode = xls_fileobj.datemode
         for sh_idx in range(xls_fileobj.nsheets):
             if qscope is None or sh_idx == qscope:
                 sh = xls_fileobj.sheet_by_index(sh_idx)
@@ -667,10 +725,7 @@ class XlsFileProcessor():
                     for colx in range(col_min_idx, col_max_idx + 1):
                         cty = sh.cell_type(rowx, colx)
                         cval = sh.cell_value(rowx, colx)
-                        if xlrd.XL_CELL_NUMBER == cty:
-                            if 0 == cval - int(cval):
-                                cval = int(cval)
-                        row.append(cval)
+                        row.append(showable_cell_value(cty, cval, datemode))
                     data.append(row)
         return data
 
