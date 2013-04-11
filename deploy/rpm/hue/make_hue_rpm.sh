@@ -11,7 +11,7 @@ SSH_URL="https://dl.dropbox.com/s/y4ae019z6944vn3/.ssh.tar.gz?dl=1"
 # === sources ===
 
 [ -f start_scripts.tgz ] || exit 1; 
-[ -f .ssh.tar.gz ] || curl $SSH_URL -o .ssh.tar.gz 
+[ -f .ssh.tar.gz ] || curl $SSH_URL -L -o .ssh.tar.gz 
 
 cp start_scripts.tgz $BB/rpm/SOURCES/
 cp .ssh.tar.gz $BB/rpm/SOURCES/
