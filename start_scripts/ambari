@@ -1,7 +1,14 @@
 #!/bin/bash
 # ambari init script
 # chkconfig: 345 99 1
-# description: startup script
+### BEGIN INIT INFO
+# provides: ambari
+# Required-Start:
+# Required-Stop:
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 6
+# Description: Ambari startup script
+### END INIT INFO
 
 SCRIPTS_PATH=/usr/lib/hue/tools/start_scripts
 NAME="ambari"

@@ -100,11 +100,11 @@ chkconfig ambari off
 
 ln -sf /usr/lib/hue/tools/start_scripts/startup_script /etc/init.d/startup_script
 chkconfig --add startup_script
-chkconfig --levels 3 startup_script on
+chkconfig --level 3 startup_script on
 
 ln -sf /usr/lib/hue/tools/start_scripts/hue /etc/init.d/hue
 chkconfig --add hue
-chkconfig --levels 3 hue on
+chkconfig --level 3 hue on
 
 #echo "Update lxml"
 #source build/env/bin/activate

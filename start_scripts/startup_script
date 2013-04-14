@@ -1,7 +1,15 @@
 #!/bin/bash
 # startup script
 # chkconfig: 345 98 1
-# description: startup script
+### BEGIN INIT INFO
+# provides: Startup_Script
+# Required-Start:
+# Required-Stop:
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 6
+# Description: startup script
+### END INIT INFO
+
 
 NAME="startup_script"
 LOG="/var/log/startup_script.log"
@@ -39,12 +47,6 @@ start)
     printf "%-50s\n" "Updating IP..." | tee -a $LOG
     bash $SCRIPTS_PATH/gen_hosts.sh
    
-    touch /usr/lib/tutorials/registration_post.log
-    chown sandbox:sandbox /usr/lib/tutorials/registration_post.log
-
-    /usr/lib/tutorials/.env/bin/python \
-        /usr/lib/hue/tools/start_scripts/registration_post.py
-
     sed -i 1i"nameserver 8.8.8.8" /etc/resolv.conf
 
     if [ -d /usr/lib/sandbox-shared ]; then

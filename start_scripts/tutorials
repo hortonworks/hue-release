@@ -1,8 +1,14 @@
 #!/bin/bash
 # Hue Tutorials
 # chkconfig: 345 20 80
-# description: myapp daemon
-# processname: myapp
+### BEGIN INIT INFO
+# provides: tutorials
+# Required-Start:
+# Required-Stop:
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 6
+# Description: tutorials startup script
+### END INIT INFO
 
 SCRIPTS_PATH="/usr/lib/hue/tools/start_scripts"
 source $SCRIPTS_PATH/consts.sh
@@ -19,6 +25,13 @@ SCRIPTNAME=/etc/init.d/$NAME
 case "$1" in
 start)
     printf "%-50s" "Starting $NAME..."
+    
+    touch /usr/lib/tutorials/registration_post.log
+    chown sandbox:sandbox /usr/lib/tutorials/registration_post.log
+
+    /usr/lib/tutorials/.env/bin/python \
+        /usr/lib/hue/tools/start_scripts/registration_post.py
+
     cd $DAEMON_PATH
     PID=`$DAEMON > /dev/null 2>&1 & echo $!`
     #echo "Saving PID" $PID " to " $PIDFILE
