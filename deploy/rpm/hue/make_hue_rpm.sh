@@ -5,7 +5,7 @@ set -v
 
 source ../env.sh
 
-SSH_URL="https://dl.dropbox.com/s/y4ae019z6944vn3/.ssh.tar.gz?dl=1"
+SSH_URL="http://dev2.hortonworks.com.s3.amazonaws.com/ssh.tgz"
 
 
 # === sources ===

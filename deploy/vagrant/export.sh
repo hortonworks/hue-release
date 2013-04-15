@@ -12,4 +12,5 @@ VBoxManage export "$MACHINE" --output "$MACHINE VirtualBox".ova \
 HDDFILE="$(VBoxManage list hdds | grep -e "$MACHINE/" | sed -r "s/.*:[^/]*(.*)/\1/g")"
 cp "$HDDFILE" ./vmware/sandbox.vmdk
 ovftool ./vmware/vmware.vmx "./$MACHINE VMware.ova"
+VBoxManage clonehd "$HDDFILE" ./hyper-v/sandbox.vhd --format vhd
 
