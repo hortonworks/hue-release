@@ -60,7 +60,7 @@ def rpm(name="repo", branch="Caterpillar"):
     update_rpm(branch)
     build_rpm(name)
     get_out(name)
-    upload(name)
+    # upload(name)
     print "Done!"
     print ("baseurl=https://roman.rader%%40gmail.com:storage_1"
            "@www.box.com/dav/HortonWorks/%s" % name)
