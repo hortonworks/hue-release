@@ -188,13 +188,12 @@ def create_from_file(request, database='default'):
                     if file_type == hcatalog.forms.IMPORT_FILE_TYPE_XLS_XLSX:
                         path = parser_options['results_path']
                     else:
-                        if parser_options['results_path'] != '' and request.fs.exists(parser_options['results_path']):
+                        if parser_options['results_path'] and request.fs.exists(parser_options['results_path']):
                             if parser_options['do_import_data']:
-                                request.fs.copyfile(parser_options['results_path'], parser_options['path'])
-                                request.fs.remove(parser_options['results_path'])
+                                path = parser_options['results_path']
                             else:
                                 request.fs.remove(parser_options['results_path'])
-                    return _submit_create_and_load(request, proposed_query, database, table_name, path, parser_options['do_import_data'])
+                    return _submit_create_and_load(request, proposed_query, database, table_name, path, parser_options['do_import_data'], parser_options.get('tmp_dir', None))
 
                 except Exception as ex:
                     return render("create_table_from_file.mako", request, dict(
@@ -234,7 +233,7 @@ DELIMITER_READABLE = {'\\001': 'ctrl-As',
                       ';': 'semicolons'}
 
 
-def _submit_create_and_load(request, create_hql, database, table_name, path, do_load):
+def _submit_create_and_load(request, create_hql, database, table_name, path, do_load, tmp_dir):
     """
     Submit the table creation, and setup the load to happen (if ``do_load``).
     """
@@ -248,6 +247,11 @@ def _submit_create_and_load(request, create_hql, database, table_name, path, do_
         LOG.info("Auto loading data from %s into table %s" % (path, table_name))
         hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
         hcatalog.views.do_load_table(request, hql)
+
+    # clean up tmp dir
+    if tmp_dir and request.fs.exists:
+        request.fs.rmtree(tmp_dir)
+
     return render("show_tables.mako", request, dict(database=database, tables=tables, ))
 
 
@@ -279,10 +283,11 @@ def _text_file_preview(fs, file_types, parser_options):
     results_file_name = None
     preview_and_create = 'preview_and_create' in parser_options
     if preview_and_create:
-        results_file_name = get_hcat_hdfs_tmp_dir(fs) + "/%s.tmp.%s" % \
-                    (os.path.basename(parser_options['path']).replace(' ', ''), datetime.now().strftime("%s"))
-        parser_options['results_path'] = results_file_name
-
+        hcat_tmp_dir = get_hcat_hdfs_tmp_dir(fs) + '/%s' % (datetime.now().strftime("%s"))
+        fs.mkdir(hcat_tmp_dir)
+        results_file =  hcat_tmp_dir + '/%s' % (os.path.basename(parser_options['path']).replace(' ', ''))
+        parser_options['tmp_dir'] = hcat_tmp_dir
+        parser_options['results_path'] = results_file
     try:
         file_obj = fs.open(parser_options['path'])
         parser_options = _parse_fields(fs, file_obj, file_types, parser_options)
@@ -318,10 +323,12 @@ def _text_file_preview(fs, file_types, parser_options):
 def _xls_file_preview(fs, parser_options):
     preview_and_create = 'preview_and_create' in parser_options
     if preview_and_create:
-        file_name = get_hcat_hdfs_tmp_dir(fs) + '/%s' % \
-                    (os.path.splitext(os.path.basename(parser_options['path'].replace(' ', '')))[0] + '.dsv.gz')
-        parser_options['results_path'] = file_name
-        result_file_obj = fs.open(file_name, 'w')
+        hcat_tmp_dir = get_hcat_hdfs_tmp_dir(fs) + '/%s' % (datetime.now().strftime("%s"))
+        fs.mkdir(hcat_tmp_dir)
+        results_file = hcat_tmp_dir + '/%s' % (os.path.splitext(os.path.basename(parser_options['path'].replace(' ', '')))[0] + '.dsv.gz')
+        parser_options['tmp_dir'] = hcat_tmp_dir
+        parser_options['results_path'] = results_file
+        result_file_obj = fs.open(results_file, 'w')
     try:
         file_obj = fs.open(parser_options['path'])
         xls_sheet_selected = parser_options['xls_sheet']

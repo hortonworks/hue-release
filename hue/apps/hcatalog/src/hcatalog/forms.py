@@ -283,7 +283,7 @@ class CreateTableFromFileForm(forms.Form):
     repl_delim_with_field_term = forms.BooleanField(required=False, initial=True,
                                               label="Replace delimiter with field terminator",
                                               help_text="")
-    read_column_headers = forms.BooleanField(required=False, initial=False,
+    read_column_headers = forms.BooleanField(required=False, initial=True,
                                              label="Read column headers",
                                              help_text="")
     import_data = forms.BooleanField(required=False, initial=True,
