@@ -1,8 +1,25 @@
+.chart_type_selectors
+{
+	width:30%;
+	border: 2px solid black;
+	height:200px;
+	position:relative;
+
+	left:65.5%;
+}
+.chart_type_wrap
+{
+	position:relative;
+	top:-140px;
+	left:30px;
+	display:inline-block;
+}
 .CodeMirror {
         float: left;
-        width: 95%;
+        width: 65%;
         border: 2px solid black;
         margin-left: 5px;
+		height:200px;
       }
       iframe {
         width: 95%;

@@ -1,9 +1,10 @@
-function chart(x,y)
+function chart(x,y,min,max)
 {
 	this.x = x;
 	this.y = y;
 	this.n = y.length;
 	var map = {};
+	this.formin = [];
 	this.seriesData = [[]];
 	this.palette = new Rickshaw.Color.Palette( { scheme: 'colorwheel' } );
 
@@ -12,9 +13,12 @@ function chart(x,y)
 		for(var k=0;k<this.n;k++)
 		{
 			this.seriesData.push([]);
-			this.seriesData[k].push({x: i, y: parseInt(d[this.y[k]])});
+			this.seriesData[k].push({x: i, y: parseFloat(d[this.y[k]])});
+			this.formin[i] = parseInt(d[this.y[k]]);	
+			
 		}
 		map[i] = d[this.x];
+
 	}
 
 	this.setGraph = function(type,unstack)
@@ -32,7 +36,10 @@ function chart(x,y)
 				name: this.y[0]
 			}]
 		});
-
+		
+		if(min){this.graph.min = min}
+		else{this.graph.min = Math.min.apply( Math, this.formin ) -1};
+		if(max) this.graph.max = max;
 		for(var k=1;k<this.n;k++)
 		this.graph.series.push({color: this.palette.color() , data: this.seriesData[k], name: this.y[k]});
 
@@ -61,7 +68,7 @@ function chart(x,y)
 			tickFormat:format
 
 		});
-
+		this.yAxis.min = 60;
 		this.graph.render();
 
 		this.slider = new Rickshaw.Graph.RangeSlider({
@@ -69,4 +76,12 @@ function chart(x,y)
 			element: document.getElementById('slider')
 		});
 	}
+	
+	this.paint = function(type,stacked){
+	d3.csv(settings.csv,function(dataset){dataset.forEach(function(d,i){c.getData(d,i);});c.setGraph(type,stacked);});
+};
 }
+
+
+
+
