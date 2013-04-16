@@ -21,6 +21,7 @@ import xlrd
 import logging
 import re
 import string
+from os import linesep
 from datetime import datetime, date, time
 
 LOG = logging.getLogger(__name__)
@@ -365,7 +366,7 @@ class CommentsDetector():
         self.java_fsm.reset()
 
     def process_buffer(self, buf, index_offset=0):
-        if self.custom_line_comment is not None and self.custom_line_comment is not '':
+        if self.custom_line_comment:
             loc_start = 0
             custom_line_comment_len = len(self.custom_line_comment)
             while loc_start != -1:
@@ -400,14 +401,6 @@ class CommentsDetector():
 DEFAULT_IMPORT_PEEK_SIZE = 8192
 DEFAULT_IMPORT_MAX_SIZE = 4294967296 # 4 gigabytes
 DEFAULT_IMPORT_PEEK_NLINES = 10
-
-
-def remove_whitespaces(buf):
-    return re.sub(r'\s+', '', buf)
-
-
-def remove_tabs(buf):
-    return re.sub(r'\t', '', buf)
 
 
 def remove_comments(buf, java_line_comment, java_block_comment, custom_line_comment):
@@ -448,16 +441,16 @@ class GzipFileProcessor():
                                        java_block_comment=java_style_comments,
                                        custom_line_comment=single_line_comment)
             if ignore_whitespaces:
-                data = remove_whitespaces(data)
+                data = data.replace(' ', '')
             if ignore_tabs:
-                data = remove_tabs(data)
+                data = data.replace('\t', '')
         except IOError:
             return None
         try:
             if import_peek_nlines:
-                return unicode(data, encoding, errors='ignore').splitlines()[:import_peek_nlines]
+                return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()][:-1][:import_peek_nlines]
             else:
-                return unicode(data, encoding, errors='ignore').splitlines()[:DEFAULT_IMPORT_PEEK_NLINES]
+                return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()][:-1][:DEFAULT_IMPORT_PEEK_NLINES]
         except UnicodeError:
             return None
 
@@ -475,13 +468,13 @@ class GzipFileProcessor():
                                        java_block_comment=java_style_comments,
                                        custom_line_comment=single_line_comment)
             if ignore_whitespaces:
-                data = remove_whitespaces(data)
+                data = data.replace(' ', '')
             if ignore_tabs:
-                data = remove_tabs(data)
+                data = data.replace('\t', '')
         except IOError:
             return None
         try:
-            return unicode(data, encoding, errors='ignore').splitlines()
+            return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()]
         except UnicodeError:
             return None
 
@@ -513,17 +506,20 @@ class TextFileProcessor():
                 data = fileobj.read(DEFAULT_IMPORT_PEEK_SIZE)
             if java_style_comments or single_line_comment:
                 data = remove_comments(data,
-                                       java_line_comment=java_style_comments,
-                                       java_block_comment=java_style_comments,
-                                       custom_line_comment=single_line_comment)
+                                        java_line_comment=java_style_comments,
+                                        java_block_comment=java_style_comments,
+                                        custom_line_comment=single_line_comment)
             if ignore_whitespaces:
-                data = remove_whitespaces(data)
+                data = data.replace(' ', '')
             if ignore_tabs:
-                data = remove_tabs(data)
+                data = data.replace('\t', '')
+        except IOError:
+            return None
+        try:
             if import_peek_nlines:
-                return unicode(data, encoding, errors='ignore').splitlines()[:DEFAULT_IMPORT_PEEK_NLINES]
+                return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()][:-1][:DEFAULT_IMPORT_PEEK_NLINES]
             else:
-                return unicode(data, encoding, errors='ignore').splitlines()[:import_peek_nlines]
+                return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()][:-1][:import_peek_nlines]
         except UnicodeError:
             return None
 
@@ -542,13 +538,13 @@ class TextFileProcessor():
                                        java_block_comment=java_style_comments,
                                        custom_line_comment=single_line_comment)
             if ignore_whitespaces:
-                data = remove_whitespaces(data)
+                data = data.replace(' ', '')
             if ignore_tabs:
-                data = remove_tabs(data)
+                data = data.replace('\t', '')
         except IOError:
             return None
         try:
-            return unicode(data, encoding, errors='ignore').splitlines()
+            return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()]
         except UnicodeError:
             return None
 

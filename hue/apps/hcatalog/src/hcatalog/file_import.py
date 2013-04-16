@@ -419,10 +419,12 @@ def _text_file_convert(fs, src_file_obj, processor, parser_options):
         src_file_obj.seek(0, hadoopfs.SEEK_SET)
         all_data = processor.read_all_data(src_file_obj,
                                            parser_options['encoding'],
-                                           ignore_whitespaces=parser_options['ignore_whitespaces'],
-                                           ignore_tabs=parser_options['ignore_tabs'],
-                                           single_line_comment=parser_options['single_line_comment'],
-                                           java_style_comments=parser_options['java_style_comments'])
+                                           ignore_whitespaces=parser_options.get('ignore_whitespaces', False),
+                                           ignore_tabs=parser_options.get('ignore_tabs', False),
+                                           single_line_comment=parser_options.get('single_line_comment', None),
+                                           java_style_comments=parser_options.get('java_style_comments', False))
+        if not all_data:
+            raise Exception('No input data was found')
         csv_content = unicode_csv_reader(parser_options['encoding'], StringIO.StringIO('\n'.join(all_data)),
                                          delimiter=parser_options['delimiter'].decode('string_escape'),)
         new_fields_list = []
@@ -484,7 +486,7 @@ def _parse_fields(fs, file_obj, filetypes, parser_options):
                                     single_line_comment=parser_options['single_line_comment'],
                                     java_style_comments=parser_options['java_style_comments'])
         auto_column_types = []
-        if lines is not None:
+        if lines:
             delim, fields_list = _readfields(lines, parser_options['delimiters'])
 
             # 'delimiter' is a MultiValueField. delimiter_0 and delimiter_1 are the sub-fields.
@@ -511,7 +513,7 @@ def _parse_fields(fs, file_obj, filetypes, parser_options):
             return parser_options
     else:
         # Even TextFileReader doesn't work
-        msg = "Failed to decode file '%s' into printable characters under %s" % (parser_options['path'], parser_options['encoding'],)
+        msg = 'No input data was found'
         LOG.error(msg)
         raise Exception(msg)
 

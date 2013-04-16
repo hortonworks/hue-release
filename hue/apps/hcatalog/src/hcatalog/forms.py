@@ -310,7 +310,7 @@ class CreateTableFromFileForm(forms.Form):
     # xls/xlsx files
     xls_sheet = ChoiceFieldExtended(label="Sheet", required=False)
     xls_cell_range = forms.CharField(label="Cell range", required=False)
-    xls_read_column_headers = forms.BooleanField(required=False, initial=False,
+    xls_read_column_headers = forms.BooleanField(required=False, initial=True,
                                              label="Read column headers",
                                              help_text="")
 
