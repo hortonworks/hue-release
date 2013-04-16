@@ -126,7 +126,9 @@ ${layout.menubar(section='query')}
         <li><a href="#log" data-toggle="tab">${_('Log')}</a></li>
         % if not error:
         <li><a href="#columns" data-toggle="tab">${_('Columns')}</a></li>
+        % if download_urls:
         <!--Visualization --><li><a href="#visualizations" data-toggle="tab">Visualizations</a></li><!--/Visualization -->
+        % endif
         % endif
       </ul>
 
@@ -188,7 +190,7 @@ ${layout.menubar(section='query')}
           <pre>${ log }</pre>
         </div>
 
-        % if not error:
+        % if not error and download_urls.get("csv"):
         <div class="tab-pane" id="columns">
           <table class="table table-striped table-condensed" cellpadding="0" cellspacing="0">
             <thead>

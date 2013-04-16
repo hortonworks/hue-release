@@ -16,7 +16,7 @@ Source2: .ssh.tar.gz
 #Source3: apache-maven-3.0.4-bin.tar.gz
 
 
-Requires: wget, sudo, libxslt, python-lxml
+Requires: wget, sudo, libxslt, python-lxml, openssl
 
 provides: hue
 
@@ -74,7 +74,8 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 %pre
 
 (
-groupadd -f hadoop
+[ ! `</etc/group grep "^hadoop"` ] && groupadd hadoop
+[ ! `</etc/group grep "^sandbox"` ] && groupadd sandbox
 [[ -z `cat /etc/passwd | grep sandbox` ]] && useradd -G hadoop sandbox || usermod -a -G hadoop sandbox
 sudo -u sandbox -s -- <<END_OF_SANDBOX
 cd /usr/lib

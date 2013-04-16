@@ -87,7 +87,7 @@ hue_start() {
         chown -R $USER:$GROUP /var/lib/hue 
         ini_set $HUEINI server_user $USER
         ini_set $HUEINI server_group $GROUP
-        chown root:$USER /usr/lib/hue/apps/shell/src/shell/build/setuid
+        chown root:$GROUP /usr/lib/hue/apps/shell/src/shell/build/setuid
         chmod 4711 /usr/lib/hue/apps/shell/src/shell/build/setuid
 
         export PYTHON_EGG_CACHE='/tmp/.hue-python-eggs'
