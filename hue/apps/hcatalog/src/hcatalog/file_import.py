@@ -334,7 +334,7 @@ def _xls_file_preview(fs, parser_options):
         xls_sheet_selected = parser_options['xls_sheet']
 
         xls_fileobj = get_xls_file_processor().open(file_obj)
-        sheets = [[str(idx), name] for idx, name in enumerate(get_xls_file_processor().get_sheet_list(xls_fileobj))]
+        sheets = [[unicode(idx), name] for idx, name in enumerate(get_xls_file_processor().get_sheet_list(xls_fileobj))]
         if not xls_sheet_selected in [sh[0] for sh in sheets]:
             xls_sheet_selected = '0'
 
@@ -433,6 +433,8 @@ def _text_file_convert(fs, src_file_obj, processor, parser_options):
         for row_idx, row in enumerate(csv_content):
             new_row = []
             for field in row:
+                # skip the new lines characters from field
+                field = re.sub(r'[\r\n]+', '', field)
                 new_row.append(field.replace(parser_options['field_terminator'].decode('string_escape'), ''))
             data_to_store.append(parser_options['field_terminator'].decode('string_escape').join(new_row))
             if row_idx <= IMPORT_COLUMN_AUTO_NLINES:
@@ -459,6 +461,8 @@ def _text_preview_convert(lines, parser_options):
             for row in csv_content:
                 new_row = []
                 for field in row:
+                    # skip the new lines characters from field
+                    field = re.sub(r'[\r\n]+', '', field)
                     new_row.append(field.replace(parser_options['field_terminator'].decode('string_escape'), ''))
                 new_fields_list.append(new_row)
             auto_column_types = HiveTypeAutoDefine().defineColumnTypes(new_fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
@@ -630,7 +634,7 @@ class HiveTypeAutoDefine(object):
                     column_types.append([0] * HIVE_PRIMITIVES_LEN)
             for i, field in enumerate(row):
                 if field:
-                    column_types[i][self.defineFieldTypeIdx(str(field), min_int_type=min_int_type)] += 1
+                    column_types[i][self.defineFieldTypeIdx(unicode(field), min_int_type=min_int_type)] += 1
         column_types = [HIVE_PRIMITIVE_TYPES[HIVE_STRING_IDX]
                         if types_list[HIVE_STRING_IDX] > 0
                         else HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))]

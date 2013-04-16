@@ -21,7 +21,6 @@ import xlrd
 import logging
 import re
 import string
-from os import linesep
 from datetime import datetime, date, time
 
 LOG = logging.getLogger(__name__)
@@ -222,7 +221,7 @@ class TransitionTableFSM:
         elif self.default_transition is not None:
             return self.default_transition
         else:
-            raise ExceptionFSM('Transition is undefined: (%s, %s).' % (str(input_symbol), str(state)))
+            raise ExceptionFSM('Transition is undefined: (%s, %s).' % (unicode(input_symbol), unicode(state)))
 
     def process(self, input_symbol):
         """
@@ -280,23 +279,23 @@ class CommentsDetector():
 
         def do_default(fsm):
             pass
-            # print 'Processing default state, state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'Processing default state, state=%s, symbol=\'%s\'' % (fsm.current_state, unicode(fsm.input_symbol))
 
         def do_other(fsm):
-            # print 'do_other current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_other current_state=%s, symbol=\'%s\'' % (fsm.current_state, unicode(fsm.input_symbol))
             if fsm.current_state == STATE_SLASH:
                 fsm.memory['cur_line_comment'] = [None, None]
                 fsm.memory['cur_block_comment'] = [None, None]
 
         def do_slash_line_only(fsm):
-            # print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, unicode(fsm.input_symbol))
             if fsm.current_state == STATE_NONE:
                 fsm.memory['cur_line_comment'][0] = fsm.memory['cur_symbol_pos']
             elif fsm.current_state == STATE_SLASH:
                 fsm.memory['cur_block_comment'] = [None, None]
 
         def do_slash_block_only(fsm):
-            # print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, unicode(fsm.input_symbol))
             if fsm.current_state == STATE_NONE:
                 fsm.memory['cur_block_comment'][0] = fsm.memory['cur_symbol_pos']
             elif fsm.current_state == STATE_STAR:
@@ -305,7 +304,7 @@ class CommentsDetector():
                 fsm.memory['cur_block_comment'] = [None, None]
 
         def do_slash_line_and_block(fsm):
-            # print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_slash current_state=%s, symbol=\'%s\'' % (fsm.current_state, unicode(fsm.input_symbol))
             if fsm.current_state == STATE_NONE:
                 fsm.memory['cur_line_comment'][0] = fsm.memory['cur_symbol_pos']
                 fsm.memory['cur_block_comment'][0] = fsm.memory['cur_symbol_pos']
@@ -317,12 +316,12 @@ class CommentsDetector():
                 fsm.memory['cur_block_comment'] = [None, None]
 
         def do_star(fsm):
-            # print 'do_star current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_star current_state=%s, symbol=\'%s\'' % (fsm.current_state, unicode(fsm.input_symbol))
             if fsm.current_state == STATE_SLASH:
                 fsm.memory['cur_line_comment'] = [None, None]
 
         def do_eol(fsm):
-            # print 'do_eol current_state=%s, symbol=\'%s\'' % (fsm.current_state, str(fsm.input_symbol))
+            # print 'do_eol current_state=%s, symbol=\'%s\'' % (fsm.current_state, unicode(fsm.input_symbol))
             if fsm.current_state == STATE_LINE_COMMENT:
                 fsm.memory['cur_line_comment'][1] = fsm.memory['cur_symbol_pos'] + 1
                 fsm.memory['line_comments'].append(fsm.memory['cur_line_comment'])
@@ -435,6 +434,7 @@ class GzipFileProcessor():
                 data = gz.read(import_peek_size)
             else:
                 data = gz.read(DEFAULT_IMPORT_PEEK_SIZE)
+            data = unicode(data, encoding, errors='ignore')
             if java_style_comments or single_line_comment:
                 data = remove_comments(data,
                                        java_line_comment=java_style_comments,
@@ -446,13 +446,12 @@ class GzipFileProcessor():
                 data = data.replace('\t', '')
         except IOError:
             return None
-        try:
-            if import_peek_nlines:
-                return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()][:-1][:import_peek_nlines]
-            else:
-                return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()][:-1][:DEFAULT_IMPORT_PEEK_NLINES]
         except UnicodeError:
             return None
+        if import_peek_nlines:
+            return [s for s in data.splitlines() if s.strip()][:-1][:import_peek_nlines]
+        else:
+            return [s for s in data.splitlines() if s.strip()][:-1][:DEFAULT_IMPORT_PEEK_NLINES]
 
 
     @staticmethod
@@ -462,6 +461,7 @@ class GzipFileProcessor():
         gz = gzip.GzipFile(fileobj=fileobj, mode='rb')
         try:
             data = gz.read()
+            data = unicode(data, encoding, errors='ignore')
             if java_style_comments or single_line_comment:
                 data = remove_comments(data,
                                        java_line_comment=java_style_comments,
@@ -473,20 +473,19 @@ class GzipFileProcessor():
                 data = data.replace('\t', '')
         except IOError:
             return None
-        try:
-            return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()]
         except UnicodeError:
             return None
+        return [s for s in data.splitlines() if s.strip()]
+
 
     @staticmethod
     def write_all_data(fileobj, data, encoding):
         try:
             data = data.encode(encoding, 'ignore')
-            try:
-                gz = gzip.GzipFile(fileobj=fileobj, mode='wb')
-                gz.write(data)
-            except IOError:
-                pass
+            gz = gzip.GzipFile(fileobj=fileobj, mode='wb')
+            gz.write(data)
+        except IOError:
+            pass
         except UnicodeError:
             pass
 
@@ -504,6 +503,7 @@ class TextFileProcessor():
                 data = fileobj.read(import_peek_size)
             else:
                 data = fileobj.read(DEFAULT_IMPORT_PEEK_SIZE)
+            data = unicode(data, encoding, errors='ignore')
             if java_style_comments or single_line_comment:
                 data = remove_comments(data,
                                         java_line_comment=java_style_comments,
@@ -515,13 +515,13 @@ class TextFileProcessor():
                 data = data.replace('\t', '')
         except IOError:
             return None
-        try:
-            if import_peek_nlines:
-                return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()][:-1][:DEFAULT_IMPORT_PEEK_NLINES]
-            else:
-                return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()][:-1][:import_peek_nlines]
         except UnicodeError:
             return None
+        if import_peek_nlines:
+            return [s for s in data.splitlines() if s.strip()][:-1][:DEFAULT_IMPORT_PEEK_NLINES]
+        else:
+            return [s for s in data.splitlines() if s.strip()][:-1][:import_peek_nlines]
+
 
     @staticmethod
     def read_all_data(fileobj, encoding, max_size=None,
@@ -532,6 +532,7 @@ class TextFileProcessor():
                 data = fileobj.read(max_size)
             else:
                 data = fileobj.read(DEFAULT_IMPORT_MAX_SIZE)
+            data = unicode(data, encoding, errors='ignore')
             if java_style_comments or single_line_comment:
                 data = remove_comments(data,
                                        java_line_comment=java_style_comments,
@@ -543,10 +544,9 @@ class TextFileProcessor():
                 data = data.replace('\t', '')
         except IOError:
             return None
-        try:
-            return [s for s in unicode(data, encoding, errors='ignore').splitlines() if s.strip()]
         except UnicodeError:
             return None
+        return [s for s in data.splitlines() if s.strip()]
 
     @staticmethod
     def write_all_data(fileobj, data, encoding):
@@ -608,11 +608,11 @@ def showable_cell_value(celltype, cellvalue, datemode):
             dt = xlrd.xldate_as_tuple(cellvalue, datemode)
             if len(dt) >= 6:
                 if 0 == dt[3] == dt[4] == dt[5]:
-                    showval = str(date(*(dt[0:3])))
+                    showval = unicode(date(*(dt[0:3])))
                 elif 0 == dt[0] == dt[1] == dt[2]:
-                    showval = str(time(*(dt[3:6])))
+                    showval = unicode(time(*(dt[3:6])))
                 else:
-                    showval = str(datetime(*(dt[0:6])))
+                    showval = unicode(datetime(*(dt[0:6])))
             else:
                 showval = ''
 
@@ -735,7 +735,7 @@ class XlsFileProcessor():
                 for row in data:
                     new_row = []
                     for field in row:
-                        new_row.append(str(field).replace(field_terminator.decode('string_escape'), ''))
+                        new_row.append(unicode(field).replace(field_terminator.decode('string_escape'), ''))
                     data_to_store.append(field_terminator.decode('string_escape').join(new_row))
 
                 gz.write(newline_terminator.join(data_to_store))
