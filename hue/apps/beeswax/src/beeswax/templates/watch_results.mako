@@ -205,34 +205,7 @@ ${layout.menubar(section='query')}
         </div>
         % if columns:
         <!--- Visualization -->
-        <div class="tab-pane" id="visualizations">
-        <textarea id="vis_code" name="code"><script>
-var x = "${columns[0]}";
-/*Set col name from csv file for x axis*/
-var y = [
-% for col in columns[1:]:
-"${col}",
-% endfor
-];
-/*Set col names from csv file for y axis. Can be only integer*/
-var c = new chart(x,y);
-d3.csv("${download_urls["csv"]}", function(dataset)
-{
-dataset.forEach(function(d,i)
-{
-c.getData(d,i);
-});
-c.setGraph('line',true);
-/*first options include: 'area', 'stack', 'bar', 'line', and 'scatterplot'.*/
-/*second option set chart as stack(fasle) or unstack(true)*/
-});
-</script>
-           </textarea> <br>
-			<iframe id="preview"></iframe>
-
-
-        </div>
-        <link href="/pig/static/css/codemirror.css" rel="stylesheet">
+		<link href="/pig/static/css/codemirror.css" rel="stylesheet">
         <link href="/hcatalog/static/css/visualization.css" rel="stylesheet">
         <script src="/pig/static/js/codemirror.js"></script>
         <script src="/hcatalog/static/js/visualization.js"></script>
@@ -240,9 +213,46 @@ c.setGraph('line',true);
         <script src="/hcatalog/static/js/xml.js"></script>
         <script src="/hcatalog/static/js/css.js"></script>
         <script src="/hcatalog/static/js/javascript.js"></script>
+        <div class="tab-pane" id="visualizations">
+        <textarea id="vis_code" name="code">
+		<script>
+		var settings = {
+			csv:"${download_urls["csv"]}",
+			xAxis:"${columns[0]}",
+			yAxis:[
+				% for col in columns[1:]:
+				"${col}",
+				% endfor
+				],
+			minY:null,
+			maxY:null
+		}
+		</script>
+        </textarea> 
+		   	<div class='chart_type_selectors'>	
+				<div class='chart_type_wrap'>
+					<input type="radio" name="type" value="area"  checked="checked"/> <img src='/hcatalog/static/css/images/charts/area.png'> area<br/>	
+					<input type="radio" name="type" value="bar"  /> <img src='/hcatalog/static/css/images/charts/bar.png'> bar<br/>
+					<input type="radio" name="type" value="line"  /> <img src='/hcatalog/static/css/images/charts/line.png'> line<br/>
+					<input type="radio" name="type" value="scatterplot" /> <img src='/hcatalog/static/css/images/charts/scatter.png'> scatter<br/>
+				
+					
+				</div>
+				<div class='chart_type_wrap'>
+					<input type="radio" name="stacked" value="false"  /> <img src='/hcatalog/static/css/images/charts/stack.png'> stack<br/>
+					<input type="radio" name="stacked" value="true" checked="checked" /> <img src='/hcatalog/static/css/images/charts/value.png'> value<br/>
+				</div>
+			</div>
+			<iframe id="preview"></iframe>
+
+
+
+        </div>
+
 
         <!--/Visualization -->
         % else:
+
          <div class="tab-pane" id="visualizations"></div>
         % endif
         % endif

@@ -75,8 +75,9 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 (
 [ ! `</etc/group grep "^hadoop"` ] && groupadd hadoop
+[ ! `</etc/group grep "^users"` ] && groupadd users
 [ ! `</etc/group grep "^sandbox"` ] && groupadd sandbox
-[[ -z `cat /etc/passwd | grep sandbox` ]] && useradd -G hadoop sandbox || usermod -a -G hadoop sandbox
+[[ -z `cat /etc/passwd | grep sandbox` ]] && useradd -g users sandbox || usermod -a -g users sandbox
 sudo -u sandbox -s -- <<END_OF_SANDBOX
 cd /usr/lib
 

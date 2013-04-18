@@ -50,10 +50,12 @@ $(document).ready(function () {
         	delay = setTimeout(updatePreview, 700);
         }
       });
-
+	editor.refresh();
 	  var previewFrame = document.getElementById('preview');	
 	  var preview =  previewFrame.contentDocument ||  previewFrame.contentWindow.document;
       function updatePreview() {
+		var type = $('input[name=type]:checked').attr('value');
+		var stacked = $('input[name=stacked]:checked').attr('value');
 		preview.open();
 		if (jQuery.browser.msie == true) { 
 			styles += '</style>';
@@ -63,10 +65,27 @@ $(document).ready(function () {
 		else
 		{
 			var include = '<script src="/hcatalog/static/js/include.js"></script>';
-			preview.write(include+editor.getValue());
+			var build_chart_file = '<script>var c = new chart(settings.xAxis,settings.yAxis,settings.minY,settings.maxY);</script>';
+			build_chart_file += "<script>c.paint('"+type+"',"+stacked+");</script>";
+			preview.write(include+editor.getValue()+build_chart_file);
 		}
 		preview.close();
       }
-	  $('a[href="#visualizations"]').live('click',function(){  editor.refresh(); });
+	  $('a[href="#visualizations"]').live('click',function(){editor.refresh(); if(jQuery.browser.mozilla){preview.open(); preview.write();preview.close(); updatePreview();}});
       setTimeout(updatePreview, 700);
+	  
+	  
+	  $('input[name=type]').click(function(){
+	  if(($(this).attr('value')=='line') || ($(this).attr('value')=='scatterplot'))
+	  {
+		$('input[name=stacked]').attr('disabled',true);
+		$('input[value=true]').attr('checked',true);
+	  }
+	  else
+	  {
+		$('input[name=stacked]').attr('disabled',false);
+	  }
+		updatePreview()
+		});
+	  $('input[name=stacked]').click(function(){updatePreview()});
 });

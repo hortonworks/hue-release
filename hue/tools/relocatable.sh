@@ -42,10 +42,13 @@ $ENV_PYTHON $VIRTUAL_BOOTSTRAP --relocatable "$HUE_ROOT/build/env"
 
 # Step 1b. Fix any broken lib64 directory
 LIB64="$HUE_ROOT/build/env/lib64"
-if [ -L "$LIB64" -a ! -e "$LIB64" ] ; then
+
+# commented out because on build machine it is possible that
+# target of broken link is exists, so in package remains broken link
+# if [ -L "$LIB64" -a ! -e "$LIB64" ] ; then
   rm "$LIB64"
   ln -s lib "$LIB64"
-fi
+# fi
 
 # Step 2. Fix .ini symlinks for all apps (make them relative)
 for app in $HUE_ROOT/apps/* ; do
