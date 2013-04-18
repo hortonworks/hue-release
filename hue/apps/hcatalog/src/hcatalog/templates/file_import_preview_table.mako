@@ -46,11 +46,17 @@
     </tr>
     </thead>
     <tbody>
+    <% max_row_len = max([len(row) for row in fields_list])%>
     % for i, row in enumerate(fields_list):
         <tr>
             <td><em>${_('Row')} #${row_start_index + i + 1}</em></td>
+        <% cur_row_len = len(row)%>
         % for val in row:
                 <td>${val}</td>
+        % endfor
+        ## aligning the table with empty cells
+        % for i in range(max_row_len - cur_row_len):
+                <td></td>
         % endfor
         </tr>
     % endfor
