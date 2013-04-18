@@ -74,13 +74,13 @@ def create_from_file(request, database='default'):
 
             # table options
             table_name = form.table.cleaned_data['name']
-            field_terminator = form.table.cleaned_data['field_terminator']
-            parser_options['field_terminator'] = field_terminator
+            replace_delimiter_with = form.table.cleaned_data['replace_delimiter_with']
+            parser_options['replace_delimiter_with'] = replace_delimiter_with
 
             # common options
             parser_options['path'] = form.table.cleaned_data['path']
-            file_type = form.table.cleaned_data['file_type']
-            parser_options['file_type'] = form.table.cleaned_data['file_type']
+            file_type = request.POST.get('file_type', hcatalog.forms.IMPORT_FILE_TYPE_NONE)
+            parser_options['file_type'] = file_type
             parser_options['preview_start_idx'] = 0
             parser_options['preview_end_idx'] = 0
 
@@ -104,7 +104,7 @@ def create_from_file(request, database='default'):
             if parser_options['autodetect_delimiter']:
                 parser_options['delimiters'] = DELIMITERS
             else:
-                parser_options['delimiters'] = parser_options['delimiter']
+                parser_options['delimiters'] = (parser_options['delimiter'],)
 
             if parser_options['xls_read_column_headers'] and parser_options['preview_start_idx'] == 0:
                 parser_options['preview_start_idx'] = 1
@@ -113,6 +113,15 @@ def create_from_file(request, database='default'):
             is_preview_next = 'submitPreviewNext' in request.POST
             is_preview_beginning = 'submitPreviewBeginning' in request.POST
             if is_preview_action or is_preview_next or is_preview_beginning:  # preview  action
+                preview_results = {}
+                preview_table_resp = ''
+                fields_list, n_cols, col_names = ([], 0, [])
+
+                # validate input parameters
+                if file_type == hcatalog.forms.IMPORT_FILE_TYPE_NONE:
+                    preview_results['error'] = unicode('Cannot define file type.')
+                    return HttpResponse(json.dumps(preview_results))
+
                 if is_preview_next and 'preview_start_idx' in request.POST and 'preview_end_idx' in request.POST:
                     parser_options['preview_start_idx'] = int(request.POST.get('preview_end_idx')) + 1
                     parser_options['preview_end_idx'] = int(request.POST.get('preview_end_idx')) + IMPORT_PEEK_NLINES
@@ -123,9 +132,6 @@ def create_from_file(request, database='default'):
                     parser_options['preview_start_idx'] += 1
                     parser_options['preview_end_idx'] += 1
 
-                preview_results = {}
-                preview_table_resp = ''
-                fields_list, n_cols, col_names = ([], 0, [])
                 try:
                     parser_options = _delim_preview_ext(request.fs, [processor.TYPE for processor in FILE_PROCESSORS],
                                                         parser_options)
@@ -144,10 +150,10 @@ def create_from_file(request, database='default'):
                     preview_results['results'] = preview_table_resp
                     options = {}
 
-                    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_CSV_TSV:
+                    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_TEXT:
                         options["delimiter_0"] = parser_options['delimiter_0']
                         options["delimiter_1"] = parser_options['delimiter_1']
-                    elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_XLS_XLSX:
+                    elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_SPREADSHEET:
                         options["xls_sheet"] = parser_options['xls_sheet']
                         options["xls_sheet_list"] = parser_options['xls_sheet_list']
                         options["preview_start_idx"] = parser_options['preview_start_idx']
@@ -157,6 +163,16 @@ def create_from_file(request, database='default'):
                     preview_results["options"] = options
                 return HttpResponse(json.dumps(preview_results))
             else:  # create table action
+                # validate input parameters
+                if file_type == hcatalog.forms.IMPORT_FILE_TYPE_NONE:
+                    err_msg = unicode('Cannot define file type.')
+                    return render("create_table_from_file.mako", request, dict(
+                        action="#",
+                        database=database,
+                        table_form=form.table,
+                        error=err_msg)
+                    )
+
                 user_def_columns = []
                 column_count = 0
                 while 'cols-%d-column_name' % column_count in request.POST \
@@ -176,16 +192,16 @@ def create_from_file(request, database='default'):
                                                                                         'comment'],
                                                                                     row_format='Delimited',
                                                                                     field_terminator=parser_options[
-                                                                                        'field_terminator']),
+                                                                                        'replace_delimiter_with']),
                                                                       'columns': user_def_columns if user_def_columns else
                                                                       parser_options['columns'],
                                                                       'partition_columns': []
                                                                   })
                     proposed_query = proposed_query.decode('utf-8')
                     path = form.table.cleaned_data['path']
-                    file_type = parser_options['file_type']
+                    file_type = hcatalog.forms.IMPORT_FILE_TYPE_TEXT
 
-                    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_XLS_XLSX:
+                    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_SPREADSHEET:
                         path = parser_options['results_path']
                     else:
                         if parser_options['results_path'] and request.fs.exists(parser_options['results_path']):
@@ -257,9 +273,9 @@ def _submit_create_and_load(request, create_hql, database, table_name, path, do_
 
 def _delim_preview_ext(fs, file_types, parser_options):
     file_type = parser_options['file_type']
-    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_CSV_TSV:
+    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_TEXT:
         parser_options = _text_file_preview(fs, file_types, parser_options)
-    elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_XLS_XLSX:
+    elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_SPREADSHEET:
         parser_options = _xls_file_preview(fs, parser_options)
     elif file_type == hcatalog.forms.IMPORT_FILE_TYPE_MS_ACCESS:
         pass
@@ -373,7 +389,7 @@ def _xls_file_preview(fs, parser_options):
             fields_list_start = 1 if parser_options['xls_read_column_headers'] else 0
             fields_list = fields_list[fields_list_start:]
             get_xls_file_processor().write_to_dsv_gzip(xls_fileobj, result_file_obj, fields_list,
-                                                       parser_options['field_terminator'])
+                                                       parser_options['replace_delimiter_with'])
             result_file_obj.close()
 
         file_obj.close()
@@ -435,8 +451,8 @@ def _text_file_convert(fs, src_file_obj, processor, parser_options):
             for field in row:
                 # skip the new lines characters from field
                 field = re.sub(r'[\r\n]+', '', field)
-                new_row.append(field.replace(parser_options['field_terminator'].decode('string_escape'), ''))
-            data_to_store.append(parser_options['field_terminator'].decode('string_escape').join(new_row))
+                new_row.append(field.replace(parser_options['replace_delimiter_with'].decode('string_escape'), ''))
+            data_to_store.append(parser_options['replace_delimiter_with'].decode('string_escape').join(new_row))
             if row_idx <= IMPORT_COLUMN_AUTO_NLINES:
                 new_fields_list.append(new_row)
         auto_column_types = HiveTypeAutoDefine().defineColumnTypes(new_fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
@@ -461,9 +477,9 @@ def _text_preview_convert(lines, parser_options):
             for row in csv_content:
                 new_row = []
                 for field in row:
-                    # skip the new lines characters from field
+                    # skip the new line characters from field
                     field = re.sub(r'[\r\n]+', '', field)
-                    new_row.append(field.replace(parser_options['field_terminator'].decode('string_escape'), ''))
+                    new_row.append(field.replace(parser_options['replace_delimiter_with'].decode('string_escape'), ''))
                 new_fields_list.append(new_row)
             auto_column_types = HiveTypeAutoDefine().defineColumnTypes(new_fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
             fields_list = new_fields_list[:IMPORT_PEEK_NLINES]

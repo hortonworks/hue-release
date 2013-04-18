@@ -76,18 +76,6 @@ ${layout.menubar(section='tables')}
                                     </div>
                                 </td>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["field_terminator"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["field_terminator"], render_default=True)}
-                                                <span class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed. Terminator must be exactly one character.')}</span>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
                             </table>
                         </div>
                         <div class="alert alert-info">${_('File options')}</div>
@@ -101,14 +89,12 @@ ${layout.menubar(section='tables')}
                                     file_chooser=True,
                                     show_errors=False
                                     )}
-                                    ${comps.field(table_form["file_type"], render_default=True)}
-                                    <input id="submit-preview" class="btn btn-primary disable-feedback"
-                                           value="${_('Preview')}" name="submitPreview"/>
                                     <span class="help-inline error-inline hide">${_('This field is required. Select path to the file on HDFS.')}</span>
                                 </div>
+                                <input id="file-type" name="file_type" value="text" style="display: none"/>
                             </div>
                         </div>
-                        <div class="well" id="file-options-csv">
+                        <div class="well" id="file-options-text">
                             <table>
                                 </tr>
                                 <td>
@@ -166,9 +152,11 @@ ${layout.menubar(section='tables')}
                                 <tr>
                                     <td>
                                         <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["single_line_comment"])}
+                                            ${comps.bootstrapLabel(table_form["replace_delimiter_with"])}
                                             <div class="controls">
-                                                ${comps.field(table_form["single_line_comment"], render_default=True)}
+                                                ${comps.field(table_form["replace_delimiter_with"], render_default=True)}
+                                                <span class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed. Terminator must be exactly one character.')}</span>
+                                                </span>
                                             </div>
                                         </div>
                                     </td>
@@ -189,9 +177,21 @@ ${layout.menubar(section='tables')}
                                         </div>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td>
+                                        <div class="control-group">
+                                            ${comps.bootstrapLabel(table_form["single_line_comment"])}
+                                            <div class="controls">
+                                                ${comps.field(table_form["single_line_comment"], render_default=True)}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
                             </table>
                         </div>
-                        <div class="well" id="file-options-xls">
+                        <div class="well" id="file-options-ss">
                             <table>
                                 <tr>
                                     <td>
@@ -286,7 +286,7 @@ ${layout.menubar(section='tables')}
 
     }
 
-    div.well#file-options-csv {
+    div.well#file-options-text {
         padding-top: 0px;
         border-top-width: 0px;
         box-shadow: 0 0 0;
@@ -296,7 +296,7 @@ ${layout.menubar(section='tables')}
         -moz-border-radius-topright: 0px;
     }
 
-    div.well#file-options-xls {
+    div.well#file-options-ss {
         padding-top: 0px;
         border-top-width: 0px;
         box-shadow: 0 0 0;
@@ -315,15 +315,7 @@ ${layout.menubar(section='tables')}
         float: left;
         width: 100px;
         padding-top: 5px;
-        text-align: right
-    }
-
-    #id_table-file_type {
-        width: 120px;
-    }
-
-    #submit-preview {
-        width: 90px;
+        text-align: right;
     }
 
     #filechooser {
@@ -333,7 +325,7 @@ ${layout.menubar(section='tables')}
     }
 
     .pathChooser {
-        width: 50%;
+        width: 80%;
     }
 
     .error-inline {
@@ -360,96 +352,29 @@ ${layout.menubar(section='tables')}
 <script type="text/javascript" charset="utf-8">
 
 var PreviewType = {"preview": 0, "preview_next": 1, "preview_beginning":2};
-var FileType = {"csv": "csv", "xls": "xls"};
+var FileType = {"text": "text", "spreadsheet": "spreadsheet", "none": "none"};
 
 var tableList = [];
 var previewStartIdx = 0;
 var previewEndIdx = 0;
 var filePath = "";
-function reactOnFilePathChange(newPath) {
-    filePath = newPath;
-    if (filePath.indexOf(".csv") != -1 || filePath.indexOf(".tsv") != -1 ||
-            filePath.indexOf(".dsv") != -1 || filePath.indexOf(".txt") != -1 ) {
-        $("#id_table-file_type").val(FileType.csv);
-    }
-    else if (filePath.indexOf(".xls") != -1 || filePath.indexOf(".xlsx") != -1) {
-        $("#id_table-file_type").val(FileType.xls);
-    }
-    else {
-        $("#id_table-file_type").val(FileType.csv);
-    }
-    $("#id_table-file_type").change();
-}
+var fileType = FileType.none
 
 $(document).ready(function () {
-    $(document).resize()
-    var zoom = document.documentElement.clientWidth / window.innerWidth;
-    $(window).resize(function () {
-        var zoomNew = document.documentElement.clientWidth / window.innerWidth;
-        if (zoom != zoomNew) {
-            $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
-            zoom = zoomNew;
-        }
-    });
-    $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
 
-    $('#id_table-autodetect_delimiter').change(function(){
-        if($(this).is(":checked")) {
-            $("#id_table-delimiter_0").attr("disabled", "disabled");
-            $("#id_table-delimiter_1").attr("disabled", "disabled");
-         }
-        else {
-            $("#id_table-delimiter_0").removeAttr("disabled");
-            $("#id_table-delimiter_1").removeAttr("disabled");
-        }
-        $("#id_table-delimiter_0").change();
-    });
-    $("#id_table-autodetect_delimiter").change();
-
-    terminatorFieldInit("field_terminator");
-    terminatorFieldInit("delimiter");
-
-    $("#id_table-file_type").change(function () {
-        $("#preview-div").hide();
-        if ($(this).val() == FileType.csv) {
-            $("div.well#div-file-selector").addClass("div-file-selector");
-            $("#file-options-xls").hide();
-            $("#preview-pagination").hide();
-            $("#file-options-csv").show();
-        }
-        else if ($(this).val() == "xls") {
-            $("#file-options-csv").hide();
-            $("#preview-pagination").show();
-            $("#file-options-xls").show();
-            $("div.well#div-file-selector").addClass("div-file-selector");
-        }
-        else if ($(this).val() == "msaccess") {
-            $("#file-options-csv").hide();
-            $("div.well#div-file-selector").removeClass("div-file-selector");
-        }
-    });
-    $("#id_table-file_type").val(FileType.csv);
-    $("#id_table-file_type").change();
-
-% if error is not None:
-    showMainError("${error}");
-% endif
-
-    $.post("${url(app_name + ':get_tables')}",function (data) {
-        tableList = data;
-    }, "json");
+    initUI();
 
     function submitPreview(preview_type) {
         submitPreviewStart();
         if(PreviewType.preview == preview_type){
-            $(window).scrollTop(0);
             $("#preview-div").hide();
         }
-        if (!validateForm()) {
+        if (!validatePreviewForm()) {
             submitPreviewEnd();
             return;
         }
         var postQueryData = $('form#mainForm').serializeArray();
+        postQueryData.push({ name: "file_type", value: fileType });
         if(PreviewType.preview == preview_type){
             postQueryData.push({ name: "submitPreviewAction", value: "" });
         }
@@ -482,19 +407,11 @@ $(document).ready(function () {
                     "fnDrawCallback": function( oSettings ) {
                         $(".resultTable").jHueTableExtender({
                             hintElement: "#jumpToColumnAlert",
-                            ##                            fixedHeader: true,
-                                                        firstColumnTooltip: true
+                            firstColumnTooltip: true
                         });
                     }
                 });
-
                 $("#preview-div").show();
-                if(PreviewType.preview == preview_type)
-                {
-                    $('html, body').animate({
-                        scrollTop: $("#preview-div").offset().top - $("#container-fluid-top").offset().top
-                    }, 1000);
-                }
             }
             if ("options" in data) {
                 updateOptions(data["options"]);
@@ -523,6 +440,8 @@ $(document).ready(function () {
     $("#submit-preview-next").click(function(){ submitPreview(PreviewType.preview_next)});
     $("#submit-preview-begin").click(function(){ submitPreview(PreviewType.preview_beginning)});
 
+    $(".fileChooserBtn").addClass("btn-primary disable-feedback");
+    $(".fileChooserBtn").prop("text", "Choose a file");
     $(".fileChooserBtn").click(function (e) {
         e.preventDefault();
         var _destination = $(this).attr("data-filechooser-destination");
@@ -538,7 +457,6 @@ $(document).ready(function () {
         $("#chooseFile").modal("show");
     });
 
-
     $('form#mainForm').submit(function (event) {
         if (!validateOnCreateTable()) {
             event.preventDefault();
@@ -547,6 +465,112 @@ $(document).ready(function () {
             submitCreateStart();
         }
     });
+
+    function setFileType(ft) {
+        fileType = ft;
+        $("input[name='file_type']").val(ft);
+    }
+
+    function initUI() {
+        setFileType(FileType.none);
+        $("#file-options-text").hide();
+        $("#file-options-ss").hide();
+        $("#preview-div").hide();
+        $("div.well#div-file-selector").removeClass("div-file-selector");
+
+        $(document).resize();
+        var zoom = document.documentElement.clientWidth / window.innerWidth;
+        $(window).resize(function () {
+            var zoomNew = document.documentElement.clientWidth / window.innerWidth;
+            if (zoom != zoomNew) {
+                $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
+                zoom = zoomNew;
+            }
+        });
+        $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
+
+        % if error is not None:
+        showMainError("${error}");
+        % endif
+
+        $.post("${url(app_name + ':get_tables')}", function (data) {
+            tableList = data;
+        }, "json");
+    }
+
+    function reactOnFilePathChange(newPath) {
+        filePath = newPath;
+        $(".pathChooser").val(filePath);
+        if (filePath.indexOf(".csv") != -1 || filePath.indexOf(".tsv") != -1 ||
+                filePath.indexOf(".dsv") != -1 || filePath.indexOf(".txt") != -1 ) {
+            setFileType(FileType.text);
+            $("div.well#div-file-selector").addClass("div-file-selector");
+            $("#file-options-ss").hide();
+            $("#preview-pagination").hide();
+            $("#file-options-text").show();
+        }
+        else if (filePath.indexOf(".xls") != -1 || filePath.indexOf(".xlsx") != -1) {
+            setFileType(FileType.spreadsheet);
+            $("#file-options-text").hide();
+            $("#preview-pagination").show();
+            $("#file-options-ss").show();
+            $("div.well#div-file-selector").addClass("div-file-selector");
+        }
+        else {
+            setFileType(FileType.text);
+            $("div.well#div-file-selector").addClass("div-file-selector");
+            $("#file-options-ss").hide();
+            $("#preview-pagination").hide();
+            $("#file-options-text").show();
+        }
+        reactOnOptionChange();
+    }
+
+    function reactOnOptionChange() {
+        submitPreview(PreviewType.preview);
+    }
+
+    // text files
+    $("select[name='table-encoding']").change(reactOnOptionChange);
+    $("input[name='table-read_column_headers']").change(reactOnOptionChange);
+    var delim0 = $("select[name='table-delimiter_0']");
+    var delim1 = $("input[name='table-delimiter_1']");
+    delim1.addClass("input-small");
+    delim1.css("margin-left", "4px").attr("placeholder", "${_('type here')}");
+    delim1.css("visibility", "hidden");
+    delim1.val('');
+    delim0.change(function () {
+        if (delim0.val() == "__other__") {
+            delim1.css("visibility", "visible");
+        }
+        else {
+            delim1.css("visibility", "hidden");
+            delim1.val('');
+        }
+        reactOnOptionChange();
+    });
+    delim1.bind("change paste keyup", reactOnOptionChange);
+    terminatorFieldInit("replace_delimiter_with");
+    $("input[name='table-ignore_whitespaces']").change(reactOnOptionChange);
+    $("input[name='table-ignore_tabs']").change(reactOnOptionChange);
+    $("input[name='table-java_style_comments']").change(reactOnOptionChange);
+    $("input[name='table-single_line_comment']").bind("change paste keyup", reactOnOptionChange);
+    $("input[name='table-autodetect_delimiter']").change(function () {
+        if ($(this).is(":checked")) {
+            $("#id_table-delimiter_0").attr("disabled", "disabled");
+            $("#id_table-delimiter_1").attr("disabled", "disabled");
+        }
+        else {
+            $("#id_table-delimiter_0").removeAttr("disabled");
+            $("#id_table-delimiter_1").removeAttr("disabled");
+        }
+    });
+    $("#id_table-autodetect_delimiter").change();
+
+    // spreadsheet files
+    $("select[name='table-xls_sheet']").change(reactOnOptionChange);
+    $("input[name='table-xls_cell_range']").bind("change paste keyup", reactOnOptionChange);
+    $("input[name='table-xls_read_column_headers']").change(reactOnOptionChange);
 
     function terminatorFieldInit(name) {
         var field_0 = $("#id_table-" + name + "_0");
@@ -563,6 +587,18 @@ $(document).ready(function () {
             }
         });
         field_0.change();
+    }
+
+    function updateTerminatorField(name) {
+        var delim0 = $("#id_table-" + name + "_0");
+        var delim1 = $("#id_table-" + name + "_1");
+        if (delim0.val() == "__other__") {
+            delim1.css("visibility", "visible");
+        }
+        else {
+            delim1.css("visibility", "hidden");
+            delim1.val('');
+        }
     }
 
     function updateOption(optionName, options)
@@ -585,10 +621,11 @@ $(document).ready(function () {
 
     function updateOptions(options)
     {
-        updateOption("field_terminator_0", options);
-        updateOption("field_terminator_1", options);
+        updateOption("replace_delimiter_with_0", options);
+        updateOption("replace_delimiter_with_1", options);
         updateOption("delimiter_0", options);
         updateOption("delimiter_1", options);
+        updateTerminatorField("delimiter");
         updateListOption("xls_sheet", "xls_sheet_list", options);
         updateOption("xls_sheet", options);
     }
@@ -688,17 +725,25 @@ $(document).ready(function () {
             hideSecondFieldError(tableNameFld);
         }
 
-        var filePath = $("input[name='table-path']");
-        if (!isDataValid($.trim(filePath.val()))) {
-            showFieldError(filePath);
+        if(!validatePreviewForm()) {
+            isValid = false;
+        }
+        return isValid;
+    }
+
+    function validatePreviewForm() {
+        var isValid = true;
+
+        var filePathField = $("input[name='table-path']");
+        if (!isDataValid(filePath)) {
+            showFieldError(filePathField);
             isValid = false;
         }
         else {
-            hideFieldError(filePath);
+            hideFieldError(filePathField);
         }
 
-        var fileType = $("select[name='table-file_type']");
-        if(fileType.val() == FileType.xls) {
+        if(fileType == FileType.spreadsheet) {
             var cellRange = $("input[name='table-xls_cell_range']");
             if (cellRange.val().length > 0 && cellRange.val().match(/^[a-zA-Z]+\d+:[a-zA-Z]+\d+$/) == undefined) {
                 showFieldError(cellRange);
@@ -709,8 +754,8 @@ $(document).ready(function () {
             }
         }
 
-        var fieldTerminatorFld = $("#id_table-field_terminator_1");
-        if ($("#id_table-field_terminator_0").val() == "__other__" && (!isDataValid($.trim(fieldTerminatorFld.val())) || $.trim(fieldTerminatorFld.val()).length != 1)) {
+        var fieldTerminatorFld = $("#id_table-replace_delimiter_with_1");
+        if ($("#id_table-replace_delimiter_with_0").val() == "__other__" && (!isDataValid($.trim(fieldTerminatorFld.val())) || $.trim(fieldTerminatorFld.val()).length != 1)) {
             showFieldError(fieldTerminatorFld);
             isValid = false;
         }
@@ -719,7 +764,8 @@ $(document).ready(function () {
         }
 
         var delimiterFld = $("#id_table-delimiter_1");
-        if ($("#id_table-delimiter_0").val() == "__other__" && (!isDataValid($.trim(delimiterFld.val())) || $.trim(delimiterFld.val()).length != 1)) {
+        if ($("#id_table-delimiter_0").val() == "__other__" &&
+                (!isDataValid(delimiterFld.val()) || (delimiterFld.val().length > 1 && delimiterFld.val()[0] != "\\"))) {
             showFieldError(delimiterFld);
             isValid = false;
         }

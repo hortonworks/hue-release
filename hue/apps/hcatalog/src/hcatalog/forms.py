@@ -36,14 +36,16 @@ HIVE_PRIMITIVE_TYPES = \
     ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double")
 
 IMPORT_FILE_TYPE_CHOICES = [
-    ('csv', 'TEXT file'),
-    ('xls', 'XLS/XLSX file'),
+    ('text', 'Text file'),
+    ('spreadsheet', 'Spreadsheet file'),
     # ('msaccess', 'MS Access'),
+    ('none', 'None'),
 ]
 
-IMPORT_FILE_TYPE_CSV_TSV = IMPORT_FILE_TYPE_CHOICES[0][0]
-IMPORT_FILE_TYPE_XLS_XLSX = IMPORT_FILE_TYPE_CHOICES[1][0]
+IMPORT_FILE_TYPE_TEXT = IMPORT_FILE_TYPE_CHOICES[0][0]
+IMPORT_FILE_TYPE_SPREADSHEET = IMPORT_FILE_TYPE_CHOICES[1][0]
 # IMPORT_FILE_TYPE_MS_ACCESS = IMPORT_FILE_TYPE_CHOICES[2][0]
+IMPORT_FILE_TYPE_NONE = IMPORT_FILE_TYPE_CHOICES[2][0]
 
 class ImportFileTypeField(ChoiceField):
     """Used for selecting import file type."""
@@ -179,10 +181,6 @@ SettingFormSet = simple_formset_factory(SettingForm)
 # In theory, there are only 256 of these...
 TERMINATOR_CHOICES = [(hive_val, desc) for hive_val, desc, _ in common.TERMINATORS]
 
-REPLACE_TERMINATOR_CHOICES = [('__field_terminator__', 'Field terminator'), ('__leave_as_is__', 'Leave as is')] + \
-                             [(hive_val, desc) for hive_val, desc, _ in common.TERMINATORS]
-
-
 
 class CreateTableForm(DependencyAwareForm):
     """
@@ -272,17 +270,14 @@ class CreateTableFromFileForm(forms.Form):
     # Basic Data
     name = common.HiveIdentifierField(label="Table Name", required=False)
     comment = forms.CharField(label="Description", required=False)
-    field_terminator = ChoiceOrOtherField(required=False, initial=TERMINATOR_CHOICES[0][0], choices=TERMINATOR_CHOICES)
 
     path = filebrowser.forms.PathField(label="Input File")
 
     # csv/tsv files
     encoding = UnicodeEncodingField()
-    file_type = ImportFileTypeField(initial='undef')
     delimiter = ChoiceOrOtherField(required=False, initial=TERMINATOR_CHOICES[0][0], choices=TERMINATOR_CHOICES)
-    repl_delim_with_field_term = forms.BooleanField(required=False, initial=True,
-                                              label="Replace delimiter with field terminator",
-                                              help_text="")
+    replace_delimiter_with = ChoiceOrOtherField(required=False, initial=TERMINATOR_CHOICES[0][0], choices=TERMINATOR_CHOICES,
+                                          label="Replace delimiter with")
     read_column_headers = forms.BooleanField(required=False, initial=True,
                                              label="Read column headers",
                                              help_text="")
