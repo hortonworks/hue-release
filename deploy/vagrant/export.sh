@@ -16,7 +16,7 @@ echo $MACHINE
 VBoxManage modifyvm "$MACHINE" --memory 2048 --cpus 2
 VBoxManage export "$MACHINE" --output "$MACHINE VirtualBox".ova \
     --vsys 0 --vendor "HortonWorks" --version "Caterpillar" --product "Sandbox"
-exit 0
+
 vagrant up --no-provision
 vagrant ssh -c "sudo /opt/VBoxGuestAdditions-*/uninstall.sh"
 vagrant ssh -c "echo 'vmware' | sudo tee /virtualization"
@@ -28,10 +28,7 @@ ovftool ./vmware/vmware.vmx "./$MACHINE VMware.ova"
 
 
 vagrant up --no-provision
+vagrant ssh -c "sudo /boot/grub/menu.lst noapic"
 vagrant ssh -c "echo 'hyper-v' | sudo tee /virtualization"
 vagrant halt
 VBoxManage clonehd "$HDDFILE" ./hyper-v/sandbox.vhd --format vhd
-
-vagrant up --no-provision
-vagrant ssh -c "sudo /boot/grub/menu.lst noapic"
-vagrant halt
