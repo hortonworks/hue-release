@@ -36,8 +36,8 @@ start)
     printf "%-50s\n" "Starting $NAME..." | tee -a $LOG
 
     echo "" > /etc/resolv.conf
-    ethtool -K eth0 tso off
-    ethtool -K eth1 tso off
+    # ethtool -K eth0 tso off
+    # ethtool -K eth1 tso off
     dhclient &
 
     /etc/init.d/mysqld start >> $LOG  #To make run.sh work (tutorials update)
