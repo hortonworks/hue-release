@@ -30,6 +30,10 @@ class sandbox_rpm {
         ensure => absent,
     }
 
+    file { '/virtualization':
+        content => "vbox",
+    }
+
     file { 'resolv.conf':
         path    => "/etc/resolv.conf",
         content => "nameserver 8.8.8.8",
