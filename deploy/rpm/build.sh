@@ -21,7 +21,7 @@ mkdir -p $SRC $OUT
 cd $SRC
 
 [ ! -d $SRC/sandbox-shared ] && git clone git@github.com:/hortonworks/sandbox-shared.git sandbox-shared
-(cd sandbox-shared; git reset --hard HEAD^; git clean -df; git checkout $BRANCH; git pull origin $BRANCH;
+(cd sandbox-shared; git reset --hard HEAD^; git clean -df; git fetch; git checkout $BRANCH; git pull origin $BRANCH;
 
     # comment out to leave release numbers as in repository
     source ./deploy/rpm/release.sh;

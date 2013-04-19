@@ -1,15 +1,25 @@
 from __future__ import with_statement
 
 import os
+import json
 
-from fabric.api import env, run, local, sudo
+from fabric.api import env, run, local
 from fabric.operations import get
 from fabric.contrib.files import exists, sed
 
-from tinydav import WebDAVClient
+import boto
+from boto.s3.key import Key
+
 
 env.user = 'sandbox'
 env.password = '1111'
+
+
+# load credentials from a predefined file
+CREDENTIALS = json.load(open('./aws_credentials.json'))
+AWS_ACCESS_KEY_ID = CREDENTIALS['access_key']
+AWS_SECRET_ACCESS_KEY = CREDENTIALS['secret_key']
+BUCKET_NAME = CREDENTIALS['bucket']
 
 
 def update_rpm(branch):
@@ -32,11 +42,13 @@ def get_out(name='repo'):
     get('/home/sandbox/rpmbuild/out', './' + name)
 
 
-def do_upload(client, path, location='/dav/HortonWorks/repo', remote=''):
+def do_upload(client, path, location='repo/', remote=''):
     if os.path.isfile(path):
         print "put %s to %s" % (path, location + remote)
-        with open(path) as fd:
-            client.put(location + remote, fd)
+        k = Key(client)
+        k.key = location + remote
+        k.set_contents_from_filename(path)
+        k.make_public()
         return
 
     files_in_dir = os.listdir(path)
@@ -46,21 +58,18 @@ def do_upload(client, path, location='/dav/HortonWorks/repo', remote=''):
 
 
 def upload(name='repo'):
-    client = WebDAVClient("www.box.com", 443)
-    client.setbasicauth("roman.rader@gmail.com", "storage_1")
-    try:
-        client.mkcol('/dav/HortonWorks/%s' % name)
-        client.mkcol('/dav/HortonWorks/%s/repodata' % name)
-    except:
-        pass
-    do_upload(client, './' + name + '/out', location='/dav/HortonWorks/%s' % name)
+    conn = boto.connect_s3(AWS_ACCESS_KEY_ID,
+                           AWS_SECRET_ACCESS_KEY)
+    bucket = conn.get_bucket(BUCKET_NAME)
+
+    do_upload(bucket, "%s/out" % name, '%s' % name)
 
 
 def rpm(name="repo", branch="Caterpillar"):
     update_rpm(branch)
     build_rpm(name)
     get_out(name)
-    # upload(name)
+    upload(name)
     print "Done!"
     print ("baseurl=https://roman.rader%%40gmail.com:storage_1"
            "@www.box.com/dav/HortonWorks/%s" % name)
