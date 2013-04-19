@@ -25,46 +25,4 @@ Vagrant::Config.run do |config|
 
   config.vm.customize ["modifyvm", :id, "--rtcuseutc", "on"]
   config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--groups", "/HortonWorks"]
-
-  config.vm.forward_port 22, 42000
-  config.vm.forward_port 25, 42001
-  config.vm.forward_port 68, 42002
-  config.vm.forward_port 80, 42003
-  config.vm.forward_port 161, 42004
-  config.vm.forward_port 199, 42005
-  config.vm.forward_port 631, 42006
-  config.vm.forward_port 2181, 42007
-  config.vm.forward_port 3306, 42008
-  config.vm.forward_port 5432, 42009
-  config.vm.forward_port 8000, 42010
-  config.vm.forward_port 8002, 42011
-  config.vm.forward_port 8010, 42012
-  config.vm.forward_port 8020, 42013
-  config.vm.forward_port 8649, 42014
-  config.vm.forward_port 8651, 42015
-  config.vm.forward_port 8652, 42016
-  config.vm.forward_port 8888, 42017
-  config.vm.forward_port 9083, 42018
-  config.vm.forward_port 9290, 42019
-  config.vm.forward_port 10000, 42020
-  config.vm.forward_port 11000, 42021
-  config.vm.forward_port 11001, 42022
-  config.vm.forward_port 36848, 42023
-  config.vm.forward_port 38265, 42024
-  config.vm.forward_port 39328, 42025
-  config.vm.forward_port 39547, 42026
-  config.vm.forward_port 41407, 42027
-  config.vm.forward_port 43449, 42028
-  config.vm.forward_port 45238, 42029
-  config.vm.forward_port 50010, 42030
-  config.vm.forward_port 50030, 42031
-  config.vm.forward_port 50060, 42032
-  config.vm.forward_port 50070, 42033
-  config.vm.forward_port 50075, 42034
-  config.vm.forward_port 50090, 42035
-  config.vm.forward_port 50111, 42036
-  config.vm.forward_port 50300, 42037
-  config.vm.forward_port 51111, 42038
-  config.vm.forward_port 60020, 42039
-
 end
