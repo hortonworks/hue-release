@@ -1,6 +1,6 @@
 [sandbox]
 name=Sandbox repo
-baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/repo/
+baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/experimental/
 path=/
 enabled=1
 gpgcheck=0
