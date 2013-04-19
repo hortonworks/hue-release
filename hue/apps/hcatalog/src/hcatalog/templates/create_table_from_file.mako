@@ -488,6 +488,7 @@ $(document).ready(function () {
             }
         });
         $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
+        reactOnAutodetectDelimiterChanged(true);
 
         % if error is not None:
         showMainError("${error}");
@@ -555,8 +556,24 @@ $(document).ready(function () {
     $("input[name='table-ignore_tabs']").change(reactOnOptionChange);
     $("input[name='table-java_style_comments']").change(reactOnOptionChange);
     $("input[name='table-single_line_comment']").bind("change paste keyup", reactOnOptionChange);
-    $("input[name='table-autodetect_delimiter']").change(function () {
-        if ($(this).is(":checked")) {
+    $("input[name='table-autodetect_delimiter']").change(function() {
+        if($(this).is(":checked")) {
+            reactOnAutodetectDelimiterChanged(true);
+            reactOnOptionChange();
+        }
+        else {
+            reactOnAutodetectDelimiterChanged(false);
+        }
+    });
+
+    // spreadsheet files
+    $("select[name='table-xls_sheet']").change(reactOnOptionChange);
+    $("input[name='table-xls_cell_range']").bind("change paste keyup", reactOnOptionChange);
+    $("input[name='table-xls_read_column_headers']").change(reactOnOptionChange);
+
+
+    function reactOnAutodetectDelimiterChanged(value) {
+        if (value) {
             $("#id_table-delimiter_0").attr("disabled", "disabled");
             $("#id_table-delimiter_1").attr("disabled", "disabled");
         }
@@ -564,13 +581,7 @@ $(document).ready(function () {
             $("#id_table-delimiter_0").removeAttr("disabled");
             $("#id_table-delimiter_1").removeAttr("disabled");
         }
-    });
-    $("#id_table-autodetect_delimiter").change();
-
-    // spreadsheet files
-    $("select[name='table-xls_sheet']").change(reactOnOptionChange);
-    $("input[name='table-xls_cell_range']").bind("change paste keyup", reactOnOptionChange);
-    $("input[name='table-xls_read_column_headers']").change(reactOnOptionChange);
+    }
 
     function terminatorFieldInit(name) {
         var field_0 = $("#id_table-" + name + "_0");
