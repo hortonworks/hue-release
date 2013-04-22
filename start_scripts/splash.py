@@ -26,11 +26,11 @@ def make_ip_window():
         import socket
         ip_hosts = socket.gethostbyname(socket.gethostname())
 
-        platform = open("/virtualization").read()
+        platform = open("/virtualization").read().strip()
         if platform == "vbox":
             ip = "127.0.0.1:42080"
 
-        elif platform == "vmware":
+        elif platform in ["vmware", "hyper-v"]:
             ip = ip_hosts
 
         if ip_hosts == "127.0.0.1":

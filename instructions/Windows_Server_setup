@@ -1,0 +1,29 @@
+In VM:
+eth0	192.168.56.101
+eth1	disable
+
+
+Role: Network Policy And Access Services
+	More actions -> Configure -> NAT ->
+		Use this public interface (select external network interface) -> 
+		Enable basic name and address servuces ->
+			Finish.
+
+Role: Hyper-V
+	Virtual Network Manager
+		New virtual network
+			Name: Internal Connection
+			Connection type: Internal Only
+
+		Go to Network and Sharing Center, configure this connection
+			to use 192.168.56.1
+
+	Create machine:
+		New -> Virtual Machine
+			Memory: at least 2048 MB
+			Connection: Internal Connection
+			Use existing virtual hard disk: sandbox.vhd
+
+			Finish
+
+	Start machine now.
