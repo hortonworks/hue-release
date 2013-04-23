@@ -24,7 +24,6 @@ from django.forms.fields import ChoiceField
 import desktop.lib.i18n
 
 from django import forms
-from hcat_client import hcat_client
 
 HIVE_IDENTIFER_REGEX = re.compile("^[a-zA-Z0-9]\w*$")
 
@@ -69,14 +68,6 @@ class HiveIdentifierField(forms.RegexField):
     def __init__(self, *args, **kwargs):
         kwargs['regex'] = HIVE_IDENTIFER_REGEX
         super(HiveIdentifierField, self).__init__(*args, **kwargs)
-
-
-class HiveTableChoiceField(forms.ChoiceField):
-    """To choose from a defined table"""
-    def __init__(self, *args, **kwargs):
-        tables = hcat_client.get_tables()
-        kwargs['choices'] = to_choices([''] + tables)
-        forms.ChoiceField.__init__(self, *args, **kwargs)
 
 
 class UnicodeEncodingField(ChoiceField):

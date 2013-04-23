@@ -31,7 +31,7 @@ from filebrowser.views import location_to_url
 
 import hcatalog.forms
 from hcatalog import common
-from hcat_client import hcat_client
+from hcat_client import HCatClient
 from beeswax.views import (authorized_get_design, safe_get_design, save_design,
                            get_parameterization, _get_query_handle_and_state,
                            authorized_get_history, confirm_query,
@@ -82,12 +82,12 @@ def describe_table_json(request, database, table):
 
 def describe_table(request, database, table):
     try:
-        table_desc_extended = hcat_client().describe_table_extended(table)
+        table_desc_extended = HCatClient(request.user.username).describe_table_extended(table)
         is_table_partitioned = table_desc_extended['partitioned']
         partitions = []
         partitionColumns = []
         if is_table_partitioned:
-            partitions = hcat_client().get_partitions(table)
+            partitions = HCatClient(request.user.username).get_partitions(table)
             partitionColumns = table_desc_extended['partitionColumns']
         table_obj = {'tableName': table, 'columns': table_desc_extended['columns'], 'partitionKeys': partitionColumns,
                      'partitions': partitions}
@@ -115,7 +115,7 @@ def drop_table(request, database):
         try:
             tables = request.POST.getlist('table_selection')
             for table in tables:
-                hcat_client().drop_table(table, db=database)
+                HCatClient(request.user.username).drop_table(table, db=database)
         except Exception as ex:
             resp['error'] = escapejs(ex.message)
         else:
@@ -129,7 +129,7 @@ def load_table(request, database, table):
     Loads data into a table.
     """
     try:
-        table_desc_extended = hcat_client().describe_table_extended(table)
+        table_desc_extended = HCatClient(request.user.username).describe_table_extended(table)
         is_table_partitioned = table_desc_extended['partitioned']
         partitionColumns = []
         if is_table_partitioned:
@@ -180,7 +180,7 @@ def do_load_table(request, create_hql):
     file = open(script_file, 'w+')
     file.write(create_hql)
     file.close()
-    hcat_client().hive_cli(file=script_file)
+    HCatClient(request.user.username).hive_cli(file=script_file)
     if os.path.exists(script_file):
         os.remove(script_file)
 
@@ -189,8 +189,7 @@ def browse_partition(request, database, table):
     if request.method == 'POST':
         try:
             partition_name = request.POST.get('partition_name')
-            location = hcat_client().get_partition_location(table, partition_name)
-            #location = hcat_client().describe_partition(table, partition_name)
+            location = HCatClient(request.user.username).get_partition_location(table, partition_name)
             url = location_to_url(request, location)
             result = {'url': url}
             return HttpResponse(json.dumps(result))
@@ -205,7 +204,7 @@ def drop_partition(request, database, table):
     elif request.method == 'POST':
         try:
             partition_name = request.POST.get('partition_name')
-            hcat_client().drop_partition(table, partition_name)
+            HCatClient(request.user.username).drop_partition(table, partition_name)
         except Exception as ex:
             raise PopupException('Drop partition', title="Drop partition", detail=str(ex))
         on_success_url = urlresolvers.reverse(get_app_name(request) + ':describe_table',
