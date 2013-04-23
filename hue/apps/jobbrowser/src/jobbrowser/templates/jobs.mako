@@ -76,7 +76,7 @@ ${ commonheader(_('Job Browser'), "jobbrowser", user) | n,unicode }
 <table class="datatables table table-striped table-condensed">
     <thead>
         <tr>
-            <th>${_('Logs')}</th>
+            <!--<th>${_('Logs')}</th>-->
             <th>${_('ID')}</th>
             <th>${_('Name')}</th>
             <th>${_('Status')}</th>
@@ -93,9 +93,9 @@ ${ commonheader(_('Job Browser'), "jobbrowser", user) | n,unicode }
     <tbody>
         % for job in jobs:
         <tr class="job-row">
-            <td data-row-selector-exclude="true">
+            <!--<td data-row-selector-exclude="true">
                 <a href="${ url('jobbrowser.views.job_single_logs', job=job.jobId) }" data-row-selector-exclude="true"><i class="icon-tasks"></i></a>
-            </td>
+            </td>-->
             <td>
                 <a href="${url('jobbrowser.views.single_job', job=job.jobId)}" title="${_('View this job')}" data-row-selector="true">${job.jobId_short}</a>
             </td>

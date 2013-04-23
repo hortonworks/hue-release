@@ -69,6 +69,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 /home/sandbox/.ssh
 
 %config(noreplace) /usr/lib/hue/desktop/desktop.db
+%config(noreplace) /etc/hue/conf/hue.ini
 
 
 %pre
