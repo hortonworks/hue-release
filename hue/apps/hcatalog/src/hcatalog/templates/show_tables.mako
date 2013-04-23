@@ -15,92 +15,204 @@
 ## specific language governing permissions and limitations
 ## under the License.
 <%!
-from desktop.views import commonheader, commonfooter
-from django.utils.translation import ugettext as _
+    from desktop.views import commonheader, commonfooter
+    from django.utils.translation import ugettext as _
 %>
+<%namespace name="actionbar" file="actionbar.mako" />
 <%namespace name="layout" file="layout.mako" />
 ${ commonheader(_('HCatalog: Table List'), app_name, user, '100px') | n,unicode }
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
-	<h1 id="describe-header">${_('HCatalog: Table List')}</h1>
-	<div id="action-spinner"><h1>${_('Loading a table list...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-	<div class="row-fluid">
-		<div class="span3">
-			<div class="well sidebar-nav">
-				<ul class="nav nav-list">
-					<li class="nav-header">${_('Actions')}</li>
-					<li><a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file')}</a></li>
-					<li><a href="${ url(app_name + ':create_table', database=database)}">${_('Create a new table manually')}</a></li>
-				</ul>
-			</div>
-		</div>
-		<div class="span9">
-			<table class="table table-condensed table-striped datatables" id="table-list-tbl">
-				<thead>
-					<tr>
-						<th>${_('Table Name')}</th>
-						<th>&nbsp;</th>
-					</tr>
-				</thead>
-				<tbody id=table-body>
-				</tbody>
-			</table>
-		</div>
-	</div>
+    <h1 data-bind="visible: !(gettingTables() || droppingTables())">${_('HCatalog: Table List')}</h1>
+    <div data-bind="visible: gettingTables"><h1>${_('Loading a table list...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <div data-bind="visible: droppingTables"><h1>${_('Dropping the table(s)...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <div class="row-fluid">
+        <div class="span3">
+            <div class="well sidebar-nav">
+                <ul class="nav nav-list">
+                    <li class="nav-header">${_('Actions')}</li>
+                    <li>
+                        <a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file')}</a>
+                    </li>
+                    <li>
+                        <a href="${ url(app_name + ':create_table', database=database)}">${_('Create a new table manually')}</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="span9">
+            <div id="alert-error-main" class="alert alert-error">
+                <p><strong>The following error(s) occurred:</strong></p>
+                <pre id="error-message"/>
+                <small></small>
+            </div>
+            <div data-bind="visible: !droppingTables()">
+                <%actionbar:render>
+                    <%def name="actions()">
+                            <button id="dropBtn" class="btn toolbarBtn" title="${_('Delete the selected tables')}"
+                                    disabled="disabled"><i class="icon-trash"></i>  ${_('Drop')}</button>
+                    </%def>
+                </%actionbar:render>
+                <div id="table-wrap"/>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
-	#table-list-tbl, #action-spinner {
-		display:none;
-	}
+    #alert-error-main {
+        display: none;
+    }
 </style>
 
+<div id="dropTable" class="modal hide fade">
+    <form id="dropTableForm" method="POST">
+    <div class="modal-header">
+            <a href="#" class="close" data-dismiss="modal">&times;</a>
+            <h3 id="dropTableMessage">${_('Confirm action')}</h3>
+        </div>
+        <div class="modal-footer">
+            <input type="button" class="btn" data-dismiss="modal" value="${_('Cancel')}" />
+            <input type="submit" class="btn btn-danger" value="${_('Yes')}"/>
+        </div>
+        <div class="hide">
+            <select name="table_selection" data-bind="options: availableTables, selectedOptions: chosenTables" size="5" multiple="true"></select>
+        </div>
+    </form>
+</div>
+
+<script src="/static/ext/js/knockout-2.1.0.js" type="text/javascript" charset="utf-8"></script>
+
 <script type="text/javascript" charset="utf-8">
-	function showError(msg) {
-		//alert(msg);
-	}
-	
-	function onBrowse()
-	{
-		$(".btn.btn-primary.browse").attr("disabled", "disabled");
-		$(".btn.btn-primary.browse").addClass("disabled");
-	}
-	
-	$(document).ready(function(){
-		var dataTbl = $(".datatables").dataTable({
-			"bPaginate": false,
-		    "bLengthChange": false,
-			"bInfo": false,
-			"bFilter": false,
-			"aoColumns": [
-				null,
-				{ "sWidth": "130px", "bSortable" : false },
-			 ]
-		});
 
-		$("a[data-row-selector='true']").jHueRowSelector();
-		
-		$('#describe-header').hide();
-		$('#action-spinner').show();
-		$.post("${url(app_name + ':get_tables')}", function(data){
-			for (var i = 0; i < data.length; i++){
-			    dataTbl.fnAddData([
-			    "<a href=" + "/hcatalog/table/" + "${database}" + "/" + data[i] + ">" + data[i] + "</a>",
-			    "<a href=" + "/hcatalog/table/" + "${database}" + "/" + data[i] + "/read" + " class=\"btn btn-primary browse\" onclick=\"onBrowse()\">${_('Browse Data')}</a>"
-			    ]);
-			}
+    function onBrowse() {
+        $(".btn.btn-primary.browse").attr("disabled", "disabled");
+        $(".btn.btn-primary.browse").addClass("disabled");
+    }
 
-			$('#action-spinner').hide();
-			$('#describe-header').show();
-			$('#table-list-tbl').show();
-			return;
-		}, "json").error(function() {
-			$('#action-spinner').hide();
-			$('#describe-header').show();
-			$('table-list-tbl').show();
-		});
-	});
+    function showMainError(errorMessage) {
+        $("#error-message").text(errorMessage);
+        $("#alert-error-main").show();
+        $(window).scrollTop(0);
+    }
+
+    function hideMainError() {
+        $("#alert-error-main").hide();
+    }
+
+    $(document).ready(function () {
+
+        var viewModel = {
+            availableTables : ko.observableArray([]),
+            chosenTables : ko.observableArray([]),
+            gettingTables: ko.observable(false),
+            droppingTables: ko.observable(false)
+        };
+        ko.applyBindings(viewModel);
+        var tables = undefined;
+
+        $(document).on("change paste keyup", "#filterInput", function () {
+            if(tables != undefined) {
+                tables.fnFilter($(this).val());
+            }
+        });
+
+        $(document).on("click", ".selectAll", function () {
+            if ($(this).attr("checked")) {
+                $(this).removeAttr("checked").removeClass("icon-ok");
+                $("." + $(this).data("selectables")).removeClass("icon-ok").removeAttr("checked");
+            }
+            else {
+                $(this).attr("checked", "checked").addClass("icon-ok");
+                $("." + $(this).data("selectables")).addClass("icon-ok").attr("checked", "checked");
+            }
+            toggleActions();
+        });
+
+        $(document).on("click", ".tableCheck", function () {
+            if ($(this).attr("checked")) {
+                $(this).removeClass("icon-ok").removeAttr("checked");
+            }
+            else {
+                $(this).addClass("icon-ok").attr("checked", "checked");
+            }
+            $(".selectAll").removeAttr("checked").removeClass("icon-ok");
+            toggleActions();
+        });
+
+        function toggleActions() {
+            $(".toolbarBtn").attr("disabled", "disabled");
+            var selector = $(".hueCheckbox[checked='checked']");
+            if (selector.length >= 1) {
+                $("#dropBtn").removeAttr("disabled");
+            }
+        }
+
+        $(document).on("click", "#dropBtn", function () {
+            viewModel.chosenTables.removeAll();
+            $(".hueCheckbox[checked='checked']").each(function( index ) {
+                viewModel.chosenTables.push($(this).data("drop-name"));
+            });
+            $("#dropTable").modal("show");
+        });
+
+        $('form#dropTableForm').submit(function (event) {
+            event.preventDefault();
+            $(this).closest(".modal").modal("hide");
+            viewModel.droppingTables(true);
+            $.post("${url(app_name + ':drop_table', database=database)}", $(this).serializeArray(), function(data){
+                if ("on_success_url" in data && data.on_success_url)
+                {
+                    window.location.replace(data.on_success_url);
+                    return;
+                }
+                viewModel.droppingTables(false);
+            }, "json").error(function () {
+                        viewModel.droppingTables(false);
+                    });
+
+        });
+
+        $.getJSON("${ url(app_name + ':drop_table', database=database)}", function(data) {
+            $("#dropTableMessage").text(data.title);
+        });
+
+        $.post("${url(app_name + ':show_tables', database=database)}",function (data) {
+            viewModel.gettingTables(true);
+            if ("error" in data) {
+                showMainError(data["error"]);
+            }
+            else if ("table_list_rendered" in data && "tables" in data) {
+                $('#table-wrap').html(data["table_list_rendered"]);
+                viewModel.availableTables = data["tables"];
+                tables = $(".datatables").dataTable({
+                    "sDom":"<'row'r>t<'row'<'span8'i><''p>>",
+                    "bPaginate":false,
+                    "bLengthChange":false,
+                    "bInfo":false,
+                    "bFilter":true,
+                    "aoColumns":[
+                        {"bSortable":false, "sWidth":"1%" },
+                        null,
+                        {"bSortable":false, "sWidth":"130px" }
+                    ],
+                    "oLanguage":{
+                        "sEmptyTable":"${_('No tables available')}",
+                        "sZeroRecords":"${_('No matching records')}"
+                    }
+                });
+                $("a[data-row-selector='true']").jHueRowSelector();
+                viewModel.gettingTables(false);
+            }
+        }, "json").error(function () {
+                    viewModel.gettingTables(false);
+                });
+
+
+
+
+    });
 </script>
 
 ${ commonfooter(messages) | n,unicode }

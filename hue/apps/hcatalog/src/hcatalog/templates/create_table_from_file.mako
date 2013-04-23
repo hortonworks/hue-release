@@ -46,10 +46,9 @@ ${layout.menubar(section='tables')}
         <div class="span9">
             <div id="alert-error-main" class="alert alert-error">
                 <p><strong>The following error(s) occurred:</strong></p>
-                <pre id="error-message">The error message</pre>
+                <pre id="error-message"/>
                 <small></small>
             </div>
-
             <form action="#" method="POST" id="mainForm" class="form-horizontal">
                 <div>
                     <fieldset>

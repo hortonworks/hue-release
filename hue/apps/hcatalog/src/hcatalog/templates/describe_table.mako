@@ -65,9 +65,9 @@ ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
 	<h1 id="describe-header">${_('HCatalog Table Metadata:')} ${table['tableName']}</h1>
-	<div id="browse-spinner"><h1>${_('Getting partition location...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-	<div id="drop-table-spinner"><h1>${_('Dropping table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-	<div id="drop-partition-spinner"><h1>${_('Dropping table partition...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+	<div id="browse-spinner"><h1>${_('Getting the partition location...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+	<div id="drop-table-spinner"><h1>${_('Dropping the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+	<div id="drop-partition-spinner"><h1>${_('Dropping the table partition...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 	<div id="import-data-spinner"><h1>${_('Importing data...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 	<div class="row-fluid">
 		<div class="span3">
@@ -135,22 +135,22 @@ ${layout.menubar(section='tables')}
 
 
 <div id="dropTable" class="modal hide fade">
-	<form id="dropTableForm" method="POST" action="${ url(app_name + ':drop_table', database=database, table=table_name) }">
-	<div class="modal-header">
-		<a href="#" class="close" data-dismiss="modal">&times;</a>
-		<h3>${_('Drop Table')}</h3>
-	</div>
-	<div class="modal-body">
-	  <div class="alert dropTableMessage">
-
-	  </div>
-	</div>
-	<div class="modal-footer">
-		<a href="#" class="btn primary submitDropTable">${_('Yes')}</a>
-		<a href="#" class="btn secondary hideModal">${_('No')}</a>
-	</div>
-	</form>
+    <form id="dropTableForm" method="POST">
+        <div class="modal-header">
+            <a href="#" class="close" data-dismiss="modal">&times;</a>
+            <h3 id="dropTableMessage">${_('Confirm action')}</h3>
+        </div>
+        <div class="modal-footer">
+            <input type="button" class="btn" data-dismiss="modal" value="${_('Cancel')}" />
+            <input type="submit" class="btn btn-danger" value="${_('Yes')}"/>
+        </div>
+        <div class="hide">
+            <select name="table_selection" data-bind="options: availableTables, selectedOptions: chosenTables" size="5" multiple="true"></select>
+        </div>
+    </form>
 </div>
+
+<script src="/static/ext/js/knockout-2.1.0.js" type="text/javascript" charset="utf-8"></script>
 
 
 % if is_table_partitioned and has_partitions:
@@ -243,7 +243,13 @@ ${layout.menubar(section='tables')}
 
 <script type="text/javascript" charset="utf-8">
 	$(document).ready(function(){
-	
+
+        var viewModel = {
+            availableTables: ["${table['tableName']}"],
+            chosenTables : ["${table['tableName']}"]
+        };
+        ko.applyBindings(viewModel);
+
 		$("#filechooser").jHueFileChooser({
 			onFileChoose: function(filePath){
 				$(".loadPath").val(filePath);
@@ -270,26 +276,30 @@ ${layout.menubar(section='tables')}
                 return;
             } 
             }, "json");
-		});		
+		});
 
-		$.getJSON("${ url(app_name + ':drop_table', database=database, table=table_name) }",function(data){
-			$(".dropTableMessage").text(data.title);
-		});
-		$(".submitDropTable").click(function(){
-		    $('#describe-header').hide();
-		    $('#drop-table-spinner').show();
-			$(this).closest(".modal").modal("hide");
-			$.post("${url(app_name + ':drop_table', database=database, table=table_name)}", function(data){
-            if (data.on_success_url != "")
-            {
-                window.location.replace(data.on_success_url);
-                return;
-            } 
-            }, "json");
-		});		
-		$(".hideModal").click(function(){
-			$(this).closest(".modal").modal("hide");
-		});
+        $('form#dropTableForm').submit(function (event) {
+            event.preventDefault();
+            $(this).closest(".modal").modal("hide");
+            $('#describe-header').hide();
+            $('#drop-table-spinner').show();
+            $.post("${url(app_name + ':drop_table', database=database)}", $(this).serializeArray(), function(data){
+                if ("on_success_url" in data && data.on_success_url)
+                {
+                    window.location.replace(data.on_success_url);
+                    return;
+                }
+            }, "json").error(function () {
+                        $('#drop-table-spinner').hide();
+                        $('#describe-header').show();
+                    });
+
+        });
+
+        $.getJSON("${ url(app_name + ':drop_table', database=database)}", function(data) {
+            $("#dropTableMessage").text(data.title);
+        });
+
 		$(".loadPath").click(function(){
 			$("#filechooser").slideDown();
 		});
