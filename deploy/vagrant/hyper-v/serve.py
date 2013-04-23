@@ -49,13 +49,15 @@ class RemotePowerShell(object):
     """
     def __init__(self, host, port=PORT_NUMBER):
         self.pubkey = rsa.PublicKey.load_pkcs1(file("key.pub").read())
+        self.privkey = rsa.PrivateKey.load_pkcs1(file("key").read())
         self.host = host
         self.port = port
 
     def __call__(self, cmd):
         cmd = rsa.encrypt(cmd, self.pubkey)
+        print cmd
         req = urllib2.urlopen('http://%s:%s/' % (self.host, self.port), cmd)
-        output = rsa.decrypt(req.read(), self.pubkey).replace("\r\n","\n")
+        output = rsa.decrypt(req.read(), self.privkey).replace("\r\n","\n")
         return output
 
 
