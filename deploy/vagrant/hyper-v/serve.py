@@ -4,6 +4,7 @@ import fileinput
 import subprocess
 
 import rsa
+import base64
 
 import urllib2
 import BaseHTTPServer
@@ -27,7 +28,7 @@ class PowerShellHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_POST(s):
         length = int(s.headers.getheader("content-length"))
         data = s.rfile.read(length)
-        data = rsa.decrypt(data, privkey)
+        data = base64.b64decode(rsa.decrypt(data, privkey))
         res = ""
         for cmd in data.split("\n"):
             res += "%s" % ps(cmd.strip())
@@ -35,6 +36,7 @@ class PowerShellHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         s.send_response(200)
         s.send_header("Content-type", "text/html")
         s.end_headers()
+        res = base64.b64encode(res)
         s.wfile.write(rsa.encrypt(res, privkey))
 
 
@@ -54,10 +56,11 @@ class RemotePowerShell(object):
         self.port = port
 
     def __call__(self, cmd):
-        cmd = rsa.encrypt(cmd, self.pubkey)
-        print cmd
+        cmd = rsa.encrypt(base64.b64encode(cmd), self.pubkey)
         req = urllib2.urlopen('http://%s:%s/' % (self.host, self.port), cmd)
-        output = rsa.decrypt(req.read(), self.privkey).replace("\r\n","\n")
+        output = rsa.decrypt(req.read(), self.privkey)
+        output = base64.b64decode(output)
+        output = output.replace("\r\n","\n")
         return output
 
 
