@@ -3,12 +3,15 @@ import time
 import fileinput
 import subprocess
 
+import rsa
+
 import urllib2
 import BaseHTTPServer
 
 
 HOST_NAME = '0.0.0.0'
 PORT_NUMBER = 42000
+privkey = None
 
 
 def ps(cmd):
@@ -23,14 +26,16 @@ def ps(cmd):
 class PowerShellHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_POST(s):
         length = int(s.headers.getheader("content-length"))
+        data = s.rfile.read(length)
+        data = rsa.decrypt(data, privkey)
         res = ""
-        for cmd in s.rfile.read(length).split("\n"):
+        for cmd in data.split("\n"):
             res += "%s" % ps(cmd.strip())
             print cmd
         s.send_response(200)
         s.send_header("Content-type", "text/html")
         s.end_headers()
-        s.wfile.write(res)
+        s.wfile.write(rsa.encrypt(res, privkey))
 
 
 class RemotePowerShell(object):
@@ -43,17 +48,21 @@ class RemotePowerShell(object):
      HELLO
     """
     def __init__(self, host, port=PORT_NUMBER):
+        self.pubkey = rsa.PublicKey.load_pkcs1(file("key.pub").read())
         self.host = host
         self.port = port
 
     def __call__(self, cmd):
+        cmd = rsa.encrypt(cmd, self.pubkey)
         req = urllib2.urlopen('http://%s:%s/' % (self.host, self.port), cmd)
-        output = req.read().replace("\r\n","\n")
+        output = rsa.decrypt(req.read(), self.pubkey).replace("\r\n","\n")
         return output
 
 
 
 if __name__ == '__main__':
+    privkey = rsa.PrivateKey.load_pkcs1(file("key").read())
+
     server_class = BaseHTTPServer.HTTPServer
     httpd = server_class((HOST_NAME, PORT_NUMBER), PowerShellHandler)
     print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
