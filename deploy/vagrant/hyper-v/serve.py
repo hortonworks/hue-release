@@ -1,8 +1,11 @@
-import time
-import BaseHTTPServer
-import subprocess
 import os
+import time
 import fileinput
+import subprocess
+
+import urllib2
+import BaseHTTPServer
+
 
 HOST_NAME = '0.0.0.0'
 PORT_NUMBER = 42000
@@ -31,8 +34,23 @@ class PowerShellHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 
 class RemotePowerShell(object):
+    """
+    Remote PowerShell.
+    
+    Use
+     >>> ps = serve.RemotePowerShell("25.84.118.43")
+     >>> print ps("echo HELLO")
+     HELLO
+    """
     def __init__(self, host, port=PORT_NUMBER):
-        
+        self.host = host
+        self.port = port
+
+    def __call__(self, cmd):
+        req = urllib2.urlopen('http://%s:%s/' % (self.host, self.port), cmd)
+        output = req.read().replace("\r\n","\n")
+        return output
+
 
 
 if __name__ == '__main__':
