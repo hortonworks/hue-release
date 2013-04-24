@@ -14,7 +14,7 @@ Vagrant::Config.run do |config|
   # Boot with a GUI so you can see the screen. (Default is headless)
   config.vm.boot_mode = :gui
 
-  config.vm.network :hostonly, "192.168.56.101"
+  # config.vm.network :hostonly, "192.168.56.101"
   config.vm.host_name = "sandbox"
   config.vm.customize ["modifyvm", :id, "--memory", 3048] #For dev purpose
 
@@ -26,6 +26,9 @@ Vagrant::Config.run do |config|
   config.vm.customize ["modifyvm", :id, "--rtcuseutc", "on"]
   config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--groups", "/HortonWorks"]
 
+  config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--nictype1", "Am79C973"]
+  config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--nic2", "none"]
+  
   config.vm.forward_port 22, 42022
   config.vm.forward_port 25, 42025
   config.vm.forward_port 68, 42068
@@ -83,5 +86,9 @@ Vagrant::Config.run do |config|
   config.vm.forward_port 60020, 60020
   config.vm.forward_port 60030, 60030
   config.vm.forward_port 60572, 60572
+<<<<<<< HEAD
+=======
+
+>>>>>>> nohostonly
 
 end
