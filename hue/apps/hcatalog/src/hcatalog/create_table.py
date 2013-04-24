@@ -26,7 +26,7 @@ from desktop.lib.django_forms import MultiForm
 import hcatalog.common
 import hcatalog.forms
 from hcatalog.views import _get_table_list
-from hcat_client import hcat_client
+from hcat_client import HCatClient
 from desktop.context_processors import get_app_name
 
 import logging
@@ -57,7 +57,7 @@ def create_table(request, database='default'):
                 # Mako outputs bytestring in utf8
                 proposed_query = proposed_query.decode('utf-8')
                 tablename = form.table.cleaned_data['name']
-                hcat_client().create_table_by_templeton(database, tablename, proposed_query)
+                HCatClient(request.user.username).create_table(database, tablename, proposed_query)
                 tables = _get_table_list(request)
                 return render("show_tables.mako", request, dict(database=database, tables=tables,))
             except Exception as ex:
