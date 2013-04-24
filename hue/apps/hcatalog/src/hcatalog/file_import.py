@@ -29,7 +29,7 @@ import hcatalog.common
 import hcatalog.forms
 from hcatalog.views import _get_table_list
 from hcatalog.file_processing import GzipFileProcessor, TextFileProcessor, XlsFileProcessor
-from hcat_client import hcat_client
+from hcat_client import HCatClient
 
 import logging
 import csv
@@ -253,7 +253,7 @@ def _submit_create_and_load(request, create_hql, database, table_name, path, do_
     """
     Submit the table creation, and setup the load to happen (if ``do_load``).
     """
-    hcat_client().create_table_by_templeton(database, table_name, create_hql)
+    HCatClient(request.user.username).create_table(database, table_name, create_hql)
     tables = _get_table_list(request)
     if do_load:
         if not table_name or not path:

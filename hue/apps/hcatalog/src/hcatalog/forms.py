@@ -23,7 +23,7 @@ from desktop.lib.django_forms import simple_formset_factory, DependencyAwareForm
 from desktop.lib.django_forms import ChoiceOrOtherField, MultiForm, SubmitButton
 from hcatalog import common
 from hcatalog.common import UnicodeEncodingField
-from hcat_client import hcat_client
+from hcat_client import HCatClient
 
 import filebrowser.forms
 
@@ -102,37 +102,6 @@ class SaveForm(forms.Form):
         data2[self.add_prefix('name')] = name
         data2[self.add_prefix('desc')] = desc
         self.data = data2
-
-
-class SaveResultsForm(DependencyAwareForm):
-    """Used for saving the query result data"""
-
-    SAVE_TYPES = (SAVE_TYPE_TBL, SAVE_TYPE_DIR) = ('to a new table', 'to HDFS directory')
-    save_target = forms.ChoiceField(required=True,
-                                    choices=common.to_choices(SAVE_TYPES),
-                                    widget=forms.RadioSelect)
-    target_table = common.HiveIdentifierField(
-        label="Table Name",
-        required=False,
-        help_text="Name of the new table")
-    target_dir = filebrowser.forms.PathField(
-        label="Results Location",
-        required=False,
-        help_text="Empty directory in HDFS to put the results")
-    dependencies = [
-        ('save_target', SAVE_TYPE_TBL, 'target_table'),
-        ('save_target', SAVE_TYPE_DIR, 'target_dir'),
-    ]
-
-    def clean_target_table(self):
-        tbl = self.cleaned_data.get('target_table')
-        if tbl:
-            try:
-                hcat_client().get_table("default", tbl)
-                raise forms.ValidationError('Table already exists')
-            except hive_metastore.ttypes.NoSuchObjectException:
-                pass
-        return tbl
 
 
 class HQLForm(forms.Form):

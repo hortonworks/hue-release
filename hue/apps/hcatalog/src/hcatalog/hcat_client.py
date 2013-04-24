@@ -162,29 +162,7 @@ class HCatClient(Templeton):
         except KeyError:
             raise Exception("""HCatClient: error on getting partition location: attribute is missed in a response""")
 
-    def create_table(self, dbname, query):
-        try:
-            LOG.info("HCatalog client, create table query:\n%s" % (query))
-            # create tmp file
-            tmp_file_name = '/tmp/create_table_%d.hcat' % (int(time()))
-            query_file = open(tmp_file_name, "w")
-            query_file.writelines(query)
-            query_file.close()
-
-            # execute command
-            res, isError, error = self.hcat_cli(file=tmp_file_name)
-
-            # remove tmp file
-            if os.path.exists(query_file.name):
-                os.remove(query_file.name)
-            if isError:
-                LOG.error(error)
-        except Exception as ex:
-            error = """HCatalog cli: error on creating table: %s""" % unicode(ex)
-            LOG.exception(error)
-            raise Exception(error)
-
-    def create_table_by_templeton(self, dbname, table, query):
+    def create_table(self, dbname, table, query):
         """
         Create table.
         """
@@ -231,10 +209,3 @@ class HCatClient(Templeton):
         answer, error = p.communicate()
         LOG.error("""HCatalog client, hcat_cli error:%s""" % error)
         return (answer, not answer, error)
-
-
-CLIENT = HCatClient()
-
-
-def hcat_client():
-    return CLIENT
