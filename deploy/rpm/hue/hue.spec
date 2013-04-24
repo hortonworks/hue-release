@@ -53,6 +53,10 @@ mv $RPM_BUILD_ROOT/usr/lib/hue/tools/start_scripts/functions $RPM_BUILD_ROOT/usr
 cd $RPM_BUILD_DIR/.ssh
 cp -R ./ $RPM_BUILD_ROOT/home/sandbox/.ssh
 
+mkdir -p $RPM_BUILD_ROOT/etc/hue
+mv $RPM_BUILD_ROOT/usr/lib/hue/desktop/conf $RPM_BUILD_ROOT/etc/hue/
+ln -s /etc/hue/conf $RPM_BUILD_ROOT/usr/lib/hue/desktop/conf
+
 
 %clean
 rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
@@ -70,6 +74,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 %config(noreplace) /usr/lib/hue/desktop/desktop.db
 %config(noreplace) /etc/hue/conf/hue.ini
+%config(noreplace) /etc/hue/conf/log.conf
 
 
 %pre
@@ -112,12 +117,6 @@ chkconfig --level 3 hue on
 #echo "Update lxml"
 #source build/env/bin/activate
 #pip install lxml --upgrade
-
-
-mkdir -p /etc/hue
-[ ! -d /etc/hue/conf ] && mv /usr/lib/hue/desktop/conf /etc/hue/ && \
-    ln -s /etc/hue/conf /usr/lib/hue/desktop/
-
 
 
 ) | tee ~/sandbox-install.log
