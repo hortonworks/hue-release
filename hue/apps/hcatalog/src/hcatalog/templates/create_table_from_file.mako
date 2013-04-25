@@ -471,7 +471,7 @@ $(document).ready(function () {
     $("#submit-preview-begin").click(function(){ submitPreview(PreviewType.preview_beginning)});
 
     $(".fileChooserBtn").addClass("btn-primary disable-feedback");
-    $(".fileChooserBtn").prop("text", "Choose a file");
+    $(".fileChooserBtn").text("Choose a file");
     $(".fileChooserBtn").click(function (e) {
         e.preventDefault();
         var _destination = $(this).attr("data-filechooser-destination");
