@@ -26,6 +26,14 @@ define line($file, $line, $ensure = 'present') {
 
 
 class sandbox_rpm {
+    file { '/etc/sysconfig/network-scripts/ifcfg-eth1':
+        ensure => absent,
+    }
+
+    file { '/virtualization':
+        content => "vbox",
+    }
+
     file { 'resolv.conf':
         path    => "/etc/resolv.conf",
         content => "nameserver 8.8.8.8",

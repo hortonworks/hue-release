@@ -36,8 +36,8 @@ start)
     printf "%-50s\n" "Starting $NAME..." | tee -a $LOG
 
     echo "" > /etc/resolv.conf
-    ethtool -K eth0 tso off
-    ethtool -K eth1 tso off
+    # ethtool -K eth0 tso off
+    # ethtool -K eth1 tso off
     dhclient &
 
     /etc/init.d/mysqld start >> $LOG  #To make run.sh work (tutorials update)
@@ -73,7 +73,7 @@ start)
     echo 0 > /proc/sys/kernel/hung_task_timeout_secs
 
     
-    echo "You can now launch sandbox on http://$(getent ahosts `hostname` | awk '{print $1}' | head -n 1):8888/"
+    echo "You can now launch sandbox!"
     stty -F /dev/tty1 -echo
 ;;
 stop)
