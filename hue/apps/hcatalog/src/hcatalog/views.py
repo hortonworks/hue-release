@@ -176,13 +176,7 @@ def load_table(request, database, table):
 
 
 def do_load_table(request, create_hql):
-    script_file = "/tmp/hive_%s.hcat" % datetime.now().strftime("%s")
-    file = open(script_file, 'w+')
-    file.write(create_hql)
-    file.close()
-    HCatClient(request.user.username).hive_cli(file=script_file)
-    if os.path.exists(script_file):
-        os.remove(script_file)
+    HCatClient(request.user.username).do_hive_query_and_wait(execute=create_hql)
 
 
 def browse_partition(request, database, table):
@@ -588,3 +582,11 @@ def _get_table_list(request):
 
 def listdir(request, path):
     return HttpResponse(json.dumps(request.fs.listdir(path)))
+
+
+def ping_hive_job(request, job_id):
+    try:
+        result = HCatClient(request.user.username).check_job(job_id)
+    except Exception as ex:
+        result = {"status": {"failureInfo": unicode(ex)}}
+    return HttpResponse(json.dumps(result))

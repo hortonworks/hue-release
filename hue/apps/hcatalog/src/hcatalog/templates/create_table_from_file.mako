@@ -25,9 +25,10 @@ ${ commonheader(_("HCatalog: Create table manually"), app_name, user, '100px') |
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid" id="container-fluid-top">
-    <h1 id="describe-header">${_('Create a new table from a file')}</h1>
-    <div id="action-spinner-create"><h1>${_('Creating the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-    <div id="action-spinner-preview"><h1>${_('Processing the file to preview...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <h1 data-bind="visible: !(creatingTable() || importingData() || previewData())">${_('Create a new table from a file')}</h1>
+    <div data-bind="visible: creatingTable()"><h1>${_('Creating the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <div data-bind="visible: importingData()"><h1>${_('Importing data into the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <div data-bind="visible: previewData()"><h1>${_('Processing the file to preview...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
@@ -233,8 +234,10 @@ ${layout.menubar(section='tables')}
                             <div class="scrollable"></div>
                             <div class="pagination pull-right" id="preview-pagination">
                                 <ul>
-                                    <li id="submit-preview-begin" class="prev"><a title="${_('Beginning of List')}" href="javascript:void(0)">&larr; ${_('Beginning of List')}</a></li>
-                                    <li id="submit-preview-next"><a title="${_('Next page')}" href= "javascript:void(0)">${_('Next Page')} &rarr;</a></li>
+                                    <li id="submit-preview-begin" class="prev"><a title="${_('Beginning of List')}" href="javascript:void(0)"
+                                        data-bind="disable: lockControls">&larr; ${_('Beginning of List')}</a></li>
+                                    <li id="submit-preview-next"><a title="${_('Next page')}" href= "javascript:void(0)"
+                                        data-bind="disable: lockControls">${_('Next Page')} &rarr;</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -242,7 +245,7 @@ ${layout.menubar(section='tables')}
                 </div>
                 <div class="form-actions">
                     <input id="submit-create" type="submit" name="createTable" class="btn btn-primary disable-feedback"
-                           value="${_('Create table')}"/>
+                           value="${_('Create table')}" data-bind="disable: lockControls"/>
                 </div>
             </form>
         </div>
@@ -348,6 +351,9 @@ ${layout.menubar(section='tables')}
 
 </div>
 
+<script src="/hcatalog/static/js/hcatalog_scripts.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/ext/js/knockout-2.1.0.js" type="text/javascript" charset="utf-8"></script>
+
 <script type="text/javascript" charset="utf-8">
 
 var PreviewType = {"preview": 0, "preview_next": 1, "preview_beginning":2};
@@ -358,6 +364,31 @@ var previewStartIdx = 0;
 var previewEndIdx = 0;
 var filePath = "";
 var fileType = FileType.none
+var pingHiveJobTimer = null;
+
+var viewModel = new AppViewModel();
+
+function AppViewModel() {
+    var self = this;
+
+    self.creatingTable = ko.observable(false);
+    self.importingData = ko.observable(false);
+    self.previewData = ko.observable(false);
+    self.lockControls = ko.computed(function() {
+        return self.creatingTable() || self.importingData() || self.previewData();
+    });
+}
+ko.applyBindings(viewModel);
+
+function showMainError(errorMessage) {
+    $("#error-message").text(errorMessage);
+    $("#alert-error-main").show();
+    $(window).scrollTop(0);
+}
+
+function hideMainError() {
+    $("#alert-error-main").hide();
+}
 
 $(document).ready(function () {
 
@@ -497,6 +528,12 @@ $(document).ready(function () {
             tableList = data;
         }, "json");
     }
+
+    % if job_id and on_success_url:
+            viewModel.creatingTable(false);
+            viewModel.importingData(true);
+            ping_hive_job("${job_id}", "${on_success_url}");
+    % endif
 
     function reactOnFilePathChange(newPath) {
         filePath = newPath;
@@ -642,39 +679,21 @@ $(document).ready(function () {
 
     function submitPreviewStart() {
         hideMainError();
-        lockControls();
-        $('#action-spinner-preview').show();
-        $('#describe-header').hide();
+        viewModel.previewData(true);
     }
 
     function submitPreviewEnd() {
-        $('#action-spinner-preview').hide();
-        $('#describe-header').show();
-        unlockControls();
+        viewModel.previewData(false);
     }
 
     function submitCreateStart() {
         hideMainError();
-        lockControls();
-        $('#action-spinner-create').show();
-        $('#describe-header').hide();
+        viewModel.creatingTable(true);
         $(window).scrollTop(0);
     }
 
     function submitCreateEnd() {
-        $('#action-spinner-create').hide();
-        $('#describe-header').show();
-        unlockControls();
-    }
-
-    function lockControls() {
-        $("#submit-preview").attr("disabled", "disabled");
-        $("#submit-create").attr("disabled", "disabled");
-    }
-
-    function unlockControls() {
-        $("#submit-preview").removeAttr("disabled");
-        $("#submit-create").removeAttr("disabled");
+        viewModel.creatingTable(false);
     }
 
     function validateOnCreateTable() {
@@ -789,16 +808,6 @@ $(document).ready(function () {
     function isDataValid(str) {
         // validates against empty string and no spaces
         return (str != "" && str.indexOf(" ") == -1);
-    }
-
-    function showMainError(errorMessage) {
-        $("#error-message").text(errorMessage);
-        $("#alert-error-main").show();
-        $(window).scrollTop(0);
-    }
-
-    function hideMainError() {
-        $("#alert-error-main").hide();
     }
 
     function showFieldError(field) {

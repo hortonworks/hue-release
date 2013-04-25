@@ -22,7 +22,9 @@ from subprocess import Popen, PIPE
 from beeswax.conf import BEESWAX_HIVE_HOME_DIR
 
 import simplejson as json
-
+from datetime import datetime
+import time, threading
+import re
 import logging
 
 LOG = logging.getLogger("analitics")
@@ -183,29 +185,29 @@ class HCatClient(Templeton):
         except KeyError:
             pass
 
-    def hcat_cli(self, execute=None, file=None):
-        if not any([execute, file]):
-            raise Exception("""One of either "execute" or "file" is required""")
-        if execute:
-            p = Popen("hcat -e '" + execute + "'", shell=True,
-                      stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
-        if file:
-            p = Popen("hcat -f " + file, shell=True,
-                      stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
-        answer, error = p.communicate()
-        LOG.error(error)
-        return (answer, not answer, error)
+    def do_hive_query_and_wait(self, hive_file=None, execute=None, timeout_sec=600.0):
+        SLEEP_INTERVAL = 1.0
+        statusdir = "/tmp/.hivejobs/%s" % datetime.now().strftime("%s")
+        job = self.hive_query(hive_file=hive_file, execute=execute, statusdir=statusdir)
+        curr = time.time()
+        end = curr + timeout_sec
+        while curr <= end:
+            try:
+                result = self.check_job(job['id'])
+                LOG.info(unicode(result))
+            except Exception as ex:
+                raise Exception("""HCatalog client, do_hive_query_and_wait error: %s""" % unicode(ex))
+            if 'exitValue' in result and result['exitValue']:
+                if 'status' in result and 'failureInfo' in result['status'] and result['status']['failureInfo'] != 'NA':
+                    raise Exception("""HCatalog client, do_hive_query_and_wait error: %s""" % unicode(result.status.failureInfo))
+            if ('completed' in result and result['completed']) or \
+                    ('status' in result and 'jobComplete' in result['status'] and result['status']['jobComplete']):
+                return  # success
+            time.sleep(SLEEP_INTERVAL)
+            curr = time.time()
+        raise Exception("""HCatalog client, do_hive_query_and_wait error: %s""" % "Timeout occurred")
 
-    def hive_cli(self, execute=None, file=None):
-        hive_bin = os.path.join(BEESWAX_HIVE_HOME_DIR.get(), "bin/hive")
-        if not any([execute, file]):
-            raise Exception('hive cli error: one of either "execute" or "file" is required')
-        if execute:
-            p = Popen(hive_bin + " -e '" + execute + "'", shell=True,
-                      stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
-        if file:
-            p = Popen(hive_bin + " -f " + file, shell=True,
-                      stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
-        answer, error = p.communicate()
-        LOG.error("""HCatalog client, hcat_cli error:%s""" % error)
-        return (answer, not answer, error)
+    def do_hive_query(self, hive_file=None, execute=None, timeout_sec=600.0):
+        statusdir = "/tmp/.hivejobs/%s" % datetime.now().strftime("%s")
+        job = self.hive_query(hive_file=hive_file, execute=execute, statusdir=statusdir)
+        return job['id'] if 'id' in job else None

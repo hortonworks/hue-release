@@ -162,7 +162,10 @@ ${layout.menubar(section='tables')}
             $(this).closest(".modal").modal("hide");
             viewModel.droppingTables(true);
             $.post("${url(app_name + ':drop_table', database=database)}", $(this).serializeArray(), function(data){
-                if ("on_success_url" in data && data.on_success_url)
+                if ("error" in data) {
+                    showMainError(data["error"]);
+                }
+                else if ("on_success_url" in data && data.on_success_url)
                 {
                     window.location.replace(data.on_success_url);
                     return;

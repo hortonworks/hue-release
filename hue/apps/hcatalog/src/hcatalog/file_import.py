@@ -21,6 +21,7 @@ from desktop.lib.django_util import render
 from desktop.lib.django_forms import MultiForm
 from desktop.context_processors import get_app_name
 from hadoop.fs import hadoopfs
+from django.core import urlresolvers
 from django.http import HttpResponse
 from django.template.defaultfilters import escapejs
 
@@ -53,7 +54,8 @@ XLS_FILE_PROCESSOR = XlsFileProcessor()
 
 def get_hcat_hdfs_tmp_dir(fs):
     if not fs.exists(HCAT_HDFS_TMP_DIR):
-        fs.mkdir(HCAT_HDFS_TMP_DIR)
+        fs.do_as_superuser(fs.mkdir, HCAT_HDFS_TMP_DIR)
+        fs.do_as_superuser(fs.chmod, HCAT_HDFS_TMP_DIR, 0777)
     return HCAT_HDFS_TMP_DIR
 
 
@@ -209,7 +211,33 @@ def create_from_file(request, database='default'):
                                 path = parser_options['results_path']
                             else:
                                 request.fs.remove(parser_options['results_path'])
-                    return _submit_create_and_load(request, proposed_query, database, table_name, path, parser_options['do_import_data'], parser_options.get('tmp_dir', None))
+                    hcat = HCatClient(request.user.username)
+                    hcat.create_table(database, table_name, proposed_query)
+                    tables = _get_table_list(request)
+                    if parser_options.get('do_import_data', True):
+                        if not table_name or not path:
+                            msg = 'Internal error: Missing needed parameter to load data into table'
+                            LOG.error(msg)
+                            raise Exception(msg)
+                        LOG.info("Auto loading data from %s into table %s" % (path, table_name))
+                        hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
+                        job_id = hcat.do_hive_query(execute=hql)
+                        on_success_url = urlresolvers.reverse(get_app_name(request) + ':index')
+                        return render("create_table_from_file.mako", request, dict(
+                            action="#",
+                            job_id=job_id,
+                            on_success_url=on_success_url,
+                            database=database,
+                            table_form=form.table,
+                            error=None,
+                            ))
+
+                    # clean up tmp dir
+                    tmp_dir = parser_options.get('tmp_dir', None)
+                    if tmp_dir and request.fs.exists:
+                        request.fs.rmtree(tmp_dir)
+
+                    return render("show_tables.mako", request, dict(database=database, tables=tables, ))
 
                 except Exception as ex:
                     return render("create_table_from_file.mako", request, dict(
@@ -232,7 +260,7 @@ def create_from_file(request, database='default'):
             database=database,
             table_form=form.table,
             error=None,
-        ))
+    ))
 
 
 IMPORT_PEEK_SIZE = 8192
@@ -247,28 +275,6 @@ DELIMITER_READABLE = {'\\001': 'ctrl-As',
                       ',': 'commas',
                       ' ': 'spaces',
                       ';': 'semicolons'}
-
-
-def _submit_create_and_load(request, create_hql, database, table_name, path, do_load, tmp_dir):
-    """
-    Submit the table creation, and setup the load to happen (if ``do_load``).
-    """
-    HCatClient(request.user.username).create_table(database, table_name, create_hql)
-    tables = _get_table_list(request)
-    if do_load:
-        if not table_name or not path:
-            msg = 'Internal error: Missing needed parameter to load data into table'
-            LOG.error(msg)
-            raise Exception(msg)
-        LOG.info("Auto loading data from %s into table %s" % (path, table_name))
-        hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
-        hcatalog.views.do_load_table(request, hql)
-
-    # clean up tmp dir
-    if tmp_dir and request.fs.exists:
-        request.fs.rmtree(tmp_dir)
-
-    return render("show_tables.mako", request, dict(database=database, tables=tables, ))
 
 
 def _delim_preview_ext(fs, file_types, parser_options):
