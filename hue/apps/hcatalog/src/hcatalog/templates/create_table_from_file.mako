@@ -393,7 +393,6 @@ function hideMainError() {
 $(document).ready(function () {
 
     initUI();
-
     function submitPreview(preview_type) {
         submitPreviewStart();
         if(PreviewType.preview == preview_type){
@@ -502,6 +501,7 @@ $(document).ready(function () {
     }
 
     function initUI() {
+
         setFileType(FileType.none);
         $("#file-options-text").hide();
         $("#file-options-ss").hide();
@@ -774,7 +774,8 @@ $(document).ready(function () {
 
         if(fileType == FileType.spreadsheet) {
             var cellRange = $("input[name='table-xls_cell_range']");
-            if (cellRange.val().length > 0 && cellRange.val().match(/^[a-zA-Z]+\d+:[a-zA-Z]+\d+$/) == undefined) {
+            if (cellRange.val().length > 0 && cellRange.attr("placeholder") !== cellRange.val()
+                    && cellRange.val().match(/^[a-zA-Z]+\d+:[a-zA-Z]+\d+$/) == undefined) {
                 showFieldError(cellRange);
                 isValid = false;
             }
