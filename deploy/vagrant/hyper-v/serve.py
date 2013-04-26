@@ -12,7 +12,7 @@ import BaseHTTPServer
 
 HOST_NAME = '0.0.0.0'
 PORT_NUMBER = 42000
-aes = SimpleAES(file("key").read())
+aes = None
 
 
 def ps(cmd):
@@ -49,14 +49,20 @@ class RemotePowerShell(object):
      >>> print ps("echo HELLO")
      HELLO
     """
-    def __init__(self, host, port=PORT_NUMBER):
+    def __init__(self, host, port=PORT_NUMBER, key=None):
         self.host = host
         self.port = port
+        if key:
+            self.aes = SimpleAES(file(key).read())
+        else:
+            self.aes = SimpleAES(file("key").read())
 
-    def __call__(self, cmd):
-        cmd = aes.encrypt(base64.b64encode(cmd))
+    def __call__(self, cmd, oneline=True):
+        if oneline:
+            cmd = cmd.replace('\n', '; ')
+        cmd = self.aes.encrypt(base64.b64encode(cmd))
         req = urllib2.urlopen('http://%s:%s/' % (self.host, self.port), cmd)
-        output = aes.decrypt(req.read())
+        output = self.aes.decrypt(req.read())
         output = base64.b64decode(output)
         output = output.replace("\r\n","\n")
         return output
@@ -64,6 +70,7 @@ class RemotePowerShell(object):
 
 
 if __name__ == '__main__':
+    aes = SimpleAES(file("key").read())
     server_class = BaseHTTPServer.HTTPServer
     httpd = server_class((HOST_NAME, PORT_NUMBER), PowerShellHandler)
     print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
