@@ -77,6 +77,7 @@ ${ commonheader(_('Job Browser'), "jobbrowser", user) | n,unicode }
     <thead>
         <tr>
             <!--<th>${_('Logs')}</th>-->
+            <th>&nbsp;</th>
             <th>${_('ID')}</th>
             <th>${_('Name')}</th>
             <th>${_('Status')}</th>
@@ -96,6 +97,10 @@ ${ commonheader(_('Job Browser'), "jobbrowser", user) | n,unicode }
             <!--<td data-row-selector-exclude="true">
                 <a href="${ url('jobbrowser.views.job_single_logs', job=job.jobId) }" data-row-selector-exclude="true"><i class="icon-tasks"></i></a>
             </td>-->
+            <td>
+              &nbsp;
+            </td>
+
             <td>
                 <a href="${url('jobbrowser.views.single_job', job=job.jobId)}" title="${_('View this job')}" data-row-selector="true">${job.jobId_short}</a>
             </td>
