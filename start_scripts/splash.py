@@ -28,7 +28,7 @@ def make_ip_window():
         ip_hosts = socket.gethostbyname(socket.gethostname())
 
         if platform == "vbox":
-            ip = "127.0.0.1:42080"
+            ip = "127.0.0.1:8888"
 
         elif platform in ["vmware", "hyper-v"]:
             ip = ip_hosts
