@@ -48,10 +48,38 @@ transform: translate(0px,23px) rotate(340deg);
 -o-transform: translate(0px,23px) rotate(340deg); 
 -moz-transform: translate(0px,23px) rotate(340deg); 
 }
-		body
-	  {
-			height:600px;
-			overflow-y: hidden; 
-	  }
+	body
+	{
+		height:600px;
+		/*verflow-y: hidden; */
+		font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-weight:500;
+	}
 
     
+	
+.arc path {
+  /*stroke:#fff;*/
+  
+}
+.pielabel
+{
+	opacity:0.7;
+	padding:2px 5px 2px 5px;
+	border-radius:5px;
+	display:none;
+	background-color:#000;
+	position:absolute;
+	color:white;
+	text-align:center;
+}
+.legend
+{
+	display:none;
+	font-size:9pt!important;
+}
+
+.showlegend
+{
+	text-decoration:none!important;
+}

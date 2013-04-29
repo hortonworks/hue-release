@@ -18,8 +18,8 @@ function chart(x,y,min,max)
 			
 		}
 		map[i] = d[this.x];
-
 	}
+	
 
 	this.setGraph = function(type,unstack)
 	{
@@ -37,9 +37,8 @@ function chart(x,y,min,max)
 			}]
 		});
 		
-		if(min){this.graph.min = min}
-		else{this.graph.min = Math.min.apply( Math, this.formin ) -1};
-		if(max) this.graph.max = max;
+		this.graph.min = Math.min.apply( Math, this.formin ) -1;
+
 		for(var k=1;k<this.n;k++)
 		this.graph.series.push({color: this.palette.color() , data: this.seriesData[k], name: this.y[k]});
 
@@ -75,11 +74,10 @@ function chart(x,y,min,max)
 			graph: this.graph,
 			element: document.getElementById('slider')
 		});
-	}
+	} 
 	
-	this.paint = function(type,stacked){
-	d3.csv(settings.csv,function(dataset){dataset.forEach(function(d,i){c.getData(d,i);});c.setGraph(type,stacked);});
-};
+	this.paint = function(csvfile,type,stacked){
+	d3.csv(csvfile,function(dataset){dataset.forEach(function(d,i){c.getData(d,i);});c.setGraph(type,stacked);});};
 }
 
 

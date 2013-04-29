@@ -288,6 +288,7 @@ def _delim_preview_ext(fs, file_types, parser_options):
 
     auto_column_types = parser_options['auto_column_types'] if 'auto_column_types' in parser_options else []
     col_names = parser_options['col_names'] if 'col_names' in parser_options else []
+    col_names = make_up_hive_column_names(col_names)
     columns = []
     if len(auto_column_types) == len(col_names):
         for i, col_name in enumerate(col_names):
@@ -300,6 +301,17 @@ def _delim_preview_ext(fs, file_types, parser_options):
     parser_options['columns'] = columns
     return parser_options
 
+
+def make_up_hive_column_names(names):
+    new_names = []
+    for col_name in names:
+        col_name = col_name.replace(" ", "_").lower()
+        col_rename_idx = 0
+        while (col_name + '_' + str(col_rename_idx) if col_rename_idx else col_name) in new_names:
+            col_rename_idx += 1
+        else:
+            new_names.append(col_name + '_' + str(col_rename_idx) if col_rename_idx else col_name)
+    return new_names
 
 def _text_file_preview(fs, file_types, parser_options):
     results_file_name = None
