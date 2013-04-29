@@ -213,7 +213,6 @@ ${layout.menubar(section='query')}
         <script src="/hcatalog/static/js/xml.js"></script>
         <script src="/hcatalog/static/js/css.js"></script>
         <script src="/hcatalog/static/js/javascript.js"></script>
-        <script src="/hcatalog/static/js/lib/jquery.csv-0.71.min.js"></script>
 		
         <div class="tab-pane" id="visualizations">
        <!--<textarea id="vis_code" name="code">
