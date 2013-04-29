@@ -1,11 +1,7 @@
-REPOQUERY="repoquery --disablerepo='*' --enablerepo='sandbox' --nvr"
-
-yum clean all --disablerepo='*' --enablerepo='sandbox'
-
 cd $SRC/sandbox-shared
 
-HUE_RELEASE=$((`$REPOQUERY hue | cut -d- -f3` + 1))
-TUTORIALS_RELEASE=$((`$REPOQUERY hue-tutorials | cut -d- -f4` + 1))
+HUE_RELEASE=$(git rev-list --full-history HEAD -- hue start_scripts deploy | wc -l)
+TUTORIALS_RELEASE=$(git rev-list --full-history HEAD -- tutorials | wc -l)
 echo "New RPM release:"
 echo "hue: $HUE_RELEASE"
 echo "tutorials: $TUTORIALS_RELEASE"
