@@ -43,7 +43,7 @@ var pielabel = d3.select("body")
 /*button to show legend*/
 var showlegend = d3.select("body")
 	.append("a")
-	.attr("href","#")
+	.attr("href","javascript:void(0);")
 	.attr("class","showlegend")
 	.html("legend");	
 	
