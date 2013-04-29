@@ -25,10 +25,10 @@ ${ commonheader(_("HCatalog: Create table manually"), app_name, user, '100px') |
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid" id="container-fluid-top">
-    <h1 data-bind="visible: !(creatingTable() || importingData() || previewData())">${_('Create a new table from a file')}</h1>
-    <div data-bind="visible: creatingTable()"><h1>${_('Creating the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-    <div data-bind="visible: importingData()"><h1>${_('Importing data into the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-    <div data-bind="visible: previewData()"><h1>${_('Processing the file to preview...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <h1 id="main-spin">${_('Create a new table from a file')}</h1>
+    <div id="creating-table-spin" class="hidden-initially"><h1>${_('Creating the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <div id="importing-data-spin" class="hidden-initially"><h1>${_('Importing data into the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <div id="preview-data-spin" class="hidden-initially" data-bind="visible: previewData()"><h1>${_('Processing the file to preview...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
@@ -45,7 +45,7 @@ ${layout.menubar(section='tables')}
         </div>
 
         <div class="span9">
-            <div id="alert-error-main" class="alert alert-error">
+            <div id="alert-error-main" class="alert alert-error hidden-initially">
                 <p><strong>The following error(s) occurred:</strong></p>
                 <pre id="error-message"/>
                 <small></small>
@@ -234,10 +234,12 @@ ${layout.menubar(section='tables')}
                             <div class="scrollable"></div>
                             <div class="pagination pull-right" id="preview-pagination">
                                 <ul>
-                                    <li id="submit-preview-begin" class="prev"><a title="${_('Beginning of List')}" href="javascript:void(0)"
-                                        data-bind="disable: lockControls">&larr; ${_('Beginning of List')}</a></li>
-                                    <li id="submit-preview-next"><a title="${_('Next page')}" href= "javascript:void(0)"
-                                        data-bind="disable: lockControls">${_('Next Page')} &rarr;</a></li>
+                                    <li id="submit-preview-begin" class="prev"><a title="${_('Beginning of List')}"
+                                                                                  href="javascript:void(0)">&larr; ${_('Beginning of List')}</a>
+                                    </li>
+                                    <li id="submit-preview-next"><a title="${_('Next page')}"
+                                                                    href="javascript:void(0)">${_('Next Page')} &rarr;</a>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -245,7 +247,7 @@ ${layout.menubar(section='tables')}
                 </div>
                 <div class="form-actions">
                     <input id="submit-create" type="submit" name="createTable" class="btn btn-primary disable-feedback"
-                           value="${_('Create table')}" data-bind="disable: lockControls"/>
+                           value="${_('Create table')}"/>
                 </div>
             </form>
         </div>
@@ -269,11 +271,6 @@ ${layout.menubar(section='tables')}
 
 
 <style>
-
-    #alert-error-main {
-        display: none;
-    }
-
     div.well.div-file-selector {
         margin-bottom: 0px;
         box-shadow: 0 0 0;
@@ -339,7 +336,7 @@ ${layout.menubar(section='tables')}
         margin-bottom: 5px;
     }
 
-    #action-spinner-create, #action-spinner-preview {
+    .hidden-initially {
         display: none;
     }
 
@@ -365,20 +362,62 @@ var previewEndIdx = 0;
 var filePath = "";
 var fileType = FileType.none
 var pingHiveJobTimer = null;
-
 var viewModel = new AppViewModel();
 
 function AppViewModel() {
     var self = this;
-
-    self.creatingTable = ko.observable(false);
-    self.importingData = ko.observable(false);
-    self.previewData = ko.observable(false);
-    self.lockControls = ko.computed(function() {
-        return self.creatingTable() || self.importingData() || self.previewData();
-    });
+##
+##    self.lockControls = ko.computed(function() {
+##        return self.creatingTable() || self.importingData() || self.previewData();
+##    });
 }
 ko.applyBindings(viewModel);
+
+function creatingTable(flag) {
+    if(flag) {
+        $("#main-spin").hide();
+        $("#creating-table-spin").show();
+    }
+    else {
+        $("#creating-table-spin").hide();
+        $("#main-spin").show();
+    }
+}
+
+function importingData(flag) {
+    if(flag) {
+        $("#main-spin").hide();
+        $("#importing-data-spin").show();
+    }
+    else {
+        $("#importing-data-spin").hide();
+        $("#main-spin").show();
+    }
+}
+
+function previewData(flag) {
+    if(flag) {
+        $("#main-spin").hide();
+        $("#preview-data-spin").show();
+    }
+    else {
+        $("#preview-data-spin").hide();
+        $("#main-spin").show();
+    }
+}
+
+function lockControls(flag) {
+    if(flag) {
+        $("#submit-preview-begin").prop('disabled', true);
+        $("#submit-preview-next").prop('disabled', true);
+        $("#submit-create").prop('disabled', true);
+    }
+    else {
+        $("#submit-preview-begin").prop('disabled', false);
+        $("#submit-preview-next").prop('disabled', false);
+        $("#submit-create").prop('disabled', false);
+    }
+}
 
 function showMainError(errorMessage) {
     $("#error-message").text(errorMessage);
@@ -501,7 +540,6 @@ $(document).ready(function () {
     }
 
     function initUI() {
-
         setFileType(FileType.none);
         $("#file-options-text").hide();
         $("#file-options-ss").hide();
@@ -530,8 +568,8 @@ $(document).ready(function () {
     }
 
     % if job_id and on_success_url:
-            viewModel.creatingTable(false);
-            viewModel.importingData(true);
+            creatingTable(false);
+            importingData(true);
             ping_hive_job("${job_id}", "${on_success_url}");
     % endif
 
@@ -610,12 +648,12 @@ $(document).ready(function () {
 
     function reactOnAutodetectDelimiterChanged(value) {
         if (value) {
-            $("#id_table-delimiter_0").attr("disabled", "disabled");
-            $("#id_table-delimiter_1").attr("disabled", "disabled");
+            $("#id_table-delimiter_0").prop('disabled', true);
+            $("#id_table-delimiter_1").prop('disabled', true);
         }
         else {
-            $("#id_table-delimiter_0").removeAttr("disabled");
-            $("#id_table-delimiter_1").removeAttr("disabled");
+            $("#id_table-delimiter_0").prop('disabled', false);
+            $("#id_table-delimiter_1").prop('disabled', false);
         }
     }
 
@@ -679,21 +717,24 @@ $(document).ready(function () {
 
     function submitPreviewStart() {
         hideMainError();
-        viewModel.previewData(true);
+        lockControls(true);
+        previewData(true);
     }
 
     function submitPreviewEnd() {
-        viewModel.previewData(false);
+        lockControls(false);
+        previewData(false);
     }
 
     function submitCreateStart() {
         hideMainError();
-        viewModel.creatingTable(true);
+        lockControls(true);
+        creatingTable(true);
         $(window).scrollTop(0);
     }
 
     function submitCreateEnd() {
-        viewModel.creatingTable(false);
+        creatingTable(false);
     }
 
     function validateOnCreateTable() {
