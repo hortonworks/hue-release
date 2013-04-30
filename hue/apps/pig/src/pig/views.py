@@ -15,6 +15,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 import re
+import logging
 import simplejson as json
 from datetime import datetime
 
@@ -30,6 +31,8 @@ from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm, UDFForm
 from pig import conf
+
+LOG = logging.getLogger(__name__)
 
 UDF_PATH = conf.UDF_PATH.get()
 FILE_PATTERN = re.compile(r"[^\w\d_\-\.]+")
@@ -177,7 +180,9 @@ def start_job(request):
     if request.POST.get("syntax_check"):
         arg = "-check"
         job_type = Job.SYNTAX_CHECK
-    job = t.pig_query(pig_file=script_file, execute=execute, statusdir=statusdir, callback=request.build_absolute_uri("/pig/notify/$jobId/"), arg=arg)
+    callback = request.build_absolute_uri("/pig/notify/$jobId/")
+    LOG.debug("Starting pig job via templeton. Script file: %s, statusdir: %s, callback: %s, arg: %s" % (script_file, statusdir, callback, arg))
+    job = t.pig_query(pig_file=script_file, execute=execute, statusdir=statusdir, callback=callback, arg=arg)
 
     if request.POST.get("script_id"):
         script = PigScript.objects.get(pk=request.POST['script_id'])
@@ -256,7 +261,7 @@ def query_history(request):
     return render(
         "query_history.mako",
         request,
-        dict(jobs=Job.objects.filter(script__user=request.user, job_type=Job.EXECUTE).order_by("-start_time").all())
+        dict(jobs=Job.objects.filter(script__user=request.user).order_by("-start_time").all())
     )
 
 
@@ -296,7 +301,6 @@ def notify_job_complited(request, job_id):
     job = Job.objects.get(job_id=job_id)
     job.status = job.JOB_COMPLETED
     job.save()
-    job_result = _job_result(request, job)
     if job.email_notification:
         subject = 'Query result'
         body = "Your PIG script '%s' started at %s has been complited.\n\
