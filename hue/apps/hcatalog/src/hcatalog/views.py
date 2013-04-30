@@ -43,10 +43,7 @@ from beeswaxd.ttypes import BeeswaxException
 from beeswax.server import dbms
 from beeswax.server.dbms import expand_exception, get_query_server_config
 
-from datetime import datetime
 import logging
-import os
-
 
 LOG = logging.getLogger(__name__)
 
