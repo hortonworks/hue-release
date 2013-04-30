@@ -17,10 +17,10 @@ ECHO_OK=printf 'Starting %-50s$(OK_STRING)\n' "$1"
 CAT=cat
 
 define colorized
-@$2 1>$(LOG) 2> temp.log || touch temp.errors;
+@$2 1>$(LOG) 2> "temp $1.log" || touch temp.errors;
 @$3;
-@if test -e temp.errors; then ($(ECHO_ERR) | tee -a $(LOG)) && ($(CAT) temp.log $4 | tee -a $(LOG)); elif test -s temp.log; then ($(ECHO_WARN) && $(CAT) temp.log) | tee -a $(LOG); else $(ECHO_OK) | tee -a $(LOG); fi;
-@$(RM) -f temp.errors temp.log;
+@if test -e "temp $1.errors"; then ($(ECHO_ERR) | tee -a $(LOG)) && ($(CAT) "temp $1.log" $4 | tee -a $(LOG)); elif test -s "temp $1.log"; then ($(ECHO_WARN) && $(CAT) "temp $1.log") | tee -a $(LOG); else $(ECHO_OK) | tee -a $(LOG); fi;
+@$(RM) -f "temp $1.errors" "temp $1.log";
 endef
 
 all: Startup Ambari
