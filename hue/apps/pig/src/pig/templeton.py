@@ -33,6 +33,7 @@ class Templeton(object):
         data = urllib.urlencode(data)
         req = urllib2.Request(TEMPLETON_URL.get() + url, data)
         response = urllib2.urlopen(req)
+
         return json.loads(response.read())
 
     def put(self, url, data=None):
@@ -52,9 +53,9 @@ class Templeton(object):
         Make DELETE query to templeton url.
         """
         if data is not None:
-            data['user.name'] = "sandbox"
+            data['user.name'] = self.user
         else:
-            data = {"user.name": "sandbox"}
+            data = {"user.name": self.user}
         data = urllib.urlencode(data)
         opener = urllib2.build_opener(urllib2.HTTPHandler)
         req = urllib2.Request(TEMPLETON_URL.get() + url + "?" + data)
@@ -94,6 +95,39 @@ class Templeton(object):
         if arg:
             data['arg'] = arg
         return self.post("pig", data)
+
+    def hive_query(self, execute=None, hive_file=None, statusdir=None, callback=None, arg=None):
+        """
+        Create and queue a Hive job.
+
+        Keyword arguments:
+        user -- Hue/Hadoop user
+        execute -- String containing an entire, short hive program to run. (e.g. pwd)
+        file -- HDFS file name of a hive program to run. (One of either "execcute" or "file" is required )
+        statusdir -- A directory where Templeton will write the status of the Hive job. If
+                     provided, it is the caller's responsibility to remove this directory when done.
+        callback -- Define a URL to Optional be called upon job completion. You may embed a specific job
+                    ID into this URL using $jobId. This tag will be replaced in the callback URL with this job's job
+                    ID.
+        arg -- Set a program argument. Optional None
+        Returns dict:
+        id -- A string containing the job ID similar to "job_201110132141_0001".
+        info -- A JSON object containing the information returned when the job was queued.
+        """
+        if not any([execute, hive_file]):
+            raise Exception("""One of either "execcute" or "file" is required""")
+        data = {}
+        if execute:
+            data['execute'] = execute
+        if hive_file:
+            data['file'] = hive_file
+        if statusdir:
+            data['statusdir'] = statusdir
+        if callback:
+            data['callback'] = callback
+        if arg:
+            data['arg'] = arg
+        return self.post("hive", data)
 
     def check_job(self, job_id):
         """

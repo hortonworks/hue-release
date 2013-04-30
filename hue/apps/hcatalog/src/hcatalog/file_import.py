@@ -20,7 +20,9 @@ from desktop.lib import django_mako, i18n
 from desktop.lib.django_util import render
 from desktop.lib.django_forms import MultiForm
 from desktop.context_processors import get_app_name
+from desktop.lib.json_utils import JSONEncoderForHTML
 from hadoop.fs import hadoopfs
+from django.core import urlresolvers
 from django.http import HttpResponse
 from django.template.defaultfilters import escapejs
 
@@ -53,7 +55,8 @@ XLS_FILE_PROCESSOR = XlsFileProcessor()
 
 def get_hcat_hdfs_tmp_dir(fs):
     if not fs.exists(HCAT_HDFS_TMP_DIR):
-        fs.mkdir(HCAT_HDFS_TMP_DIR)
+        fs.do_as_superuser(fs.mkdir, HCAT_HDFS_TMP_DIR)
+        fs.do_as_superuser(fs.chmod, HCAT_HDFS_TMP_DIR, 0777)
     return HCAT_HDFS_TMP_DIR
 
 
@@ -161,7 +164,7 @@ def create_from_file(request, database='default'):
                         options["preview_has_more"] = parser_options['preview_has_more']
 
                     preview_results["options"] = options
-                return HttpResponse(json.dumps(preview_results))
+                return HttpResponse(json.dumps(preview_results, cls=JSONEncoderForHTML))
             else:  # create table action
                 # validate input parameters
                 if file_type == hcatalog.forms.IMPORT_FILE_TYPE_NONE:
@@ -209,7 +212,33 @@ def create_from_file(request, database='default'):
                                 path = parser_options['results_path']
                             else:
                                 request.fs.remove(parser_options['results_path'])
-                    return _submit_create_and_load(request, proposed_query, database, table_name, path, parser_options['do_import_data'], parser_options.get('tmp_dir', None))
+                    hcat = HCatClient(request.user.username)
+                    hcat.create_table(database, table_name, proposed_query)
+                    tables = _get_table_list(request)
+                    if parser_options.get('do_import_data', True):
+                        if not table_name or not path:
+                            msg = 'Internal error: Missing needed parameter to load data into table'
+                            LOG.error(msg)
+                            raise Exception(msg)
+                        LOG.info("Auto loading data from %s into table %s" % (path, table_name))
+                        hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
+                        job_id = hcat.do_hive_query(execute=hql)
+                        on_success_url = urlresolvers.reverse(get_app_name(request) + ':index')
+                        return render("create_table_from_file.mako", request, dict(
+                            action="#",
+                            job_id=job_id,
+                            on_success_url=on_success_url,
+                            database=database,
+                            table_form=form.table,
+                            error=None,
+                            ))
+
+                    # clean up tmp dir
+                    tmp_dir = parser_options.get('tmp_dir', None)
+                    if tmp_dir and request.fs.exists:
+                        request.fs.rmtree(tmp_dir)
+
+                    return render("show_tables.mako", request, dict(database=database, tables=tables, ))
 
                 except Exception as ex:
                     return render("create_table_from_file.mako", request, dict(
@@ -232,7 +261,7 @@ def create_from_file(request, database='default'):
             database=database,
             table_form=form.table,
             error=None,
-        ))
+    ))
 
 
 IMPORT_PEEK_SIZE = 8192
@@ -249,28 +278,6 @@ DELIMITER_READABLE = {'\\001': 'ctrl-As',
                       ';': 'semicolons'}
 
 
-def _submit_create_and_load(request, create_hql, database, table_name, path, do_load, tmp_dir):
-    """
-    Submit the table creation, and setup the load to happen (if ``do_load``).
-    """
-    HCatClient(request.user.username).create_table(database, table_name, create_hql)
-    tables = _get_table_list(request)
-    if do_load:
-        if not table_name or not path:
-            msg = 'Internal error: Missing needed parameter to load data into table'
-            LOG.error(msg)
-            raise Exception(msg)
-        LOG.info("Auto loading data from %s into table %s" % (path, table_name))
-        hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
-        hcatalog.views.do_load_table(request, hql)
-
-    # clean up tmp dir
-    if tmp_dir and request.fs.exists:
-        request.fs.rmtree(tmp_dir)
-
-    return render("show_tables.mako", request, dict(database=database, tables=tables, ))
-
-
 def _delim_preview_ext(fs, file_types, parser_options):
     file_type = parser_options['file_type']
     if file_type == hcatalog.forms.IMPORT_FILE_TYPE_TEXT:
@@ -282,6 +289,7 @@ def _delim_preview_ext(fs, file_types, parser_options):
 
     auto_column_types = parser_options['auto_column_types'] if 'auto_column_types' in parser_options else []
     col_names = parser_options['col_names'] if 'col_names' in parser_options else []
+    col_names = make_up_hive_column_names(col_names)
     columns = []
     if len(auto_column_types) == len(col_names):
         for i, col_name in enumerate(col_names):
@@ -294,6 +302,17 @@ def _delim_preview_ext(fs, file_types, parser_options):
     parser_options['columns'] = columns
     return parser_options
 
+
+def make_up_hive_column_names(names):
+    new_names = []
+    for col_name in names:
+        col_name = col_name.replace(" ", "_").lower()
+        col_rename_idx = 0
+        while (col_name + '_' + str(col_rename_idx) if col_rename_idx else col_name) in new_names:
+            col_rename_idx += 1
+        else:
+            new_names.append(col_name + '_' + str(col_rename_idx) if col_rename_idx else col_name)
+    return new_names
 
 def _text_file_preview(fs, file_types, parser_options):
     results_file_name = None

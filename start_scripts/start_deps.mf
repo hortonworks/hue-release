@@ -1,8 +1,32 @@
 line = 10
+LOG=/var/log/startup_script.log
+
+NO_COLOR=\x1b[0m
+OK_COLOR=\x1b[32;01m
+ERROR_COLOR=\x1b[31;01m
+WARN_COLOR=\x1b[33;01m
+
+OK_STRING=[$(OK_COLOR)  OK  $(NO_COLOR)]
+ERROR_STRING=[$(ERROR_COLOR)ERRORS$(NO_COLOR)]
+WARN_STRING=[$(WARN_COLOR)WARNINGS$(NO_COLOR)]
+
+ECHO=echo -e
+ECHO_ERR=printf 'Starting %-50s$(ERROR_STRING)\n' "$1"
+ECHO_WARN=printf 'Starting %-50s$(WARN_STRING)\n' "$1"
+ECHO_OK=printf 'Starting %-50s$(OK_STRING)\n' "$1"
+CAT=cat
+
+define colorized
+@$2 1>$(LOG) 2> "temp $1.log" || touch temp.errors;
+@$3;
+@if test -e "temp $1.errors"; then ($(ECHO_ERR) | tee -a $(LOG)) && ($(CAT) "temp $1.log" $4 | tee -a $(LOG)); elif test -s "temp $1.log"; then ($(ECHO_WARN) && $(CAT) "temp $1.log") | tee -a $(LOG); else $(ECHO_OK) | tee -a $(LOG); fi;
+@$(RM) -f "temp $1.errors" "temp $1.log";
+endef
 
 all: Startup Ambari
 
 Startup: HDFS MapReduce Zookeeper HBase Hive_Metastore Templeton Oozie
+	@echo "`date`:\tStartup" >> $(LOG)
 Ambari: ambari_server ambari_agent ganglia nagios
 
 HDFS: namenode secondary_namenode datanode
@@ -13,104 +37,143 @@ Hive_Metastore: hive hcat
 Templeton: templeton
 Oozie: oozie
 
-
 postgresql:
-	/etc/init.d/postgresql start ;sleep 5
+	$(call colorized,\
+		Postgre SQL, \
+		@/etc/init.d/postgresql start,\
+		sleep 5,)
 
 # ==== HDFS ====
 
 namenode: postgresql
-	echo "Starting Postgresql"
-	su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode" ;sleep 5
-	tail -$(line)  /var/log/hadoop/hdfs/hadoop-hdfs-namenode-*.log
+	$(call colorized,\
+		name node, \
+		@su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode",\
+		sleep 5,\
+		/var/log/hadoop/hdfs/hadoop-hdfs-namenode-*.log)
 
 datanode: postgresql
-	echo "Start data node"
-	su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode";sleep 5
-	tail -$(line)  /var/log/hadoop/hdfs/hadoop-hdfs-datanode-*.log
+	$(call colorized,\
+		data node, \
+		su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode",\
+		sleep 5,\
+		/var/log/hadoop/hdfs/hadoop-hdfs-datanode-*.log)
 
 secondary_namenode: postgresql
-	echo "Start secondary name node"
-	su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode";sleep 5
-	tail -$(line)  /var/log/hadoop/hdfs/hadoop-hdfs-secondarynamenode-*.log
+	$(call colorized,\
+		secondary name node, \
+		su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode",\
+		sleep 5,\
+		/var/log/hadoop/hdfs/hadoop-hdfs-secondarynamenode-*.log)
 
 
 # ==== MapReduce ====
 
 jobtracker: postgresql HDFS
-	echo "Start job tracker"
-	su - mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start jobtracker; sleep 25"
-	tail -$(line)  /var/log/hadoop/mapred/hadoop-mapred-jobtracker-*.log
+	$(call colorized,\
+		job tracker, \
+		su - mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start jobtracker" ,\
+		sleep 25,\
+		/var/log/hadoop/mapred/hadoop-mapred-jobtracker-*.log)
+
 
 historyserver: postgresql HDFS
-	echo "Start history server"
-	su - mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start historyserver";sleep 5
-	tail -$(line)  /var/log/hadoop/mapred/hadoop-mapred-historyserver-*.log
+	$(call colorized,\
+		history server, \
+		su - mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start historyserver",\
+		sleep 5,\
+		/var/log/hadoop/mapred/hadoop-mapred-historyserver-*.log)
+
 
 tasktracker: postgresql HDFS
-	echo "Start task trackers"
-	su mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start tasktracker";sleep 5
-	tail -$(line)  /var/log/hadoop/mapred/hadoop-mapred-tasktracker-*.log
+	$(call colorized,\
+		task trackers, \
+		su mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start tasktracker",\
+		sleep 5,\
+		/var/log/hadoop/mapred/hadoop-mapred-tasktracker-*.log)
+
 
 # ==== HBase ====
 
 hbase_master: postgresql zookeeper
-	echo "Start hbase master"
-	su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master; sleep 25"
-	tail -$(line)  /var/log/hbase/hbase-hbase-master-*.log
+	$(call colorized,\
+		hbase master, \
+		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master",\
+		sleep 25,\
+		/var/log/hbase/hbase-hbase-master-*.log)
 
 hbase_regionservers: namenode
-	echo "Start hbase regionservers"
-	su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver";sleep 5
-	tail -$(line)  /var/log/hbase/hbase-hbase-regionserver-*.log
+	$(call colorized,\
+		hbase regionservers, \
+		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver",\
+		sleep 5,\
+		/var/log/hbase/hbase-hbase-regionserver-*.log)
 
 # ==== Hive ====
 
 hive: postgresql
-	echo "Start Hiveserver2"
 	/etc/init.d/mysqld start
-	#su - hive -c  'env HADOOP_HOME=/usr nohup hive --service hiveserver2 > /var/log/hive/hive.out 2> /var/log/hive/hive.log & '
-	su - hive -c  'env JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startHiveserver2.sh /var/log/hive/hive-server2.out  /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid '
-	tail -$(line)  /var/log/hive/hive-server2.log
+	$(call colorized,\
+		Hiveserver2, \
+		su - hive -c  'env JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startHiveserver2.sh /var/log/hive/hive-server2.out  /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid ',true,\
+		/var/log/hive/hive-server2.log)
 
 hcat: hive
-	echo "Start hcat server"
-	su - hive -c  'env HADOOP_HOME=/usr JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startMetastore.sh /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid '
-	tail -$(line)  /var/log/hive/hive.log
+	$(call colorized,\
+		hcat server, \
+		su - hive -c  'env HADOOP_HOME=/usr JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startMetastore.sh /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid ', true,\
+		/var/log/hive/hive.log)
+
 
 # ==== Single services ====
 
 zookeeper: namenode
-	echo "Start zookeeper nodes"
-	su - zookeeper -c  'source /etc/zookeeper/conf/zookeeper-env.sh ; /bin/env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/lib/zookeeper/bin/zkServer.sh start'
+	$(call colorized,\
+		zookeeper nodes, \
+		su - zookeeper -c  'source /etc/zookeeper/conf/zookeeper-env.sh ; /bin/env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/lib/zookeeper/bin/zkServer.sh start',\
+		true)
+	
 
 templeton: hcat HDFS
-	echo "Start templeton server"
-	su - hcat -c '/usr/lib/hcatalog/sbin/webhcat_server.sh start'
-	tail -$(line)  /var/log/webhcat/webhcat.log
+	$(call colorized,\
+		templeton server, \
+		su - hcat -c '/usr/lib/hcatalog/sbin/webhcat_server.sh start', true\
+		, /var/log/webhcat/webhcat.log)
+
 
 oozie: namenode
-	echo "Start Oozie"
-	su - oozie -c "cd /var/log/oozie; /usr/lib/oozie/bin/oozie-start.sh"
-	tail -$(line)  /var/log/oozie/oozie.log
+	$(call colorized,\
+		Oozie, \
+		su - oozie -c "cd /var/log/oozie; /usr/lib/oozie/bin/oozie-start.sh", true\
+		,\
+		/var/log/oozie/oozie.log)
+
 
 ganglia: HDFS
-	echo "Starting Ganglia"
-	/etc/init.d/gmetad stop
-	/etc/init.d/gmond stop
-	/etc/init.d/hdp-gmetad start
-	/etc/init.d/hdp-gmond start
+	$(call colorized,\
+		Ganglia, \
+		/etc/init.d/gmetad stop; /etc/init.d/gmond stop; /etc/init.d/hdp-gmetad start && /etc/init.d/hdp-gmond start,\
+		true)
 
 nagios: HDFS
-	echo "starting Nagios"
-	/etc/init.d/nagios start;sleep 5
+	$(call colorized,\
+		Nagios, \
+		/etc/init.d/nagios start,\
+		sleep 5,)
+
 
 # ==== Ambari ====
 
 ambari_server: HDFS Ganglia Nagios
-	echo "Starting Ambari server"
-	ambari-server start; sleep 5
+	$(call colorized,\
+		Ambari server, \
+		ambari-server start,\
+		sleep 5, )
+
 
 ambari_agent: ambari_server
-	echo "Starting Ambari agent"
-	ambari-agent start
+	$(call colorized,\
+		Ambari agent, \
+		ambari-agent start,true)
+
+	

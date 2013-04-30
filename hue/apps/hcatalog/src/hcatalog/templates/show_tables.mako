@@ -24,9 +24,9 @@ ${ commonheader(_('HCatalog: Table List'), app_name, user, '100px') | n,unicode 
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
-    <h1 data-bind="visible: !(gettingTables() || droppingTables())">${_('HCatalog: Table List')}</h1>
-    <div data-bind="visible: gettingTables"><h1>${_('Loading a table list...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-    <div data-bind="visible: droppingTables"><h1>${_('Dropping the table(s)...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <h1 id="main-spin">${_('HCatalog: Table List')}</h1>
+    <div id="getting-tables-spin" class="hidden-initially" data-bind="visible: gettingTables"><h1>${_('Loading a table list...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <div id="dropping-tables-spin" class="hidden-initially" data-bind="visible: droppingTables"><h1>${_('Dropping the table(s)...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
@@ -42,12 +42,12 @@ ${layout.menubar(section='tables')}
             </div>
         </div>
         <div class="span9">
-            <div id="alert-error-main" class="alert alert-error">
+            <div id="alert-error-main" class="alert alert-error hidden-initially">
                 <p><strong>The following error(s) occurred:</strong></p>
                 <pre id="error-message"/>
                 <small></small>
             </div>
-            <div data-bind="visible: !droppingTables()">
+            <div>
                 <%actionbar:render>
                     <%def name="actions()">
                             <button id="dropBtn" class="btn toolbarBtn" title="${_('Delete the selected tables')}"
@@ -61,7 +61,7 @@ ${layout.menubar(section='tables')}
 </div>
 
 <style>
-    #alert-error-main {
+    .hidden-initially {
         display: none;
     }
 </style>
@@ -91,6 +91,28 @@ ${layout.menubar(section='tables')}
         $(".btn.btn-primary.browse").addClass("disabled");
     }
 
+    function gettingTables(flag) {
+        if(flag) {
+            $("#main-spin").hide();
+            $("#getting-tables-spin").show();
+        }
+        else {
+            $("#getting-tables-spin").hide();
+            $("#main-spin").show();
+        }
+    }
+
+    function droppingTables(flag) {
+        if(flag) {
+            $("#main-spin").hide();
+            $("#dropping-tables-spin").show();
+        }
+        else {
+            $("#dropping-tables-spin").hide();
+            $("#main-spin").show();
+        }
+    }
+
     function showMainError(errorMessage) {
         $("#error-message").text(errorMessage);
         $("#alert-error-main").show();
@@ -105,9 +127,7 @@ ${layout.menubar(section='tables')}
 
         var viewModel = {
             availableTables : ko.observableArray([]),
-            chosenTables : ko.observableArray([]),
-            gettingTables: ko.observable(false),
-            droppingTables: ko.observable(false)
+            chosenTables : ko.observableArray([])
         };
         ko.applyBindings(viewModel);
         var tables = undefined;
@@ -160,16 +180,19 @@ ${layout.menubar(section='tables')}
         $('form#dropTableForm').submit(function (event) {
             event.preventDefault();
             $(this).closest(".modal").modal("hide");
-            viewModel.droppingTables(true);
+            droppingTables(true);
             $.post("${url(app_name + ':drop_table', database=database)}", $(this).serializeArray(), function(data){
-                if ("on_success_url" in data && data.on_success_url)
+                if ("error" in data) {
+                    showMainError(decodeUnicodeCharacters(data["error"]));
+                }
+                else if ("on_success_url" in data && data.on_success_url)
                 {
                     window.location.replace(data.on_success_url);
                     return;
                 }
-                viewModel.droppingTables(false);
+                droppingTables(false);
             }, "json").error(function () {
-                        viewModel.droppingTables(false);
+                        droppingTables(false);
                     });
 
         });
@@ -179,9 +202,9 @@ ${layout.menubar(section='tables')}
         });
 
         $.post("${url(app_name + ':show_tables', database=database)}",function (data) {
-            viewModel.gettingTables(true);
+            gettingTables(true);
             if ("error" in data) {
-                showMainError(data["error"]);
+                showMainError(decodeUnicodeCharacters(data["error"]));
             }
             else if ("table_list_rendered" in data && "tables" in data) {
                 $('#table-wrap').html(data["table_list_rendered"]);
@@ -203,10 +226,10 @@ ${layout.menubar(section='tables')}
                     }
                 });
                 $("a[data-row-selector='true']").jHueRowSelector();
-                viewModel.gettingTables(false);
+                gettingTables(false);
             }
         }, "json").error(function () {
-                    viewModel.gettingTables(false);
+                    gettingTables(false);
                 });
 
 

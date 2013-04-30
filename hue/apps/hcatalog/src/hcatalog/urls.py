@@ -34,6 +34,7 @@ urlpatterns = patterns('hcatalog.views',
   url(r'^table/(?P<database>\w+)/(?P<table>\w+)/drop_partition$', 'drop_partition', name='drop_partition'),
   url(r'^watch/(?P<id>\d+)$', 'watch_query', name='watch_query'),
   url(r'^results/(?P<id>\d+)/(?P<first_row>\d+)$', 'view_results', name='view_results'),
+  url(r'ping_hive_job/(?P<job_id>\w+)/$', 'ping_hive_job', name='ping_hive_job'),
 )
 
 urlpatterns += patterns(

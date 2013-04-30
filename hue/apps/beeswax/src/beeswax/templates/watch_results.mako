@@ -213,8 +213,9 @@ ${layout.menubar(section='query')}
         <script src="/hcatalog/static/js/xml.js"></script>
         <script src="/hcatalog/static/js/css.js"></script>
         <script src="/hcatalog/static/js/javascript.js"></script>
+		
         <div class="tab-pane" id="visualizations">
-        <textarea id="vis_code" name="code">
+       <!--<textarea id="vis_code" name="code">
 		<script>
 		var settings = {
 			csv:"${download_urls["csv"]}",
@@ -228,20 +229,48 @@ ${layout.menubar(section='query')}
 			maxY:null
 		}
 		</script>
-        </textarea> 
+        </textarea>--> 
 		   	<div class='chart_type_selectors'>	
+				<div class='chart_type_wrap'>		
+					xAxis:<br/>
+					<select name="xAxis" id="xAxis">
+						% for col in columns[0:]:
+						<option value='"${col}"'>${col}</option>
+						% endfor
+					</select>
+				</div>
+
 				<div class='chart_type_wrap'>
+				yAxis:<br/>	
+					<input type="checkbox" name="yAxis" value="${columns[0]}" disabled="disabled">${columns[0]}<br>
+					% for col in columns[1:]:
+					<input type="checkbox" name="yAxis" value="${col}" checked="checked">${col}<br>
+					% endfor
+				</div>
+
+				<div class='chart_type_wrap'>
+				chart type:<br/>
 					<input type="radio" name="type" value="area"  checked="checked"/> <img src='/hcatalog/static/css/images/charts/area.png'> area<br/>	
 					<input type="radio" name="type" value="bar"  /> <img src='/hcatalog/static/css/images/charts/bar.png'> bar<br/>
 					<input type="radio" name="type" value="line"  /> <img src='/hcatalog/static/css/images/charts/line.png'> line<br/>
 					<input type="radio" name="type" value="scatterplot" /> <img src='/hcatalog/static/css/images/charts/scatter.png'> scatter<br/>
-				
-					
+					<input type="radio" name="type" value="pie" /> <img src='/hcatalog/static/css/images/charts/pie.jpg' width="26px" style="margin-left:5px; margin-right:5px"/> pie<br/>
 				</div>
 				<div class='chart_type_wrap'>
+				value type:<br/>
 					<input type="radio" name="stacked" value="false"  /> <img src='/hcatalog/static/css/images/charts/stack.png'> stack<br/>
 					<input type="radio" name="stacked" value="true" checked="checked" /> <img src='/hcatalog/static/css/images/charts/value.png'> value<br/>
 				</div>
+			<!--	<div class='chart_type_wrap'>
+					value range:<br/>	
+					from:<select name="minlimit" class="pielimits pielimits1" disabled="disabled">
+					</select> 
+					<br/>
+					to:<select name="maxlimit" class="pielimits pielimits2" disabled="disabled">
+					</select>
+				</div>-->
+
+				<input type="hidden" value='${download_urls["csv"]}' name="csv"/>
 			</div>
 			<iframe id="preview"></iframe>
 
