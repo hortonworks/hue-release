@@ -132,9 +132,10 @@ class tutorials {
     }
 
     exec { "load_videos.sh":
-      command => '/bin/bash /tmp/load_videos.sh',
+      command => '/bin/bash /tmp/load_videos.sh | tee /var/log/load_videos.log',
       require => [File['load_videos.sh']],
-      timeout => 0
+      timeout => 0,
+      logoutput => "on_failure",
     }
 
     service { "httpd":
@@ -169,9 +170,10 @@ class hdfs_prepare {
       }
 
       exec { "hdfs_prepare.sh":
-        command => '/bin/bash /tmp/hdfs_prepare.sh > /var/log/hdfs_start.log',
+        command => '/bin/bash /tmp/hdfs_prepare.sh |tee /var/log/hdfs_start.log',
         require => [File['hdfs_prepare.sh'], Exec["start"], Package["wget"]],
-        timeout => 0
+        timeout => 0,
+        logoutput=> "on_failure",
       }
 }
 
