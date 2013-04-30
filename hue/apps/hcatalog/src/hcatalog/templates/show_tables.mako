@@ -183,7 +183,7 @@ ${layout.menubar(section='tables')}
             droppingTables(true);
             $.post("${url(app_name + ':drop_table', database=database)}", $(this).serializeArray(), function(data){
                 if ("error" in data) {
-                    showMainError(data["error"]);
+                    showMainError(decodeUnicodeCharacters(data["error"]));
                 }
                 else if ("on_success_url" in data && data.on_success_url)
                 {
@@ -204,7 +204,7 @@ ${layout.menubar(section='tables')}
         $.post("${url(app_name + ':show_tables', database=database)}",function (data) {
             gettingTables(true);
             if ("error" in data) {
-                showMainError(data["error"]);
+                showMainError(decodeUnicodeCharacters(data["error"]));
             }
             else if ("table_list_rendered" in data && "tables" in data) {
                 $('#table-wrap').html(data["table_list_rendered"]);

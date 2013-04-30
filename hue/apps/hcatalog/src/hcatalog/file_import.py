@@ -20,6 +20,7 @@ from desktop.lib import django_mako, i18n
 from desktop.lib.django_util import render
 from desktop.lib.django_forms import MultiForm
 from desktop.context_processors import get_app_name
+from desktop.lib.json_utils import JSONEncoderForHTML
 from hadoop.fs import hadoopfs
 from django.core import urlresolvers
 from django.http import HttpResponse
@@ -163,7 +164,7 @@ def create_from_file(request, database='default'):
                         options["preview_has_more"] = parser_options['preview_has_more']
 
                     preview_results["options"] = options
-                return HttpResponse(json.dumps(preview_results))
+                return HttpResponse(json.dumps(preview_results, cls=JSONEncoderForHTML))
             else:  # create table action
                 # validate input parameters
                 if file_type == hcatalog.forms.IMPORT_FILE_TYPE_NONE:

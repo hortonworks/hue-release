@@ -1,4 +1,4 @@
-function ping_hive_job(job_id, on_success_url) {
+function pingHiveJob(job_id, on_success_url) {
     var url = '/hcatalog/ping_hive_job/';
     $.get(url + job_id + "/",
         function (data) {
@@ -12,6 +12,14 @@ function ping_hive_job(job_id, on_success_url) {
                 window.location.replace(on_success_url);
                 return;
             }
-            pingHiveJobTimer = window.setTimeout("ping_hive_job('" + job_id + "', '" + on_success_url + "');", 2000);
+            pingHiveJobTimer = window.setTimeout("pingHiveJob('" + job_id + "', '" + on_success_url + "');", 2000);
         }, "json");
+}
+
+function decodeUnicodeCharacters(str) {
+    var r = /\\u([\d\w]{4})/gi;
+    return unescape(str.replace(r, function (match, grp) {
+        return String.fromCharCode(parseInt(grp, 16));
+    })
+    );
 }

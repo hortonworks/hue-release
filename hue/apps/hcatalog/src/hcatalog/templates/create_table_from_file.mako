@@ -458,7 +458,7 @@ $(document).ready(function () {
         }
         $.post("${url(app_name + ':create_from_file', database=database)}", postQueryData,function (data) {
             if ("error" in data) {
-                showMainError(data["error"]);
+                showMainError(decodeUnicodeCharacters(data["error"]));
             }
             else if ("results" in data) {
                 $('.scrollable').html(data["results"]);
@@ -570,7 +570,7 @@ $(document).ready(function () {
     % if job_id and on_success_url:
             creatingTable(false);
             importingData(true);
-            ping_hive_job("${job_id}", "${on_success_url}");
+            pingHiveJob("${job_id}", "${on_success_url}");
     % endif
 
     function reactOnFilePathChange(newPath) {
