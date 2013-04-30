@@ -15,16 +15,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
 from time import time
 from pig.templeton import Templeton
-from subprocess import Popen, PIPE
 from beeswax.conf import BEESWAX_HIVE_HOME_DIR
 
-import simplejson as json
 from datetime import datetime
-import time, threading
-import re
 import logging
 
 LOG = logging.getLogger("analitics")

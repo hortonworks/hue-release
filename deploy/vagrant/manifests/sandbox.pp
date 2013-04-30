@@ -121,6 +121,22 @@ class splash {
 class tutorials {
     include sandbox_rpm
 
+    package { "wget":
+      ensure => present,
+    }
+      
+
+    file { 'load_videos.sh':
+      path    => "/tmp/load_videos.sh",
+      content => template("/vagrant/files/scripts/load_videos.sh"),
+    }
+
+    exec { "load_videos.sh":
+      command => '/bin/bash /tmp/load_videos.sh',
+      require => [File['load_videos.sh']],
+      timeout => 0
+    }
+
     service { "httpd":
         ensure => running,
         require => [ Class[sandbox_rpm], ],
@@ -145,10 +161,7 @@ class java_home {
 
 
 class hdfs_prepare {
-      package { "wget":
-        ensure => present,
-      }
-      
+            
 
       file { 'hdfs_prepare.sh':
         path    => "/tmp/hdfs_prepare.sh",
@@ -157,7 +170,7 @@ class hdfs_prepare {
 
       exec { "hdfs_prepare.sh":
         command => '/bin/bash /tmp/hdfs_prepare.sh > /var/log/hdfs_start.log',
-        require => [File['hdfs_prepare.sh'], Exec["start"]],
+        require => [File['hdfs_prepare.sh'], Exec["start"], Package["wget"]],
         timeout => 0
       }
 }
