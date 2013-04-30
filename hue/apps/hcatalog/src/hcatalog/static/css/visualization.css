@@ -1,23 +1,25 @@
 .chart_type_selectors
 {
-	width:30%;
-	border: 2px solid black;
-	height:200px;
+	/*width:95%;*/
+	width:865px;
+	/*border: 2px solid #3EA211;*/
+	height:150px;
 	position:relative;
-
-	left:65.5%;
+    margin-left: 5px;
+	
 }
 .chart_type_wrap
 {
 	position:relative;
-	top:-140px;
 	left:30px;
 	display:inline-block;
+	vertical-align:top;
+	min-width:140px;
 }
 .CodeMirror {
         float: left;
-        width: 65%;
-        border: 2px solid black;
+        width: 0%;
+        border: 2px solid #3EA211;
         margin-left: 5px;
 		height:200px;
       }
@@ -25,7 +27,15 @@
         width: 95%;
         float: left;
         height: 600px;
-        border: 2px solid black;
+        border: 2px solid #3EA211;
         margin-top: 5px;
         margin-left: 5px;
       }
+select.pielimits
+{
+	width:55px!important;
+}
+.pielimits2
+{
+	margin-left:16px;
+}
