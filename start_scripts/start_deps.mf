@@ -164,7 +164,7 @@ nagios: HDFS
 
 # ==== Ambari ====
 
-ambari_server: HDFS Ganglia Nagios
+ambari_server: HDFS ganglia nagios
 	$(call colorized,\
 		Ambari server, \
 		ambari-server start,\
