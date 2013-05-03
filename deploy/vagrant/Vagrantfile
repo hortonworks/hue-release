@@ -28,6 +28,7 @@ Vagrant::Config.run do |config|
 
   config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--nictype1", "Am79C973"]
   config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--nic2", "none"]
+  config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--mouse", "usbtablet"]
   
   config.vm.forward_port 22, 42022
   config.vm.forward_port 25, 42025
@@ -48,6 +49,7 @@ Vagrant::Config.run do |config|
   config.vm.forward_port 8002, 8002
   config.vm.forward_port 8010, 8010
   config.vm.forward_port 8020, 8020
+  config.vm.forward_port 8080, 8080
   config.vm.forward_port 8649, 8649
   config.vm.forward_port 8651, 8651
   config.vm.forward_port 8652, 8652

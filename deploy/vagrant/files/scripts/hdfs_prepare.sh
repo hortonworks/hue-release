@@ -1,12 +1,15 @@
 [ ! -f /root/.hdfs_prepared ] && (
 su - hdfs -c "hadoop fs -rmr -skipTrash /user/ambari_qa/.staging/"
 su - hdfs -c "hadoop fs -rm -skipTrash /apps/webhcat/pig.tar.gz"
-wget -O /tmp/pig.tar.gz http://dev2.hortonworks.com.s3.amazonaws.com/pig.tar.gz
+wget -O /tmp/webhcat.tar.gz http://dev2.hortonworks.com.s3.amazonaws.com/hdfs/webhcat/webhcat.tar.gz
+tar xvf /tmp/webhcat.tar.gz -C /tmp
 su - hcat -c "hadoop fs -put /tmp/pig.tar.gz /apps/webhcat/pig.tar.gz"
-su - hcat -c "hadoop fs -chmod 755 /apps/webhcat/pig.tar.gz"
-rm -f /tmp/pig.tar.gz
+su - hcat -c "hadoop fs -put /tmp/hive.tar.gz /apps/webhcat/hive.tar.gz"
+su - hcat -c "hadoop fs -put /tmp/hadoop-streaming.jar /apps/webhcat/hadoop-streaming.jar"
+su - hcat -c "hadoop fs -chmod -R 755 /apps/webhcat"
+rm -f /tmp/webhcat.tar.gz
 echo "Installing udfs"
-wget -O /tmp/udfs.tar.gz http://dev2.hortonworks.com.s3.amazonaws.com/udfs.tar.gz
+wget -O /tmp/udfs.tar.gz http://dev2.hortonworks.com.s3.amazonaws.com/hdfs/pig/udfs.tar.gz
 cd /tmp
 tar xvf udfs.tar.gz
 chown sandbox udfs
