@@ -5,7 +5,7 @@
 
 . /usr/lib/hue/tools/functions
 
-LOCKFILE=/var/lock/subsys/hue
+LOCKFILE=/var/lock/subsys/hue/hue
 DAEMON=/usr/lib/hue/build/env/bin/supervisor # Introduce the server's location here
 LOGDIR=/var/log/hue  # Log directory to use
 PIDFILE=/var/run/hue/supervisor.pid
@@ -22,7 +22,7 @@ function ini_set() {
 }
 
 parse_args() {
-    ARGS=$(getopt -o h:u:k:p:l: -l "HUEHOME:,USER:,LOCKFILE:,LOGDIR:,PIDFILE:" -- "$@");
+    ARGS=$(getopt -o h:u:k:p:l:g: -l "HUEHOME:,USER:,LOCKFILE:,LOGDIR:,PIDFILE:,GROUP:" -- "$@");
 
     if [ $? -ne 0 ];
     then
@@ -46,6 +46,13 @@ parse_args() {
           shift;
           if [ -n "$1" ]; then
             USER="$1"
+            shift;
+          fi
+          ;;
+        -g | --GROUP)
+          shift;
+          if [ -n "$1" ]; then
+            GROUP="$1"
             shift;
           fi
           ;;
@@ -82,9 +89,11 @@ parse_args() {
 
 }
 
-hue_start() {
+hue_setup() {
+        mkdir -p "`dirname $LOCKFILE`"
         chown -R $USER:$GROUP /usr/lib/hue 
         chown -R $USER:$GROUP /var/lib/hue 
+        chown -R $USER:$GROUP "`dirname $LOCKFILE`"
         ini_set $HUEINI server_user $USER
         ini_set $HUEINI server_group $GROUP
         chown root:$GROUP /usr/lib/hue/apps/shell/src/shell/build/setuid
@@ -111,6 +120,10 @@ hue_start() {
                 echo "Failed to register some apps: Details in $RE_REG_LOG"
             fi
         fi
+}
+
+hue_start() {
+        [ `id -u` -eq "0" ] && hue_setup
 
         echo -n "Starting hue: "
         for dir in $(dirname $PIDFILE) $LOGDIR ${PYTHON_EGG_CACHE}
@@ -179,6 +192,9 @@ case "$ACTION" in
         ;;
     restart|reload)
         hue_restart
+        ;;
+    setup)
+        hue_setup
         ;;
     condrestart)
         [ -f $LOCKFILE ] && restart || :
