@@ -30,10 +30,10 @@ import filebrowser.forms
 
 # Note, struct is not currently supported.  (Because it's recursive, for example.)
 HIVE_TYPES = \
-    ("string", "tinyint", "smallint", "int", "bigint", "boolean",
-     "float", "double", "array", "map",)
+    ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double", "timestamp",
+     "array", "map",)
 HIVE_PRIMITIVE_TYPES = \
-    ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double")
+    ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double", "timestamp")
 
 IMPORT_FILE_TYPE_CHOICES = [
     ('text', 'Text file'),

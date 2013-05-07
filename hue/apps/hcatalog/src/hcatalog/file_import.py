@@ -179,7 +179,7 @@ def create_from_file(request, database='default'):
                 user_def_columns = []
                 column_count = 0
                 while 'cols-%d-column_name' % column_count in request.POST \
-                    and 'cols-%d-column_type' % column_count in request.POST:
+                        and 'cols-%d-column_type' % column_count in request.POST:
                     user_def_columns.append(dict(column_name=request.POST.get('cols-%d-column_name' % column_count),
                                         column_type=request.POST.get('cols-%d-column_type' % column_count), ))
                     column_count += 1
@@ -196,8 +196,7 @@ def create_from_file(request, database='default'):
                                                                                     row_format='Delimited',
                                                                                     field_terminator=parser_options[
                                                                                         'replace_delimiter_with']),
-                                                                      'columns': user_def_columns if user_def_columns else
-                                                                      parser_options['columns'],
+                                                                      'columns': user_def_columns if user_def_columns else parser_options['columns'],
                                                                       'partition_columns': []
                                                                   })
                     proposed_query = proposed_query.decode('utf-8')
@@ -231,7 +230,7 @@ def create_from_file(request, database='default'):
                             database=database,
                             table_form=form.table,
                             error=None,
-                            ))
+                        ))
 
                     # clean up tmp dir
                     tmp_dir = parser_options.get('tmp_dir', None)
@@ -604,9 +603,6 @@ def _readfields(lines, delimiters):
     return res
 
 
-
-HIVE_PRIMITIVE_TYPES = ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double")
-
 HIVE_STRING_IDX = 0
 HIVE_TINYINT_IDX = 1
 HIVE_SMALLINT_IDX = 2
@@ -615,31 +611,35 @@ HIVE_BIGINT_IDX = 4
 HIVE_BOOLEAN_IDX = 5
 HIVE_FLOAT_IDX = 6
 HIVE_DOUBLE_IDX = 7
-HIVE_PRIMITIVES_LEN = len(HIVE_PRIMITIVE_TYPES)
+HIVE_TIMESTAMP_IDX = 8
+HIVE_PRIMITIVES_LEN = len(hcatalog.forms.HIVE_PRIMITIVE_TYPES)
 
 
 class HiveTypeAutoDefine(object):
 
     def isStrFloatingPointValue(self, strVal):
-        return re.match(r'(^[+-]?((?:\d+\.\d+)|(?:\.\d+))(?:[eE][+-]?\d+)?$)', strVal) != None
+        return re.match(r'(^[+-]?((?:\d+\.\d+)|(?:\.\d+))(?:[eE][+-]?\d+)?$)', strVal) is not None
 
     def isStrIntegerValue(self, strVal):
-        return re.match(r'(^[+-]?\d+(?:[eE][+]?\d+)?$)', strVal) != None
+        return re.match(r'(^[+-]?\d+(?:[eE][+]?\d+)?$)', strVal) is not None
 
     def isStrBooleanValue(self, strVal):
         return strVal == 'TRUE' or strVal == 'FALSE'
 
     def isIntHiveTinyint(self, intVal):
-        return -2**7 <= intVal <= 2**7 - 1
+        return -2 ** 7 <= intVal <= 2 ** 7 - 1
 
     def isIntHiveSmallint(self, intVal):
-        return -2**15 <= intVal <= 2**15 - 1
+        return -2 ** 15 <= intVal <= 2 ** 15 - 1
 
     def isIntHiveInt(self, intVal):
-        return -2**31 <= intVal <= 2**31 - 1
+        return -2 ** 31 <= intVal <= 2 ** 31 - 1
 
     def isIntHiveBigint(self, intVal):
-        return -2**63 <= intVal <= 2**63 - 1
+        return -2 ** 63 <= intVal <= 2 ** 63 - 1
+
+    def isStrJdbcCompliantTimestamp(self, strVal):  # YYYY-MM-DD HH:MM:SS.fffffffff
+        return re.match(r'\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}(?:.\d{9})?$', strVal) is not None
 
     def defineFieldTypeIdx(self, strVal, min_int_type=HIVE_TINYINT_IDX):
         if self.isStrIntegerValue(strVal):
@@ -656,10 +656,12 @@ class HiveTypeAutoDefine(object):
             return HIVE_DOUBLE_IDX
         elif self.isStrBooleanValue(strVal):
             return HIVE_BOOLEAN_IDX
+        elif self.isStrJdbcCompliantTimestamp(strVal):
+            return HIVE_TIMESTAMP_IDX
         return HIVE_STRING_IDX
 
     def defineFieldType(self, strVal):
-        return HIVE_PRIMITIVE_TYPES[self.defineFieldTypeIdx(strVal)]
+        return hcatalog.forms.HIVE_PRIMITIVE_TYPES[self.defineFieldTypeIdx(strVal)]
 
     def defineColumnTypes(self, matrix, min_int_type=HIVE_INT_IDX):
         column_types = []
@@ -670,8 +672,8 @@ class HiveTypeAutoDefine(object):
             for i, field in enumerate(row):
                 if field:
                     column_types[i][self.defineFieldTypeIdx(unicode(field), min_int_type=min_int_type)] += 1
-        column_types = [HIVE_PRIMITIVE_TYPES[HIVE_STRING_IDX]
+        column_types = [hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_STRING_IDX]
                         if types_list[HIVE_STRING_IDX] > 0
-                        else HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))]
+                        else hcatalog.forms.HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))]
                         for types_list in column_types]
         return column_types
