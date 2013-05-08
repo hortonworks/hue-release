@@ -114,6 +114,8 @@ ln -sf /usr/lib/hue/tools/start_scripts/hue /etc/init.d/hue
 chkconfig --add hue
 chkconfig --level 3 hue on
 
+/etc/init.d/hue setup
+
 #echo "Update lxml"
 #source build/env/bin/activate
 #pip install lxml --upgrade
