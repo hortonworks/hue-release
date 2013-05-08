@@ -305,7 +305,7 @@ def _delim_preview_ext(fs, file_types, parser_options):
 def make_up_hive_column_names(names):
     new_names = []
     for col_name in names:
-        col_name = col_name.replace(" ", "_").lower()
+        col_name = re.sub(r'[^a-zA-Z0-9]+', '_', unicode(col_name).lower())
         col_rename_idx = 0
         while (col_name + '_' + str(col_rename_idx) if col_rename_idx else col_name) in new_names:
             col_rename_idx += 1
@@ -375,6 +375,7 @@ def _xls_file_preview(fs, parser_options):
         xls_read_column_headers = parser_options['xls_read_column_headers']
         xls_cell_range = parser_options['xls_cell_range']
         col_names = []
+        fields_list_start = 1 if xls_read_column_headers else 0
         if xls_read_column_headers:
             fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected,
                                                                cell_range=xls_cell_range,
@@ -389,14 +390,11 @@ def _xls_file_preview(fs, parser_options):
         row_start_idx = parser_options['preview_start_idx']
         row_end_idx = parser_options['preview_end_idx'] + 1  # read one more row over to define has_more flag
 
-        if preview_and_create:
-            fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected,
-                                                                  cell_range=xls_cell_range)
-        else:
-            fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected,
-                                                                  cell_range=xls_cell_range,
-                                                                  row_start_idx=row_start_idx,
-                                                                  row_end_idx=row_end_idx)
+        fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected,
+                                                              cell_range=xls_cell_range)
+        auto_column_types = HiveTypeAutoDefine().defineColumnTypes(fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
+        if not preview_and_create:
+            fields_list = fields_list[row_start_idx: row_end_idx + 1]
 
         preview_has_more = row_end_idx - row_start_idx == len(fields_list) - 1
         if preview_has_more:
@@ -404,15 +402,12 @@ def _xls_file_preview(fs, parser_options):
             row_end_idx -= 1
 
         if preview_and_create:
-            fields_list_start = 1 if parser_options['xls_read_column_headers'] else 0
             fields_list = fields_list[fields_list_start:]
             get_xls_file_processor().write_to_dsv_gzip(xls_fileobj, result_file_obj, fields_list,
                                                        parser_options['replace_delimiter_with'])
             result_file_obj.close()
 
         file_obj.close()
-
-        auto_column_types = HiveTypeAutoDefine().defineColumnTypes(fields_list[:IMPORT_COLUMN_AUTO_NLINES])
 
     except IOError as ex:
         msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
@@ -672,8 +667,14 @@ class HiveTypeAutoDefine(object):
             for i, field in enumerate(row):
                 if field:
                     column_types[i][self.defineFieldTypeIdx(unicode(field), min_int_type=min_int_type)] += 1
-        column_types = [hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_STRING_IDX]
-                        if types_list[HIVE_STRING_IDX] > 0
-                        else hcatalog.forms.HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))]
-                        for types_list in column_types]
-        return column_types
+        res_column_types = []
+        for types_list in column_types:
+            if types_list[HIVE_STRING_IDX] > 0:
+                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_STRING_IDX])
+            elif types_list[HIVE_DOUBLE_IDX] > 0:
+                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_DOUBLE_IDX])
+            elif types_list[HIVE_FLOAT_IDX] > 0:
+                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_FLOAT_IDX])
+            else:
+                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))])
+        return res_column_types
