@@ -9,7 +9,7 @@ MACHINE="$(VBoxManage list vms | grep `cat .vagrant/machines/default/virtualbox/
 echo $MACHINE
 VBoxManage modifyvm "$MACHINE" --memory 2048 --cpus 2
 VBoxManage export "$MACHINE" --output "$MACHINE VirtualBox".ova \
-    --vsys 0 --vendor "HortonWorks" --version "Caterpillar" --product "Sandbox"
+    --vsys 0 --vendor "HortonWorks" --version "1.3" --product "Sandbox"
 
 # VMware
 vagrant up --no-provision
