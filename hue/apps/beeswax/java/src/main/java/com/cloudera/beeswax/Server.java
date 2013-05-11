@@ -338,7 +338,7 @@ public class Server {
   public static void serveMeta(int port) throws MetaException, TTransportException {
     // Verify that we're supposed to run an internal metastore.
     HiveConf conf = new HiveConf(Driver.class);
-    if (!conf.getBoolean("hive.metastore.local", true)) {
+    if (!conf.getBoolean("hive.metastore.local", false)) {
       String msg = "hive.metastore.local is set to false. The Beeswax internal metastore " +
                    "is not supposed to run.";
       LOG.fatal(msg);
