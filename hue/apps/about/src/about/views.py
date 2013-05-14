@@ -42,7 +42,7 @@ def index(request):
     return HttpResponse(json.dumps(result))
   return render('index.mako', request, {
     'components': _get_components(),
-    'sandbox_version': conf.SANDBOX_VERSION.get(),
+    'hue_version': conf.HUE_VERSION.get(),
   })
 
 

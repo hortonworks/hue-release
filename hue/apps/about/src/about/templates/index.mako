@@ -30,7 +30,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 	</div>
 
 	<div class="container-fluid">
-		<h1 id="describe-header">Hortonworks Sandbox ${sandbox_version}</h1>
+		<h1 id="describe-header">Hortonworks Hue ${hue_version}</h1>
 		<div id="update-tutorials-spinner"><h1>Updating tutorials...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 		<h3 id="update-tutorials-msg"></h3>
 		<div class="span-3">
@@ -101,7 +101,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
                 }
             }
         });
-	
+
 		$("#updateTutorialsBtn").click(function(){
 			$('#describe-header').hide();
        		$('#update-tutorials-spinner').show();
@@ -119,7 +119,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
                     showError("There are no available tutorial updates");
                 }
             }
-            
+
             }, "json");
       });
 	});
