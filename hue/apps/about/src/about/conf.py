@@ -52,9 +52,9 @@ HIVE_VERSION = Config(
   default="0.10.0.21",
 )
 
-SANDBOX_VERSION = Config(
-  key="sandbox_version",
-  help="Version of Sandbox being used",
+HUE_VERSION = Config(
+  key="hue_version",
+  help="Version of Hue being used",
   private=True,
-  default="1.2.2",
+  default="2.2",
 )
