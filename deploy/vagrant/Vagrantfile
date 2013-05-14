@@ -26,8 +26,9 @@ Vagrant::Config.run do |config|
   config.vm.customize ["modifyvm", :id, "--rtcuseutc", "on"]
   config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--groups", "/HortonWorks"]
 
-  config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--nictype1", "Am79C973"]
-  config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--nic2", "none"]
+  config.vm.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
+  config.vm.customize ["modifyvm", :id, "--nic2", "none"]
+  config.vm.customize ["modifyvm", :id, "--mouse", "usbtablet"]
   
   config.vm.forward_port 22, 42022
   config.vm.forward_port 25, 42025
@@ -55,6 +56,7 @@ Vagrant::Config.run do |config|
   config.vm.forward_port 8888, 8888
   config.vm.forward_port 9083, 9083
   config.vm.forward_port 9290, 9290
+  config.vm.forward_port 9090, 9090
   config.vm.forward_port 10000, 10000
   config.vm.forward_port 11000, 11000
   config.vm.forward_port 11001, 11001

@@ -374,6 +374,7 @@ function AppViewModel() {
 ko.applyBindings(viewModel);
 
 function creatingTable(flag) {
+    lockControls(flag);
     if(flag) {
         $("#main-spin").hide();
         $("#creating-table-spin").show();
@@ -385,6 +386,7 @@ function creatingTable(flag) {
 }
 
 function importingData(flag) {
+    lockControls(flag);
     if(flag) {
         $("#main-spin").hide();
         $("#importing-data-spin").show();
@@ -396,6 +398,7 @@ function importingData(flag) {
 }
 
 function previewData(flag) {
+    lockControls(flag);
     if(flag) {
         $("#main-spin").hide();
         $("#preview-data-spin").show();
@@ -717,18 +720,15 @@ $(document).ready(function () {
 
     function submitPreviewStart() {
         hideMainError();
-        lockControls(true);
         previewData(true);
     }
 
     function submitPreviewEnd() {
-        lockControls(false);
         previewData(false);
     }
 
     function submitCreateStart() {
         hideMainError();
-        lockControls(true);
         creatingTable(true);
         $(window).scrollTop(0);
     }

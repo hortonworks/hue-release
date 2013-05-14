@@ -34,7 +34,8 @@
                 klass="column",
                 placeholder=_("Column name")
                 )}
-                <span  class="help-inline error-inline hide">${_('This field is required.')}</span>
+                    <span  class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed.')}</span>
+                    <span  class="help-inline error-inline error-inline-bis hide">${_('Column names must be unique.')}</span>
                  <br/><br/>
                 ${comps.label(form["column_type"])}
                 ${comps.field(form["column_type"],

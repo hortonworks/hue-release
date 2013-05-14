@@ -26,7 +26,7 @@ from django.http import HttpResponse, Http404
 
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_util import login_notrequired, render
-from filebrowser.views import _do_newfile_save
+from filebrowser.views import _do_newfile_save, _file_reader
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm, UDFForm
@@ -334,9 +334,12 @@ def download_job_result(request, job_id):
     job = get_object_or_404(Job, job_id=job_id)
     if job.status != job.JOB_COMPLETED:
         raise PopupException("Job not completed yet")
-    job_result = _job_result(request, job)
-    response = HttpResponse(job_result['stdout'], content_type='text/plain')
+    path = job.statusdir + "/stdout"
+    stdout = request.fs.open(path, "r")
+    stats = request.fs.stats(path)
+    response = HttpResponse(_file_reader(stdout), content_type='application/octet-stream')
     response['Content-Disposition'] = 'attachment; filename="%s_result.txt"' % job_id
+    response["Content-Length"] = stats['size']
     return response
 
 

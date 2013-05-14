@@ -179,7 +179,7 @@ def create_from_file(request, database='default'):
                 user_def_columns = []
                 column_count = 0
                 while 'cols-%d-column_name' % column_count in request.POST \
-                    and 'cols-%d-column_type' % column_count in request.POST:
+                        and 'cols-%d-column_type' % column_count in request.POST:
                     user_def_columns.append(dict(column_name=request.POST.get('cols-%d-column_name' % column_count),
                                         column_type=request.POST.get('cols-%d-column_type' % column_count), ))
                     column_count += 1
@@ -196,8 +196,7 @@ def create_from_file(request, database='default'):
                                                                                     row_format='Delimited',
                                                                                     field_terminator=parser_options[
                                                                                         'replace_delimiter_with']),
-                                                                      'columns': user_def_columns if user_def_columns else
-                                                                      parser_options['columns'],
+                                                                      'columns': user_def_columns if user_def_columns else parser_options['columns'],
                                                                       'partition_columns': []
                                                                   })
                     proposed_query = proposed_query.decode('utf-8')
@@ -231,7 +230,7 @@ def create_from_file(request, database='default'):
                             database=database,
                             table_form=form.table,
                             error=None,
-                            ))
+                        ))
 
                     # clean up tmp dir
                     tmp_dir = parser_options.get('tmp_dir', None)
@@ -306,7 +305,7 @@ def _delim_preview_ext(fs, file_types, parser_options):
 def make_up_hive_column_names(names):
     new_names = []
     for col_name in names:
-        col_name = col_name.replace(" ", "_").lower()
+        col_name = re.sub(r'[^a-zA-Z0-9]+', '_', unicode(col_name).lower())
         col_rename_idx = 0
         while (col_name + '_' + str(col_rename_idx) if col_rename_idx else col_name) in new_names:
             col_rename_idx += 1
@@ -376,6 +375,7 @@ def _xls_file_preview(fs, parser_options):
         xls_read_column_headers = parser_options['xls_read_column_headers']
         xls_cell_range = parser_options['xls_cell_range']
         col_names = []
+        fields_list_start = 1 if xls_read_column_headers else 0
         if xls_read_column_headers:
             fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected,
                                                                cell_range=xls_cell_range,
@@ -390,14 +390,11 @@ def _xls_file_preview(fs, parser_options):
         row_start_idx = parser_options['preview_start_idx']
         row_end_idx = parser_options['preview_end_idx'] + 1  # read one more row over to define has_more flag
 
-        if preview_and_create:
-            fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected,
-                                                                  cell_range=xls_cell_range)
-        else:
-            fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected,
-                                                                  cell_range=xls_cell_range,
-                                                                  row_start_idx=row_start_idx,
-                                                                  row_end_idx=row_end_idx)
+        fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected,
+                                                              cell_range=xls_cell_range)
+        auto_column_types = HiveTypeAutoDefine().defineColumnTypes(fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
+        if not preview_and_create:
+            fields_list = fields_list[row_start_idx: row_end_idx + 1]
 
         preview_has_more = row_end_idx - row_start_idx == len(fields_list) - 1
         if preview_has_more:
@@ -405,15 +402,12 @@ def _xls_file_preview(fs, parser_options):
             row_end_idx -= 1
 
         if preview_and_create:
-            fields_list_start = 1 if parser_options['xls_read_column_headers'] else 0
             fields_list = fields_list[fields_list_start:]
             get_xls_file_processor().write_to_dsv_gzip(xls_fileobj, result_file_obj, fields_list,
                                                        parser_options['replace_delimiter_with'])
             result_file_obj.close()
 
         file_obj.close()
-
-        auto_column_types = HiveTypeAutoDefine().defineColumnTypes(fields_list[:IMPORT_COLUMN_AUTO_NLINES])
 
     except IOError as ex:
         msg = "Failed to open file '%s': %s" % (parser_options['path'], ex)
@@ -604,9 +598,6 @@ def _readfields(lines, delimiters):
     return res
 
 
-
-HIVE_PRIMITIVE_TYPES = ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double")
-
 HIVE_STRING_IDX = 0
 HIVE_TINYINT_IDX = 1
 HIVE_SMALLINT_IDX = 2
@@ -615,31 +606,35 @@ HIVE_BIGINT_IDX = 4
 HIVE_BOOLEAN_IDX = 5
 HIVE_FLOAT_IDX = 6
 HIVE_DOUBLE_IDX = 7
-HIVE_PRIMITIVES_LEN = len(HIVE_PRIMITIVE_TYPES)
+HIVE_TIMESTAMP_IDX = 8
+HIVE_PRIMITIVES_LEN = len(hcatalog.forms.HIVE_PRIMITIVE_TYPES)
 
 
 class HiveTypeAutoDefine(object):
 
     def isStrFloatingPointValue(self, strVal):
-        return re.match(r'(^[+-]?((?:\d+\.\d+)|(?:\.\d+))(?:[eE][+-]?\d+)?$)', strVal) != None
+        return re.match(r'(^[+-]?((?:\d+\.\d+)|(?:\.\d+))(?:[eE][+-]?\d+)?$)', strVal) is not None
 
     def isStrIntegerValue(self, strVal):
-        return re.match(r'(^[+-]?\d+(?:[eE][+]?\d+)?$)', strVal) != None
+        return re.match(r'(^[+-]?\d+(?:[eE][+]?\d+)?$)', strVal) is not None
 
     def isStrBooleanValue(self, strVal):
         return strVal == 'TRUE' or strVal == 'FALSE'
 
     def isIntHiveTinyint(self, intVal):
-        return -2**7 <= intVal <= 2**7 - 1
+        return -2 ** 7 <= intVal <= 2 ** 7 - 1
 
     def isIntHiveSmallint(self, intVal):
-        return -2**15 <= intVal <= 2**15 - 1
+        return -2 ** 15 <= intVal <= 2 ** 15 - 1
 
     def isIntHiveInt(self, intVal):
-        return -2**31 <= intVal <= 2**31 - 1
+        return -2 ** 31 <= intVal <= 2 ** 31 - 1
 
     def isIntHiveBigint(self, intVal):
-        return -2**63 <= intVal <= 2**63 - 1
+        return -2 ** 63 <= intVal <= 2 ** 63 - 1
+
+    def isStrJdbcCompliantTimestamp(self, strVal):  # YYYY-MM-DD HH:MM:SS.fffffffff
+        return re.match(r'\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}(?:.\d{9})?$', strVal) is not None
 
     def defineFieldTypeIdx(self, strVal, min_int_type=HIVE_TINYINT_IDX):
         if self.isStrIntegerValue(strVal):
@@ -656,10 +651,12 @@ class HiveTypeAutoDefine(object):
             return HIVE_DOUBLE_IDX
         elif self.isStrBooleanValue(strVal):
             return HIVE_BOOLEAN_IDX
+        elif self.isStrJdbcCompliantTimestamp(strVal):
+            return HIVE_TIMESTAMP_IDX
         return HIVE_STRING_IDX
 
     def defineFieldType(self, strVal):
-        return HIVE_PRIMITIVE_TYPES[self.defineFieldTypeIdx(strVal)]
+        return hcatalog.forms.HIVE_PRIMITIVE_TYPES[self.defineFieldTypeIdx(strVal)]
 
     def defineColumnTypes(self, matrix, min_int_type=HIVE_INT_IDX):
         column_types = []
@@ -670,8 +667,14 @@ class HiveTypeAutoDefine(object):
             for i, field in enumerate(row):
                 if field:
                     column_types[i][self.defineFieldTypeIdx(unicode(field), min_int_type=min_int_type)] += 1
-        column_types = [HIVE_PRIMITIVE_TYPES[HIVE_STRING_IDX]
-                        if types_list[HIVE_STRING_IDX] > 0
-                        else HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))]
-                        for types_list in column_types]
-        return column_types
+        res_column_types = []
+        for types_list in column_types:
+            if types_list[HIVE_STRING_IDX] > 0:
+                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_STRING_IDX])
+            elif types_list[HIVE_DOUBLE_IDX] > 0:
+                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_DOUBLE_IDX])
+            elif types_list[HIVE_FLOAT_IDX] > 0:
+                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_FLOAT_IDX])
+            else:
+                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))])
+        return res_column_types

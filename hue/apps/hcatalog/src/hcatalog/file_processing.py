@@ -607,12 +607,7 @@ def showable_cell_value(celltype, cellvalue, datemode):
         try:
             dt = xlrd.xldate_as_tuple(cellvalue, datemode)
             if len(dt) >= 6:
-                if 0 == dt[3] == dt[4] == dt[5]:
-                    showval = unicode(date(*(dt[0:3])))
-                elif 0 == dt[0] == dt[1] == dt[2]:
-                    showval = unicode(time(*(dt[3:6])))
-                else:
-                    showval = unicode(datetime(*(dt[0:6])))
+                showval = datetime(*(dt[0:6])).isoformat(sep=' ')
             else:
                 showval = ''
 
