@@ -1,29 +1,27 @@
 function chart(x,y,min,max)
 {
-	this.x = x;
-	this.y = y;
-	this.n = y.length;
-	var map = {};
-	this.formin = [];
-	this.seriesData = [[]];
-	this.palette = new Rickshaw.Color.Palette( { scheme: 'colorwheel' } );
+	x = x;
+	y = y;
+	n = y.length;
+	map = {};
+	formin = [];
+	seriesData = [[]];
+	palette = new Rickshaw.Color.Palette( { scheme: 'colorwheel' } );
 
-	this.getData = function(d,i)
+	getData = function(d,i)
 	{
-		for(var k=0;k<this.n;k++)
+		for(var k=0;k<n;k++)
 		{
-			this.seriesData.push([]);
-			this.seriesData[k].push({x: i, y: parseFloat(d[this.y[k]])});
-			this.formin[i] = parseInt(d[this.y[k]]);	
-			
+			seriesData.push([]);
+			seriesData[k].push({x: i, y: parseFloat(d[y[k]])});
+			formin[i] = parseInt(d[y[k]]);	
 		}
-		map[i] = d[this.x];
+		map[i] = d[x];
 	}
-	
 
-	this.setGraph = function(type,unstack)
+	setGraph = function(type,unstack)
 	{
-		this.graph = new Rickshaw.Graph({
+		graph = new Rickshaw.Graph({
 			element: document.getElementById("chart"),
 			width: 900,
 			height: 350,
@@ -31,53 +29,63 @@ function chart(x,y,min,max)
 			unstack: unstack,
 			series:
 			[{
-				color: this.palette.color(),
-				data: this.seriesData[0],
-				name: this.y[0]
+				color: palette.color(),
+				data: seriesData[0],
+				name: y[0]
 			}]
 		});
 		
-		this.graph.min = Math.min.apply( Math, this.formin ) -1;
+		graph.min = Math.min.apply( Math, formin ) -1;
 
-		for(var k=1;k<this.n;k++)
-		this.graph.series.push({color: this.palette.color() , data: this.seriesData[k], name: this.y[k]});
+		for(var k=1;k<n;k++)
+		graph.series.push({color: palette.color() , data: seriesData[k], name: y[k]});
 
-		this.legend = new Rickshaw.Graph.Legend({
-			graph: this.graph,
+		legend = new Rickshaw.Graph.Legend({
+			graph: graph,
 			element: document.querySelector('#legend')
 		});
-
-		this.hoverDetail = new Rickshaw.Graph.HoverDetail( {
-			graph: this.graph
+		
+		shelving = new Rickshaw.Graph.Behavior.Series.Toggle({
+			graph: graph,
+			legend: legend
 		});
 
-		this.yAxis = new Rickshaw.Graph.Axis.Y({
-			graph: this.graph,
+		hoverDetail = new Rickshaw.Graph.HoverDetail( {
+			graph: graph
+		});
+
+		yAxis = new Rickshaw.Graph.Axis.Y({
+			graph: graph,
 			orientation: 'left',
 			element: document.getElementById('y_axis')
 		});
+		
 		var format = function(n)
 		{
 			return map[n];
 		}
-		this.xAxis = new Rickshaw.Graph.Axis.X( {
-			graph: this.graph,
+		
+		xAxis = new Rickshaw.Graph.Axis.X( {
+			graph: graph,
 			orientation: 'bottom',
 			element: document.getElementById('x_axis'),
 			tickFormat:format
 
 		});
-		this.yAxis.min = 60;
-		this.graph.render();
 
-		this.slider = new Rickshaw.Graph.RangeSlider({
-			graph: this.graph,
+		graph.render();
+		
+		slider = new Rickshaw.Graph.RangeSlider({
+			graph: graph,
 			element: document.getElementById('slider')
 		});
 	} 
 	
 	this.paint = function(csvfile,type,stacked){
-	d3.csv(csvfile,function(dataset){dataset.forEach(function(d,i){c.getData(d,i);});c.setGraph(type,stacked);});};
+		d3.csv(csvfile,function(dataset){
+		dataset.forEach(function(d,i){getData(d,i);});
+		setGraph(type,stacked);});
+	};
 }
 
 
