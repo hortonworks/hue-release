@@ -31,10 +31,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
  */
 public class CleanableSessionState extends SessionState {
 
-  public CleanableSessionState() {
-    super();
-  }
-
+  
   public CleanableSessionState(HiveConf conf) {
     super(conf);
   }
