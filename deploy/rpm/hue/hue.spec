@@ -16,7 +16,7 @@ Source2: .ssh.tar.gz
 #Source3: apache-maven-3.0.4-bin.tar.gz
 
 
-Requires: wget, sudo, libxslt, python-lxml, openssl
+Requires: wget, sudo, libxslt, python-lxml, openssl, python >= 2.6
 
 provides: hue
 
