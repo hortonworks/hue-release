@@ -9,17 +9,12 @@ Apache Hadoop. Hue applications are collected into a desktop-style environment
 and delivered as a Web application, requiring no additional installation for
 individual users.
 
-This guide describes how to install and configure a Hue tarball. For
-information about installing Hue packages, see
-https://ccp.cloudera.com/display/CDH4DOC/Hue+Installation[Installing Hue].
+This guide describes how to install and configure a Hue tarball.
 
 There is also a companion SDK guide that describes how to develop
 new Hue applications:
 link:sdk/sdk.html[Hue SDK Documentation]
 
-IMPORTANT: Hue requires the Hadoop contained in
-https://ccp.cloudera.com/display/CDH4DOC/CDH4+Quick+Start+Guide[Cloudera's
-Distribution including Apache Hadoop (CDH4)]
 
 .Conventions Used in this Guide:
 * Commands that must be run with +root+ permission have a +#+ command prompt.
@@ -44,8 +39,6 @@ within your cluster, though it can be a remote node as long as there are no
 overly restrictive firewalls. For small clusters of less than 10 nodes,
 you can use your existing master node as the Hue Server.
 
-You can download the Hue tarball here:
-http://github.com/cloudera/hue/downloads/
 
 Hue Dependencies
 ^^^^^^^^^^^^^^^^
@@ -73,13 +66,12 @@ sqlite-devel,libsqlite3-dev
 ant,ant
 libsasl2-dev,cyrus-sasl-devel
 libsasl2-modules-gssapi-mit,cyrus-sasl-gssapi
-libkrb5-dev,krb5-devel        
+libkrb5-dev,krb5-devel
 libtidy-0.99-0,libtidy (For unit tests only)
 mvn,mvn (From maven2 package or tarball)
 openldap-dev / libldap2-dev, openldap-devel
 ~~~~~~~~~~
 
-The full list is here: https://github.com/cloudera/hue#development-prerequisites
 
 Build
 ^^^^^
@@ -124,11 +116,11 @@ of various Python libraries and you don't have to be concerned about missing
 software components.
 
 
-Install Hadoop from CDH
+Install Hadoop from HDP
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-To use Hue, you must install and run Hadoop from CDH4 or later.  If you
-are not running this version of CDH or later, upgrade your cluster before
+To use Hue, you must install and run Hadoop from HDP1.2.1 or later.  If you
+are not running this version of HDP or later, upgrade your cluster before
 proceeding.
 
 .Dependency on CDH Components
@@ -140,10 +132,9 @@ proceeding.
   MR1         No         JobBrowser, JobDesigner, Beeswax   Job information access through hue-plugins
   Yarn        No         JobDesigner, Beeswax               Transitive dependency via Hive or Oozie
   Oozie       No         JobDesigner, Oozie                 Oozie access through REST API
-  Hive        No         Beeswax                            Beeswax uses the Hive client libraries
-  Flume       No         Shell                              Optionally provides access to the Flume shell
+  Hive        No         Beeswax, Hcatalog                  Beeswax uses the Hive client libraries
+  WebHcat     No         Hcatalog, Pig                      HCatalog, and Pig uses WebHcat REST API
   HBase       No         Shell                              Optionally provides access to the HBase shell
-  Pig         No         Shell                              Optionally provides access to the Pig shell
 -------------------------------------------------------------------------------------
 
 
@@ -161,6 +152,22 @@ Depending on your setup, your `hdfs-site.xml` might be in `/etc/hadoop/conf`.
       <name>dfs.webhdfs.enabled</name>
       <value>true</value>
     </property>
+
+Also you need to enable append operation:
+
+    <property>
+      <name>dfs.support.append</name>
+      <value>true</value>
+    </property>
+
+[NOTE]
+https://issues.apache.org/jira/browse/HADOOP-8230[Append is not supported in Hadoop 1.x.  If you really need the previous functionality, to turn on the append functionality set the flag "dfs.support.broken.append" to true.]
+
+    <property>
+      <name>dfs.support.broken.append</name>
+      <value>true</value>
+    </property>
+
 
 You also need to add this to `core-site.html`.
 
@@ -297,7 +304,7 @@ Configuring Your Firewall for Hue
 
 Hue currently requires that the machines within your cluster can connect to
 each other freely over TCP. The machines outside your cluster must be able to
-open TCP port 8888 on the Hue Server (or the configured Hue web HTTP port)
+open TCP port 8000 on the Hue Server (or the configured Hue web HTTP port)
 to interact with the system.
 
 
@@ -329,8 +336,7 @@ No Existing Hive Installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Familiarize yourself with the configuration options in
-`hive-site.xml`. See
-https://ccp.cloudera.com/display/CDH4DOC/Hive+Installation#HiveInstallation-ConfiguringtheHiveMetastore[Hive
+`hive-site.xml`. See http://docs.hortonworks.com/HDPDocuments/HDP1/HDP-1.2.3.1/bk_installing_manually_book/content/rpm-chap6.html[Hive
 Installation and Configuration].
 Having a `hive-site.xml` is optional but often useful, particularly on setting
 up a http://wiki.apache.org/hadoop/Hive/AdminManual/MetastoreAdmin[metastore].
