@@ -13,7 +13,7 @@ function chart(x,y,min,max)
 		for(var k=0;k<n;k++)
 		{
 			seriesData.push([]);
-			seriesData[k].push({x: i, y: parseFloat(d[y[k]])});
+			seriesData[k].push({x: i, y: (isNaN(d[y[k]]))?0:parseInt(d[y[k]])});
 			formin[i] = parseInt(d[y[k]]);	
 		}
 		map[i] = d[x];

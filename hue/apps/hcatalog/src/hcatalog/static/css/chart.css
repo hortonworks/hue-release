@@ -16,7 +16,7 @@
 #x_axis,#slider
 {
 	position: relative;
-	left: 84px; 
+	left: 100px; 
 	bottom:30px;
 }
 #x_axis>svg

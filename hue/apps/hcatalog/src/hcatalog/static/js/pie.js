@@ -17,7 +17,7 @@ var arc = d3.svg.arc()
 
 var pie = d3.layout.pie()
     .sort(null)
-    .value(function(d) {return d[yAxis[k]]; });
+    .value(function(d) {return (isNaN(d[yAxis[k]]))?0:(d[yAxis[k]]); });
  
 var svg = d3.select("body").append("svg")
     .attr("width", width)
