@@ -213,6 +213,7 @@ ${layout.menubar(section='query')}
         <script src="/hcatalog/static/js/xml.js"></script>
         <script src="/hcatalog/static/js/css.js"></script>
         <script src="/hcatalog/static/js/javascript.js"></script>
+		<script src="/hcatalog/static/js/lib/jquery.csv-0.71.min.js"></script>
 		
         <div class="tab-pane" id="visualizations">
        <!--<textarea id="vis_code" name="code">
@@ -244,7 +245,7 @@ ${layout.menubar(section='query')}
 				yAxis:<br/>	
 					<input type="checkbox" name="yAxis" value="${columns[0]}" disabled="disabled">${columns[0]}<br>
 					% for col in columns[1:]:
-					<input type="checkbox" name="yAxis" value="${col}" checked="checked">${col}<br>
+					<input type="checkbox" name="yAxis" value="${col}" checked="checked" >${col}<br>
 					% endfor
 				</div>
 
@@ -261,15 +262,6 @@ ${layout.menubar(section='query')}
 					<input type="radio" name="stacked" value="false"  /> <img src='/hcatalog/static/css/images/charts/stack.png'> stack<br/>
 					<input type="radio" name="stacked" value="true" checked="checked" /> <img src='/hcatalog/static/css/images/charts/value.png'> value<br/>
 				</div>
-			<!--	<div class='chart_type_wrap'>
-					value range:<br/>	
-					from:<select name="minlimit" class="pielimits pielimits1" disabled="disabled">
-					</select> 
-					<br/>
-					to:<select name="maxlimit" class="pielimits pielimits2" disabled="disabled">
-					</select>
-				</div>-->
-
 				<input type="hidden" value='${download_urls["csv"]}' name="csv"/>
 			</div>
 			<iframe id="preview"></iframe>

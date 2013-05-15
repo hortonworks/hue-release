@@ -43,6 +43,7 @@
 
   <properties>
     <hadoop.version>2.0.0-mr1-cdh4.2.0-SNAPSHOT</hadoop.version>
+    <zookeeper.version>3.4.5</zookeeper.version>
     <hive.version>0.10.0-cdh4.2.0-SNAPSHOT</hive.version>
     <slf4j.version>1.6.1</slf4j.version>
     <commons-logging.version>1.0.4</commons-logging.version>
@@ -74,6 +75,11 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>${zookeeper.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-core</artifactId>
@@ -159,6 +165,13 @@
   </dependencyManagement>
 
   <repositories>
+    <repository>
+      <id>central</id>
+      <url>http://repo1.maven.org/maven2</url>
+      <snapshots>
+          <enabled>false</enabled>
+      </snapshots>
+    </repository> 
     <repository>
       <id>cloudera.repos</id>
       <url>https://repository.cloudera.com/content/groups/cdh-releases-rcs</url>
