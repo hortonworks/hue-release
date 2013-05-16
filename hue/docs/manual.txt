@@ -351,6 +351,16 @@ In `hue.ini`, modify `hive_conf_dir` to point to the
 directory containing `hive-site.xml`.
 
 
+hive.security.authorization.manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Make sure that hive.security.authorization.manager class is visible by
+hue. E.g. if
+hive.security.authorization.manager=org.apache.hcatalog.security.HdfsAuthorizationProvider
+you need to make hcatalog-core.jar to be in HIVE_HOME:
+ln -s /usr/lib/hcatalog/share/hcatalog/hcatalog-core.jar /usr/lib/hive/lib/ 
+
+
 Configuring Hue
 ---------------
 
