@@ -245,6 +245,7 @@ ${layout.menubar(section='tables')}
                         </div>
                     </fieldset>
                 </div>
+                <input name="file_processor_type" data-bind="value: fileProcessorType" value="" style="display: none"/>
                 <div class="form-actions">
                     <input id="submit-create" type="submit" name="createTable" class="btn btn-primary disable-feedback"
                            value="${_('Create table')}"/>
@@ -366,24 +367,9 @@ var viewModel = new AppViewModel();
 
 function AppViewModel() {
     var self = this;
-##
-##    self.lockControls = ko.computed(function() {
-##        return self.creatingTable() || self.importingData() || self.previewData();
-##    });
+    self.fileProcessorType = ko.observable("");
 }
 ko.applyBindings(viewModel);
-
-function creatingTable(flag) {
-    lockControls(flag);
-    if(flag) {
-        $("#main-spin").hide();
-        $("#creating-table-spin").show();
-    }
-    else {
-        $("#creating-table-spin").hide();
-        $("#main-spin").show();
-    }
-}
 
 function importingData(flag) {
     lockControls(flag);
@@ -393,6 +379,18 @@ function importingData(flag) {
     }
     else {
         $("#importing-data-spin").hide();
+        $("#main-spin").show();
+    }
+}
+
+function creatingTable(flag) {
+    lockControls(flag);
+    if(flag) {
+        $("#main-spin").hide();
+        $("#creating-table-spin").show();
+    }
+    else {
+        $("#creating-table-spin").hide();
         $("#main-spin").show();
     }
 }
@@ -500,6 +498,9 @@ $(document).ready(function () {
                         $("#submit-preview-next").hide();
                     }
                 }
+                if ("file_processor_type" in data["options"]) {
+                    viewModel.fileProcessorType(data["options"]["file_processor_type"]);
+                }
             }
             submitPreviewEnd();
         }, "json").error(function () {
@@ -559,7 +560,6 @@ $(document).ready(function () {
             }
         });
         $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
-        reactOnAutodetectDelimiterChanged(true);
 
         % if error is not None:
         showMainError("${error}");
@@ -635,11 +635,7 @@ $(document).ready(function () {
     $("input[name='table-single_line_comment']").bind("change paste keyup", reactOnOptionChange);
     $("input[name='table-autodetect_delimiter']").change(function() {
         if($(this).is(":checked")) {
-            reactOnAutodetectDelimiterChanged(true);
             reactOnOptionChange();
-        }
-        else {
-            reactOnAutodetectDelimiterChanged(false);
         }
     });
 
@@ -647,18 +643,6 @@ $(document).ready(function () {
     $("select[name='table-xls_sheet']").change(reactOnOptionChange);
     $("input[name='table-xls_cell_range']").bind("change paste keyup", reactOnOptionChange);
     $("input[name='table-xls_read_column_headers']").change(reactOnOptionChange);
-
-
-    function reactOnAutodetectDelimiterChanged(value) {
-        if (value) {
-            $("#id_table-delimiter_0").prop('disabled', true);
-            $("#id_table-delimiter_1").prop('disabled', true);
-        }
-        else {
-            $("#id_table-delimiter_0").prop('disabled', false);
-            $("#id_table-delimiter_1").prop('disabled', false);
-        }
-    }
 
     function terminatorFieldInit(name) {
         var field_0 = $("#id_table-" + name + "_0");

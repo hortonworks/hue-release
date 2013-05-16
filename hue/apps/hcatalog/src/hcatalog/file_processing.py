@@ -15,13 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
+from hadoop.fs import hadoopfs
 import gzip
 import xlrd
 import logging
 import re
 import string
 from datetime import datetime, date, time
+
 
 LOG = logging.getLogger(__name__)
 
@@ -113,8 +114,6 @@ def intervals_subtraction(intervals, subtrahend):
 
     if not intervals:
         return None
-    elif len(intervals) == 1:
-        return intervals
 
     intervals.sort(key=lambda self: self.start)
     y = []
@@ -398,7 +397,8 @@ class CommentsDetector():
 
 
 DEFAULT_IMPORT_PEEK_SIZE = 8192
-DEFAULT_IMPORT_MAX_SIZE = 4294967296 # 4 gigabytes
+DEFAULT_IMPORT_CHUNK_SIZE = 5*1024*1024  # 5 Mb
+DEFAULT_IMPORT_MAX_SIZE = 4294967296  # 4 Gb
 DEFAULT_IMPORT_PEEK_NLINES = 10
 
 
@@ -424,7 +424,7 @@ class GzipFileProcessor():
     TYPE = 'gzip'
 
     @staticmethod
-    def readlines(fileobj, encoding,
+    def read_preview_lines(fileobj, encoding,
                   import_peek_size=None, import_peek_nlines=None,
                   ignore_whitespaces=False, ignore_tabs=False,
                   single_line_comment=False, java_style_comments=False):
@@ -453,48 +453,89 @@ class GzipFileProcessor():
         else:
             return [s for s in data.splitlines() if s.strip()][:-1][:DEFAULT_IMPORT_PEEK_NLINES]
 
+    @staticmethod
+    def read_in_chunks(fs, path, encoding):
+        src_file_obj = fs.open(path, mode='r')
+        gz = gzip.GzipFile(fileobj=src_file_obj, mode='rb')
+        align_rest = ''
+        while True:
+            chunk = gz.read(DEFAULT_IMPORT_CHUNK_SIZE)
+            if chunk:
+                chunk_len = len(chunk)
+                chunk = align_rest + chunk
+                if chunk_len < DEFAULT_IMPORT_CHUNK_SIZE:  # last chunk
+                    chunk = unicode('\n'.join([s for s in chunk.splitlines() if s.strip()]), encoding, errors='ignore')
+                else:
+                    lines = chunk.splitlines()
+                    if 1 == len(lines):
+                        raise Exception('File could not be read in chunks: default chunk size is %s [bytes]'
+                                        % DEFAULT_IMPORT_CHUNK_SIZE)
+                    align_rest = lines[-1]
+                    if chunk[-1] == '\n' or chunk[-1] == '\r':
+                        align_rest += '\n'
+                    chunk = unicode('\n'.join([s for s in lines[:-1] if s.strip()]), encoding, errors='ignore')
+                yield chunk
+            else:
+                src_file_obj.close()
+                return
+        src_file_obj.close()
 
     @staticmethod
-    def read_all_data(fileobj, encoding,
-                      ignore_whitespaces=False, ignore_tabs=False,
-                      single_line_comment=False, java_style_comments=False):
-        gz = gzip.GzipFile(fileobj=fileobj, mode='rb')
-        try:
-            data = gz.read()
-            data = unicode(data, encoding, errors='ignore')
-            if java_style_comments or single_line_comment:
-                data = remove_comments(data,
-                                       java_line_comment=java_style_comments,
-                                       java_block_comment=java_style_comments,
-                                       custom_line_comment=single_line_comment)
-            if ignore_whitespaces:
-                data = data.replace(' ', '')
-            if ignore_tabs:
-                data = data.replace('\t', '')
-        except IOError:
-            return None
-        except UnicodeError:
-            return None
-        return [s for s in data.splitlines() if s.strip()]
-
+    def append_chunk(fs, path, data, encoding):
+        dest_file_obj = fs.open(path, mode='w')
+        gz = gzip.GzipFile(fileobj=dest_file_obj, mode='wb')
+        # data = data.encode(encoding, 'ignore')
+        # fs.append(path, data)
+        gz.write(data)
+        dest_file_obj.close()
 
     @staticmethod
-    def write_all_data(fileobj, data, encoding):
-        try:
-            data = data.encode(encoding, 'ignore')
-            gz = gzip.GzipFile(fileobj=fileobj, mode='wb')
-            gz.write(data)
-        except IOError:
-            pass
-        except UnicodeError:
-            pass
+    def remove_comments_from_file(fs, src_path, dest_path, java_line_comment, java_block_comment, custom_line_comment):
+        comment_detector = CommentsDetector(java_line_comment=java_line_comment,
+                                            java_block_comment=java_block_comment,
+                                            custom_line_comment=custom_line_comment)
+        src_file_obj = fs.open(src_path, mode='r')
+        src_gz = gzip.GzipFile(fileobj=src_file_obj, mode='rb')
+        offset = 0
+        while True:
+            chunk = fs.read(src_path, offset, DEFAULT_IMPORT_CHUNK_SIZE)
+            if chunk:
+                chunk_len = len(chunk)
+                comment_detector.process_buffer(chunk, index_offset=offset)
+                offset += chunk_len
+            else:
+                break
+
+        comments = comment_detector.get_comments()
+        if comments:
+            fs.create(dest_path, overwrite=True, permission=0777)
+            dest_file_obj = fs.open(src_path, mode='w')
+            dest_gz = gzip.GzipFile(fileobj=dest_file_obj, mode='wb')
+            src_size = offset
+            content_to_copy = [x for x in range(0, src_size, DEFAULT_IMPORT_CHUNK_SIZE) + [src_size]]
+            if len(content_to_copy) > 1:
+                content_to_copy = [IInterval(content_to_copy[i], c) for i, c in enumerate(content_to_copy[1:])]
+            else:
+                content_to_copy = [IInterval(0, src_size)]
+            for comment in comments:
+                content_to_copy = intervals_subtraction(content_to_copy, comment)
+            for chunk_to_copy in content_to_copy:
+                src_gz.seek(chunk_to_copy.start)
+                sub_chunk = src_gz.read(chunk_to_copy.end - chunk_to_copy.start)
+                if sub_chunk:
+                    dest_gz.write(sub_chunk)
+            src_file_obj.close()
+            dest_file_obj.close()
+            return dest_path
+        src_file_obj.close()
+        return src_path
 
 
 class TextFileProcessor():
     TYPE = 'text'
 
     @staticmethod
-    def readlines(fileobj, encoding,
+    def read_preview_lines(fileobj, encoding,
                   import_peek_size=None, import_peek_nlines=None,
                   ignore_whitespaces=False, ignore_tabs=False,
                   single_line_comment=False, java_style_comments=False):
@@ -522,43 +563,81 @@ class TextFileProcessor():
         else:
             return [s for s in data.splitlines() if s.strip()][:-1][:import_peek_nlines]
 
-
     @staticmethod
-    def read_all_data(fileobj, encoding, max_size=None,
-                      ignore_whitespaces=False, ignore_tabs=False,
-                      single_line_comment=False, java_style_comments=False):
-        try:
-            if max_size:
-                data = fileobj.read(max_size)
+    def read_in_chunks(fs, path, encoding):
+        offset = 0
+        LOG.info('||||| read_in_chunks - 0')
+        while True:
+            LOG.info('||||| read_in_chunks - 1')
+            chunk = fs.read(path, offset, DEFAULT_IMPORT_CHUNK_SIZE)
+            LOG.info('||||| read_in_chunks - 2')
+            if chunk:
+                LOG.info('||||| read_in_chunks - 3')
+                chunk_len = len(chunk)
+                LOG.info('||||| read_in_chunks - 4 - %s' % str(chunk_len))
+                if chunk_len < DEFAULT_IMPORT_CHUNK_SIZE:  # last chunk
+                    LOG.info('||||| read_in_chunks - 5')
+                    chunk = unicode('\n'.join([s for s in chunk.splitlines() if s.strip()]), encoding, errors='ignore')
+                    LOG.info('||||| read_in_chunks - 6')
+                else:
+                    LOG.info('||||| read_in_chunks - 7')
+                    lines = chunk.splitlines()
+                    LOG.info('||||| read_in_chunks - 8')
+                    if 1 == len(lines):
+                        raise Exception('File could not be read in chunks: default chunk size is %s [bytes]'
+                                        % DEFAULT_IMPORT_CHUNK_SIZE)
+                    LOG.info('||||| read_in_chunks - 9')
+                    chunk_len -= len(lines[-1])
+                    chunk = unicode('\n'.join([s for s in lines[:-1] if s.strip()]), encoding, errors='ignore')
+                    LOG.info('||||| read_in_chunks - 10')
+                LOG.info('||||| read_in_chunks - 11')
+                offset += chunk_len
+                LOG.info('||||| read_in_chunks - 12')
+                yield chunk
             else:
-                data = fileobj.read(DEFAULT_IMPORT_MAX_SIZE)
-            data = unicode(data, encoding, errors='ignore')
-            if java_style_comments or single_line_comment:
-                data = remove_comments(data,
-                                       java_line_comment=java_style_comments,
-                                       java_block_comment=java_style_comments,
-                                       custom_line_comment=single_line_comment)
-            if ignore_whitespaces:
-                data = data.replace(' ', '')
-            if ignore_tabs:
-                data = data.replace('\t', '')
-        except IOError:
-            return None
-        except UnicodeError:
-            return None
-        return [s for s in data.splitlines() if s.strip()]
+                return
 
     @staticmethod
-    def write_all_data(fileobj, data, encoding):
-        try:
-            data = data.encode(encoding, 'ignore')
-            try:
-                fileobj.write(data)
-            except IOError:
-                pass
-        except UnicodeError:
-            pass
+    def append_chunk(fs, path, data, encoding):
+        data = data.encode(encoding, 'ignore')
+        fs.append(path, data)
 
+    @staticmethod
+    def remove_comments_from_file(fs, src_path, dest_path, java_line_comment, java_block_comment, custom_line_comment):
+        comment_detector = CommentsDetector(java_line_comment=java_line_comment,
+                                        java_block_comment=java_block_comment,
+                                        custom_line_comment=custom_line_comment)
+
+        offset = 0
+        while True:
+            chunk = fs.read(src_path, offset, DEFAULT_IMPORT_CHUNK_SIZE)
+            if chunk:
+                chunk_len = len(chunk)
+                comment_detector.process_buffer(chunk, index_offset=offset)
+                offset += chunk_len
+            else:
+                break
+
+        comments = comment_detector.get_comments()
+        if comments:
+            fs.create(dest_path, overwrite=True, permission=0777)
+            src_stats = fs.stats(src_path)
+            src_size = src_stats['size']
+            content_to_copy = [x for x in range(0, src_size, DEFAULT_IMPORT_CHUNK_SIZE) + [src_size]]
+            if len(content_to_copy) > 1:
+                content_to_copy = [IInterval(content_to_copy[i], c) for i, c in enumerate(content_to_copy[1:])]
+            else:
+                content_to_copy = [IInterval(0, src_size)]
+            for comment in comments:
+                content_to_copy = intervals_subtraction(content_to_copy, comment)
+            for chunk_to_copy in content_to_copy:
+                # raise Exception('comments=%s\ncontent_to_copy=%s\nchunk_to_copy=%s\nintervals_intersection=%s' %
+                #                 (str(comments), str(content_to_copy), str(chunk_to_copy), str(intervals_intersection(content_to_copy + [chunk_to_copy]))))
+                sub_chunk = fs.read(src_path, chunk_to_copy.start, chunk_to_copy.end - chunk_to_copy.start)
+                if sub_chunk:
+                    fs.append(dest_path, sub_chunk)
+            return dest_path
+        return src_path
 
 def excel_col_to_index(col_name):
     index = 0
@@ -721,20 +800,14 @@ class XlsFileProcessor():
         return data
 
     @staticmethod
-    def write_to_dsv_gzip(xls_fileobj, fileobj, data, field_terminator, newline_terminator='\n'):
-        try:
-            try:
-                gz = gzip.GzipFile(fileobj=fileobj, mode='wb')
-
-                data_to_store = []
-                for row in data:
-                    new_row = []
-                    for field in row:
-                        new_row.append(unicode(field).replace(field_terminator.decode('string_escape'), ''))
-                    data_to_store.append(field_terminator.decode('string_escape').join(new_row))
-
-                gz.write(newline_terminator.join(data_to_store))
-            except IOError:
-                pass
-        except UnicodeError:
-            pass
+    def write_to_dsv_gzip(fs, xls_fileobj, dest_path, data, field_terminator, newline_terminator='\n'):
+        dest_file_obj = fs.open(dest_path, mode='w')
+        gz = gzip.GzipFile(fileobj=dest_file_obj, mode='wb')
+        data_to_store = []
+        for row in data:
+            new_row = []
+            for field in row:
+                new_row.append(unicode(field).replace(field_terminator.decode('string_escape'), ''))
+            data_to_store.append(field_terminator.decode('string_escape').join(new_row))
+        gz.write(newline_terminator.join(data_to_store))
+        dest_file_obj.close()
