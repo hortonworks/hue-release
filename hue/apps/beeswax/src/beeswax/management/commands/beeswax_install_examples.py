@@ -111,7 +111,7 @@ class Command(NoArgsCommand):
     """
     Setup the sample user
     """
-    USERNAME = 'sandbox'
+    USERNAME = 'sample'
     try:
       user = User.objects.get(username=USERNAME)
     except User.DoesNotExist:
