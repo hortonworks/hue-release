@@ -686,7 +686,7 @@ class HiveTypeAutoDefine(object):
     def defineFieldType(self, strVal):
         return hcatalog.forms.HIVE_PRIMITIVE_TYPES[self.defineFieldTypeIdx(strVal)]
 
-    def defineColumnTypes(self, matrix, min_int_type=HIVE_INT_IDX):
+    def defineColumnTypes(self, matrix, min_int_type=HIVE_BIGINT_IDX):
         column_types = []
         for row in matrix:
             if len(row) > len(column_types):
@@ -703,10 +703,6 @@ class HiveTypeAutoDefine(object):
                 res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_DOUBLE_IDX])
             elif types_list[HIVE_FLOAT_IDX] > 0:
                 res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_FLOAT_IDX])
-            elif types_list[HIVE_BIGINT_IDX] > 0:
-                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_BIGINT_IDX])
-            elif types_list[HIVE_INT_IDX] > 0:
-                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_INT_IDX])
             else:
                 res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))])
         return res_column_types
