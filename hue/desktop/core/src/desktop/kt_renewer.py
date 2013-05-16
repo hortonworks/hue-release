@@ -25,7 +25,7 @@ from desktop.conf import KERBEROS as CONF
 LOG = logging.getLogger(__name__)
 SPEC = DjangoCommandSupervisee("kt_renewer")
 
-NEED_KRB181_WORKAROUND=None
+NEED_KRB181_WORKAROUND=False
 
 def renew_from_kt():
   cmdv = [CONF.KINIT_PATH.get(),

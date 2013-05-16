@@ -74,8 +74,6 @@ def get_metastore():
   """
   global _METASTORE_LOC_CACHE
   if not _METASTORE_LOC_CACHE:
-    kerberos_principal = security_util.get_kerberos_principal(get_conf().get(_CNF_METASTORE_KERBEROS_PRINCIPAL, None), socket.getfqdn())
-    kerberos_principal_components = security_util.get_components(kerberos_principal)
     thrift_uris = get_conf().get(_CNF_METASTORE_URIS)
     is_local = thrift_uris is None or thrift_uris == ''
     if is_local:
@@ -89,6 +87,8 @@ def get_metastore():
         LOG.fatal('Cannot understand remote metastore uri "%s"' % thrift_uri)
       else:
         host, port = match.groups()
+      kerberos_principal = security_util.get_kerberos_principal(get_conf().get(_CNF_METASTORE_KERBEROS_PRINCIPAL, None), host)
+      kerberos_principal_components = security_util.get_components(kerberos_principal)
       if str(get_conf().get(_CNF_METASTORE_SASL, 'false')).lower() == 'true' and len(kerberos_principal_components) == 3:
         host = kerberos_principal_components[1]
     _METASTORE_LOC_CACHE = (is_local, host, int(port), kerberos_principal)
