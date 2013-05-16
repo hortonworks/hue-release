@@ -263,7 +263,7 @@ def create_from_file(request, database='default'):
 
 
 IMPORT_PEEK_SIZE = 8192
-IMPORT_MAX_SIZE = 4294967296 # 4 gigabytes
+IMPORT_MAX_SIZE = 4294967296  # 4 Gb
 IMPORT_PEEK_NLINES = 10
 IMPORT_COLUMN_AUTO_NLINES = 200
 DELIMITERS = [hive_val for hive_val, _, _ in hcatalog.common.TERMINATORS]
@@ -703,6 +703,10 @@ class HiveTypeAutoDefine(object):
                 res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_DOUBLE_IDX])
             elif types_list[HIVE_FLOAT_IDX] > 0:
                 res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_FLOAT_IDX])
+            elif types_list[HIVE_BIGINT_IDX] > 0:
+                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_BIGINT_IDX])
+            elif types_list[HIVE_INT_IDX] > 0:
+                res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[HIVE_INT_IDX])
             else:
                 res_column_types.append(hcatalog.forms.HIVE_PRIMITIVE_TYPES[types_list.index(max(types_list))])
         return res_column_types
