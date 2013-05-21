@@ -24,6 +24,10 @@ import grp
 import logging
 import threading
 import subprocess
+try:
+  import json
+except ImportError:
+  import simplejson as json
 
 import ldap_access
 from ldap import LDAPError
@@ -52,7 +56,11 @@ __groups_lock = threading.Lock()
 
 
 def list_users(request):
-  return render("list_users.mako", request, dict(users=User.objects.all(), request=request))
+  return render("list_users.mako", request, {
+      'users': User.objects.all(),
+      'users_json': json.dumps(list(User.objects.values_list('id', flat=True))),
+      'request': request
+  })
 
 
 def list_groups(request):
@@ -63,34 +71,27 @@ def list_permissions(request):
   return render("list_permissions.mako", request, dict(permissions=HuePermission.objects.all()))
 
 
-def delete_user(request, username):
+def delete_user(request):
   if not request.user.is_superuser:
     raise PopupException(_("You must be a superuser to delete users."), error_code=401)
 
-  if request.method == 'POST':
-    try:
-      global __users_lock
-      __users_lock.acquire()
-      try:
-        if username == request.user.username:
-          raise PopupException(_("You cannot remove yourself."), error_code=401)
-        user = User.objects.get(username=username)
-        # Since profiles are lazily created, they may not exist.
-        try:
-          user_profile = UserProfile.objects.get(user=user)
-          user_profile.delete()
-        except UserProfile.DoesNotExist, e:
-          pass
-        user.delete()
-      finally:
-        __users_lock.release()
+  if request.method != 'POST':
+    raise PopupException(_('A POST request is required.'))
 
-      request.info(_('The user was deleted.'))
-      return redirect(reverse(list_users))
-    except User.DoesNotExist:
-      raise PopupException(_("User not found."), error_code=404)
-  else:
-    return render("delete_user.mako", request, dict(path=request.path, username=username))
+  ids = request.POST.getlist('user_ids')
+  global __users_lock
+  __users_lock.acquire()
+  try:
+    if str(request.user.id) in ids:
+      raise PopupException(_("You cannot remove yourself."), error_code=401)
+
+    UserProfile.objects.filter(user__id__in=ids).delete()
+    User.objects.filter(id__in=ids).delete()
+  finally:
+    __users_lock.release()
+
+  request.info(_('The users were deleted.'))
+  return redirect(reverse(list_users))
 
 
 def delete_group(request, name):
@@ -148,15 +149,10 @@ def edit_user(request, username=None):
     if form.is_valid(): # All validation rules pass
       if instance is None:
         instance = form.save()
-        # Create profile for new users.
         get_profile(instance)
       else:
-        #
-        # Check for 3 more conditions:
-        # (1) A user cannot inactivate oneself;
-        # (2) Non-superuser cannot promote himself; and
-        # (3) The last active superuser cannot demote/inactivate himself.
-        #
+        if username != form.instance.username:
+          raise PopupException(_("You cannot change a username."), error_code=401)
         if request.user.username == username and not form.instance.is_active:
           raise PopupException(_("You cannot make yourself inactive."), error_code=401)
 
@@ -322,8 +318,9 @@ def add_ldap_groups(request):
       groupname_pattern = form.cleaned_data['groupname_pattern']
       import_by_dn = form.cleaned_data['dn']
       import_members = form.cleaned_data['import_members']
+      import_members_recursive = form.cleaned_data['import_members_recursive']
       try:
-        groups = import_ldap_groups(groupname_pattern, import_members, import_by_dn)
+        groups = import_ldap_groups(groupname_pattern, import_members, import_members_recursive, import_by_dn)
       except LDAPError, e:
         LOG.error(_("LDAP Exception: %s") % e)
         raise PopupException(_('There was an error when communicating with LDAP'), detail=str(e))
@@ -503,13 +500,14 @@ def _import_ldap_users(username_pattern, import_by_dn=False):
   return imported_users
 
 
-def _import_ldap_groups(groupname_pattern, import_members=False, import_by_dn=False):
+def _import_ldap_groups(groupname_pattern, import_members=False, recursive_import_members=False, import_by_dn=False):
   """
   Import a group from LDAP. If import_members is true, this will also import any
   LDAP users that exist within the group.
   """
   conn = ldap_access.get_connection()
   group_info = conn.find_groups(groupname_pattern, import_by_dn)
+
   if not group_info:
     LOG.warn(_("Could not get LDAP details for group pattern %s") % groupname_pattern)
     return None
@@ -526,19 +524,27 @@ def _import_ldap_groups(groupname_pattern, import_members=False, import_by_dn=Fa
       return None
 
     LdapGroup.objects.get_or_create(group=group)
-
     group.user_set.clear()
-    for member in ldap_info['members']:
+
+    # Find members for group and subgoups
+    members = ldap_info['members']
+    if recursive_import_members:
+      sub_group_info = conn.find_groups(ldap_info['dn'], True)
+      for sub_ldap_info in sub_group_info:
+        members.extend(sub_ldap_info['members'])
+
+    # Import/fetch users
+    for member in members:
       users = []
 
       if import_members:
-        LOG.debug(_("Importing user %s") % member)
+        LOG.debug("Importing user %s" % str(member))
         users = _import_ldap_users(member, import_by_dn=True)
 
       else:
         user_info = conn.find_users(member, find_by_dn=True)
         if len(user_info) > 1:
-          LOG.warn(_('Found multiple users for member %s.') % member)
+          LOG.warn('Found multiple users for member %s.' % member)
         else:
           for ldap_info in user_info:
             try:
@@ -552,7 +558,7 @@ def _import_ldap_groups(groupname_pattern, import_members=False, import_by_dn=Fa
         # at the user
         continue
 
-      LOG.debug(_("Adding member %s represented as users (should be a single user) %s to group %s") % (member, str(users), group.name))
+      LOG.debug("Adding member %s represented as users (should be a single user) %s to group %s" % (str(member), str(users), str(group.name)))
       for user in users:
         group.user_set.add(user)
 
@@ -566,8 +572,8 @@ def import_ldap_users(user_pattern, import_by_dn):
   return _import_ldap_users(user_pattern, import_by_dn)
 
 
-def import_ldap_groups(group_pattern, import_members, import_by_dn):
-  return _import_ldap_groups(group_pattern, import_members, import_by_dn)
+def import_ldap_groups(group_pattern, import_members, import_members_recursive, import_by_dn):
+  return _import_ldap_groups(group_pattern, import_members, import_members_recursive, import_by_dn)
 
 
 def sync_ldap_users():
