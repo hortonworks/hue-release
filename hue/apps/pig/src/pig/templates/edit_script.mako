@@ -341,6 +341,9 @@ call_popup_var_edit($(this)).done(function() {
                 $("#job_info_outer").prepend(data.text);
                 job_id = data.job_id;
                 ping_job(job_id);
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                $("#failure_info").html(xhr.responseText);
             }
         });
        });
