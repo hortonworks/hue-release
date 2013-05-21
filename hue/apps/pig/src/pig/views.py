@@ -19,23 +19,21 @@ import logging
 import simplejson as json
 from datetime import datetime
 
-from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_util import login_notrequired, render
-from filebrowser.views import _do_newfile_save, _file_reader
+from filebrowser.views import _do_newfile_save, _file_reader, _upload_file
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
-from pig.forms import PigScriptForm, UDFForm
+from pig.forms import PigScriptForm
 from pig import conf
 
 LOG = logging.getLogger(__name__)
 
 UDF_PATH = conf.UDF_PATH.get()
-FILE_PATTERN = re.compile(r"[^\w\d_\-\.]+")
 
 
 def index(request, obj_id=None):
@@ -110,35 +108,8 @@ def script_clone(request, obj_id):
 
 
 def udf_create(request):
-    form = UDFForm(request.POST, request.FILES)
-    if not form.is_valid():
-        return HttpResponse(json.dumps({"status": 500, "error": "Error in upload form: %s" % form.errors}))
-    uploaded_file = request.FILES['hdfs_file']
-    file_name = re.sub(FILE_PATTERN, "", uploaded_file.name)
-    dest = request.fs.join(UDF_PATH, file_name)
-    tmp_file = uploaded_file.get_temp_path()
-    username = request.user.username
-
-    if not request.fs.exists(UDF_PATH):
-        try:
-            request.fs.mkdir(UDF_PATH)
-        except:
-            pass
-    try:
-        # Temp file is created by superuser. Chown the file.
-        request.fs.do_as_superuser(request.fs.chmod, tmp_file, 0644)
-        request.fs.do_as_superuser(request.fs.chown, tmp_file, username, username)
-        # Move the file to where it belongs
-        request.fs.rename(uploaded_file.get_temp_path(), dest)
-    except IOError, ex:
-        try:
-            request.fs.exists(dest)
-            msg = _('Destination %(name)s already exists.' % {'name': dest})
-        except Exception:
-            msg = _('Copy to "%(name)s failed: %(error)s') % {'name': dest, 'error': ex}
-        return HttpResponse(json.dumps({"status": 500, "error": msg}))
-
-    UDF.objects.create(url=dest, file_name=file_name, owner=request.user)
+    res = _upload_file(request)
+    UDF.objects.create(url=res['dest'], file_name=request.FILES['hdfs_file'].name, owner=request.user)
     return HttpResponse(json.dumps({"status": 0}))
 
 

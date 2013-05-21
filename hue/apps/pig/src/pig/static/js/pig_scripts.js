@@ -417,6 +417,7 @@ $(document).ready(function(){
     });
 
   var uploader = new qq.FileUploader({
+          debug: true,
           element: document.getElementById('udf_file_upload'),
           allowedExtensions: ["jar"],
           action: $("#udfs_form").attr("action"),
@@ -427,11 +428,12 @@ $(document).ready(function(){
                     '<ul class="qq-upload-list"></ul>' +
                     '</div>',
           params:{
+            dest: $("#udfs_form").data("destination"),
             fileFieldLabel:"hdfs_file"
           },
           onComplete:function (id, fileName, response) {
             if (response.status != 0) {
-              $.jHueNotify.error("Error: " + (response['error'] ? response['error'] : "Error occured"));
+              $.jHueNotify.error("Error: " + (response['error'] ? response['error'] : " occured. Please check udf_path setting in hue.ini" ));
             } else {
               window.location.reload(true);
             }
