@@ -34,7 +34,7 @@ var Templates = (function($, ko) {
         ssh: 'static/templates/actions/ssh.html',
         shell: 'static/templates/actions/shell.html',
         email: 'static/templates/actions/email.html',
-        distcp: 'static/templates/actions/distcp.html',
+        distcp: 'static/templates/actions/distcp.html'
       },
       partials: {
         name: 'static/templates/widgets/text.html',
@@ -44,11 +44,11 @@ var Templates = (function($, ko) {
         parameters: 'static/templates/widgets/parameters.html',
         archives: 'static/templates/widgets/filechooser.html',
         files: 'static/templates/widgets/filechooser.html',
-        mkdirs: 'static/templates/widgets/filechooser.html',
-        deletes: 'static/templates/widgets/filechooser.html',
+        mkdirs: 'static/templates/widgets/folderchooser.html',
+        deletes: 'static/templates/widgets/folderchooser.html',
         touchzs: 'static/templates/widgets/filechooser.html',
-        chmods: 'static/templates/widgets/filechooser.html',
-        moves: 'static/templates/widgets/filechooser.html',
+        chmods: 'static/templates/widgets/chmods.html',
+        moves: 'static/templates/widgets/moves.html',
         job_properties: 'static/templates/widgets/properties.html',
         prepares: 'static/templates/widgets/prepares.html',
         arguments: 'static/templates/widgets/params.html',
@@ -56,28 +56,48 @@ var Templates = (function($, ko) {
         params: 'static/templates/widgets/params.html',
         arguments_envvars: 'static/templates/widgets/params.html',
         params_arguments: 'static/templates/widgets/params.html',
+        capture_output: 'static/templates/widgets/checkbox.html'
       }
     }, options);
 
     self.initialize(options);
   };
 
+  function invertDictionary(dict) {
+    var inverse = {};
+    $.each(dict, function(key, value) {
+      if (value in inverse) {
+        inverse[value].push(key);
+      } else {
+        inverse[value] = [key];
+      }
+    });
+    return inverse;
+  }
+
   $.extend(module.prototype, {
     initialize: function(options) {
       var self = this;
 
+      var reverse_partials = invertDictionary(options.partials);
+      var reverse_actions = invertDictionary(options.actions);
+
       self.partials = {};
-      $.each(options.partials, function(widget_id, url) {
+      $.each(reverse_partials, function(url, widget_ids) {
         $.get(url, function(data) {
-          self.partials[widget_id] = data;
-        })
+          $.each(widget_ids, function(index, widget_id) {
+            self.partials[widget_id] = data;
+          });
+        });
       });
 
       self.actions = {};
-      $.each(options.actions, function(action_id, url) {
+      $.each(reverse_actions, function(url, widget_ids) {
         $.get(url, function(data) {
-          self.actions[action_id] = data;
-        })
+          $.each(widget_ids, function(index, widget_id) {
+            self.actions[widget_id] = data;
+          });
+        });
       });
     },
     getActionTemplate: function(id, context) {
@@ -87,11 +107,12 @@ var Templates = (function($, ko) {
         return el;
       } else {
         var html = Mustache.to_html(self.actions[id], context, self.partials);
-        if (el.length  == 0) el = $('<script/>');
-        el.attr('id', id);
-        el.attr('type', 'text/html');
-        el.html(html);
-        $(document.body).append(el);
+        // no jQuery here, IE8 doesn't like it.
+        var scriptTag = document.createElement('script');
+        scriptTag.setAttribute('id', id);
+        scriptTag.setAttribute('type', 'text/html');
+        scriptTag.text = html;
+        document.body.appendChild(scriptTag);
         return $('#' + id);
       }
     }

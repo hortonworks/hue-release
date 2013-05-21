@@ -52,6 +52,41 @@ from jobsub.management.commands import jobsub_setup
 LOG = logging.getLogger(__name__)
 
 
+def _list_designs(request, owner, name, order_by='-last_modified'):
+  """
+  Fetch all workflow designs.
+  parameters:
+    owner       - Substring filter by owner field
+    name        - Substring filter by design name field
+    order_by    - Order by string in django ORM format
+    is_trashed  - Boolean filter for trash or available
+  """
+  data = Workflow.objects.filter(managed=False)
+  if owner:
+      data = data.filter(owner__username__icontains=owner)
+  if name:
+      data = data.filter(name__icontains=name)
+  data = data.order_by(order_by)
+
+  designs = []
+  for design in data:
+      ko_design = {
+        'id': design.id,
+        'owner': design.owner.username,
+        # Design name is validated by workflow and node forms.
+        'name': design.name,
+        'description': design.description,
+        'node_type': design.start.get_child('to').node_type,
+        'last_modified': py_time.mktime(design.last_modified.timetuple()),
+        'editable': design.owner.id == request.user.id,
+        'is_shared': design.is_shared,
+        'is_trashed': design.is_trashed
+      }
+      designs.append(ko_design)
+
+  return designs
+
+
 def list_designs(request):
   '''
   List all workflow designs. Result sorted by last modification time.
@@ -62,29 +97,11 @@ def list_designs(request):
   data = Workflow.objects.filter(managed=False)
   owner = request.GET.get('owner', '')
   name = request.GET.get('name', '')
-  if owner:
-      data = data.filter(owner__username__icontains=owner)
-  if name:
-      data = data.filter(name__icontains=name)
-  data = data.order_by('-last_modified')
-
-  designs = []
-  for design in data:
-      ko_design = {
-          'id': design.id,
-          'owner': design.owner.username,
-          # Design name is validated by workflow and node forms.
-          'name': design.name,
-          'description': design.description,
-          'node_type': design.start.get_child('to').node_type,
-          'last_modified': py_time.mktime(design.last_modified.timetuple()),
-          'editable': design.owner.id == request.user.id,
-          'is_shared': design.is_shared
-      }
-      designs.append(ko_design)
 
   if request.is_ajax():
-    return render_json(designs, js_safe=True)
+    return render_json({
+      'designs': _list_designs(request, owner, name)
+    }, js_safe=True)
   else:
     return render("designs.mako", request, {
       'currentuser': request.user,
@@ -111,18 +128,44 @@ def delete_design(request, design_id):
   if request.method != 'POST':
     raise StructuredException(code="METHOD_NOT_ALLOWED_ERROR", message=_('Must be POST request.'), error_code=405)
 
+  skip_trash = 'skip_trash' in request.GET
+
   try:
     workflow = _get_design(design_id)
     _check_permission(request, workflow.owner.username,
-                      _("Access denied: delete workflow %(id)s.") % {'id': design_id},
+                      _("Access denied: delete design %(id)s.") % {'id': design_id},
                       allow_root=True)
-    Workflow.objects.destroy(workflow, request.fs)
+    if skip_trash:
+      Workflow.objects.destroy(workflow, request.fs)
+    else:
+      workflow.delete(skip_trash=False)
 
   except Workflow.DoesNotExist:
-    LOG.error("Trying to delete non-existent workflow (id %s)" % (design_id,))
-    raise StructuredException(code="NOT_FOUND", message=_('Could not find design.'), error_code=404)
+    raise StructuredException(code="NOT_FOUND", message=_('Could not find design %s.') % design_id, error_code=404)
 
-  return render_json({})
+  return render_json({
+    'status': 0
+  })
+
+
+def restore_design(request, design_id):
+  if request.method != 'POST':
+    raise StructuredException(code="METHOD_NOT_ALLOWED_ERROR", message=_('Must be POST request.'), error_code=405)
+
+  try:
+    workflow = _get_design(design_id)
+    _check_permission(request, workflow.owner.username,
+                      _("Access denied: delete design %(id)s.") % {'id': design_id},
+                      allow_root=True)
+    workflow.restore()
+
+  except Workflow.DoesNotExist:
+    LOG.error("Trying to restore non-existent workflow (id %s)" % (design_id,))
+    raise StructuredException(code="NOT_FOUND", message=_('Could not find design %s.') % design_id, error_code=404)
+
+  return render_json({
+    'status': 0
+  })
 
 
 def get_design(request, design_id):
@@ -162,7 +205,10 @@ def _save_design(design_id, data):
   node = workflow.start.get_child('to').get_full_node()
   node_id = node.id
   for key in data:
-    setattr(node, key, data[key])
+    if key in ('is_shared', 'capture_output', 'propagate_configuration'):
+      setattr(node, key, str(data[key]).lower() == 'true')
+    else:
+      setattr(node, key, data[key])
   node.id = node_id
   node.pk = node_id
   node.save()
