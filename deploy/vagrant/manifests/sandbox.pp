@@ -1,3 +1,4 @@
+
 $HUE_HOME="/usr/lib/hue"
 
 Exec { path => [ "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/" ] }
@@ -189,26 +190,11 @@ class sandbox {
         mode => 0755,
       }
 
-    file { 'startHiveserver2.sh':
-        path    => "/tmp/startHiveserver2.sh",
-        content => template("/vagrant/files/scripts/startHiveserver2.sh"),
-        owner   => hive,
-        mode   => 755,
-    }
-
-    file { 'startMetastore.sh':
-        path    => "/tmp/startMetastore.sh",
-        content => template("/vagrant/files/scripts/startMetastore.sh"),
-        owner   => hive,
-        mode  => 755,
-    }
 
     
     exec { 'start':
         command => "/etc/init.d/startup_script restart",
-        require => [ File["startHiveserver2.sh"],
-                     File["startMetastore.sh"],
-                     File["/usr/lib/hive/lib/hcatalog-core.jar"],
+      require => [   File["/usr/lib/hive/lib/hcatalog-core.jar"],
                      Class[sandbox_rpm],
                     ],
     }
