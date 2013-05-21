@@ -28,12 +28,12 @@ var NodeFields = {
   },
   addFile: function(data, event) {
     var self = this;
-    var prop = { name: ko.observable("") };
+    var prop = { name: ko.observable(""), dummy: ko.observable("") };
     prop.name.subscribe(function(value) {
       self.files.valueHasMutated();
     });
     self.files.push(prop);
-    $(document).trigger('add.file.design', [data]);
+    $(document).trigger('add.file.workflow', [data]);
   },
   removeArchive: function(data, event) {
     var self = this;

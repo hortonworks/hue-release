@@ -40,10 +40,13 @@ import logging
 from lxml import etree
 
 from django.core import serializers
+from django.utils.encoding import smart_str
 from django.utils.translation import ugettext as _
 
 from conf import DEFINITION_XSLT_DIR
-from models import Workflow, Node, Link, Start, End, Decision, DecisionEnd, Fork, Join
+from models import Workflow, Node, Link, Start, End,\
+                   Decision, DecisionEnd, Fork, Join,\
+                   Kill
 from utils import xml_tag
 
 LOG = logging.getLogger(__name__)
@@ -77,17 +80,39 @@ def _save_links(workflow, root):
 
   Note: The nodes that these links point to should exist already.
   Note: Nodes are looked up by workflow and name.
+  Note: Skip global configuration explicitly. Unknown knows should throw an error.
   """
+  LOG.debug("Start resolving links for workflow %s" % smart_str(workflow.name))
+
   # Iterate over nodes
   for child_el in root:
     # Skip special nodes (like comments).
     if not isinstance(child_el.tag, basestring):
       continue
 
+    # Skip kill nodes.
+    if child_el.tag.endswith('kill'):
+      continue
+
+    # Skip global configuration.
+    if child_el.tag.endswith('global'):
+      continue
+
+    tag = xml_tag(child_el)
+    name = child_el.attrib.get('name', tag)
+    LOG.debug("Getting node with data - XML TAG: %(tag)s\tLINK NAME: %(node_name)s\tWORKFLOW NAME: %(workflow_name)s" % {
+      'tag': smart_str(tag),
+      'node_name': smart_str(name),
+      'workflow_name': smart_str(workflow.name)
+    })
+
     # Iterate over node members
     # Join nodes have attributes which point to the next node
     # Start node has attribute which points to first node
-    parent = Node.objects.get(workflow=workflow, name=child_el.attrib.get('name', xml_tag(child_el))).get_full_node()
+    try:
+      parent = Node.objects.get(name=name, workflow=workflow).get_full_node()
+    except Node.DoesNotExist, e:
+      raise RuntimeError(_('Node with name %s for workflow %s does not exist.') % (name, workflow.name))
 
     if isinstance(parent, Start):
       _start_relationships(workflow, parent, child_el)
@@ -97,14 +122,19 @@ def _save_links(workflow, root):
 
     elif isinstance(parent, Decision):
       _decision_relationships(workflow, parent, child_el)
+
     else:
       _node_relationships(workflow, parent, child_el)
 
   workflow.end = End.objects.get(workflow=workflow).get_full_node()
   workflow.save()
 
+  _resolve_start_relationships(workflow)
   _resolve_fork_relationships(workflow)
   _resolve_decision_relationships(workflow)
+
+  LOG.debug("Finished resolving links for workflow %s" % smart_str(workflow.name))
+
 
 def _start_relationships(workflow, parent, child_el):
   """
@@ -125,6 +155,7 @@ def _start_relationships(workflow, parent, child_el):
   obj = Link.objects.create(name='to', parent=parent, child=child)
   obj.save()
 
+
 def _join_relationships(workflow, parent, child_el):
   """
   Resolves join node links.
@@ -142,6 +173,7 @@ def _join_relationships(workflow, parent, child_el):
 
   obj = Link.objects.create(name='to', parent=parent, child=child)
   obj.save()
+
 
 def _decision_relationships(workflow, parent, child_el):
   """
@@ -178,10 +210,12 @@ def _decision_relationships(workflow, parent, child_el):
 
       obj.save()
 
+
 def _node_relationships(workflow, parent, child_el):
   """
   Resolves node links.
   Will use 'start' link type for fork nodes and 'to' link type for all other nodes.
+  Error links will automatically resolve to a single kill node.
   """
   for el in child_el:
     # Skip special nodes (like comments).
@@ -196,6 +230,8 @@ def _node_relationships(workflow, parent, child_el):
           raise RuntimeError(_("Node %s has a link that is missing 'start' attribute.") % parent.name)
         to = el.attrib['start']
         name = 'start'
+      elif name == 'error':
+        to = 'kill'
       else:
         if 'to' not in el.attrib:
           raise RuntimeError(_("Node %s has a link that is missing 'to' attribute.") % parent.name)
@@ -208,6 +244,16 @@ def _node_relationships(workflow, parent, child_el):
 
       obj = Link.objects.create(name=name, parent=parent, child=child)
       obj.save()
+
+
+def _resolve_start_relationships(workflow):
+  if not workflow.start:
+    raise RuntimeError(_("Workflow start has not been created."))
+
+  if not workflow.end:
+    raise RuntimeError(_("Workflow end has not been created."))
+
+  obj = Link.objects.get_or_create(name='related', parent=workflow.start, child=workflow.end)
 
 
 def _resolve_fork_relationships(workflow):
@@ -391,7 +437,11 @@ def _resolve_decision_relationships(workflow):
 
 
 def _prepare_nodes(workflow, root):
-  # Deserialize
+  """
+  Prepare nodes for groking by Django
+  - Deserialize
+  - Automatically skip undefined nodes.
+  """
   objs = serializers.deserialize('xml', etree.tostring(root))
 
   # First pass is a list of nodes and their types respectively.
@@ -476,7 +526,7 @@ def _resolve_subworkflow_from_deployment_dir(fs, workflow, app_path):
   except Exception, e:
     raise RuntimeError(_("Could not find workflow at path %s") % app_path)
 
-  for subworkflow in Workflow.objects.all():
+  for subworkflow in Workflow.objects.available():
     if subworkflow.deployment_dir == app_path:
       if workflow.owner.id != subworkflow.owner.id:
         raise RuntimeError(_("Subworkflow is not owned by %s") % workflow.owner)
@@ -486,12 +536,23 @@ def _resolve_subworkflow_from_deployment_dir(fs, workflow, app_path):
 
 
 def _save_nodes(workflow, nodes):
+  """
+  Save nodes, but skip kill nodes because we create a single kill node to use.
+  """
   for node in nodes:
+    if node.node_type is 'kill':
+      continue
+
     try:
       # Do not overwrite start or end node
       Node.objects.get(workflow=workflow, node_type=node.node_type, name=node.name)
     except Node.DoesNotExist:
       node.save()
+
+  # Create kill node
+  # Only need it if we have a node to reference it with.
+  if len(nodes) > 2:
+    Kill.objects.create(name='kill', workflow=workflow, node_type=Kill.node_type)
 
 
 def import_workflow(workflow, workflow_definition, fs=None):
@@ -510,7 +571,7 @@ def import_workflow(workflow, workflow_definition, fs=None):
 
   # Ensure namespace exists
   if schema_version not in OOZIE_NAMESPACES:
-    raise RuntimeError(_("Tag with namespace %(namespace)s is not a valid. Please use one of the following namespaces: %(namespaces)s") % {
+    raise RuntimeError(_("Tag with namespace %(namespace)s is not valid. Please use one of the following namespaces: %(namespaces)s") % {
       'namespace': workflow_definition_root.tag,
       'namespaces': ', '.join(OOZIE_NAMESPACES)
     })

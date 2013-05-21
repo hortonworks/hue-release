@@ -22,7 +22,7 @@
 <%namespace name="layout" file="../navigation-bar.mako" />
 <%namespace name="utils" file="../utils.inc.mako" />
 
-${ commonheader(_("Oozie App"), "oozie", user, "100px") | n,unicode }
+${ commonheader(_("Oozie Information"), "oozie", user, "100px") | n,unicode }
 ${ layout.menubar(section='dashboard') }
 
 
@@ -55,7 +55,7 @@ ${ layout.menubar(section='dashboard') }
       <div class="tab-pane active" id="instrumentation">
         <div class="well hueWell">
             <form class="form-search">
-                ${_('Filter: ')}<input type="text" class="searchFilter input-xlarge search-query" placeholder="${_('Text Filter')}">
+                <input type="text" class="searchFilter input-xlarge search-query" placeholder="${_('Text Filter')}">
             </form>
         </div>
        <div class="tabbable">

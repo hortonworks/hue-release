@@ -47,7 +47,7 @@ var map_params = function(options, subscribe) {
 
 // Maps JSON strings to fields in the view model.
 var MAPPING_OPTIONS = {
-  ignore: ['initialize', 'toString'],
+  ignore: ['initialize', 'toString', 'copy'],
   job_properties: {
     create: function(options) {
       var parent = options.parent;
@@ -82,7 +82,7 @@ var MAPPING_OPTIONS = {
     },
     update: function(options) {
       return map_params(options, function() {});
-    },
+    }
   },
   archives: {
     create: function(options) {
@@ -110,7 +110,7 @@ var MAPPING_OPTIONS = {
       };
 
       return map_params(options, subscribe);
-    },
+    }
   },
   params: {
     create: function(options) {
@@ -138,7 +138,7 @@ var MAPPING_OPTIONS = {
       };
 
       return map_params(options, subscribe);
-    },
+    }
   },
   prepares: {
     create: function(options) {
@@ -166,15 +166,21 @@ var MAPPING_OPTIONS = {
       };
 
       return map_params(options, subscribe);
-    },
+    }
   },
   deletes: {
     create: function(options) {
       return map_params(options, function() {});
     },
+    update: function(options) {
+      return map_params(options, function() {});
+    },
   },
   mkdirs: {
     create: function(options) {
+      return map_params(options, function() {});
+    },
+    update: function(options) {
       return map_params(options, function() {});
     },
   },
@@ -192,9 +198,38 @@ var MAPPING_OPTIONS = {
 
       return map_params(options, subscribe);
     },
+    update: function(options) {
+      var parent = options.parent;
+      var subscribe = function(mapping) {
+        mapping.source.subscribe(function(value) {
+          parent.moves.valueHasMutated();
+        });
+        mapping.destination.subscribe(function(value) {
+          parent.moves.valueHasMutated();
+        });
+      };
+
+      return map_params(options, subscribe);
+    }
    },
    chmods: {
      create: function(options) {
+       var parent = options.parent;
+       var subscribe = function(mapping) {
+         mapping.path.subscribe(function(value) {
+           parent.chmods.valueHasMutated();
+         });
+         mapping.permissions.subscribe(function(value) {
+           parent.chmods.valueHasMutated();
+         });
+         mapping.recursive.subscribe(function(value) {
+           parent.chmods.valueHasMutated();
+         });
+       };
+
+       return map_params(options, subscribe);
+     },
+     update: function(options) {
        var parent = options.parent;
        var subscribe = function(mapping) {
          mapping.path.subscribe(function(value) {
@@ -215,6 +250,9 @@ var MAPPING_OPTIONS = {
      create: function(options) {
        return map_params(options, function() {});
      },
+     update: function(options) {
+       return map_params(options, function() {});
+     }
    }
 };
 
@@ -235,6 +273,17 @@ var ModelModule = function($) {
     toString: function() {
       var self = this;
       return JSON.stringify(self, null, '\t');
+    },
+
+    copy: function() {
+      var self = this;
+      var model = $.extend(true, {}, self);
+      $.each(MODEL_FIELDS_JSON, function(i, field) {
+        if (field in model && $.type(model[field]) != "string") {
+          model[field] = JSON.stringify(model[field]);
+        }
+      });
+      return model;
     }
   });
 

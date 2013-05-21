@@ -25,7 +25,7 @@
 <%namespace name="controls" file="control_utils.mako" />
 <%namespace name="workflows" file="workflow_utils.mako" />
 
-${ commonheader(_("Oozie App"), "oozie", user, "100px") | n,unicode }
+${ commonheader(_("Edit Workflow"), "oozie", user, "100px") | n,unicode }
 ${ layout.menubar(section='workflows') }
 
 
@@ -67,7 +67,7 @@ ${ layout.menubar(section='workflows') }
             <a href="${ url('oozie:schedule_workflow', workflow=workflow.id) }" title="${ _('Schedule this workflow') }" rel="tooltip" data-placement="right"><i class="icon-calendar"></i> ${ _('Schedule') }</a>
           </li>
           <li>
-            <a id="clone-btn" href="#" data-clone-url="${ url('oozie:clone_workflow', workflow=workflow.id) }" title="${ _('Clone this workflow') }" rel="tooltip" data-placement="right"><i class="icon-retweet"></i> ${ _('Clone') }</a>
+            <a id="clone-btn" href="#" data-clone-url="${ url('oozie:clone_workflow', workflow=workflow.id) }" title="${ _('Copy this workflow') }" rel="tooltip" data-placement="right"><i class="icon-retweet"></i> ${ _('Copy') }</a>
           </li>
         % endif
       </ul>
@@ -343,7 +343,7 @@ ${ controls.decision_form(node_form, link_form, default_link_form, 'decision', T
       <div class="row-fluid node-action-bar">
         <div class="span12" style="text-align:right">
           <a class="btn btn-mini edit-node-link" title="${ _('Edit') }" rel="tooltip" data-bind="attr: { 'data-node-type': node_type() }"><i class="icon-pencil"></i></a>
-          <a class="btn btn-mini clone-node-btn" title="${ _('Clone') }" rel="tooltip"><i class="icon-retweet"></i></a>
+          <a class="btn btn-mini clone-node-btn" title="${ _('Copy') }" rel="tooltip"><i class="icon-retweet"></i></a>
           <a class="btn btn-mini delete-node-btn" title="${ _('Delete') }" rel="tooltip"><i class="icon-trash"></i></a>
           &nbsp;
         </div>
@@ -624,12 +624,10 @@ $('#workflow').on('click', '.convert-node-link', function(e) {
 // Modal for cloning a node
 $('#workflow').on('click', '.clone-node-btn', function(e) {
   var node = ko.contextFor(this).$data;
-  var model_copy = $.extend(true, {}, node.model);
-  var NodeModel = nodeModelChooser(node.node_type());
-  model_copy.id = IdGeneratorTable[model_copy.node_type].nextId();
-  model_copy.name += '-copy';
-  model_copy.child_links = [];
-  var model = new NodeModel(model_copy);
+  var model = node.model.copy();
+  model.id = IdGeneratorTable[model.node_type].nextId();
+  model.name += '-copy';
+  model.child_links = [];
   var new_node = new Node(workflow, model, workflow.registry);
   workflow.registry.add(new_node.id(), new_node);
 

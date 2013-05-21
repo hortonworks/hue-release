@@ -1,3 +1,4 @@
+## -*- coding: utf-8 -*-
 ## Licensed to Cloudera, Inc. under one
 ## or more contributor license agreements.  See the NOTICE file
 ## distributed with this work for additional information
@@ -23,7 +24,7 @@
 <%namespace name="layout" file="../navigation-bar.mako" />
 <%namespace name="utils" file="../utils.inc.mako" />
 
-${ commonheader(_("Oozie App"), "oozie", user, "100px") | n,unicode }
+${ commonheader(_("Workflow Dashboard"), "oozie", user, "100px") | n,unicode }
 ${ layout.menubar(section='dashboard') }
 
 
@@ -245,7 +246,7 @@ ${ layout.menubar(section='dashboard') }
               <td>${ oozie_workflow.externalId or '-' }</td>
             </tr>
             <tr>
-              <td>${ _('Last Modification time') }</td>
+              <td>${ _('Last Modified') }</td>
               <td>${ utils.format_time(oozie_workflow.lastModTime) }</td>
             </tr>
             <tr>
@@ -277,11 +278,11 @@ ${ layout.menubar(section='dashboard') }
         </div>
 
         <div class="tab-pane" id="log">
-          <pre>${ oozie_workflow.log }</pre>
+          <pre>${ oozie_workflow.log.decode('utf-8', 'replace') }</pre>
         </div>
 
         <div class="tab-pane" id="definition" style="min-height:400px">
-          <textarea id="definitionEditor">${ oozie_workflow.definition }</textarea>
+          <textarea id="definitionEditor">${ oozie_workflow.definition.decode('utf-8', 'replace') }</textarea>
         </div>
       </div>
 

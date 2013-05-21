@@ -24,7 +24,7 @@
 <%namespace name="properties" file="coordinator_properties.mako" />
 <%namespace name="coordinator_data" file="create_coordinator_data.mako" />
 
-${ commonheader(_("Oozie App"), "oozie", user, "100px") | n,unicode }
+${ commonheader(_("Edit Coordinator"), "oozie", user, "100px") | n,unicode }
 ${ layout.menubar(section='coordinators') }
 
 <style type="text/css">
@@ -79,7 +79,7 @@ ${ layout.menubar(section='coordinators') }
           % if coordinator:
               <li class="nav-header">${ _('Actions') }</li>
               <li><a id="submit-btn" href="javascript:void(0)" data-submit-url="${ url('oozie:submit_coordinator', coordinator=coordinator.id) }" title="${ _('Submit this coordinator') }" rel="tooltip" data-placement="right"><i class="icon-play"></i> ${ _('Submit') }</a></li>
-              <li><a id="clone-btn" href="javascript:void(0)" data-clone-url="${ url('oozie:clone_coordinator', coordinator=coordinator.id) }" title="${ _('Clone this coordinator') }" rel="tooltip" data-placement="right"><i class="icon-retweet"></i> ${ _('Clone') }</a></li>
+              <li><a id="clone-btn" href="javascript:void(0)" data-clone-url="${ url('oozie:clone_coordinator', coordinator=coordinator.id) }" title="${ _('Copy this coordinator') }" rel="tooltip" data-placement="right"><i class="icon-retweet"></i> ${ _('Copy') }</a></li>
           % endif
 
         </ul>

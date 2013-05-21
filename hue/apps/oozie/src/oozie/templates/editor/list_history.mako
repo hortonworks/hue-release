@@ -24,7 +24,7 @@
 <%namespace name="layout" file="../navigation-bar.mako" />
 <%namespace name="utils" file="../utils.inc.mako" />
 
-${ commonheader(_("Oozie App"), "oozie", user, "100px") | n,unicode }
+${ commonheader(_("History"), "oozie", user, "100px") | n,unicode }
 ${ layout.menubar(section='history') }
 
 
@@ -32,7 +32,7 @@ ${ layout.menubar(section='history') }
   <h1>${ _('Submission History') }</h1>
   <div class="well hueWell">
     <form class="form-search">
-      ${ _('Filter:') } <input type="text" id="filterInput" class="input-xlarge search-query" placeholder="${ _('Search for username, name, etc...') }">
+      <input type="text" id="filterInput" class="input-xlarge search-query" placeholder="${ _('Search for username, name, etc...') }">
     </form>
   </div>
 
