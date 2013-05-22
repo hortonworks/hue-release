@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+## -*- coding: utf-8 -*-
 # Licensed to Cloudera, Inc. under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -61,7 +62,8 @@ class MockOozieApi:
   JSON_COORDINATOR_LIST = [{u'startTime': u'Sun, 01 Jul 2012 00:00:00 GMT', u'actions': [], u'frequency': 1, u'concurrency': 1, u'pauseTime': None, u'group': None, u'toString': u'Coornidator application id[0000041-120717205528122-oozie-oozi-C] status[RUNNING]', u'consoleUrl': None, u'mat_throttling': 0, u'status': u'RUNNING', u'conf': None, u'user': u'test', u'timeOut': 120, u'coordJobPath': u'hdfs://localhost:8020/user/test/demo2', u'timeUnit': u'DAY', u'coordJobId': u'0000041-120717205528122-oozie-oozi-C', u'coordJobName': u'DailyWordCount1', u'nextMaterializedTime': u'Wed, 04 Jul 2012 00:00:00 GMT', u'coordExternalId': None, u'acl': None, u'lastAction': u'Wed, 04 Jul 2012 00:00:00 GMT', u'executionPolicy': u'FIFO', u'timeZone': u'America/Los_Angeles', u'endTime': u'Wed, 04 Jul 2012 00:00:00 GMT'},
                            {u'startTime': u'Sun, 01 Jul 2012 00:00:00 GMT', u'actions': [], u'frequency': 1, u'concurrency': 1, u'pauseTime': None, u'group': None, u'toString': u'Coornidator application id[0000011-120706144403213-oozie-oozi-C] status[DONEWITHERROR]', u'consoleUrl': None, u'mat_throttling': 0, u'status': u'DONEWITHERROR', u'conf': None, u'user': u'test', u'timeOut': 120, u'coordJobPath': u'hdfs://localhost:8020/user/hue/jobsub/_romain_-design-2', u'timeUnit': u'DAY', u'coordJobId': u'0000011-120706144403213-oozie-oozi-C', u'coordJobName': u'DailyWordCount2', u'nextMaterializedTime': u'Thu, 05 Jul 2012 00:00:00 GMT', u'coordExternalId': None, u'acl': None, u'lastAction': u'Thu, 05 Jul 2012 00:00:00 GMT', u'executionPolicy': u'FIFO', u'timeZone': u'America/Los_Angeles', u'endTime': u'Wed, 04 Jul 2012 18:54:00 GMT'},
                            {u'startTime': u'Sun, 01 Jul 2012 00:00:00 GMT', u'actions': [], u'frequency': 1, u'concurrency': 1, u'pauseTime': None, u'group': None, u'toString': u'Coornidator application id[0000010-120706144403213-oozie-oozi-C] status[DONEWITHERROR]', u'consoleUrl': None, u'mat_throttling': 0, u'status': u'DONEWITHERROR', u'conf': None, u'user': u'test', u'timeOut': 120, u'coordJobPath': u'hdfs://localhost:8020/user/hue/jobsub/_romain_-design-2', u'timeUnit': u'DAY', u'coordJobId': u'0000010-120706144403213-oozie-oozi-C', u'coordJobName': u'DailyWordCount3', u'nextMaterializedTime': u'Thu, 05 Jul 2012 00:00:00 GMT', u'coordExternalId': None, u'acl': None, u'lastAction': u'Thu, 05 Jul 2012 00:00:00 GMT', u'executionPolicy': u'FIFO', u'timeZone': u'America/Los_Angeles', u'endTime': u'Wed, 04 Jul 2012 18:54:00 GMT'},
-                           {u'startTime': u'Sun, 01 Jul 2012 00:00:00 GMT', u'actions': [], u'frequency': 1, u'concurrency': 1, u'pauseTime': None, u'group': None, u'toString': u'Coornidator application id[0000009-120706144403213-oozie-oozi-C] status[DONEWITHERROR]', u'consoleUrl': None, u'mat_throttling': 0, u'status': u'DONEWITHERROR', u'conf': None, u'user': u'test', u'timeOut': 120, u'coordJobPath': u'hdfs://localhost:8020/user/hue/jobsub/_romain_-design-2', u'timeUnit': u'DAY', u'coordJobId': u'0000009-120706144403213-oozie-oozi-C', u'coordJobName': u'DailyWordCount4', u'nextMaterializedTime': u'Thu, 05 Jul 2012 00:00:00 GMT', u'coordExternalId': None, u'acl': None, u'lastAction': u'Thu, 05 Jul 2012 00:00:00 GMT', u'executionPolicy': u'FIFO', u'timeZone': u'America/Los_Angeles', u'endTime': u'Wed, 04 Jul 2012 18:54:00 GMT'}]
+                           {u'startTime': u'Sun, 01 Jul 2012 00:00:00 GMT', u'actions': [], u'frequency': 1, u'concurrency': 1, u'pauseTime': None, u'group': None, u'toString': u'Coornidator application id[0000009-120706144403213-oozie-oozi-C] status[DONEWITHERROR]', u'consoleUrl': None, u'mat_throttling': 0, u'status': u'DONEWITHERROR', u'conf': None, u'user': u'test', u'timeOut': 120, u'coordJobPath': u'hdfs://localhost:8020/user/hue/jobsub/_romain_-design-2', u'timeUnit': u'DAY', u'coordJobId': u'0000009-120706144403213-oozie-oozi-C', u'coordJobName': u'DailyWordCount4', u'nextMaterializedTime': u'Thu, 05 Jul 2012 00:00:00 GMT', u'coordExternalId': None, u'acl': None, u'lastAction': u'Thu, 05 Jul 2012 00:00:00 GMT', u'executionPolicy': u'FIFO', u'timeZone': u'America/Los_Angeles', u'endTime': u'Wed, 04 Jul 2012 18:54:00 GMT'},
+                           {u'startTime': u'Sun, 01 Jul 2012 00:00:00 GMT', u'actions': [], u'frequency': 1, u'concurrency': 1, u'pauseTime': None, u'group': None, u'toString': u'Coornidator application id[00000012-120706144403213-oozie-oozi-C] status[DONEWITHERROR]', u'consoleUrl': None, u'mat_throttling': 0, u'status': u'DONEWITHERROR', u'conf': None, u'user': u'test', u'timeOut': 120, u'coordJobPath': u'hdfs://localhost:8020/user/hue/jobsub/_romain_-design-2', u'timeUnit': u'DAY', u'coordJobId': u'0000009-120706144403213-oozie-oozi-C', u'coordJobName': u'DåilyWordCount5', u'nextMaterializedTime': u'Thu, 05 Jul 2012 00:00:00 GMT', u'coordExternalId': None, u'acl': None, u'lastAction': u'Thu, 05 Jul 2012 00:00:00 GMT', u'executionPolicy': u'FIFO', u'timeZone': u'America/Los_Angeles', u'endTime': u'Wed, 04 Jul 2012 18:54:00 GMT'}]
   COORDINATOR_IDS = [coord['coordJobId'] for coord in JSON_COORDINATOR_LIST]
   COORDINATOR_DICT = dict([(coord['coordJobId'], coord) for coord in JSON_COORDINATOR_LIST])
 
@@ -184,9 +186,6 @@ class OozieMockBase(object):
     oozie_api.OozieApi = MockOozieApi
     oozie_api._api_cache = None
 
-    History.objects.all().delete()
-    Coordinator.objects.all().delete()
-
     self.c = make_logged_in_client(is_superuser=False)
     grant_access("test", "test", "oozie")
     self.user = User.objects.get(username='test')
@@ -197,6 +196,10 @@ class OozieMockBase(object):
     oozie_api.OozieApi = oozie_api.OriginalOozieApi
     Workflow.objects.check_workspace = Workflow.objects.original_check_workspace
     oozie_api._api_cache = None
+
+    History.objects.all().delete()
+    Coordinator.objects.all().delete()
+    Bundle.objects.all().delete()
 
 
   def setup_simple_workflow(self):
@@ -245,6 +248,20 @@ class OozieMockBase(object):
     Link(parent=action3, child=self.wf.end, name="ok").save()
 
 
+  def create_noop_workflow(self, name='noop-test'):
+    wf = Workflow.objects.new_workflow(self.user)
+    wf.name = name
+    wf.save()
+    wf.start.workflow = wf
+    wf.end.workflow = wf
+    wf.start.save()
+    wf.end.save()
+    Kill.objects.create(name='kill', workflow=wf, node_type=Kill.node_type)
+    Link.objects.create(parent=wf.start, child=wf.end, name='related')
+    Link.objects.create(parent=wf.start, child=wf.end, name="to")
+    return wf
+
+
 class OozieBase(OozieServerProvider):
   requires_hadoop = True
 
@@ -265,7 +282,7 @@ class OozieBase(OozieServerProvider):
     if _INITIALIZED:
       return
 
-    self.c.post(reverse('oozie:setup_app'))
+    self.c.post(reverse('oozie:install_examples'))
     self.cluster.fs.do_as_user('test', self.cluster.fs.create_home_dir, '/user/test')
     self.cluster.fs.do_as_superuser(self.cluster.fs.chmod, '/user/test', 0777, True)
     try:
@@ -394,6 +411,108 @@ class TestAPI(OozieMockBase):
 
     response = self.c.post(reverse('oozie:workflow_save', kwargs={'workflow': self.wf.pk}), data={'workflow': workflow_json}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
     assert_equal(200, response.status_code)
+
+  def test_workflow_add_subworkflow_node(self):
+    wf = self.create_noop_workflow()
+    try:
+      subworkflow_name = "subworkflow-1"
+      subworkflow_id = "subworkflow:1"
+      subworkflow_json = """{
+        "description": "",
+        "workflow": %(workflow)d,
+        "child_links": [
+          {
+            "comment": "",
+            "name": "ok",
+            "parent": "%(id)s",
+            "child": %(end)d
+          },
+          {
+            "comment": "",
+            "name": "error",
+            "parent": "%(id)s",
+            "child": %(kill)d
+          }
+        ],
+        "node_type": "subworkflow",
+        "sub_workflow": %(subworkflow)d,
+        "job_properties": "[]",
+        "name": "%(name)s",
+        "id": "%(id)s",
+        "propagate_configuration": true
+      }"""
+      subworkflow_json = subworkflow_json % {
+        'workflow': wf.id,
+        'subworkflow': self.wf.id,
+        'end': wf.end.id,
+        'kill': Kill.objects.get(workflow=wf).id,
+        'name': subworkflow_name,
+        'id': subworkflow_id
+      }
+      workflow_dict = workflow_to_dict(wf)
+      workflow_dict['nodes'].append(json.loads(subworkflow_json))
+      workflow_dict['nodes'][0]['child_links'][1]['child'] = subworkflow_id
+      del workflow_dict['nodes'][0]['child_links'][1]['id']
+      workflow_json = json.dumps(workflow_dict)
+
+      response = self.c.post(reverse('oozie:workflow_save', kwargs={'workflow': wf.pk}), data={'workflow': workflow_json})
+      test_response_json = response.content
+      test_response_json_object = json.loads(test_response_json)
+      assert_equal(0, test_response_json_object['status'], workflow_json)
+    finally:
+      wf.delete()
+
+
+  def test_workflow_add_mapreduce_node(self):
+    wf = self.create_noop_workflow()
+    try:
+      node_name = "mr-1"
+      node_id = "mapreduce:1"
+      node_json = """{
+        "description": "",
+        "workflow": %(workflow)d,
+        "child_links": [
+          {
+            "comment": "",
+            "name": "ok",
+            "parent": "%(id)s",
+            "child": %(end)d
+          },
+          {
+            "comment": "",
+            "name": "error",
+            "parent": "%(id)s",
+            "child": %(kill)d
+          }
+        ],
+        "node_type": "mapreduce",
+        "jar_path": "test",
+        "job_properties": "[]",
+        "files": "[]",
+        "archives": "[]",
+        "prepares": "[]",
+        "name": "%(name)s",
+        "id": "%(id)s"
+      }"""
+      node_json = node_json % {
+        'workflow': wf.id,
+        'end': wf.end.id,
+        'kill': Kill.objects.get(workflow=wf).id,
+        'name': node_name,
+        'id': node_id
+      }
+      workflow_dict = workflow_to_dict(wf)
+      workflow_dict['nodes'].append(json.loads(node_json))
+      workflow_dict['nodes'][0]['child_links'][1]['child'] = node_id
+      del workflow_dict['nodes'][0]['child_links'][1]['id']
+      workflow_json = json.dumps(workflow_dict)
+
+      response = self.c.post(reverse('oozie:workflow_save', kwargs={'workflow': wf.pk}), data={'workflow': workflow_json})
+      test_response_json = response.content
+      test_response_json_object = json.loads(test_response_json)
+      assert_equal(0, test_response_json_object['status'], workflow_json)
+    finally:
+      wf.delete()
 
   def test_workflow(self):
     response = self.c.get(reverse('oozie:workflow', kwargs={'workflow': self.wf.pk}))
@@ -934,7 +1053,7 @@ class TestEditor(OozieMockBase):
             '</configuration>\W+'
         '</sub-workflow>', xml, re.MULTILINE), xml)
 
-    wf2.delete()
+    wf2.delete(skip_trash=True)
 
   def test_workflow_flatten_list(self):
     assert_equal('[<Start: start>, <Mapreduce: action-name-1>, <Mapreduce: action-name-2>, <Mapreduce: action-name-3>, '
@@ -985,13 +1104,13 @@ class TestEditor(OozieMockBase):
 
   def test_clone_coordinator(self):
     coord = create_coordinator(self.wf, self.c)
-    coordinator_count = Coordinator.objects.count()
+    coordinator_count = Coordinator.objects.available().count()
 
     response = self.c.post(reverse('oozie:clone_coordinator', args=[coord.id]), {}, follow=True)
 
     coord2 = Coordinator.objects.latest('id')
     assert_not_equal(coord.id, coord2.id)
-    assert_equal(coordinator_count + 1, Coordinator.objects.count(), response)
+    assert_equal(coordinator_count + 1, Coordinator.objects.available().count(), response)
 
     assert_equal(coord.dataset_set.count(), coord2.dataset_set.count())
     assert_equal(coord.datainput_set.count(), coord2.datainput_set.count())
@@ -1014,7 +1133,7 @@ class TestEditor(OozieMockBase):
 
     # Bulk delete
     response = self.c.post(reverse('oozie:delete_coordinator'), {'job_selection': [coord.id, coord2.id]}, follow=True)
-    assert_equal(coordinator_count - 1, Coordinator.objects.count(), response)
+    assert_equal(coordinator_count - 1, Coordinator.objects.available().count(), response)
 
 
   def test_coordinator_workflow_access_permissions(self):
@@ -1207,8 +1326,8 @@ class TestEditor(OozieMockBase):
     create_coordinator_data(coord, self.c)
 
 
-  def test_setup_app(self):
-    self.c.post(reverse('oozie:setup_app'))
+  def test_install_examples(self):
+    self.c.post(reverse('oozie:install_examples'))
 
 
   def test_workflow_prepare(self):
@@ -1292,6 +1411,14 @@ class TestEditor(OozieMockBase):
                   ],
                   response.context['params_form'].initial)
 
+  def test_trash_workflow(self):
+    previous_trashed = len(Workflow.objects.trashed())
+    previous_available = len(Workflow.objects.available())
+    response = self.c.post(reverse('oozie:delete_workflow'), {'job_selection': [self.wf.id]}, follow=True)
+    assert_equal(200, response.status_code, response)
+    assert_equal(previous_trashed + 1, len(Workflow.objects.trashed()))
+    assert_equal(previous_available - 1, len(Workflow.objects.available()))
+
 
 class TestEditorBundle(OozieMockBase):
 
@@ -1306,13 +1433,13 @@ class TestEditorBundle(OozieMockBase):
 
   def test_clone_bundle(self):
     bundle = create_bundle(self.c)
-    bundle_count = Bundle.objects.count()
+    bundle_count = Bundle.objects.available().count()
 
     response = self.c.post(reverse('oozie:clone_bundle', args=[bundle.id]), {}, follow=True)
 
     bundle2 = Bundle.objects.latest('id')
     assert_not_equal(bundle.id, bundle2.id)
-    assert_equal(bundle_count + 1, Bundle.objects.count(), response)
+    assert_equal(bundle_count + 1, Bundle.objects.available().count(), response)
 
     assert_equal(bundle.coordinators.count(), bundle.coordinators.all().count())
 
@@ -1327,16 +1454,16 @@ class TestEditorBundle(OozieMockBase):
 
     # Bulk delete
     response = self.c.post(reverse('oozie:delete_bundle'), {'job_selection': [bundle.id, bundle2.id]}, follow=True)
-    assert_equal(bundle_count - 1, Bundle.objects.count(), response)
+    assert_equal(bundle_count - 1, Bundle.objects.available().count(), response)
 
 
   def test_delete_bundle(self):
     bundle = create_bundle(self.c)
-    bundle_count = Bundle.objects.count()
+    bundle_count = Bundle.objects.available().count()
 
     response = self.c.post(reverse('oozie:delete_bundle'), {'job_selection': [bundle.id]}, follow=True)
 
-    assert_equal(bundle_count - 1, Bundle.objects.count(), response)
+    assert_equal(bundle_count - 1, Bundle.objects.available().count(), response)
 
 
   def test_bundle_gen_xml(self):
@@ -1449,10 +1576,27 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(2, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(1, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(2, len(Link.objects.filter(parent__workflow=workflow)))
     assert_equal('done', Node.objects.get(workflow=workflow, node_type='end').name)
     assert_equal('uri:oozie:workflow:0.4', workflow.schema_version)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
+
+
+  def test_import_workflow_basic_global_config(self):
+    """
+    Validates import for basic workflow: start, end, and global configuration.
+    """
+    workflow = Workflow.objects.new_workflow(self.user)
+    workflow.save()
+    f = open('apps/oozie/src/oozie/test_data/0.4/test-basic-global-config.xml')
+    import_workflow(workflow, f.read())
+    f.close()
+    workflow.save()
+    assert_equal(2, len(Node.objects.filter(workflow=workflow)))
+    assert_equal(2, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal('done', Node.objects.get(workflow=workflow, node_type='end').name)
+    assert_equal('uri:oozie:workflow:0.4', workflow.schema_version)
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_decision(self):
@@ -1466,12 +1610,12 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(12, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(20, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(21, len(Link.objects.filter(parent__workflow=workflow)))
     assert_equal(1, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='decision', comment='${1 gt 2}', name='start')))
     assert_equal(1, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='decision', comment='', name='start')))
     assert_equal(1, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='decision', name='default')))
     assert_equal(1, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='decision', child__node_type='decisionend', name='related')))
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_decision_complex(self):
@@ -1482,12 +1626,12 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(14, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(26, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(27, len(Link.objects.filter(parent__workflow=workflow)))
     assert_equal(3, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='decision', comment='${ 1 gt 2 }', name='start')))
     assert_equal(0, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='decision', comment='', name='start')))
     assert_equal(3, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='decision', name='default')))
     assert_equal(3, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='decision', child__node_type='decisionend', name='related')))
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_distcp(self):
@@ -1501,9 +1645,9 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(4, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(3, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(4, len(Link.objects.filter(parent__workflow=workflow)))
     assert_equal('[{"type":"arg","value":"-overwrite"},{"type":"arg","value":"-m"},{"type":"arg","value":"${MAP_NUMBER}"},{"type":"arg","value":"/user/hue/oozie/workspaces/data"},{"type":"arg","value":"${OUTPUT}"}]', Node.objects.get(workflow=workflow, node_type='distcp').get_full_node().params)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_forks(self):
@@ -1514,11 +1658,11 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(12, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(19, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(20, len(Link.objects.filter(parent__workflow=workflow)))
     assert_equal(6, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='fork')))
     assert_equal(4, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='fork', name='start')))
     assert_equal(2, len(Link.objects.filter(parent__workflow=workflow, parent__node_type='fork', child__node_type='join', name='related')))
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_mapreduce(self):
@@ -1532,9 +1676,9 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(4, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(3, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(4, len(Link.objects.filter(parent__workflow=workflow)))
     assert_equal('[{"name":"mapred.reduce.tasks","value":"1"},{"name":"mapred.mapper.class","value":"org.apache.hadoop.examples.SleepJob"},{"name":"mapred.reducer.class","value":"org.apache.hadoop.examples.SleepJob"},{"name":"mapred.mapoutput.key.class","value":"org.apache.hadoop.io.IntWritable"},{"name":"mapred.mapoutput.value.class","value":"org.apache.hadoop.io.NullWritable"},{"name":"mapred.output.format.class","value":"org.apache.hadoop.mapred.lib.NullOutputFormat"},{"name":"mapred.input.format.class","value":"org.apache.hadoop.examples.SleepJob$SleepInputFormat"},{"name":"mapred.partitioner.class","value":"org.apache.hadoop.examples.SleepJob"},{"name":"mapred.speculative.execution","value":"false"},{"name":"sleep.job.map.sleep.time","value":"0"},{"name":"sleep.job.reduce.sleep.time","value":"1"}]', Node.objects.get(workflow=workflow, node_type='mapreduce').get_full_node().job_properties)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_pig(self):
@@ -1549,10 +1693,10 @@ class TestImportWorkflow04(OozieMockBase):
     workflow.save()
     node = Node.objects.get(workflow=workflow, node_type='pig').get_full_node()
     assert_equal(4, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(3, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(4, len(Link.objects.filter(parent__workflow=workflow)))
     assert_equal('aggregate.pig', node.script_path)
     assert_equal('[{"type":"argument","value":"-param"},{"type":"argument","value":"INPUT=/user/hue/oozie/workspaces/data"},{"type":"argument","value":"-param"},{"type":"argument","value":"OUTPUT=${output}"}]', node.params)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_sqoop(self):
@@ -1566,11 +1710,11 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(4, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(3, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(4, len(Link.objects.filter(parent__workflow=workflow)))
     node = Node.objects.get(workflow=workflow, node_type='sqoop').get_full_node()
     assert_equal('["db.hsqldb.properties#db.hsqldb.properties","db.hsqldb.script#db.hsqldb.script"]', node.files)
     assert_equal('import --connect jdbc:hsqldb:file:db.hsqldb --table TT --target-dir ${output} -m 1', node.script_path)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_java(self):
@@ -1584,7 +1728,7 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(5, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(5, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(6, len(Link.objects.filter(parent__workflow=workflow)))
     nodes = [Node.objects.filter(workflow=workflow, node_type='java')[0].get_full_node(),
              Node.objects.filter(workflow=workflow, node_type='java')[1].get_full_node()]
     assert_equal('org.apache.hadoop.examples.terasort.TeraGen', nodes[0].main_class)
@@ -1593,7 +1737,7 @@ class TestImportWorkflow04(OozieMockBase):
     assert_equal('${output_dir}/teragen ${output_dir}/terasort', nodes[1].args)
     assert_true(nodes[0].capture_output)
     assert_false(nodes[1].capture_output)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_shell(self):
@@ -1604,7 +1748,7 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(5, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(5, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(6, len(Link.objects.filter(parent__workflow=workflow)))
     nodes = [Node.objects.filter(workflow=workflow, node_type='shell')[0].get_full_node(),
              Node.objects.filter(workflow=workflow, node_type='shell')[1].get_full_node()]
     assert_equal('shell-1', nodes[0].name)
@@ -1613,7 +1757,7 @@ class TestImportWorkflow04(OozieMockBase):
     assert_equal('hello.py', nodes[0].command)
     assert_true(nodes[0].capture_output)
     assert_false(nodes[1].capture_output)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_fs(self):
@@ -1627,14 +1771,14 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(4, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(3, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(4, len(Link.objects.filter(parent__workflow=workflow)))
     node = Node.objects.get(workflow=workflow, node_type='fs').get_full_node()
     assert_equal('[{"path":"${nameNode}${output}/testfs/renamed","permissions":"700","recursive":"false"}]', node.chmods)
     assert_equal('[{"name":"${nameNode}${output}/testfs"}]', node.deletes)
     assert_equal('["${nameNode}${output}/testfs","${nameNode}${output}/testfs/source"]', node.mkdirs)
     assert_equal('[{"source":"${nameNode}${output}/testfs/source","destination":"${nameNode}${output}/testfs/renamed"}]', node.moves)
     assert_equal('["${nameNode}${output}/testfs/new_file"]', node.touchzs)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_email(self):
@@ -1648,13 +1792,13 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(4, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(3, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(4, len(Link.objects.filter(parent__workflow=workflow)))
     node = Node.objects.get(workflow=workflow, node_type='email').get_full_node()
     assert_equal('example@example.org', node.to)
     assert_equal('', node.cc)
     assert_equal('I love', node.subject)
     assert_equal('Hue', node.body)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
   def test_import_workflow_generic(self):
@@ -1668,10 +1812,36 @@ class TestImportWorkflow04(OozieMockBase):
     f.close()
     workflow.save()
     assert_equal(4, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(3, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(4, len(Link.objects.filter(parent__workflow=workflow)))
     node = Node.objects.get(workflow=workflow, node_type='generic').get_full_node()
     assert_equal("<bleh test=\"test\">\n              <test>test</test>\n        </bleh>", node.xml)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
+
+
+  def test_import_multi_kill_node(self):
+    """
+    Validates import for multiple kill nodes: xml.
+
+    Kill nodes should be skipped and a single kill node should be created.
+    """
+    workflow = Workflow.objects.new_workflow(self.user)
+    workflow.save()
+    f = open('apps/oozie/src/oozie/test_data/0.4/test-java-multiple-kill.xml')
+    import_workflow(workflow, f.read())
+    f.close()
+    workflow.save()
+    assert_equal('kill', Kill.objects.get(workflow=workflow).name)
+    assert_equal(5, len(Node.objects.filter(workflow=workflow)))
+    assert_equal(6, len(Link.objects.filter(parent__workflow=workflow)))
+    nodes = [Node.objects.filter(workflow=workflow, node_type='java')[0].get_full_node(),
+             Node.objects.filter(workflow=workflow, node_type='java')[1].get_full_node()]
+    assert_equal('org.apache.hadoop.examples.terasort.TeraGen', nodes[0].main_class)
+    assert_equal('${records} ${output_dir}/teragen', nodes[0].args)
+    assert_equal('org.apache.hadoop.examples.terasort.TeraSort', nodes[1].main_class)
+    assert_equal('${output_dir}/teragen ${output_dir}/terasort', nodes[1].args)
+    assert_true(nodes[0].capture_output)
+    assert_false(nodes[1].capture_output)
+    workflow.delete(skip_trash=True)
 
 
 class TestPermissions(OozieBase):
@@ -1681,6 +1851,11 @@ class TestPermissions(OozieBase):
     self.wf = create_workflow(self.c)
     self.setup_simple_workflow()
 
+  def tearDown(self):
+    try:
+      self.wf.delete(skip_trash=True)
+    except:
+      pass
 
   def test_workflow_permissions(self):
     response = self.c.get(reverse('oozie:edit_workflow', args=[self.wf.id]))
@@ -1769,7 +1944,7 @@ class TestPermissions(OozieBase):
     finally:
       finish()
 
-    # Delete
+    # Move to trash
     finish = SHARE_JOBS.set_for_testing(False)
     try:
       response = client_not_me.post(reverse('oozie:delete_workflow'), {'job_selection': [self.wf.id]})
@@ -1778,6 +1953,28 @@ class TestPermissions(OozieBase):
       finish()
 
     response = self.c.post(reverse('oozie:delete_workflow'), {'job_selection': [self.wf.id]}, follow=True)
+    assert_equal(200, response.status_code)
+
+    # Trash
+    finish = SHARE_JOBS.set_for_testing(False)
+    try:
+      response = client_not_me.get(reverse('oozie:list_trashed_workflows'))
+      assert_false(self.wf.name in response.content, response.content)
+    finally:
+      finish()
+
+    response = self.c.get(reverse('oozie:list_trashed_workflows'))
+    assert_true(self.wf.name in response.content, response.content)
+
+    # Restore
+    finish = SHARE_JOBS.set_for_testing(False)
+    try:
+      response = client_not_me.post(reverse('oozie:restore_workflow'), {'job_selection': [self.wf.id]})
+      assert_true('Permission denied' in response.content, response.content)
+    finally:
+      finish()
+
+    response = self.c.post(reverse('oozie:restore_workflow'), {'job_selection': [self.wf.id]}, follow=True)
     assert_equal(200, response.status_code)
 
 
@@ -1894,7 +2091,7 @@ class TestPermissions(OozieBase):
     finally:
       finish()
 
-    # Delete
+    # Move to trash
     finish = SHARE_JOBS.set_for_testing(False)
     try:
       response = client_not_me.post(reverse('oozie:delete_coordinator'), {'job_selection': [coord.id]})
@@ -1905,6 +2102,28 @@ class TestPermissions(OozieBase):
     response = self.c.post(reverse('oozie:delete_coordinator'), {'job_selection': [coord.id]}, follow=True)
     assert_equal(200, response.status_code)
 
+    # List trash
+    finish = SHARE_JOBS.set_for_testing(True)
+    try:
+      response = client_not_me.get(reverse('oozie:list_trashed_coordinators'))
+      assert_true(coord.name in response.content, response.content)
+    finally:
+      finish()
+    finish = SHARE_JOBS.set_for_testing(False)
+
+    response = client_not_me.get(reverse('oozie:list_trashed_coordinators'))
+    assert_false(coord.name in response.content, response.content)
+
+    # Restore
+    finish = SHARE_JOBS.set_for_testing(False)
+    try:
+      response = client_not_me.post(reverse('oozie:restore_coordinator'), {'job_selection': [coord.id]})
+      assert_true('Permission denied' in response.content, response.content)
+    finally:
+      finish()
+
+    response = self.c.post(reverse('oozie:restore_coordinator'), {'job_selection': [coord.id]}, follow=True)
+    assert_equal(200, response.status_code)
 
   def test_bundle_permissions(self):
     bundle = create_bundle(self.c)
@@ -2005,6 +2224,29 @@ class TestPermissions(OozieBase):
     response = self.c.post(reverse('oozie:delete_bundle'), {'job_selection': [bundle.id]}, follow=True)
     assert_equal(200, response.status_code)
 
+    # List trash
+    finish = SHARE_JOBS.set_for_testing(True)
+    try:
+      response = client_not_me.get(reverse('oozie:list_trashed_bundles'))
+      assert_true(bundle.name in response.content, response.content)
+    finally:
+      finish()
+    finish = SHARE_JOBS.set_for_testing(False)
+
+    response = client_not_me.get(reverse('oozie:list_trashed_bundles'))
+    assert_false(bundle.name in response.content, response.content)
+
+    # Restore
+    finish = SHARE_JOBS.set_for_testing(False)
+    try:
+      response = client_not_me.post(reverse('oozie:restore_bundle'), {'job_selection': [bundle.id]})
+      assert_true('Permission denied' in response.content, response.content)
+    finally:
+      finish()
+
+    response = self.c.post(reverse('oozie:restore_bundle'), {'job_selection': [bundle.id]}, follow=True)
+    assert_equal(200, response.status_code)
+
 
 class TestEditorWithOozie(OozieBase):
 
@@ -2017,7 +2259,10 @@ class TestEditorWithOozie(OozieBase):
 
 
   def tearDown(self):
-    self.wf.delete()
+    try:
+      self.wf.delete(skip_trash=True)
+    except:
+      pass
 
 
   def test_create_workflow(self):
@@ -2028,11 +2273,11 @@ class TestEditorWithOozie(OozieBase):
 
 
   def test_clone_workflow(self):
-    workflow_count = Workflow.objects.count()
+    workflow_count = Workflow.objects.available().count()
 
     response = self.c.post(reverse('oozie:clone_workflow', args=[self.wf.id]), {}, follow=True)
 
-    assert_equal(workflow_count + 1, Workflow.objects.count(), response)
+    assert_equal(workflow_count + 1, Workflow.objects.available().count(), response)
 
     wf2 = Workflow.objects.latest('id')
     assert_not_equal(self.wf.id, wf2.id)
@@ -2047,11 +2292,11 @@ class TestEditorWithOozie(OozieBase):
 
     # Bulk delete
     response = self.c.post(reverse('oozie:delete_workflow'), {'job_selection': [self.wf.id, wf2.id]}, follow=True)
-    assert_equal(workflow_count - 1, Workflow.objects.count(), response)
+    assert_equal(workflow_count - 1, Workflow.objects.available().count(), response)
 
 
   def test_import_workflow(self):
-    workflow_count = Workflow.objects.count()
+    workflow_count = Workflow.objects.available().count()
 
     # Create
     filename = os.path.abspath(os.path.dirname(__file__) + "/test_data/0.4/test-mapreduce.xml")
@@ -2067,7 +2312,15 @@ class TestEditorWithOozie(OozieBase):
       'description': ['']
     }, follow=True)
     fh.close()
-    assert_equal(workflow_count + 1, Workflow.objects.count(), response)
+    assert_equal(workflow_count + 1, Workflow.objects.available().count(), response)
+
+  def test_delete_workflow(self):
+    previous_trashed = len(Workflow.objects.trashed())
+    previous_available = len(Workflow.objects.all())
+    response = self.c.post(reverse('oozie:delete_workflow') + "?skip_trash=true", {'job_selection': [self.wf.id]}, follow=True)
+    assert_equal(200, response.status_code, response)
+    assert_equal(previous_trashed, len(Workflow.objects.trashed()))
+    assert_equal(previous_available - 1, len(Workflow.objects.all()))
 
 
 class TestImportWorkflow04WithOozie(OozieBase):
@@ -2084,7 +2337,7 @@ class TestImportWorkflow04WithOozie(OozieBase):
 
 
   def tearDown(self):
-    self.wf.delete()
+    self.wf.delete(skip_trash=True)
 
     # Make sure examples are owned by Hue.
     # This user is created by OozieBase.
@@ -2102,10 +2355,10 @@ class TestImportWorkflow04WithOozie(OozieBase):
     f.close()
     workflow.save()
     assert_equal(4, len(Node.objects.filter(workflow=workflow)))
-    assert_equal(3, len(Link.objects.filter(parent__workflow=workflow)))
+    assert_equal(4, len(Link.objects.filter(parent__workflow=workflow)))
     node = Node.objects.get(workflow=workflow, node_type='subworkflow').get_full_node()
     assert_equal(True, node.propagate_configuration)
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
 class TestOozieSubmissions(OozieBase):
@@ -2367,8 +2620,8 @@ class TestDashboard(OozieMockBase):
 
 
   def test_list_coordinator(self):
-    response = self.c.get(reverse('oozie:list_oozie_coordinator', args=[MockOozieApi.COORDINATOR_IDS[0]]))
-    assert_true('Coordinator DailyWordCount1' in response.content, response.content)
+    response = self.c.get(reverse('oozie:list_oozie_coordinator', args=[MockOozieApi.COORDINATOR_IDS[4]]))
+    assert_true(u'Coordinator DåilyWordCount5' in response.content.decode('utf-8', 'replace'), response.content.decode('utf-8', 'replace'))
     assert_true('Workflow' in response.content, response.content)
 
 
@@ -2522,20 +2775,20 @@ class TestDashboard(OozieMockBase):
 
 
   def test_good_workflow_status_graph(self):
-    workflow_count = Workflow.objects.count()
+    workflow_count = Workflow.objects.available().count()
 
     response = self.c.get(reverse('oozie:list_oozie_workflow', args=[MockOozieApi.WORKFLOW_IDS[0]]), {})
 
     assert_true(response.context['workflow_graph'])
-    assert_equal(Workflow.objects.count(), workflow_count)
+    assert_equal(Workflow.objects.available().count(), workflow_count)
 
   def test_bad_workflow_status_graph(self):
-    workflow_count = Workflow.objects.count()
+    workflow_count = Workflow.objects.available().count()
 
     response = self.c.get(reverse('oozie:list_oozie_workflow', args=[MockOozieApi.WORKFLOW_IDS[1]]), {})
 
     assert_true(response.context['workflow_graph'] is None)
-    assert_equal(Workflow.objects.count(), workflow_count)
+    assert_equal(Workflow.objects.available().count(), workflow_count)
 
 
 class TestUtils(OozieMockBase):
@@ -2667,13 +2920,13 @@ def create_workflow(client, workflow_dict=WORKFLOW_DICT):
   Node.objects.filter(workflow__name=name).delete()
   Workflow.objects.filter(name=name).delete()
 
-  workflow_count = Workflow.objects.count()
+  workflow_count = Workflow.objects.available().count()
   response = client.get(reverse('oozie:create_workflow'))
-  assert_equal(workflow_count, Workflow.objects.count(), response)
+  assert_equal(workflow_count, Workflow.objects.available().count(), response)
 
   response = client.post(reverse('oozie:create_workflow'), workflow_dict, follow=True)
   assert_equal(200, response.status_code)
-  assert_equal(workflow_count + 1, Workflow.objects.count(), response)
+  assert_equal(workflow_count + 1, Workflow.objects.available().count(), response)
 
   wf = Workflow.objects.get(name=name)
   assert_not_equal('', wf.deployment_dir)
@@ -2683,27 +2936,27 @@ def create_workflow(client, workflow_dict=WORKFLOW_DICT):
 
 
 def create_coordinator(workflow, client):
-  coord_count = Coordinator.objects.count()
+  coord_count = Coordinator.objects.available().count()
   response = client.get(reverse('oozie:create_coordinator'))
-  assert_equal(coord_count, Coordinator.objects.count(), response)
+  assert_equal(coord_count, Coordinator.objects.available().count(), response)
 
   post = COORDINATOR_DICT.copy()
   post['workflow'] = workflow.id
   response = client.post(reverse('oozie:create_coordinator'), post)
-  assert_equal(coord_count + 1, Coordinator.objects.count(), response)
+  assert_equal(coord_count + 1, Coordinator.objects.available().count(), response)
 
   return Coordinator.objects.get(name='MyCoord')
 
 
 def create_bundle(client):
-  if not Bundle.objects.filter(name='MyBundle').exists():
-    bundle_count = Bundle.objects.count()
+  if not Bundle.objects.available().filter(name='MyBundle').exists():
+    bundle_count = Bundle.objects.available().count()
     response = client.get(reverse('oozie:create_bundle'))
-    assert_equal(bundle_count, Bundle.objects.count(), response)
+    assert_equal(bundle_count, Bundle.objects.available().count(), response)
 
     post = BUNDLE_DICT.copy()
     response = client.post(reverse('oozie:create_bundle'), post)
-    assert_equal(bundle_count + 1, Bundle.objects.count(), response)
+    assert_equal(bundle_count + 1, Bundle.objects.available().count(), response)
 
   return Bundle.objects.get(name='MyBundle')
 

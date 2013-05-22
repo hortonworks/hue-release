@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+
 from django.utils.translation import ugettext as _, ugettext_lazy as _t
 
 from desktop.lib.conf import Config, coerce_bool, validate_path
@@ -38,6 +40,18 @@ REMOTE_DEPLOYMENT_DIR = Config(
   help=_t("Location on HDFS where the workflows/coordinators are deployed when submitted by a non-owner."))
 
 
+def get_oozie_status():
+  from liboozie.oozie_api import get_oozie
+
+  status = 'down'
+
+  try:
+    if not 'test' in sys.argv: # Avoid tests hanging
+      status = str(get_oozie().get_oozie_status())
+  except:
+    pass
+
+  return status
 
 def config_validator():
   """
@@ -46,18 +60,12 @@ def config_validator():
   Called by core check_config() view.
   """
   from hadoop.cluster import get_all_hdfs
-#  from liboozie.oozie_api import get_oozie
 
   res = []
 
-#  status = 'down'
-#  try:
-#    status = str(get_oozie().get_oozie_status())
-#  except:
-#    pass
-#  if 'NORMAL' not in status:
-#    res.append((status, _('The Oozie server is not available')))
-
+  status = get_oozie_status()
+  if 'NORMAL' not in status:
+    res.append((status, _('The Oozie server is not available')))
 
   class ConfigMock:
     def __init__(self, value): self.value = value
@@ -65,9 +73,6 @@ def config_validator():
     def get_fully_qualifying_key(self): return self.value
 
   for cluster in get_all_hdfs().values():
-    res.extend(validate_path(REMOTE_DEPLOYMENT_DIR, is_dir=True, fs=cluster,
-                             message=_('The deployment directory of Oozie workflows does not exist. '
-                                       'Run "Setup Examples" on the Oozie workflow page.')))
     res.extend(validate_path(ConfigMock('/user/oozie/share/lib'), is_dir=True, fs=cluster,
                              message=_('Oozie Share Lib not installed in default location.')))
 

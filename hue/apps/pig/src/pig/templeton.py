@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
-import logging
-import urllib
-import urllib2
+from desktop.lib.rest import http_client
 import simplejson as json
-from hcatalog.conf import TEMPLETON_URL
+import urllib
 
-LOG = logging.getLogger(__name__)
+from hcatalog.conf import TEMPLETON_URL, SECURITY_ENABLED
+
 
 class Templeton(object):
 
     def __init__(self, user="hdfs"):
         self.user = user
+        self.client = http_client.HttpClient(TEMPLETON_URL.get())
+        if SECURITY_ENABLED.get():
+            self.client = self.client.set_kerberos_auth()
 
     def get(self, url, data=None):
         """
@@ -20,8 +22,8 @@ class Templeton(object):
             data['user.name'] = self.user
         else:
             data = {"user.name": self.user}
-        data = urllib.urlencode(data)
-        response = urllib2.urlopen(TEMPLETON_URL.get() + url + "?" + data)
+
+        response = self.client.execute("GET", url, params=data)
         return json.loads(response.read())
 
     def post(self, url, data=None):
@@ -32,24 +34,19 @@ class Templeton(object):
             data['user.name'] = self.user
         else:
             data = {"user.name": self.user}
-        data = urllib.urlencode(data)
-        LOG.debug('Templeton request, method: POST, url: %s, data: %s' % (unicode(TEMPLETON_URL.get() + url),
-                                                                          unicode(data)))
-        req = urllib2.Request(TEMPLETON_URL.get() + url, data)
-        response = urllib2.urlopen(req)
-
+        data = urllib.urlencode([(k, v) for k, vs in data.iteritems()
+                                 for v in isinstance(vs, list) and vs or [vs]])
+        response = self.client.execute("POST", url, data=data)
         return json.loads(response.read())
 
     def put(self, url, data=None):
         """
         Make PUT query to templeton url.
         """
-        req = urllib2.Request(TEMPLETON_URL.get() + url + "?user.name=" + self.user, data, {'Content-Type': 'application/json'})
-        req.get_method = lambda: 'PUT'
         try:
-            response = urllib2.urlopen(req)
+            response = self.client.execute("PUT", url, params={"user.name": self.user}, data=data, headers={'Content-Type': 'application/json'})
             return json.loads(response.read())
-        except urllib2.HTTPError, error:
+        except http_client.RestException, error:
             return json.loads(error.read())
 
     def delete(self, url, data=None):
@@ -60,11 +57,7 @@ class Templeton(object):
             data['user.name'] = self.user
         else:
             data = {"user.name": self.user}
-        data = urllib.urlencode(data)
-        opener = urllib2.build_opener(urllib2.HTTPHandler)
-        req = urllib2.Request(TEMPLETON_URL.get() + url + "?" + data)
-        req.get_method = lambda: 'DELETE'
-        response = opener.open(req)
+        response = self.client.execute("DELETE", url, data=data)
         return json.loads(response.read())
 
     def pig_query(self, execute=None, pig_file=None, statusdir=None, callback=None, arg=None):

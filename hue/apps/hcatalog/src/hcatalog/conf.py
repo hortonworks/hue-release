@@ -8,6 +8,14 @@ TEMPLETON_URL = Config(
   default="http://localhost:50111/templeton/v1/"
 )
 
+SECURITY_ENABLED = Config(
+  key="security_enabled",
+  help="Whether to use kerberos auth",
+  default=False,
+  type=bool
+)
+
+
 def config_validator():
   """
   config_validator() -> [ (config_variable, error_message) ]
@@ -18,8 +26,8 @@ def config_validator():
   t = Templeton()
   try:
   	t.get("status")
-  except urllib2.URLError, error:
-    return [ (TEMPLETON_URL, "%s" % (error.reason)) ]
+  except Exception, error:
+    return [ (TEMPLETON_URL, "%s" % (error.message)) ]
   else:
   	return []
 

@@ -7,7 +7,7 @@
       "name": "MapReduce",
       "parameters": "[]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/sleep",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of MapReduce action that sleeps"
@@ -35,7 +35,7 @@
       "name": "Sequential Java",
       "parameters": "[]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/terasort",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of sequential Java actions"
@@ -49,7 +49,7 @@
       "name": "Forks",
       "parameters": "[]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/sleepfork",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of multiple forks"
@@ -63,7 +63,7 @@
       "name": "Hive",
       "parameters": "[{\"name\":\"oozie.use.system.libpath\",\"value\":\"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/hive",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of Hive action"
@@ -77,7 +77,7 @@
       "name": "Pig",
       "parameters": "[{\"name\":\"oozie.use.system.libpath\",\"value\":\"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/pig",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of Pig action"
@@ -91,7 +91,7 @@
       "name": "Sqoop",
       "parameters": "[{\"name\":\"oozie.use.system.libpath\",\"value\":\"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/sqoop",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of Sqoop action"
@@ -105,7 +105,7 @@
       "name": "Ssh",
       "parameters": "[]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/ssh",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of Ssh action"
@@ -119,7 +119,7 @@
       "name": "Shell",
       "parameters": "[]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/shell",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of Shell action"
@@ -133,7 +133,7 @@
       "name": "DistCp",
       "parameters": "[{\"name\":\"oozie.use.system.libpath\",\"value\":\"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/distcp",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of DistCp action"
@@ -147,7 +147,7 @@
       "name": "Email",
       "parameters": "[{\"name\": \"oozie.use.system.libpath\", \"value\": \"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/email",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of Email action"
@@ -161,7 +161,7 @@
       "name": "Fs",
       "parameters": "[{\"name\": \"oozie.use.system.libpath\", \"value\": \"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/fs",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Example of sequential Fs actions"
@@ -175,7 +175,7 @@
       "name": "Generic",
       "parameters": "[{\"name\": \"oozie.use.system.libpath\", \"value\": \"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/managed/generic",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
       "owner": 1100713,
       "description": "Execute a generic action with a custom extension"
@@ -203,7 +203,7 @@
       "name": "DistCp",
       "parameters": "[{\"name\": \"oozie.use.system.libpath\", \"value\": \"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/unmanaged/distcp",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-03-11 15:12:02",
       "owner": 1100713,
       "description": "Example of DistCp action"
@@ -217,7 +217,7 @@
       "name": "Email",
       "parameters": "[{\"name\": \"oozie.use.system.libpath\", \"value\": \"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/unmanaged/email",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-03-11 15:12:11",
       "owner": 1100713,
       "description": "Example of Email action"
@@ -231,7 +231,7 @@
       "name": "Fs",
       "parameters": "[{\"name\": \"oozie.use.system.libpath\", \"value\": \"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/unmanaged/fs",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-03-11 15:12:21",
       "owner": 1100713,
       "description": "Example of sequential Fs actions"
@@ -245,7 +245,7 @@
       "name": "Hive",
       "parameters": "[{\"name\":\"oozie.use.system.libpath\",\"value\":\"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/unmanaged/hive",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-03-11 15:12:31",
       "owner": 1100713,
       "description": "Example of Hive action"
@@ -259,7 +259,7 @@
       "name": "MapReduce",
       "parameters": "[]",
       "deployment_dir": "/user/hue/oozie/workspaces/unmanaged/sleep",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-03-11 15:12:43",
       "owner": 1100713,
       "description": "Example of MapReduce action that sleeps"
@@ -273,7 +273,7 @@
       "name": "Pig",
       "parameters": "[{\"name\":\"oozie.use.system.libpath\",\"value\":\"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/unmanaged/pig",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-03-11 15:12:52",
       "owner": 1100713,
       "description": "Example of Pig action"
@@ -287,7 +287,7 @@
       "name": "Shell",
       "parameters": "[]",
       "deployment_dir": "/user/hue/oozie/workspaces/unmanaged/shell",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-03-11 15:13:00",
       "owner": 1100713,
       "description": "Example of Shell action"
@@ -301,7 +301,7 @@
       "name": "Sqoop",
       "parameters": "[{\"name\":\"oozie.use.system.libpath\",\"value\":\"true\"}]",
       "deployment_dir": "/user/hue/oozie/workspaces/unmanaged/sqoop",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-03-11 15:13:08",
       "owner": 1100713,
       "description": "Example of Sqoop action"
@@ -315,7 +315,7 @@
       "name": "Ssh",
       "parameters": "[]",
       "deployment_dir": "/user/hue/oozie/workspaces/unmanaged/ssh",
-      "schema_version": "uri:oozie:workflow:0.3",
+      "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-03-11 15:13:18",
       "owner": 1100713,
       "description": "Example of Ssh action"

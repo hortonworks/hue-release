@@ -23,27 +23,46 @@
 <%namespace name="layout" file="../navigation-bar.mako" />
 <%namespace name="utils" file="../utils.inc.mako" />
 
-${ commonheader(_("Oozie App"), "oozie", user, "100px") | n,unicode }
+${ commonheader(_("Workflows"), "oozie", user, "100px") | n,unicode }
 ${ layout.menubar(section='workflows') }
 
+<style type="text/css">
+  input.search-query {
+    vertical-align: top;
+  }
+</style>
 
 <div class="container-fluid">
   <h1>${ _('Workflow Manager') }</h1>
 
   <%actionbar:render>
+    <%def name="search()">
+      <input id="filterInput" type="text" class="input-xlarge search-query" placeholder="${_('Search for name, description, etc...')}">
+    </%def>
+
     <%def name="actions()">
+      <div class="btn-toolbar" style="display: inline; vertical-align: middle">
         <button class="btn toolbarBtn" id="submit-btn" disabled="disabled"><i class="icon-play"></i> ${ _('Submit') }</button>
         <button class="btn toolbarBtn" id="schedule-btn" disabled="disabled"><i class="icon-calendar"></i> ${ _('Schedule') }</button>
-        <button class="btn toolbarBtn" id="clone-btn" disabled="disabled"><i class="icon-retweet"></i> ${ _('Clone') }</button>
-        <button class="btn toolbarBtn" id="delete-btn" disabled="disabled"><i class="icon-remove"></i> ${ _('Delete') }</button>
+        <button class="btn toolbarBtn" id="clone-btn" disabled="disabled"><i class="icon-retweet"></i> ${ _('Copy') }</button>
+        <div id="delete-dropdown" class="btn-group" style="vertical-align: middle;">
+          <button id="delete-btn" class="btn toolbarBtn dropdown-toggle" title="${_('Delete')}" data-toggle="dropdown" disabled="disabled">
+            <i class="icon-remove"></i> ${_('Delete')}
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" style="top: auto">
+            <li><a href="javascript:void(0);" id="trash-btn" title="${_('Move to trash')}"><i class="icon-trash"></i> ${_('Move to trash')}</a></li>
+            <li><a href="javascript:void(0);" id="destroy-btn" title="${_('Delete forever')}"><i class="icon-bolt"></i> ${_('Delete forever')}</a></li>
+          </ul>
+        </div>
+      </div>
     </%def>
 
     <%def name="creation()">
-        <a href="${ url('oozie:create_workflow') }" class="btn"><i class="icon-plus-sign"></i> ${ _('Create') }</a>
-        <a href="${ url('oozie:import_workflow') }" class="btn"><i class="icon-plus-sign"></i> ${ _('Import') }</a>
-        % if currentuser.is_superuser:
-          <a href="#installSamples" data-toggle="modal" class="btn"><i class="icon-download-alt"></i> ${ _('Setup Examples') }</a>
-        % endif
+      <a href="${ url('oozie:create_workflow') }" class="btn"><i class="icon-plus-sign"></i> ${ _('Create') }</a>
+      <a href="${ url('oozie:import_workflow') }" class="btn"><i class="icon-plus-sign"></i> ${ _('Import') }</a>
+      &nbsp;&nbsp;
+      <a href="${ url('oozie:list_trashed_workflows') }" class="btn"><i class="icon-trash"></i> ${ _('Trash') }</a>
     </%def>
   </%actionbar:render>
 
@@ -54,7 +73,7 @@ ${ layout.menubar(section='workflows') }
         <th width="1%"><div class="hueCheckbox selectAll" data-selectables="workflowCheck"></div></th>
         <th>${ _('Name') }</th>
         <th>${ _('Description') }</th>
-        <th>${ _('Last Modification') }</th>
+        <th>${ _('Last Modified') }</th>
         <th>${ _('Steps') }</th>
         <th>${ _('Status') }</th>
         <th>${ _('Owner') }</th>
@@ -65,16 +84,16 @@ ${ layout.menubar(section='workflows') }
         <tr>
           <td data-row-selector-exclude="true">
              <div class="hueCheckbox workflowCheck" data-row-selector-exclude="true"
-              % if workflow.is_accessible(currentuser):
+              % if workflow.is_accessible(user):
                   data-submit-url="${ url('oozie:submit_workflow', workflow=workflow.id) }"
                   data-schedule-url="${ url('oozie:schedule_workflow', workflow=workflow.id) }"
                   data-clone-url="${ url('oozie:clone_workflow', workflow=workflow.id) }"
               % endif
-              % if workflow.is_editable(currentuser):
+              % if workflow.is_editable(user):
                   data-delete-id="${ workflow.id }"
               % endif
             ></div>
-            % if workflow.is_accessible(currentuser):
+            % if workflow.is_accessible(user):
               <a href="${ url('oozie:edit_workflow', workflow=workflow.id) }" data-row-selector="true"></a>
             % endif
           </td>
@@ -99,11 +118,11 @@ ${ layout.menubar(section='workflows') }
 
 <div id="submit-wf-modal" class="modal hide"></div>
 
-<div id="deleteWf" class="modal hide fade">
-  <form id="deleteWfForm" action="${ url('oozie:delete_workflow') }" method="POST">
+<div id="trashWf" class="modal hide fade">
+  <form id="trashWfForm" action="${ url('oozie:delete_workflow') }" method="POST">
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
-      <h3 id="deleteWfMessage">${ _('Delete the selected workflow(s)?') }</h3>
+      <h3 id="trashWfMessage">${ _('Move the selected workflow(s) to trash?') }</h3>
     </div>
     <div class="modal-footer">
       <a href="#" class="btn" data-dismiss="modal">${ _('No') }</a>
@@ -115,21 +134,22 @@ ${ layout.menubar(section='workflows') }
   </form>
 </div>
 
-<div id="installSamples" class="modal hide fade">
-  <form id="installSamplesForm" action="${url('oozie:setup_app')}" method="POST">
+<div id="destroyWf" class="modal hide fade">
+  <form id="destroyWfForm" action="${ url('oozie:delete_workflow') }?skip_trash=true" method="POST">
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
-      <h3>${ _('Set up the workspaces and examples?') }</h3>
-    </div>
-    <div class="modal-body">
-      ${ _('Hue is going to re-create the workspaces and re-install the examples.') }
+      <h3 id="destroyWfMessage">${ _('Delete the selected workflow(s)?') }</h3>
     </div>
     <div class="modal-footer">
       <a href="#" class="btn" data-dismiss="modal">${ _('No') }</a>
-      <input type="submit" class="btn btn-primary" value="${ _('Yes') }"/>
+      <input type="submit" class="btn btn-danger" value="${ _('Yes') }"/>
+    </div>
+    <div class="hide">
+      <select name="job_selection" data-bind="options: availableJobs, selectedOptions: chosenJobs" size="5" multiple="true"></select>
     </div>
   </form>
 </div>
+
 
 <script src="/static/ext/js/datatables-paging-0.1.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/ext/js/knockout-2.1.0.js" type="text/javascript" charset="utf-8"></script>
@@ -189,12 +209,20 @@ ${ layout.menubar(section='workflows') }
       }
     }
 
-    $("#delete-btn").click(function (e) {
+    $("#trash-btn").click(function (e) {
       viewModel.chosenJobs.removeAll();
       $(".hueCheckbox[checked='checked']").each(function( index ) {
         viewModel.chosenJobs.push($(this).data("delete-id"));
       });
-      $("#deleteWf").modal("show");
+      $("#trashWf").modal("show");
+    });
+
+    $("#destroy-btn").click(function (e) {
+      viewModel.chosenJobs.removeAll();
+      $(".hueCheckbox[checked='checked']").each(function( index ) {
+        viewModel.chosenJobs.push($(this).data("delete-id"));
+      });
+      $("#destroyWf").modal("show");
     });
 
     $("#submit-btn").click(function () {

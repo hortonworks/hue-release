@@ -28,7 +28,7 @@ LOG = logging.getLogger("analitics")
 class HCatClient(Templeton):
 
     def __init__(self, user="sandbox"):
-        self.user = user
+        super(HCatClient, self).__init__(user)
 
     def get_databases(self):
         """

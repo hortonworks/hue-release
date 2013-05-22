@@ -621,6 +621,8 @@ def massaged_oozie_jobs_for_json(oozie_jobs, user):
       'absoluteUrl': job.get_absolute_url(),
       'canEdit': has_job_edition_permission(job, user),
       'killUrl': reverse('oozie:manage_oozie_jobs', kwargs={'job_id':job.id, 'action':'kill'}),
+      'suspendUrl': reverse('oozie:manage_oozie_jobs', kwargs={'job_id':job.id, 'action':'suspend'}),
+      'resumeUrl': reverse('oozie:manage_oozie_jobs', kwargs={'job_id':job.id, 'action':'resume'}),
       'created': hasattr(job, 'createdTime') and job.createdTime and job.createdTime and ((job.type == 'Bundle' and job.createdTime) or format_time(job.createdTime)),
       'startTime': hasattr(job, 'startTime') and format_time(job.startTime) or None,
       'run': hasattr(job, 'run') and job.run or 0,
@@ -638,16 +640,17 @@ def split_oozie_jobs(oozie_jobs):
   jobs_completed = []
 
   for job in oozie_jobs:
-    if job.is_running():
-      if job.type == 'Workflow':
-        job = get_oozie().get_job(job.id)
-      elif job.type == 'Coordinator':
-        job = get_oozie().get_coordinator(job.id)
+    if job.appName != 'pig-app-hue-script':
+      if job.is_running():
+        if job.type == 'Workflow':
+          job = get_oozie().get_job(job.id)
+        elif job.type == 'Coordinator':
+          job = get_oozie().get_coordinator(job.id)
+        else:
+          job = get_oozie().get_bundle(job.id)
+        jobs_running.append(job)
       else:
-        job = get_oozie().get_bundle(job.id)
-      jobs_running.append(job)
-    else:
-      jobs_completed.append(job)
+        jobs_completed.append(job)
 
   jobs['running_jobs'] = sorted(jobs_running, key=lambda w: w.status)
   jobs['completed_jobs'] = sorted(jobs_completed, key=lambda w: w.status)

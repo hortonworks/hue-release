@@ -16,18 +16,9 @@
 ## under the License.
 from django import forms
 from pig.models import PigScript
-from django.utils.translation import ugettext_lazy as _
 
 
 class PigScriptForm(forms.ModelForm):
     class Meta:
         model = PigScript
         exclude = ("date_created", "saved", "user")
-
-
-class UDFForm(forms.Form):
-    hdfs_file = forms.FileField(
-        required=True,
-        label=_("File to Upload"),
-        widget=forms.FileInput(attrs={"accept": "application/java-archive"})
-    )

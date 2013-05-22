@@ -24,9 +24,9 @@ ${shared.menubar(section='My Scripts')}
 
 <%!
 from pig.models import UDF
-from pig.forms import UDFForm
-udf_form = UDFForm()
+from pig import conf
 udfs = UDF.objects.all()
+UDF_PATH = conf.UDF_PATH.get()
 %>
 
 ## Use double hashes for a mako template comment
@@ -87,7 +87,7 @@ udfs = UDF.objects.all()
             <li>
               <form id="udfs_form" enctype="multipart/form-data"
                   action="${url('pig.views.udf_create')}"
-                  method="post">
+                  method="post" data-destination="${UDF_PATH}">
                   <div id="udf_file_upload"><i class="icon-upload icon-white"></i> Upload UDF jar</div>                
               </form>
             </li>
@@ -341,6 +341,9 @@ call_popup_var_edit($(this)).done(function() {
                 $("#job_info_outer").prepend(data.text);
                 job_id = data.job_id;
                 ping_job(job_id);
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                $("#failure_info").html(xhr.responseText);
             }
         });
        });

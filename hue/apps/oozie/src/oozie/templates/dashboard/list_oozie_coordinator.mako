@@ -1,3 +1,4 @@
+## -*- coding: utf-8 -*-
 ## Licensed to Cloudera, Inc. under one
 ## or more contributor license agreements.  See the NOTICE file
 ## distributed with this work for additional information
@@ -22,7 +23,7 @@
 <%namespace name="layout" file="../navigation-bar.mako" />
 <%namespace name="utils" file="../utils.inc.mako" />
 
-${ commonheader(_("Oozie App"), "oozie", user, "100px") | n,unicode }
+${ commonheader(_("Coordinator Dashboard"), "oozie", user, "100px") | n,unicode }
 ${ layout.menubar(section='dashboard') }
 
 
@@ -197,7 +198,7 @@ ${ layout.menubar(section='dashboard') }
             <th>${ _('Missing Dependencies') }</th>
 
             <th>${ _('Created Time') }</th>
-            <th>${ _('Last Modified Time') }</th>
+            <th>${ _('Last Modified') }</th>
 
             <th>${ _('Id') }</th>
             <th>${ _('External Id') }</th>
@@ -264,11 +265,11 @@ ${ layout.menubar(section='dashboard') }
       </div>
 
       <div class="tab-pane" id="log">
-        <pre>${ oozie_coordinator.log }</pre>
+        <pre>${ oozie_coordinator.log.decode('utf-8', 'replace') }</pre>
       </div>
 
       <div class="tab-pane" id="definition">
-        <textarea id="definitionEditor">${ oozie_coordinator.definition }</textarea>
+        <textarea id="definitionEditor">${ oozie_coordinator.definition.decode('utf-8', 'replace') }</textarea>
       </div>
     </div>
 

@@ -32,6 +32,7 @@ from django.core.urlresolvers import reverse
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 from django.forms.models import inlineformset_factory
+from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext as _, ugettext_lazy as _t
 
 from desktop.log.access import access_warn
@@ -42,6 +43,7 @@ from hadoop.fs.exceptions import WebHdfsException
 
 from hadoop.fs.hadoopfs import Hdfs
 from liboozie.submittion import Submission
+from liboozie.submittion import create_directories
 
 from oozie.conf import REMOTE_SAMPLE_DIR, SHARE_JOBS
 from oozie.management.commands import oozie_setup
@@ -54,6 +56,14 @@ LOG = logging.getLogger(__name__)
 PATH_MAX = 512
 name_validator = RegexValidator(regex='[a-zA-Z_][\-_a-zA-Z0-9]{1,39}',
                                 message=_('Enter a valid value: combination of 2 - 40 letters and digits starting by a letter'))
+
+
+class TrashManager(models.Manager):
+  def trashed(self):
+    return super(TrashManager, self).get_query_set().filter(is_trashed=True)
+
+  def available(self):
+    return super(TrashManager, self).get_query_set().filter(is_trashed=False)
 
 
 """
@@ -112,9 +122,24 @@ class Job(models.Model):
                                   help_text=_t('Enable other users to have access to this job.'))
   parameters = models.TextField(default='[{"name":"oozie.use.system.libpath","value":"true"}]', verbose_name=_t('Oozie parameters'),
                                 help_text=_t('Parameters used at the submission time (e.g. market=US, oozie.use.system.libpath=true).'))
+  is_trashed = models.BooleanField(default=False, db_index=True, verbose_name=_t('Is trashed'),
+                                   help_text=_t('If this job is trashed.'))
 
   objects = JobManager()
   unique_together = ('owner', 'name')
+
+  def delete(self, skip_trash=False, *args, **kwargs):
+    if skip_trash:
+      return super(Job, self).delete(*args, **kwargs)
+    else:
+      self.is_trashed = True
+      self.save()
+      return self
+
+  def restore(self):
+    self.is_trashed = False
+    self.save()
+    return self
 
   def save(self):
     super(Job, self).save()
@@ -128,7 +153,8 @@ class Job(models.Model):
     return self.deployment_dir != '' and fs.exists(self.deployment_dir)
 
   def __str__(self):
-    return '%s - %s' % (self.name, self.owner)
+    res = '%s - %s' % (force_unicode(self.name), self.owner)
+    return res.encode('utf-8', 'xmlcharrefreplace')
 
   def get_full_node(self):
     try:
@@ -183,9 +209,9 @@ class Job(models.Model):
     return user.is_superuser or self.owner == user
 
 
-class WorkflowManager(models.Manager):
+class WorkflowManager(TrashManager):
   def new_workflow(self, owner):
-    workflow = Workflow(owner=owner, schema_version='uri:oozie:workflow:0.3')
+    workflow = Workflow(owner=owner, schema_version='uri:oozie:workflow:0.4')
 
     kill = Kill(name='kill', workflow=workflow, node_type=Kill.node_type)
     end = End(name='end', workflow=workflow, node_type=End.node_type)
@@ -216,7 +242,8 @@ class WorkflowManager(models.Manager):
     self.check_workspace(workflow, fs)
 
   def check_workspace(self, workflow, fs):
-    oozie_setup.create_directories(fs)
+    create_directories(fs, [REMOTE_SAMPLE_DIR.get()])
+    create_directories(fs)
 
     if workflow.is_shared:
       perms = 0755
@@ -232,7 +259,7 @@ class WorkflowManager(models.Manager):
     except:
       pass
     workflow.save()
-    workflow.delete()
+    workflow.delete(skip_trash=True)
 
 
 class Workflow(Job):
@@ -382,7 +409,7 @@ class Workflow(Job):
     return reverse('oozie:edit_workflow', kwargs={'workflow': self.id})
 
   def get_hierarchy(self):
-    node = self.start
+    node = Start.objects.get(workflow=self) # Uncached version of start.
     return self.get_hierarchy_rec(node=node) + [[Kill.objects.get(workflow=node.workflow)],
                                            [End.objects.get(workflow=node.workflow)]]
 
@@ -446,7 +473,7 @@ class Workflow(Job):
     if mapping is None:
       mapping = {}
     tmpl = 'editor/gen/workflow.xml.mako'
-    return re.sub(re.compile('\s*\n+', re.MULTILINE), '\n', django_mako.render_to_string(tmpl, {'workflow': self, 'mapping': mapping}))
+    return re.sub(re.compile('\s*\n+', re.MULTILINE), '\n', django_mako.render_to_string(tmpl, {'workflow': self, 'mapping': mapping})).encode('utf-8', 'xmlcharrefreplace')
 
 
 class Link(models.Model):
@@ -1227,6 +1254,8 @@ class Coordinator(Job):
   job_properties = models.TextField(default='[]', verbose_name=_t('Workflow properties'),
                                     help_text=_t('Configuration properties to transmit to the workflow (e.g. limit=100, username=${coord:user()})'))
 
+  objects = TrashManager()
+
   HUE_ID = 'hue-id-c'
 
   def get_type(self):
@@ -1236,7 +1265,7 @@ class Coordinator(Job):
     if mapping is None:
       mapping = {}
     tmpl = "editor/gen/coordinator.xml.mako"
-    return re.sub(re.compile('\s*\n+', re.MULTILINE), '\n', django_mako.render_to_string(tmpl, {'coord': self, 'mapping': mapping}))
+    return re.sub(re.compile('\s*\n+', re.MULTILINE), '\n', django_mako.render_to_string(tmpl, {'coord': self, 'mapping': mapping})).encode('utf-8', 'xmlcharrefreplace')
 
   def clone(self, new_owner=None):
     datasets = Dataset.objects.filter(coordinator=self)
@@ -1479,6 +1508,8 @@ class Bundle(Job):
                                        help_text=_t('When to start the first coordinators.'))
   coordinators = models.ManyToManyField(Coordinator, through='BundledCoordinator')
 
+  objects = TrashManager()
+
   HUE_ID = 'hue-id-b'
 
   def get_type(self):
@@ -1488,7 +1519,7 @@ class Bundle(Job):
     if mapping is None:
       mapping = {}
     tmpl = "editor/gen/bundle.xml.mako"
-    return re.sub(re.compile('\s*\n+', re.MULTILINE), '\n', django_mako.render_to_string(tmpl, {'bundle': self, 'mapping': mapping}))
+    return re.sub(re.compile('\s*\n+', re.MULTILINE), '\n', django_mako.render_to_string(tmpl, {'bundle': self, 'mapping': mapping})).encode('utf-8', 'xmlcharrefreplace')
 
   def clone(self, new_owner=None):
     bundleds = BundledCoordinator.objects.filter(bundle=self)

@@ -1,3 +1,4 @@
+## -*- coding: utf-8 -*-
 ## Licensed to Cloudera, Inc. under one
 ## or more contributor license agreements.  See the NOTICE file
 ## distributed with this work for additional information
@@ -23,7 +24,7 @@
 <%namespace name="properties" file="coordinator_properties.mako" />
 <%namespace name="utils" file="../utils.inc.mako" />
 
-${ commonheader(_("Oozie App"), "oozie", user, "100px") | n,unicode }
+${ commonheader(_("Edit Bundle"), "oozie", user, "100px") | n,unicode }
 ${ layout.menubar(section='bundles') }
 
 <style type="text/css">
@@ -79,7 +80,7 @@ ${ layout.menubar(section='bundles') }
               </li>
               <li>
                 <a id="clone-btn" href="javascript:void(0)" data-clone-url="${ url('oozie:clone_bundle', bundle=bundle.id) }"
-                   title="${ _('Clone this bundle') }" rel="tooltip" data-placement="right"><i class="icon-retweet"></i> ${ _('Clone') }
+                   title="${ _('Copy this bundle') }" rel="tooltip" data-placement="right"><i class="icon-retweet"></i> ${ _('Copy') }
                 </a>
              </li>
           % endif

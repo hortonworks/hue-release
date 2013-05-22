@@ -23,22 +23,44 @@
 <%namespace name="layout" file="../navigation-bar.mako" />
 <%namespace name="utils" file="../utils.inc.mako" />
 
-${ commonheader(_("Oozie App"), "oozie", user, "100px") | n,unicode }
+${ commonheader(_("Coordinators"), "oozie", user, "100px") | n,unicode }
 ${ layout.menubar(section='coordinators') }
 
+<style type="text/css">
+  input.search-query {
+    vertical-align: top;
+  }
+</style>
 
 <div class="container-fluid">
   <h1>${ _('Coordinator Manager') }</h1>
 
   <%actionbar:render>
+    <%def name="search()">
+      <input id="filterInput" type="text" class="input-xlarge search-query" placeholder="${_('Search for name, description, etc...')}">
+    </%def>
+
     <%def name="actions()">
+      <div class="btn-toolbar" style="display: inline; vertical-align: middle">
         <button class="btn toolbarBtn" id="submit-btn" disabled="disabled"><i class="icon-play"></i> ${ _('Submit') }</button>
-        <button class="btn toolbarBtn" id="clone-btn" disabled="disabled"><i class="icon-retweet"></i> ${ _('Clone') }</button>
-        <button class="btn toolbarBtn" id="delete-btn" disabled="disabled"><i class="icon-remove"></i> ${ _('Delete') }</button>
+        <button class="btn toolbarBtn" id="clone-btn" disabled="disabled"><i class="icon-retweet"></i> ${ _('Copy') }</button>
+        <div id="delete-dropdown" class="btn-group" style="vertical-align: middle;">
+          <button id="delete-btn" class="btn toolbarBtn dropdown-toggle" title="${_('Delete')}" data-toggle="dropdown" disabled="disabled">
+            <i class="icon-remove"></i> ${_('Delete')}
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" style="top: auto">
+            <li><a href="javascript:void(0);" id="trash-btn" title="${_('Move to trash')}"><i class="icon-trash"></i> ${_('Move to trash')}</a></li>
+            <li><a href="javascript:void(0);" id="destroy-btn" title="${_('Delete forever')}"><i class="icon-bolt"></i> ${_('Delete forever')}</a></li>
+          </ul>
+        </div>
+      </div>
     </%def>
 
     <%def name="creation()">
-        <a href="${ url('oozie:create_coordinator') }" class="btn"><i class="icon-plus-sign"></i> ${ _('Create') }</a>
+      <a href="${ url('oozie:create_coordinator') }" class="btn"><i class="icon-plus-sign"></i> ${ _('Create') }</a>
+      &nbsp;&nbsp;
+      <a href="${ url('oozie:list_trashed_coordinators') }" class="btn"><i class="icon-trash"></i> ${ _('Trash') }</a>
     </%def>
   </%actionbar:render>
 
@@ -60,16 +82,16 @@ ${ layout.menubar(section='coordinators') }
         <tr>
           <td data-row-selector-exclude="true">
             <div class="hueCheckbox coordinatorCheck" data-row-selector-exclude="true"
-              % if coordinator.is_accessible(currentuser):
+              % if coordinator.is_accessible(user):
                   data-clone-url="${ url('oozie:clone_coordinator', coordinator=coordinator.id) }"
                   data-submit-url="${ url('oozie:submit_coordinator', coordinator=coordinator.id) }"
               % endif
-              % if coordinator.is_editable(currentuser):
+              % if coordinator.is_editable(user):
                   data-delete-id="${ coordinator.id }"
               % endif
               >
             </div>
-            % if coordinator.is_accessible(currentuser):
+            % if coordinator.is_accessible(user):
               <a href="${ url('oozie:edit_coordinator', coordinator=coordinator.id) }" data-row-selector="true"/>
             % endif
           </td>
@@ -95,11 +117,27 @@ ${ layout.menubar(section='coordinators') }
 
 <div id="submit-job-modal" class="modal hide"></div>
 
-<div id="delete-job" class="modal hide">
-  <form id="deleteWfForm" action="${ url('oozie:delete_coordinator') }" method="POST">
+<div id="trash-job" class="modal hide">
+  <form id="trashForm" action="${ url('oozie:delete_coordinator') }" method="POST">
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
-      <h3 id="deleteWfMessage">${ _('Delete the selected coordinator(s)?') }</h3>
+      <h3 id="trashMessage">${ _('Move the selected coordinator(s) to trash?') }</h3>
+    </div>
+    <div class="modal-footer">
+      <a href="#" class="btn" data-dismiss="modal">${ _('No') }</a>
+      <input type="submit" class="btn btn-danger" value="${ _('Yes') }"/>
+    </div>
+    <div class="hide">
+      <select name="job_selection" data-bind="options: availableJobs, selectedOptions: chosenJobs" size="5" multiple="true"></select>
+    </div>
+  </form>
+</div>
+
+<div id="destroy-job" class="modal hide">
+  <form id="destroyForm" action="${ url('oozie:delete_coordinator') }?skip_trash=true" method="POST">
+    <div class="modal-header">
+      <a href="#" class="close" data-dismiss="modal">&times;</a>
+      <h3 id="destroyMessage">${ _('Delete the selected coordinator(s)?') }</h3>
     </div>
     <div class="modal-footer">
       <a href="#" class="btn" data-dismiss="modal">${ _('No') }</a>
@@ -169,12 +207,20 @@ ${ layout.menubar(section='coordinators') }
       }
     }
 
-    $("#delete-btn").click(function (e) {
+    $("#trash-btn").click(function (e) {
       viewModel.chosenJobs.removeAll();
       $(".hueCheckbox[checked='checked']").each(function( index ) {
         viewModel.chosenJobs.push($(this).data("delete-id"));
       });
-      $("#delete-job").modal("show");
+      $("#trash-job").modal("show");
+    });
+
+    $("#destroy-btn").click(function (e) {
+      viewModel.chosenJobs.removeAll();
+      $(".hueCheckbox[checked='checked']").each(function( index ) {
+        viewModel.chosenJobs.push($(this).data("delete-id"));
+      });
+      $("#destroy-job").modal("show");
     });
 
     $("#submit-btn").click(function () {

@@ -1,3 +1,4 @@
+## -*- coding: utf-8 -*-
 ## Licensed to Cloudera, Inc. under one
 ## or more contributor license agreements.  See the NOTICE file
 ## distributed with this work for additional information
@@ -22,7 +23,7 @@
 <%namespace name="layout" file="../navigation-bar.mako" />
 <%namespace name="utils" file="../utils.inc.mako" />
 
-${ commonheader(_("Oozie App"), "oozie", user, "100px") | n,unicode }
+${ commonheader(_("Bundles Dashboard"), "oozie", user, "100px") | n,unicode }
 ${layout.menubar(section='dashboard')}
 
 
@@ -31,7 +32,6 @@ ${layout.menubar(section='dashboard')}
 
   <div class="well hueWell">
     <form>
-      ${ _('Filter:') }
       <input type="text" id="filterInput" class="input-xlarge search-query" placeholder="${ _('Search for username, name, etc...') }">
 
       <span class="pull-right">
@@ -127,6 +127,8 @@ ${layout.menubar(section='dashboard')}
       absoluteUrl: bundle.absoluteUrl,
       canEdit: bundle.canEdit,
       killUrl: bundle.killUrl,
+      suspendUrl: bundle.suspendUrl,
+      resumeUrl: bundle.resumeUrl,
       created: bundle.created
     }
   }
@@ -330,18 +332,36 @@ ${layout.menubar(section='dashboard')}
                 foundRow = node;
               }
             });
+            var killCell = "";
+            var suspendCell = "";
+            var resumeCell = "";
+            if (bundle.canEdit) {
+              killCell = '<a class="btn btn-small confirmationModal" ' +
+                      'href="javascript:void(0)" ' +
+                      'data-url="' + bundle.killUrl + '" ' +
+                      'title="${ _('Kill') } ' + bundle.id + '"' +
+                      'alt="${ _('Are you sure you want to kill bundle ')}' + bundle.id + '?" ' +
+                      'data-message="${ _('The bundle was killed!') }" ' +
+                      'data-confirmation-message="${ _('Are you sure you\'d like to kill this job?') }"' +
+                      '>${ _('Kill') }</a>';
+              suspendCell = '<a class="btn btn-small confirmationModal" ' +
+                      'href="javascript:void(0)" ' +
+                      'data-url="' + bundle.suspendUrl + '" ' +
+                      'title="${ _('Suspend') } ' + bundle.id + '"' +
+                      'alt="${ _('Are you sure you want to suspend bundle ')}' + bundle.id + '?" ' +
+                      'data-message="${ _('The bundle was suspended!') }" ' +
+                      'data-confirmation-message="${ _('Are you sure you\'d like to suspend this job?') }"' +
+                      '>${ _('Suspend') }</a>';
+              resumeCell = '<a class="btn btn-small confirmationModal" ' +
+                      'href="javascript:void(0)" ' +
+                      'data-url="' + bundle.resumeUrl + '" ' +
+                      'title="${ _('Resume') } ' + bundle.id + '"' +
+                      'alt="${ _('Are you sure you want to resume bundle ')}' + bundle.id + '?" ' +
+                      'data-message="${ _('The bundle was resumed!') }" ' +
+                      'data-confirmation-message="${ _('Are you sure you\'d like to resume this job?') }"' +
+                      '>${ _('Resume') }</a>';
+            }
             if (foundRow == null) {
-              var killCell = "";
-              if (bundle.canEdit) {
-                killCell = '<a class="btn btn-small confirmationModal" ' +
-                        'href="javascript:void(0)" ' +
-                        'data-url="' + bundle.killUrl + '" ' +
-                        'title="${ _('Kill') } ' + bundle.id + '"' +
-                        'alt="${ _('Are you sure you want to kill bundle ')}' + bundle.id + '?" ' +
-                        'data-message="${ _('The bundle was killed!') }" ' +
-                        'data-confirmation-message="${ _('Are you sure you\'d like to kill this job?') }"' +
-                        '>${ _('Kill') }</a>';
-              }
               if (['RUNNING', 'PREP', 'WAITING', 'SUSPENDED', 'PREPSUSPENDED', 'PREPPAUSED', 'PAUSED'].indexOf(bundle.status) > -1) {
                 try {
                   runningTable.fnAddData([
@@ -352,7 +372,7 @@ ${layout.menubar(section='dashboard')}
                     bundle.user,
                     emptyStringIfNull(bundle.created),
                     '<a href="' + bundle.absoluteUrl + '" data-row-selector="true">' + bundle.id + '</a>',
-                    killCell
+                    killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(bundle.status) > -1?suspendCell:resumeCell)
                   ]);
                 }
                 catch (error) {
@@ -364,6 +384,7 @@ ${layout.menubar(section='dashboard')}
             else {
               runningTable.fnUpdate('<span class="' + bundle.statusClass + '">' + bundle.status + '</span>', foundRow, 1, false);
               runningTable.fnUpdate('<div class="progress"><div class="' + bundle.progressClass + '" style="width:' + bundle.progress + '%">' + bundle.progress + '%</div></div>', foundRow, 3, false);
+              runningTable.fnUpdate(killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(bundle.status) > -1?suspendCell:resumeCell), foundRow, 7, false);
             }
           });
         }
