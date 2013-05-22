@@ -566,33 +566,20 @@ class TextFileProcessor():
     @staticmethod
     def read_in_chunks(fs, path, encoding):
         offset = 0
-        LOG.info('||||| read_in_chunks - 0')
         while True:
-            LOG.info('||||| read_in_chunks - 1')
             chunk = fs.read(path, offset, DEFAULT_IMPORT_CHUNK_SIZE)
-            LOG.info('||||| read_in_chunks - 2')
             if chunk:
-                LOG.info('||||| read_in_chunks - 3')
                 chunk_len = len(chunk)
-                LOG.info('||||| read_in_chunks - 4 - %s' % str(chunk_len))
                 if chunk_len < DEFAULT_IMPORT_CHUNK_SIZE:  # last chunk
-                    LOG.info('||||| read_in_chunks - 5')
                     chunk = unicode('\n'.join([s for s in chunk.splitlines() if s.strip()]), encoding, errors='ignore')
-                    LOG.info('||||| read_in_chunks - 6')
                 else:
-                    LOG.info('||||| read_in_chunks - 7')
                     lines = chunk.splitlines()
-                    LOG.info('||||| read_in_chunks - 8')
                     if 1 == len(lines):
                         raise Exception('File could not be read in chunks: default chunk size is %s [bytes]'
                                         % DEFAULT_IMPORT_CHUNK_SIZE)
-                    LOG.info('||||| read_in_chunks - 9')
                     chunk_len -= len(lines[-1])
                     chunk = unicode('\n'.join([s for s in lines[:-1] if s.strip()]), encoding, errors='ignore')
-                    LOG.info('||||| read_in_chunks - 10')
-                LOG.info('||||| read_in_chunks - 11')
                 offset += chunk_len
-                LOG.info('||||| read_in_chunks - 12')
                 yield chunk
             else:
                 return

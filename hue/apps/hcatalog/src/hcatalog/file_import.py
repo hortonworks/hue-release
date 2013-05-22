@@ -176,7 +176,6 @@ def create_from_file(request, database='default'):
                         table_form=form.table,
                         error=err_msg)
                     )
-                # raise Exception(str(parser_options['delimiter']))
                 # getting back file_processor_type from preview
                 parser_options['file_processor_type'] = request.POST.get('file_processor_type', None)
                 user_def_columns = []

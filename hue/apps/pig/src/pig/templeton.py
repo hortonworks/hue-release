@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import logging
 import urllib
 import urllib2
 import simplejson as json
 from hcatalog.conf import TEMPLETON_URL
 
+LOG = logging.getLogger(__name__)
 
 class Templeton(object):
 
@@ -31,6 +33,8 @@ class Templeton(object):
         else:
             data = {"user.name": self.user}
         data = urllib.urlencode(data)
+        LOG.debug('Templeton request, method: POST, url: %s, data: %s' % (unicode(TEMPLETON_URL.get() + url),
+                                                                          unicode(data)))
         req = urllib2.Request(TEMPLETON_URL.get() + url, data)
         response = urllib2.urlopen(req)
 
