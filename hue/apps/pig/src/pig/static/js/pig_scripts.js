@@ -417,7 +417,7 @@ $(document).ready(function(){
     });
 
   var uploader = new qq.FileUploader({
-          debug: true,
+          //debug: true,
           element: document.getElementById('udf_file_upload'),
           allowedExtensions: ["jar"],
           action: $("#udfs_form").attr("action"),

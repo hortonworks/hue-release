@@ -78,7 +78,7 @@ def process_pig_script(pig_src, request):
         return request.POST.get("%" + matchobj.group(1) + "%")
 
     def get_file_path(matchobj):
-        return "REGISTER " + request.fs.fs_defaultfs + UDF_PATH + matchobj.group(1)
+        return "REGISTER " + request.fs.fs_defaultfs + request.fs.join(UDF_PATH + "/" + matchobj.group(1))
 
     def get_macro_path(matchobj):
         return "IMPORT '" + request.fs.fs_defaultfs + matchobj.group(1) +"';"
@@ -108,9 +108,17 @@ def script_clone(request, obj_id):
 
 
 def udf_create(request):
-    res = _upload_file(request)
-    UDF.objects.create(url=res['dest'], file_name=request.FILES['hdfs_file'].name, owner=request.user)
-    return HttpResponse(json.dumps({"status": 0}))
+    response = {'status': -1, 'data': ''}
+    try:
+        resp = _upload_file(request)
+        response.update(resp)
+        UDF.objects.create(url=resp['path'], file_name=request.FILES['hdfs_file'].name, owner=request.user)
+    except Exception, ex:
+        response['error'] = str(ex)
+        hdfs_file = request.FILES.get('hdfs_file')
+        if hdfs_file:
+            hdfs_file.remove()
+    return HttpResponse(json.dumps(response))
 
 
 def udf_delete(request, obj_id):
