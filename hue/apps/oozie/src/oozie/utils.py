@@ -94,7 +94,7 @@ def smart_path(path, mapping):
   # This dynamic checking enable the use of <prepares> statements in a workflow scheduled manually of by a coordinator.
   # The logic is a bit complicated but Oozie is not consistent with data paths, prepare, coordinator paths and Fs action.
 
-  if not path.startswith('$') and not path.startswith('/') and not path.startswith('hdfs://'):
+  if not path.startswith('/') and not path.startswith('hdfs://'):
     path = '/user/%(username)s/%(path)s' % {'username': '${wf:user()}', 'path': path}
 
   if path.startswith('$'):
