@@ -1,5 +1,5 @@
 %define tutorials_dir      /usr/lib/tutorials
-%define huedir            /usr/lib/hue
+%define hue_dir            /usr/lib/hue
 %global __os_install_post %{nil}
 %define _unpackaged_files_terminate_build 1
 %define _binaries_in_noarch_packages_terminate_build   0
@@ -29,8 +29,8 @@ Hue Tutorials
 %prep
 %setup -n tutorials
 gzip -dc $BB/rpm/SOURCES/tutorials-env.tgz | tar -xvvf -
-%setup -b 1 -T -D -n start_scripts
-%setup -b 2 -T -D -n .ssh
+%setup -b 2 -T -D -n start_scripts
+%setup -b 3 -T -D -n .ssh
 
 %build
 
@@ -144,6 +144,8 @@ fi
 Summary: Init-scripts and splash
 Requires: hue, python >= 2.6
 
+%description -n hue-sandbox
+Init scripts and splash
 
 %files -n hue-sandbox
 %{hue_dir}

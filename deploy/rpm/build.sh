@@ -69,11 +69,13 @@ bash $SRC/hue/tools/relocatable.sh
 
 cd $SRC
 tar zcf $SRC/hue.tgz hue
-COMMENT #
+COMMENT
 
-cd $SRC/sandbox-shared/deploy/rpm
+echo "making rpms"
 
 #======= Making rpms =======
+
+cd $SRC/sandbox-shared/deploy/rpm
 
 <<COMMENT
 ( #Hue RPM
@@ -88,6 +90,7 @@ COMMENT
 ( #Tutorials RPM
     cd tutorials
     cp $SRC/tutorials.tgz $SRC/tutorials-env.tgz ./
+    cp $SRC/start_scripts.tgz ./
     bash make_tutorials_rpm.sh
     mv *.rpm $OUT/
 )
