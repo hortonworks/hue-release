@@ -4,7 +4,7 @@ import os
 import json
 
 from fabric.api import env, run, local
-from fabric.operations import get
+from fabric.operations import get, put, sudo
 from fabric.contrib.files import exists, sed
 
 import boto
@@ -60,13 +60,13 @@ def do_upload(client, path, location='repo/', remote=''):
         do_upload(client, "%s/%s" % (path, f), location=location, remote="%s/%s" % (remote, f))
 
 
-def upload(name='repo'):
+def upload(name='repo', subfolder="/out"):
     "upload to s3 rpms. args: s3dir"
     conn = boto.connect_s3(AWS_ACCESS_KEY_ID,
                            AWS_SECRET_ACCESS_KEY)
     bucket = conn.get_bucket(BUCKET_NAME)
 
-    do_upload(bucket, "%s/out" % name, '%s' % name)
+    do_upload(bucket, "%s%s" % (name, subfolder), '%s' % name)
 
 
 def rpm(name="repo", branch="Caterpillar"):
@@ -80,3 +80,26 @@ def rpm(name="repo", branch="Caterpillar"):
 
 def vagrant():
     local("cd ./vagrant; vagrant destroy -f; vagrant up")
+
+build_support = "/home/jenkins/workspace/build-support/"
+output_directory = build_support + 'bigtop-0.3/output/hue'
+
+
+def bt_get_out(name='repo'):
+    "download rpmbuild result folder from BigTop, args: dirname"
+    local('rm -rf ./' + name)
+    get(output_directory, './' + name)
+
+
+def btrpm(name="repo", branch="Caterpillar"):
+    "build and upload to s3 rpms _using BigTop_. args: s3dir,branch"
+    env.host_string = "root@127.0.0.1:2222"
+
+    put("HDP_variables.sh",
+        "/home/jenkins/workspace/build-support/HDP_variables.sh")
+    sed(build_support + 'HDP_variables.sh', 'Caterpillar', branch)
+    sudo("cd " + build_support + "; BUILD_NUMBER=100 sh bigtop_build.sh hue", user="jenkins")
+    sudo("cd " + output_directory + "; createrepo .", user="jenkins")
+    bt_get_out(name)
+    upload(name, "")
+    print "Done!"

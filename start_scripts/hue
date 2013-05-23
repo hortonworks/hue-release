@@ -2,6 +2,14 @@
 # Hue
 # chkconfig: 345 99 1
 # description: startup script
+### BEGIN INIT INFO
+# provides: Hue
+# Required-Start:
+# Required-Stop:
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 6
+# Description: hue init script
+### END INIT INFO
 
 . /usr/lib/hue/tools/functions
 

@@ -16,6 +16,8 @@ mkdir -p $SRC $OUT
 # to specify ssh key!
 # export GIT_SSH="`pwd`/git_ssh.sh"
 
+sudo yum -y install createrepo git rpm-build mysql-devel openldap-devel python-simplejson sqlite-devel
+
 #===== Making sources ======
 
 cd $SRC
@@ -35,7 +37,7 @@ cd $SRC
     tar zcf $SRC/tutorials.tgz tutorials --exclude=".git"
 )
 
-sudo yum -y install createrepo git rpm-build ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql  mysql-devel openldap-devel python-devel python-simplejson sqlite-devel
+# sudo yum -y install ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql python-devel
 sudo easy_install virtualenv
 
 mkdir -p tutorials-env && cd tutorials-env
@@ -48,7 +50,7 @@ tar zcf $SRC/tutorials-env.tgz .env
 
 # Build Hue
 
-
+<<COMMENT
 rm -rf $SRC/hue
 
 cd $SRC
@@ -67,12 +69,13 @@ bash $SRC/hue/tools/relocatable.sh
 
 cd $SRC
 tar zcf $SRC/hue.tgz hue
-
+COMMENT #
 
 cd $SRC/sandbox-shared/deploy/rpm
 
 #======= Making rpms =======
 
+<<COMMENT
 ( #Hue RPM
     cd hue
     cp $SRC/hue.tgz $SRC/start_scripts.tgz ./
@@ -80,6 +83,7 @@ cd $SRC/sandbox-shared/deploy/rpm
     bash make_hue_rpm.sh
     mv *.rpm $OUT/
 )
+COMMENT
 
 ( #Tutorials RPM
     cd tutorials
