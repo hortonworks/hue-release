@@ -27,7 +27,7 @@ start)
     printf "%-50s" "Starting $NAME..."
     
     touch /usr/lib/tutorials/registration_post.log
-    chown sandbox:sandbox /usr/lib/tutorials/registration_post.log
+    chown hue:hadoop /usr/lib/tutorials/registration_post.log
 
     /usr/lib/tutorials/.env/bin/python \
         /usr/lib/hue/tools/start_scripts/registration_post.py

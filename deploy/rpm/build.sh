@@ -98,9 +98,9 @@ COMMENT
 unset GIT_SSH
 
 #====== Create repository =====
-cd $OUT
-createrepo .
+#cd $OUT
+#createrepo .
 
-set +x
+#set +x
 
-echo "Building repository finished: $OUT"
+#echo "Building repository finished: $OUT"

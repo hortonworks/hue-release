@@ -51,6 +51,6 @@ def do_post():
 
 if __name__ == '__main__':
     do_post()
-    uid = pwd.getpwnam('sandbox').pw_uid
-    gid = grp.getgrnam('sandbox').gr_gid
+    uid = pwd.getpwnam('hue').pw_uid
+    gid = grp.getgrnam('hadoop').gr_gid
     os.chown(LOG_FILE, uid, gid)

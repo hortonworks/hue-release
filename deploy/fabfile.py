@@ -69,10 +69,14 @@ def upload(name='repo', subfolder="/out"):
     do_upload(bucket, "%s%s" % (name, subfolder), '%s' % name)
 
 
-def rpm(name="repo", branch="Caterpillar"):
+def rpm(name="repo", branch="Caterpillar", bigtop=True):
     "build and upload to s3 rpms. args: s3dir,branch"
     update_rpm(branch)
     build_rpm()
+    if bigtop:
+        run("rm -rf /home/sandbox/rpmbuild/out/repodata")
+        put('./' + name + '-bigtop/hue/*.rpm', '/home/sandbox/rpmbuild/out/')
+    run("cd /home/sandbox/rpmbuild/out; createrepo .")
     get_out(name)
     upload(name)
     print "Done!"
@@ -87,8 +91,9 @@ output_directory = build_support + 'bigtop-0.3/output/hue'
 
 def bt_get_out(name='repo'):
     "download rpmbuild result folder from BigTop, args: dirname"
-    local('rm -rf ./' + name)
-    get(output_directory, './' + name)
+    env.host_string = "root@127.0.0.1:2222"
+    local('rm -rf ./' + name + '-bigtop')
+    get(output_directory, './' + name + "-bigtop")
 
 
 def btrpm(name="repo", branch="Caterpillar"):

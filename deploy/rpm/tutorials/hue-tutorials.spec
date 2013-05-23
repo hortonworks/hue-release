@@ -1,5 +1,7 @@
 %define tutorials_dir      /usr/lib/tutorials
 %define hue_dir            /usr/lib/hue
+%define user               hue
+%define group              hadoop
 %global __os_install_post %{nil}
 %define _unpackaged_files_terminate_build 1
 %define _binaries_in_noarch_packages_terminate_build   0
@@ -38,7 +40,7 @@ gzip -dc $BB/rpm/SOURCES/tutorials-env.tgz | tar -xvvf -
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT%{tutorials_dir}/
 mkdir -p $RPM_BUILD_ROOT%{hue_dir}/tools
-mkdir -p $RPM_BUILD_ROOT/home/sandbox/.ssh
+mkdir -p $RPM_BUILD_ROOT/home/%{user}/.ssh
 
 cd $RPM_BUILD_DIR/tutorials
 cp -R ./ $RPM_BUILD_ROOT%{tutorials_dir}/
@@ -48,7 +50,7 @@ cp -R ./ $RPM_BUILD_ROOT%{hue_dir}/tools/start_scripts/
 mv $RPM_BUILD_ROOT%{hue_dir}/tools/start_scripts/functions $RPM_BUILD_ROOT%{hue_dir}/tools/
 
 cd $RPM_BUILD_DIR/.ssh
-cp -R ./ $RPM_BUILD_ROOT/home/sandbox/.ssh
+cp -R ./ $RPM_BUILD_ROOT/home/%{user}/.ssh
 
 
 
@@ -57,7 +59,7 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 %files
 
-%defattr(-,sandbox,sandbox)
+%defattr(-,%{user},%{group})
 %{tutorials_dir}
 
 
@@ -65,15 +67,15 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 rm -f %{tutorials_dir}/tutorials_app/db/lessons.db
 
-mkdir -p /usr/lib/tutorials
-chown -R sandbox:sandbox /usr/lib/tutorials
+mkdir -p %{tutorials_dir}
+chown -R %{user}:%{group} %{tutorials_dir}
 
-sudo -u sandbox -s -- <<END_OF_SANDBOX
+sudo -u %{user} -s -- <<END_OF_SANDBOX
 
 echo '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/single_user_mode
 echo '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/show_credentials
 
-cd /usr/lib/tutorials/
+cd %{tutorials_dir}
 echo "clonning tutorials ..."
 [ ! -d sandbox-tutorials ] && git clone git@github.com:hortonworks/sandbox-tutorials.git
 cd sandbox-tutorials
@@ -86,10 +88,10 @@ END_OF_SANDBOX
 %post
 
 rm -f %{tutorials_dir}/tutorials_app/db/db_version.txt
-sudo -u sandbox bash %{tutorials_dir}/tutorials_app/run/run.sh
+sudo -u %{user} bash %{tutorials_dir}/tutorials_app/run/run.sh
 
 
-TUTORIALS="/usr/lib/tutorials"
+TUTORIALS="%{tutorials_dir}"
 HUE="%{hue_dir}"
 
 ln -s $TUTORIALS/hue_common_header.js \
@@ -147,6 +149,19 @@ Requires: hue, python >= 2.6
 %description -n hue-sandbox
 Init scripts and splash
 
+%post -n hue-sandbox
+ln -sf %{hue_dir}/tools/start_scripts/hue /etc/init.d/hue
+chkconfig --add hue
+chkconfig --level 3 hue on
+
+/etc/init.d/hue setup
+
+ln -sf /usr/lib/hue/tools/start_scripts/startup_script /etc/init.d/startup_script
+chkconfig --add startup_script
+chkconfig --level 3 startup_script on
+
+
 %files -n hue-sandbox
 %{hue_dir}
-/home/sandbox/.ssh
+%defattr(600,%{user},%{group})
+/home/%{user}/.ssh

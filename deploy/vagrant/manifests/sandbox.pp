@@ -77,6 +77,15 @@ class sandbox_rpm {
                      Exec['yum-cache'],
                    ],
     }
+
+    user { "hue":
+      ensure     => "present",
+      managehome => true,
+    }
+
+    group { "hadoop":
+        ensure => "present",
+    }
 }
 
 

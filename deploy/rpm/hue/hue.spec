@@ -1,4 +1,6 @@
 %global __os_install_post %{nil}
+%define user               hue
+%define group              hadoop
 %define _unpackaged_files_terminate_build 1
 %define _binaries_in_noarch_packages_terminate_build   0
 
@@ -41,7 +43,7 @@ Hue
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/usr/lib/hue/
 mkdir -p $RPM_BUILD_ROOT/var/lib/hue/tools
-mkdir -p $RPM_BUILD_ROOT/home/sandbox/.ssh
+mkdir -p $RPM_BUILD_ROOT/home/%{user}/.ssh
 
 cd $RPM_BUILD_DIR/hue
 cp -R ./ $RPM_BUILD_ROOT/usr/lib/hue/
@@ -51,7 +53,7 @@ cp -R ./ $RPM_BUILD_ROOT/usr/lib/hue/tools/start_scripts/
 mv $RPM_BUILD_ROOT/usr/lib/hue/tools/start_scripts/functions $RPM_BUILD_ROOT/usr/lib/hue/tools/
 
 cd $RPM_BUILD_DIR/.ssh
-cp -R ./ $RPM_BUILD_ROOT/home/sandbox/.ssh
+cp -R ./ $RPM_BUILD_ROOT/home/%{user}/.ssh
 
 mkdir -p $RPM_BUILD_ROOT/etc/hue
 mv $RPM_BUILD_ROOT/usr/lib/hue/desktop/conf $RPM_BUILD_ROOT/etc/hue/
@@ -64,13 +66,13 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 
 %files
 
-%defattr(-,sandbox,sandbox)
+%defattr(-,%{user},%{group})
 /usr/lib/hue
 
 %dir /var/lib/hue
 
-%defattr(600,sandbox,sandbox)
-/home/sandbox/.ssh
+%defattr(600,%{user},%{group})
+/home/%{user}/.ssh
 
 %config(noreplace) /usr/lib/hue/desktop/desktop.db
 %config(noreplace) /etc/hue/conf/hue.ini
@@ -82,9 +84,8 @@ rm -rf $RPM_BUILD_ROOT $RPM_BUILD_DIR
 (
 [ ! `</etc/group grep "^hadoop"` ] && groupadd hadoop
 [ ! `</etc/group grep "^users"` ] && groupadd users
-[ ! `</etc/group grep "^sandbox"` ] && groupadd sandbox
-[[ -z `cat /etc/passwd | grep sandbox` ]] && useradd -g users sandbox || usermod -a -g users sandbox
-sudo -u sandbox -s -- <<END_OF_SANDBOX
+[[ -z `cat /etc/passwd | grep %{user}` ]] && useradd -g users %{user} || usermod -a -g users %{user}
+sudo -u %{user} -s -- <<END_OF_SANDBOX
 cd /usr/lib
 
 END_OF_SANDBOX
@@ -97,7 +98,7 @@ END_OF_SANDBOX
 (
 chmod -R 755 /usr/lib/hue/tools/start_scripts
 
-sudo -u sandbox mkdir -p /usr/lib/hue/logs
+sudo -u %{user} mkdir -p /usr/lib/hue/logs
 
 cd /usr/lib/hue
 mv desktop/libs/hadoop/java-lib/hue-plugins-*.jar /usr/lib/hadoop/lib/
@@ -126,7 +127,7 @@ chkconfig --level 3 hue on
 %postun
 
 if [ "$1" = "0" ]; then
-	#  userdel -r sandbox
+	#  userdel -r %{user}
     echo
 elif [ "$1" = "1" ]; then
   # upgrade

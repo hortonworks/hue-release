@@ -53,13 +53,13 @@ start)
         printf "%-50s\n" "Updating sandbox..." | tee -a $LOG
         cd /usr/lib/sandbox-shared
 
-        sudo -u sandbox git fetch >> /var/log/startup_script.log 2>&1
-        sudo -u sandbox git checkout $BRANCH >> /var/log/startup_script.log 2>&1
-        sudo -u sandbox git stash  >> /var/log/startup_script.log 2>&1
-        pull_res=$(sudo -u sandbox git pull origin $BRANCH 2>> $LOG)
+        sudo -u hue git fetch >> /var/log/startup_script.log 2>&1
+        sudo -u hue git checkout $BRANCH >> /var/log/startup_script.log 2>&1
+        sudo -u hue git stash  >> /var/log/startup_script.log 2>&1
+        pull_res=$(sudo -u hue git pull origin $BRANCH 2>> $LOG)
         echo $pull_res >> $LOG
 
-        chown sandbox:sandbox -R /usr/lib/sandbox-shared
+        chown hue:hadoop -R /usr/lib/sandbox-shared
         [ ! "$pull_res" = "Already up-to-date." ] && /usr/lib/hue/build/env/bin/hue migrate  >> $LOG 2>&1
     fi
     

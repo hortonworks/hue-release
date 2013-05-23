@@ -6,7 +6,7 @@ TUTORIALS_PATH = Config(
   key="tutorials_path",
   help="Path where tutorials are located",
   private=True,
-  default="/usr/lib/sandbox-tutorials/",
+  default="/usr/lib/tutorials/sandbox-tutorials/",
 )
 
 TUTORIALS_UPDATE_SCRIPT = Config(
