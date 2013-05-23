@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from desktop.lib.rest import http_client
+from desktop.conf import SERVER_USER
 import simplejson as json
 import urllib
 
@@ -9,7 +10,7 @@ from hcatalog.conf import TEMPLETON_URL, SECURITY_ENABLED
 class Templeton(object):
 
     def __init__(self, user="hdfs"):
-        self.user = user
+        self.user = SERVER_USER.get()
         self.client = http_client.HttpClient(TEMPLETON_URL.get())
         if SECURITY_ENABLED.get():
             self.client = self.client.set_kerberos_auth()

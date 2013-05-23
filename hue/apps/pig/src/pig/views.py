@@ -208,11 +208,11 @@ def _job_result(request, job):
     statusdir = job.statusdir
     result = {}
     try:
-        error = request.fs.open(statusdir + "/stderr", "r")
+        error = request.fs.do_as_user(request.fs.DEFAULT_USER, request.fs.open(statusdir + "/stderr", "r"))
         result['error'] = error.read()
-        stdout = request.fs.open(statusdir + "/stdout", "r")
+        stdout = request.fs.do_as_user(request.fs.DEFAULT_USER, request.fs.open(statusdir + "/stdout", "r"))
         result['stdout'] = stdout.read()
-        exit_code = request.fs.open(statusdir + "/exit", "r")
+        exit_code = request.fs.do_as_user(request.fs.DEFAULT_USER, request.fs.open(statusdir + "/exit", "r"))
         result['exit'] = exit_code.read()
         error.close()
         stdout.close()
