@@ -162,6 +162,7 @@ chkconfig --level 3 startup_script on
 
 
 %files -n hue-sandbox
+%defattr(755,%{user},%{group})
 %{hue_dir}
 %defattr(600,%{user},%{group})
 /home/%{user}/.ssh

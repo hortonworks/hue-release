@@ -69,6 +69,13 @@ class sandbox_rpm {
                    ],
     }
 
+    package { 'hue-sandbox':
+        ensure => latest,
+        require => [ File['sandbox.repo'],
+                     Exec['yum-cache'],
+                   ],
+    }
+
     package { 'hue-tutorials':
         ensure => latest,
         require => [ File['sandbox.repo'],

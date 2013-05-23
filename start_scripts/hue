@@ -24,6 +24,8 @@ DAEMON_OPTS="-p $PIDFILE -l $LOGDIR -d"
 
 HUEINI=/etc/hue/conf/hue.ini
 
+DO="/sbin/runuser -s /bin/bash $USER -c"
+
 # set hue.ini configuration
 function ini_set() {
     sed -i "s/\($2 *= *\).*/\1$3/" "$1"
@@ -112,7 +114,6 @@ hue_setup() {
         if [ -e $RE_REGISTER ]; then
             # Do app_reg on upgraded apps. This is a workaround for DISTRO-11.
             # We can probably take it out after another release.
-            DO="/sbin/runuser -s /bin/bash $USER -c"
             APP_REG="/usr/share/hue/tools/app_reg/app_reg.py"
             # Upgraded apps write their paths in the re_rgister file.
             RE_REG_LOG=/var/log/hue/hue_re_register.log
@@ -146,7 +147,7 @@ hue_start() {
             return 0
         fi
         # the supervisor itself will setuid down to $USER
-        env - PATH=$PATH $DAEMON $DAEMON_OPTS
+        $DO "$DAEMON $DAEMON_OPTS"
         ret=$?
         base=$(basename $0)
         if [ $ret -eq 0 ]; then
