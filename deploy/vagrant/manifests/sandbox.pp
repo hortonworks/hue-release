@@ -60,23 +60,7 @@ class sandbox_rpm {
         command => "yum clean all --disablerepo='*' --enablerepo='sandbox'",
     }
 
-    package { 'hue':
-        ensure => latest,
-        require => [ File['sandbox.repo'],
-                     Package['libxslt'],
-                     Package['python-lxml'],
-                     Exec['yum-cache'],
-                   ],
-    }
-
-    package { 'hue-sandbox':
-        ensure => latest,
-        require => [ File['sandbox.repo'],
-                     Exec['yum-cache'],
-                   ],
-    }
-
-    package { 'hue-tutorials':
+    package { ['hue', 'hue-sandbox', 'hue-tutorials', 'hue-plugins']:
         ensure => latest,
         require => [ File['sandbox.repo'],
                      Package['libxslt'],
