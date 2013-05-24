@@ -72,8 +72,8 @@ chown -R %{user}:%{group} %{tutorials_dir}
 
 sudo -u %{user} -s -- <<END_OF_SANDBOX
 
-echo '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/single_user_mode
-echo '{"user":"sandbox", "pass":"1111"}' > /var/lib/hue/show_credentials
+echo '{"user":"hue", "pass":"1111"}' > /var/lib/hue/single_user_mode
+echo '{"user":"hue", "pass":"1111"}' > /var/lib/hue/show_credentials
 
 cd %{tutorials_dir}
 echo "clonning tutorials ..."
