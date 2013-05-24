@@ -7,8 +7,10 @@ gpgcheck=0
 
 
 [hue-bigtop]
+# dev repository
 name=Hue repository
 baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/bigtop/testing/
 path=/
 enabled=1
 gpgcheck=0
+priority=1

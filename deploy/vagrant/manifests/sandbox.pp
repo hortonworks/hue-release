@@ -40,10 +40,15 @@ class sandbox_rpm {
         content => "nameserver 8.8.8.8",
     }
 
+    package { "yum-plugin-priorities":
+        ensure => present,
+    }
+
     file { 'sandbox.repo':
         path    => "/etc/yum.repos.d/sandbox.repo",
         content => template("/vagrant/files/sandbox.repo"),
         ensure  => file,
+        require => Package['yum-plugin-priorities'],
     }
 
     package { "libxslt":
@@ -69,10 +74,12 @@ class sandbox_rpm {
                    ],
     }
 
+/*  Disable single user mode
     file {'/var/lib/hue/single_user_mode':
         ensure => absent,
         require => Package['hue-tutorials'],
     }
+*/
 
     user { "hue":
       ensure     => "present",
