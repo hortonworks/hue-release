@@ -60,22 +60,24 @@ def do_upload(client, path, location='repo/', remote=''):
         do_upload(client, "%s/%s" % (path, f), location=location, remote="%s/%s" % (remote, f))
 
 
-def upload(name='repo', subfolder="/out"):
+def upload(name='repo', subfolder="/out", local=None):
     "upload to s3 rpms. args: s3dir"
     conn = boto.connect_s3(AWS_ACCESS_KEY_ID,
                            AWS_SECRET_ACCESS_KEY)
     bucket = conn.get_bucket(BUCKET_NAME)
 
-    do_upload(bucket, "%s%s" % (name, subfolder), '%s' % name)
+    if not local:
+        local = name
+    do_upload(bucket, "%s%s" % (local, subfolder), '%s' % name)
 
 
 def rpm(name="repo", branch="Caterpillar", bigtop=True):
     "build and upload to s3 rpms. args: s3dir,branch"
     update_rpm(branch)
     build_rpm()
-    if bigtop:
-        run("rm -rf /home/sandbox/rpmbuild/out/repodata")
-        put('./' + name + '-bigtop/hue/*.rpm', '/home/sandbox/rpmbuild/out/')
+    # if bigtop:
+        # run("rm -rf /home/sandbox/rpmbuild/out/repodata")
+        # put('./' + name + '-bigtop/hue/*.rpm', '/home/sandbox/rpmbuild/out/')
     run("cd /home/sandbox/rpmbuild/out; createrepo .")
     get_out(name)
     upload(name)
@@ -106,5 +108,5 @@ def btrpm(name="repo", branch="Caterpillar"):
     sudo("cd " + build_support + "; BUILD_NUMBER=100 sh bigtop_build.sh hue", user="jenkins")
     sudo("cd " + output_directory + "; createrepo .", user="jenkins")
     bt_get_out(name)
-    upload(name, "")
+    upload('bigtop/' + name, "", local=name + '-bigtop/hue')
     print "Done!"

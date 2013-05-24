@@ -4,3 +4,11 @@ baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/testing/
 path=/
 enabled=1
 gpgcheck=0
+
+
+[hue-bigtop]
+name=Hue repository
+baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/bigtop/testing/
+path=/
+enabled=1
+gpgcheck=0
