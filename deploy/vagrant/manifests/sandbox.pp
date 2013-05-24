@@ -25,8 +25,22 @@ define line($file, $line, $ensure = 'present') {
     }
 }
 
+define replace($file, $pattern, $replacement) {
+    exec { "/usr/bin/perl -pi -e 's/$pattern/$replacement/' '$file'":
+        onlyif => "/usr/bin/perl -ne 'BEGIN { \$ret = 1; } \$ret = 0 if
+/$pattern/ && ! /$replacement/ ; END { exit \$ret; }' '$file'",
+    }
+}
+
 
 class sandbox_rpm {
+    replace { "/etc/hive/conf/hive-site.xml":
+       file => "/etc/hive/conf/hive-site.xml",
+       pattern => "jdbc:mysql:\\/\\/sandbox.hortonworks.com",
+       replacement => "jdbc:mysql:\\/\\/localhost:3306"
+    }
+
+
     file { '/etc/sysconfig/network-scripts/ifcfg-eth1':
         ensure => absent,
     }
@@ -253,9 +267,6 @@ class sandbox {
         require => Service['ip6tables']
     }
 }
-
-
-
 
 
 
