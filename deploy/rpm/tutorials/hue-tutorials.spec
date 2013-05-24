@@ -150,9 +150,9 @@ Requires: hue, python >= 2.6
 Init scripts and splash
 
 %post -n hue-sandbox
-ln -sf %{hue_dir}/tools/start_scripts/hue /etc/init.d/hue
-chkconfig --add hue
-chkconfig --level 3 hue on
+# ln -sf %{hue_dir}/tools/start_scripts/hue /etc/init.d/hue
+# chkconfig --add hue
+# chkconfig --level 3 hue on
 
 /etc/init.d/hue setup
 
