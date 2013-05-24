@@ -60,21 +60,21 @@ echo "Start Oozie"
 su - oozie -c "cd /var/log/oozie; /usr/lib/oozie/bin/oozie-start.sh"
 tail -$line  /var/log/oozie/oozie.log
 
-echo "Starting Ganglia"
-/etc/init.d/gmetad stop
-/etc/init.d/gmond stop
-/etc/init.d/hdp-gmetad start
-/etc/init.d/hdp-gmond start
+# echo "Starting Ganglia"
+# /etc/init.d/gmetad stop
+# /etc/init.d/gmond stop
+# /etc/init.d/hdp-gmetad start
+# /etc/init.d/hdp-gmond start
 
 
-echo "starting Nagios"
-/etc/init.d/nagios start;sleep 5
+# echo "starting Nagios"
+# /etc/init.d/nagios start;sleep 5
 
-echo "Starting Ambari server"
-ambari-server start; sleep 5
+# echo "Starting Ambari server"
+# ambari-server start; sleep 5
 
-echo "Starting Ambari agent"
-ambari-agent start
+# echo "Starting Ambari agent"
+# ambari-agent start
 
 echo "Service associated with port"
 netstat -nltp
