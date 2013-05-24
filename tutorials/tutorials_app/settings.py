@@ -12,7 +12,7 @@ USERINFO_FILE_PATH = os.path.join('/usr/lib/tutorials', 'user_info.dat')
 
 START_SCRIPTS = os.path.join('/usr/lib/hue/tools', 'start_scripts')
 
-HUE_PATH = os.path.join('/usr/lib', 'hue')
+HUE_VAR_PATH = os.path.join('/var/lib', 'hue')
 
 ADMINS = ()
 
@@ -27,7 +27,7 @@ DATABASES = {
     },
     'auth_db': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(HUE_PATH, 'desktop/desktop.db'),
+        'NAME': os.path.join(HUE_VAR_PATH, 'desktop.db'),
     }
 }
 
