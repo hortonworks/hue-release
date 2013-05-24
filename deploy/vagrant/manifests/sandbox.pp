@@ -69,6 +69,11 @@ class sandbox_rpm {
                    ],
     }
 
+    file {'/var/lib/hue/single_user_mode':
+        ensure => absent,
+        require => Package['hue-tutorials'],
+    }
+
     user { "hue":
       ensure     => "present",
       managehome => true,
