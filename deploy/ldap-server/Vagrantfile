@@ -1,0 +1,23 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos"
+
+  config.vm.box_url = "http://puppet-vagrant-boxes.puppetlabs.com/centos-64-x64-vbox4210.box"
+
+  config.vm.network :private_network, ip: "192.168.56.10", adapter: 2
+
+  config.vm.provider :virtualbox do |vb|
+    vb.gui = true
+    vb.customize ["modifyvm", :id, "--memory", "256", "--name", "LDAP", "--groups", "/HortonWorks"]
+    vb.customize ["modifyvm", :id, "--mouse", "usbtablet"]
+    vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50", "--cpus", "1"]
+  end
+
+  config.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
+    puppet.manifests_path = "manifests"
+    puppet.manifest_file  = "base.pp"
+  end
+
+end
