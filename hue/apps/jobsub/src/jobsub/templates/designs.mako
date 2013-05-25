@@ -49,19 +49,16 @@ ${ commonheader("Job designer", "jobsub", user, "60px") | n,unicode }
 
     <%def name="actions()">
       <div class="btn-toolbar" style="display: inline; vertical-align: middle">
-        <button id="home" class="btn" title="${_('Home')}"><i class="icon-share"></i> ${_('Home')}</button>
-        &nbsp;
       <!-- ko ifnot: inTrash -->
         <button id="submit-design" class="btn" title="${_('Submit')}" data-bind="enable: selectedDesignObjects().length == 1"><i class="icon-play"></i> ${_('Submit')}</button>
         <button id="edit-design" class="btn" title="${_('Edit')}" data-bind="enable: selectedDesignObjects().length == 1"><i class="icon-pencil"></i> ${_('Edit')}</button>
         <button id="copy-designs" class="btn" title="${_('Copy')}" data-bind="enable: selectedDesignObjects().length > 0"><i class="icon-retweet"></i> ${_('Copy')}</button>
         <div id="delete-dropdown" class="btn-group" style="vertical-align: middle">
-          <button id="delete-btn" class="btn toolbarBtn dropdown-toggle" title="${_('Delete')}" data-toggle="dropdown" data-bind="enable: selectedDesignObjects().length > 0">
-            <i class="icon-remove"></i> ${_('Delete')}
+          <button id="trash-designs" class="btn" data-bind="enable: selectedDesignObjects().length > 0"><i class="icon-remove"></i> ${_('Move to trash')}</button>
+          <button class="btn dropdown-toggle" data-toggle="dropdown" data-bind="enable: selectedDesignObjects().length > 0">
             <span class="caret"></span>
           </button>
-          <ul class="dropdown-menu" style="top: auto">
-            <li><a href="javascript:void(0);" id="trash-designs" title="${_('Move to trash')}"><i class="icon-trash"></i> ${_('Move to trash')}</a></li>
+          <ul class="dropdown-menu">
             <li><a href="javascript:void(0);" id="destroy-designs" title="${_('Delete forever')}"><i class="icon-bolt"></i> ${_('Delete forever')}</a></li>
           </ul>
         </div>
@@ -75,7 +72,14 @@ ${ commonheader("Job designer", "jobsub", user, "60px") | n,unicode }
 
     <%def name="creation()">
       <div class="btn-toolbar" style="display: inline; vertical-align: middle">
+        <button id="home" class="btn" title="${_('Home')}" data-bind="visible: isEditing"><i class="icon-home"></i> ${_('View designs')}</button>
+      <!-- ko if: inTrash -->
+        &nbsp;&nbsp;
+        <button type="button" id="purge-trashed-designs" class="btn" title="${ _('Delete all the designs') }"><i class="icon-fire"></i> ${ _('Empty trash') }</button>
+      <!-- /ko -->
       <!-- ko ifnot: inTrash -->
+        <a href="#trashed-designs" class="btn"><i class="icon-trash"></i> ${ _('View trash') }</a>
+        &nbsp;&nbsp;
         <div id="new-action-dropdown" class="btn-group" style="vertical-align: middle">
           <a href="#" class="btn new-action-link dropdown-toggle" title="${_('New action')}" data-toggle="dropdown">
             <i class="icon-plus-sign"></i> ${_('New action')}
@@ -117,12 +121,8 @@ ${ commonheader("Job designer", "jobsub", user, "60px") | n,unicode }
             </li>
           </ul>
         </div>
-        &nbsp;&nbsp;
-        <a href="#trashed-designs" class="btn"><i class="icon-trash"></i> ${ _('Trash') }</a>
       <!-- /ko -->
-      <!-- ko if: inTrash -->
-        <button type="button" id="purge-trashed-designs" class="btn" title="${ _('Delete all the designs') }"><i class="icon-fire"></i> ${ _('Empty') }</button>
-      <!-- /ko -->
+
       </div>
     </%def>
   </%actionbar:render>
@@ -235,7 +235,33 @@ ${ commonheader("Job designer", "jobsub", user, "60px") | n,unicode }
     <h3>${_('Choose a file')}</h3>
   </div>
   <div class="modal-body">
-    <div id="fileChooserModal">
+    <div class="chooser">
+    </div>
+  </div>
+  <div class="modal-footer">
+  </div>
+</div>
+
+<div id="chooseDirectory" class="modal hide fade">
+  <div class="modal-header">
+    <a href="#" class="close" data-dismiss="modal">&times;</a>
+    <h3>${_('Choose a directory')}</h3>
+  </div>
+  <div class="modal-body">
+    <div class="chooser">
+    </div>
+  </div>
+  <div class="modal-footer">
+  </div>
+</div>
+
+<div id="choosePath" class="modal hide fade">
+  <div class="modal-header">
+    <a href="#" class="close" data-dismiss="modal">&times;</a>
+    <h3>${_('Choose a path')}</h3>
+  </div>
+  <div class="modal-body">
+    <div class="chooser">
     </div>
   </div>
   <div class="modal-footer">
@@ -694,6 +720,7 @@ var designTableOptions = {
       designs.selectAll();
     }
   },
+  "iDisplayLength" : 25,
   "oLanguage": {
     "sEmptyTable":     "${_('No data available')}",
     "sInfo":           "${_('Showing _START_ to _END_ of _TOTAL_ entries')}",
@@ -776,6 +803,7 @@ var setupRoutes = (function() {
           });
 
           designs.closeDesign();
+          designs.isEditing(true);
 
           var context = $.extend(true, {}, global_action_context, contexts[node_type]);
           templates.getActionTemplate(node_type, context);
@@ -808,6 +836,8 @@ var setupRoutes = (function() {
             showSection('design');
           });
 
+          designs.isEditing(true);
+
           var node_type = designObject.design().node_type();
           var context = $.extend(true, {}, global_action_context, contexts[node_type]);
           templates.getActionTemplate(node_type, context);
@@ -818,12 +848,14 @@ var setupRoutes = (function() {
         'trashed-designs': function() {
           $('#home').removeAttr('disabled');
           designs.inTrash(true);
+          designs.isEditing(true);
           showSection('list-designs');
           redraw();
         },
         'list-designs': function() {
           $('#home').removeAttr('disabled');
           designs.inTrash(false);
+          designs.isEditing(false);
           showSection('list-designs');
           redraw();
         }

@@ -197,7 +197,7 @@ class Submission(object):
           # Home is 755
           fs.create_home_dir(remote_home_dir)
         # Shared by all the users
-        fs.mkdir(remote_data_dir, 0777)
+        fs.mkdir(remote_data_dir, 01777)
     finally:
       fs.setuser(user)
 
