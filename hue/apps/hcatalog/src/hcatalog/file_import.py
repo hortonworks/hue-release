@@ -476,6 +476,8 @@ def _text_file_convert(fs, processor, parser_options):
     ignore_tabs = parser_options.get('ignore_tabs', False)
     single_line_comment = parser_options.get('single_line_comment', None)
     java_style_comments = parser_options.get('java_style_comments', False)
+    delimiter_decoded = parser_options['delimiter'].decode('string_escape')
+    replace_delimiter_with_decoded = parser_options['replace_delimiter_with'].decode('string_escape')
 
     no_comments_path = path
     # remove comments at first
@@ -490,16 +492,15 @@ def _text_file_convert(fs, processor, parser_options):
             chunk = chunk.replace(' ', '')
         if ignore_tabs:
             chunk = chunk.replace('\t', '')
-        csv_content = unicode_csv_reader(encoding, StringIO.StringIO(chunk),
-                                         delimiter=parser_options['delimiter'].decode('string_escape'), )
+        csv_content = unicode_csv_reader(encoding, StringIO.StringIO(chunk), delimiter=delimiter_decoded, )
         data_to_store = []
         for row_idx, row in enumerate(csv_content):
             new_row = []
             for field in row:
                 # skip the new lines characters from field
-                field = re.sub(r'[\r\n]+', '', field)
-                new_row.append(field.replace(parser_options['replace_delimiter_with'].decode('string_escape'), ''))
-            data_to_store.append(parser_options['replace_delimiter_with'].decode('string_escape').join(new_row))
+                field = field.replace('\r', '').replace('\n', '')
+                new_row.append(field.replace(replace_delimiter_with_decoded, ''))
+            data_to_store.append(replace_delimiter_with_decoded.join(new_row))
         if first_chunk:
             fields_list_start = 1 if parser_options['read_column_headers'] else 0
             processor.append_chunk(fs, results_path, '\n'.join(data_to_store[fields_list_start:]), encoding)
@@ -516,16 +517,18 @@ def _text_preview_convert(lines, parser_options):
 
     if parser_options['read_column_headers'] or parser_options['apply_excel_dialect']:
         if parser_options['apply_excel_dialect']:
+            delimiter_decoded = parser_options['delimiter'].decode('string_escape')
+            replace_delimiter_with_decoded = parser_options['replace_delimiter_with'].decode('string_escape')
             csv_content = unicode_csv_reader(parser_options['encoding'], StringIO.StringIO('\n'.join(lines)),
-                                             delimiter=parser_options['delimiter'].decode('string_escape'),)
+                                             delimiter=delimiter_decoded,)
             new_fields_list = []
             fields_list_start = 1 if parser_options['read_column_headers'] else 0
             for row in csv_content:
                 new_row = []
                 for field in row:
                     # skip the new line characters from field
-                    field = re.sub(r'[\r\n]+', '', field)
-                    new_row.append(field.replace(parser_options['replace_delimiter_with'].decode('string_escape'), ''))
+                    field = field.replace('\r', '').replace('\n', '')
+                    new_row.append(field.replace(replace_delimiter_with_decoded, ''))
                 new_fields_list.append(new_row)
             auto_column_types = HiveTypeAutoDefine().defineColumnTypes(new_fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
             fields_list = new_fields_list[:IMPORT_PEEK_NLINES]
