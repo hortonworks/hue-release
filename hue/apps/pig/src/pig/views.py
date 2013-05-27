@@ -24,7 +24,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 
 from desktop.lib.exceptions_renderable import PopupException
-from desktop.lib.django_util import login_notrequired, render
+from desktop.lib.django_util import login_notrequired, render, get_desktop_uri_prefix
 from filebrowser.views import _do_newfile_save, _file_reader, _upload_file
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
@@ -286,7 +286,7 @@ def notify_job_complited(request, job_id):
         You can check result at the following link %s" % (
             job.script.title,
             job.start_time.strftime('%d.%m.%Y %H:%M'),
-            request.build_absolute_uri(reverse("show_job_result", args=[job_id]))
+            "%s%s" % (get_desktop_uri_prefix(), reverse("show_job_result", args=[job_id]))
         )
         job.script.user.email_user(subject, body)
     return HttpResponse("Done")
