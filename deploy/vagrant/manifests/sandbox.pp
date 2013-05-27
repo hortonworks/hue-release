@@ -85,6 +85,7 @@ class sandbox_rpm {
                      Package['libxslt'],
                      Package['python-lxml'],
                      Exec['yum-cache'],
+                     Package['yum-plugin-priorities'],
                    ],
     }
 
