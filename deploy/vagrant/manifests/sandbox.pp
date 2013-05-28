@@ -40,7 +40,6 @@ class sandbox_rpm {
        replacement => "jdbc:mysql:\\/\\/localhost:3306"
     }
 
-
     file { '/etc/sysconfig/network-scripts/ifcfg-eth1':
         ensure => absent,
     }
@@ -99,6 +98,7 @@ class sandbox_rpm {
     user { "hue":
       ensure     => "present",
       managehome => true,
+      password => '$1$MwHL5JF5$1WmQPYETuWUyhCKLEyN9a1',
     }
 
     group { "hadoop":
