@@ -98,6 +98,8 @@ class sandbox_rpm {
     user { "hue":
       ensure     => "present",
       managehome => true,
+      gid => "hadoop",
+      groups => ["admin"],
       password => '$1$MwHL5JF5$1WmQPYETuWUyhCKLEyN9a1',
     }
 
