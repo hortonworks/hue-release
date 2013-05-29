@@ -58,7 +58,7 @@ class Templeton(object):
             data['user.name'] = self.user
         else:
             data = {"user.name": self.user}
-        response = self.client.execute("DELETE", url, data=data)
+        response = self.client.execute("DELETE", url, params={"user.name": self.user}, data=data)
         return json.loads(response.read())
 
     def pig_query(self, execute=None, pig_file=None, statusdir=None, callback=None, arg=None):
