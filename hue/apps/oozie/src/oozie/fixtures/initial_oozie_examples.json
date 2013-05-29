@@ -2676,8 +2676,8 @@
     "pk": 48,
     "model": "oozie.hive",
     "fields": {
-      "files": "[\"hive-site.xml\"]",
-      "job_xml": "hive-site.xml",
+      "files": "[]",
+      "job_xml": "",
       "job_properties": "[]",
       "params": "[]",
       "archives": "[]",
@@ -2689,8 +2689,8 @@
     "pk": 104,
     "model": "oozie.hive",
     "fields": {
-      "files": "[\"hive-site.xml\"]",
-      "job_xml": "hive-site.xml",
+      "files": "[]",
+      "job_xml": "",
       "job_properties": "[]",
       "params": "[]",
       "archives": "[]",
