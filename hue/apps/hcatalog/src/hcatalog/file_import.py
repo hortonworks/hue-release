@@ -186,7 +186,7 @@ def create_from_file(request, database='default'):
                                         column_type=request.POST.get('cols-%d-column_type' % column_count), ))
                     column_count += 1
                 try:
-                    parser_options = _on_table_create(request.fs, parser_options)
+                    LOG.debug('Creating table by hcatalog')
                     proposed_query = django_mako.render_to_string("create_table_statement.mako",
                                                                   {
                                                                       'table': dict(name=table_name,
@@ -198,22 +198,19 @@ def create_from_file(request, database='default'):
                                                                       'partition_columns': []
                                                                   })
                     proposed_query = proposed_query.decode('utf-8')
-                    path = form.table.cleaned_data['path']
-                    file_type = hcatalog.forms.IMPORT_FILE_TYPE_TEXT
-
-                    if file_type == hcatalog.forms.IMPORT_FILE_TYPE_SPREADSHEET:
-                        path = parser_options['results_path']
-                    else:
-                        if parser_options['results_path'] and request.fs.exists(parser_options['results_path']):
-                            if parser_options['do_import_data']:
-                                path = parser_options['results_path']
-                            else:
-                                request.fs.remove(parser_options['results_path'])
                     hcat = HCatClient(request.user.username)
                     hcat.create_table(database, table_name, proposed_query)
-                    tables = _get_table_list(request)
-                    if parser_options.get('do_import_data', True):
-                        if not table_name or not path:
+
+                    do_import_data = parser_options.get('do_import_data', True)
+                    LOG.debug('Data processing stage')
+                    if do_import_data:
+                        parser_options = _on_table_create(request.fs, parser_options)
+                        path = parser_options.get('results_path', None)
+                        if not path or not request.fs.exists(path):
+                            msg = 'Missing needed result file to load data into table'
+                            LOG.error(msg)
+                            raise Exception(msg)
+                        if not table_name:
                             msg = 'Internal error: Missing needed parameter to load data into table'
                             LOG.error(msg)
                             raise Exception(msg)
@@ -235,7 +232,7 @@ def create_from_file(request, database='default'):
                     if tmp_dir and request.fs.exists:
                         request.fs.rmtree(tmp_dir)
 
-                    return render("show_tables.mako", request, dict(database=database, tables=tables, ))
+                    return render("show_tables.mako", request, dict(database=database, tables=_get_table_list(request)))
 
                 except Exception as ex:
                     return render("create_table_from_file.mako", request, dict(

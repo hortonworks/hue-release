@@ -664,6 +664,20 @@ $(document).ready(function () {
     function updateTerminatorField(name) {
         var delim0 = $("#id_table-" + name + "_0");
         var delim1 = $("#id_table-" + name + "_1");
+        if($("input[name='table-autodetect_delimiter']").is(":checked"))
+        {
+            var delim_repl_with0 = $("select[name='table-replace_delimiter_with_0']");
+            var delim_repl_with1 = $("input[name='table-replace_delimiter_with_1']");
+            delim_repl_with0.val(delim0.val());
+            delim_repl_with1.val(delim1.val());
+            if (delim_repl_with0.val() == "__other__") {
+                delim_repl_with1.css("visibility", "visible");
+            }
+            else {
+                delim_repl_with1.css("visibility", "hidden");
+                delim_repl_with1.val('');
+            }
+        }
         if (delim0.val() == "__other__") {
             delim1.css("visibility", "visible");
         }
