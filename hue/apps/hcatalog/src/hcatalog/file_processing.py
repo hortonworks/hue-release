@@ -364,6 +364,11 @@ class CommentsDetector():
         self.java_fsm.reset()
 
     def process_buffer(self, buf, index_offset=0):
+        """
+        Feeds the buffer into FSM
+        index_offset - is used when input data is split in chunks but there is a need to process that as one unit,
+        in this case the result comment intervals would be applied for whole input stream
+        """
         if self.custom_line_comment:
             loc_start = 0
             custom_line_comment_len = len(self.custom_line_comment)
@@ -389,17 +394,54 @@ class CommentsDetector():
                 self.java_fsm.memory['cur_symbol_pos'] = idx + index_offset
                 self.java_fsm.process(symbol if symbol in self.defined_symbols else 'other')
 
-    def get_comments(self):
+    def skip_comments(self, chunk_buf, index_offset=0):
+        self.process_buffer(chunk_buf, index_offset=index_offset)
+        comments = self.get_comment_intervals()
+        cur_block_comment = self.get_cur_block_comment()
+        new_comments = []
+        if comments:
+            for c in comments:
+                new_c = [c[0] - index_offset, c[1] - index_offset]
+                if new_c[0] < 0:
+                    new_c[0] = 0
+                if new_c[1] < 0:
+                    new_c[1] = 0
+                if new_c[0] > 0 or new_c[1] > 0:
+                    new_comments.append(new_c)
+        if cur_block_comment[0]:
+            new_comments.append([cur_block_comment[0] - index_offset, len(chunk_buf)])
+        self.clear_comment_intervals()
+        if new_comments:
+            new_buffer = ''
+            end_comment_pos = 0
+            for comment in new_comments:
+                new_buffer += chunk_buf[end_comment_pos : comment[0]]
+                # skipping empty lines in case of java block comments
+                test_next_start = chunk_buf[comment[1]:comment[1] + 2]
+                if '\r\n' == test_next_start:
+                    end_comment_pos = comment[1] + 2
+                elif '\r' == test_next_start[0:1] or '\n' == test_next_start[0:1]:
+                    end_comment_pos = comment[1] + 1
+            new_buffer += chunk_buf[end_comment_pos : len(chunk_buf)]
+            return new_buffer
+        return chunk_buf
+
+    def get_cur_line_comment(self):
+        return self.java_fsm.memory['cur_line_comment']
+
+    def get_cur_block_comment(self):
+        return self.java_fsm.memory['cur_block_comment']
+
+    def get_comment_intervals(self):
         comments = self.java_fsm.memory['line_comments'] + self.java_fsm.memory['block_comments'] + \
                self.custom_line_comments
         comments = intervals_union([IInterval(c[0], c[1]) for c in comments])
         return comments
 
-
-DEFAULT_IMPORT_PEEK_SIZE = 8192
-DEFAULT_IMPORT_CHUNK_SIZE = 5*1024*1024  # 5 Mb
-DEFAULT_IMPORT_MAX_SIZE = 4294967296  # 4 Gb
-DEFAULT_IMPORT_PEEK_NLINES = 10
+    def clear_comment_intervals(self):
+        self.java_fsm.memory['line_comments'] = []
+        self.java_fsm.memory['block_comments'] = []
+        self.custom_line_comments = []
 
 
 def remove_comments(buf, java_line_comment, java_block_comment, custom_line_comment):
@@ -407,7 +449,10 @@ def remove_comments(buf, java_line_comment, java_block_comment, custom_line_comm
                                         java_block_comment=java_block_comment,
                                         custom_line_comment=custom_line_comment)
     comment_detector.process_buffer(buf)
-    comments = comment_detector.get_comments()
+    comments = comment_detector.get_comment_intervals()
+    cur_block_comment = comment_detector.get_cur_block_comment()
+    if cur_block_comment[0]:
+        comments.append([cur_block_comment[0], len(buf)])
     if comments:
         new_buffer = ''
         end_comment_pos = 0
@@ -417,6 +462,12 @@ def remove_comments(buf, java_line_comment, java_block_comment, custom_line_comm
         new_buffer += buf[end_comment_pos : len(buf)]
         return new_buffer
     return buf
+
+
+DEFAULT_IMPORT_PEEK_SIZE = 8192
+DEFAULT_IMPORT_CHUNK_SIZE = 5*1024*1024  # 5 Mb
+DEFAULT_IMPORT_MAX_SIZE = 4294967296  # 4 Gb
+DEFAULT_IMPORT_PEEK_NLINES = 10
 
 
 class GzipFileProcessor():
@@ -506,7 +557,7 @@ class GzipFileProcessor():
             else:
                 break
 
-        comments = comment_detector.get_comments()
+        comments = comment_detector.get_comment_intervals()
         if comments:
             fs.create(dest_path, overwrite=True, permission=0777)
             dest_file_obj = fs.open(src_path, mode='w')
@@ -605,7 +656,7 @@ class TextFileProcessor():
             else:
                 break
 
-        comments = comment_detector.get_comments()
+        comments = comment_detector.get_comment_intervals()
         if comments:
             fs.create(dest_path, overwrite=True, permission=0777)
             src_stats = fs.stats(src_path)

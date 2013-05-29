@@ -30,7 +30,7 @@ from django.template.defaultfilters import escapejs
 import hcatalog.common
 import hcatalog.forms
 from hcatalog.views import _get_table_list
-from hcatalog.file_processing import GzipFileProcessor, TextFileProcessor, XlsFileProcessor
+from hcatalog.file_processing import GzipFileProcessor, TextFileProcessor, XlsFileProcessor, CommentsDetector
 from hcat_client import HCatClient
 
 import logging
@@ -450,16 +450,40 @@ def _xls_file_create(fs, parser_options):
     fields_list = get_xls_file_processor().get_scope_data(xls_fileobj, xls_sheet_selected, cell_range=xls_cell_range)
     fields_list_start = 1 if xls_read_column_headers else 0
     fields_list = fields_list[fields_list_start:]
-    # raise Exception(str(fields_list))
     get_xls_file_processor().write_to_dsv_gzip(fs, xls_fileobj, results_path, fields_list,
                                                parser_options['replace_delimiter_with'])
     return parser_options
 
 
-def unicode_csv_reader(encoding, unicode_csv_data, dialect=csv.excel, **kwargs):
+def unicode_csv_reader(encoding, unicode_csv_data, cell_delim_to_skip=None, cell_skip_lfs=False, join_cells_with=None,
+                       dialect=csv.excel, **kwargs):
     csv_reader = csv.reader(custom_csv_encoder(encoding, unicode_csv_data), dialect=dialect, **kwargs)
-    for row in csv_reader:
-        yield [unicode(cell, encoding) for cell in row]
+    if join_cells_with:
+        if cell_delim_to_skip and cell_skip_lfs:
+            for row in csv_reader:
+                yield join_cells_with.join([unicode(cell, encoding).replace('\r', '').replace('\n', '').replace(cell_delim_to_skip, '') for cell in row])
+        elif cell_skip_lfs:
+            for row in csv_reader:
+                yield join_cells_with.join([unicode(cell, encoding).replace('\r', '').replace('\n', '') for cell in row])
+        elif cell_delim_to_skip:
+            for row in csv_reader:
+                yield join_cells_with.join([unicode(cell, encoding).replace(cell_delim_to_skip, '') for cell in row])
+        else:
+            for row in csv_reader:
+                yield join_cells_with.join([unicode(cell, encoding) for cell in row])
+    else:
+        if cell_delim_to_skip and cell_skip_lfs:
+            for row in csv_reader:
+                yield [unicode(cell, encoding).replace('\r', '').replace('\n', '').replace(cell_delim_to_skip, '') for cell in row]
+        elif cell_skip_lfs:
+            for row in csv_reader:
+                yield [unicode(cell, encoding).replace('\r', '').replace('\n', '') for cell in row]
+        elif cell_delim_to_skip:
+            for row in csv_reader:
+                yield [unicode(cell, encoding).replace(cell_delim_to_skip, '') for cell in row]
+        else:
+            for row in csv_reader:
+                yield [unicode(cell, encoding) for cell in row]
 
 
 def custom_csv_encoder(encoding, unicode_csv_data):
@@ -479,36 +503,31 @@ def _text_file_convert(fs, processor, parser_options):
     delimiter_decoded = parser_options['delimiter'].decode('string_escape')
     replace_delimiter_with_decoded = parser_options['replace_delimiter_with'].decode('string_escape')
 
-    no_comments_path = path
-    # remove comments at first
     if java_style_comments or single_line_comment:
-        no_comments_path = processor.remove_comments_from_file(fs, path, results_path + '.no.comm',
-                                                               java_line_comment=java_style_comments,
-                                                               java_block_comment=java_style_comments,
-                                                               custom_line_comment=single_line_comment)
+        comment_detector = CommentsDetector(java_line_comment=java_style_comments,
+                                            java_block_comment=java_style_comments,
+                                            custom_line_comment=single_line_comment)
     first_chunk = True
-    for chunk in processor.read_in_chunks(fs, no_comments_path, encoding):
+    chunk_offset = 0
+    for chunk in processor.read_in_chunks(fs, path, encoding):
+        # skipping comments at first
+        if java_style_comments or single_line_comment:
+            chunk = comment_detector.skip_comments(chunk, index_offset=chunk_offset)
+            chunk_offset += len(chunk)
         if ignore_whitespaces:
             chunk = chunk.replace(' ', '')
         if ignore_tabs:
             chunk = chunk.replace('\t', '')
-        csv_content = unicode_csv_reader(encoding, StringIO.StringIO(chunk), delimiter=delimiter_decoded, )
-        data_to_store = []
-        for row_idx, row in enumerate(csv_content):
-            new_row = []
-            for field in row:
-                # skip the new lines characters from field
-                field = field.replace('\r', '').replace('\n', '')
-                new_row.append(field.replace(replace_delimiter_with_decoded, ''))
-            data_to_store.append(replace_delimiter_with_decoded.join(new_row))
+        data_to_store = unicode_csv_reader(encoding, StringIO.StringIO(chunk), delimiter=delimiter_decoded,
+                                           cell_delim_to_skip=replace_delimiter_with_decoded, cell_skip_lfs=True,
+                                           join_cells_with=replace_delimiter_with_decoded)
+        data_to_store = [row for row in data_to_store]
         if first_chunk:
             fields_list_start = 1 if parser_options['read_column_headers'] else 0
             processor.append_chunk(fs, results_path, '\n'.join(data_to_store[fields_list_start:]), encoding)
             first_chunk = False
         else:
             processor.append_chunk(fs, results_path, '\n' + '\n'.join(data_to_store), encoding)
-    if no_comments_path != path:
-        fs.remove(no_comments_path)
 
     return parser_options
 
@@ -519,17 +538,11 @@ def _text_preview_convert(lines, parser_options):
         if parser_options['apply_excel_dialect']:
             delimiter_decoded = parser_options['delimiter'].decode('string_escape')
             replace_delimiter_with_decoded = parser_options['replace_delimiter_with'].decode('string_escape')
-            csv_content = unicode_csv_reader(parser_options['encoding'], StringIO.StringIO('\n'.join(lines)),
-                                             delimiter=delimiter_decoded,)
-            new_fields_list = []
+            new_fields_list = unicode_csv_reader(parser_options['encoding'], StringIO.StringIO('\n'.join(lines)),
+                                             delimiter=delimiter_decoded,
+                                             cell_delim_to_skip=replace_delimiter_with_decoded, cell_skip_lfs=True)
             fields_list_start = 1 if parser_options['read_column_headers'] else 0
-            for row in csv_content:
-                new_row = []
-                for field in row:
-                    # skip the new line characters from field
-                    field = field.replace('\r', '').replace('\n', '')
-                    new_row.append(field.replace(replace_delimiter_with_decoded, ''))
-                new_fields_list.append(new_row)
+            new_fields_list = [row for row in new_fields_list]
             auto_column_types = HiveTypeAutoDefine().defineColumnTypes(new_fields_list[fields_list_start:IMPORT_COLUMN_AUTO_NLINES])
             fields_list = new_fields_list[:IMPORT_PEEK_NLINES]
             parser_options['fields_list'] = fields_list
