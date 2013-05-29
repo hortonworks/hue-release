@@ -355,6 +355,7 @@ def _text_file_preview(fs, file_types, parser_options):
 def _text_file_create(fs, parser_options):
     hcat_tmp_dir = get_hcat_hdfs_tmp_dir(fs) + '/%s' % (datetime.now().strftime("%s"))
     fs.mkdir(hcat_tmp_dir)
+    fs.do_as_superuser(fs.chmod, hcat_tmp_dir, 0777)
     results_path = hcat_tmp_dir + '/%s' % (os.path.basename(parser_options['path']).replace(' ', ''))
     parser_options['tmp_dir'] = hcat_tmp_dir
     parser_options['results_path'] = results_path

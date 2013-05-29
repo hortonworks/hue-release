@@ -96,6 +96,7 @@ ${serde_properties | n}
 }
 % endif
 },
+"permissions": "rwxrwxrwx",
 % if table.get("use_default_location", True):
 "external": "false"
 % else:
