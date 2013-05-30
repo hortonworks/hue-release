@@ -40,7 +40,7 @@ gzip -dc $BB/rpm/SOURCES/tutorials-env.tgz | tar -xvvf -
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT%{tutorials_dir}/
 mkdir -p $RPM_BUILD_ROOT%{hue_dir}/tools
-mkdir -p $RPM_BUILD_ROOT/home/%{user}/.ssh
+mkdir -p $RPM_BUILD_ROOT%{hue_dir}/.ssh
 
 cd $RPM_BUILD_DIR/tutorials
 cp -R ./ $RPM_BUILD_ROOT%{tutorials_dir}/
@@ -50,7 +50,7 @@ cp -R ./ $RPM_BUILD_ROOT%{hue_dir}/tools/start_scripts/
 mv $RPM_BUILD_ROOT%{hue_dir}/tools/start_scripts/functions $RPM_BUILD_ROOT%{hue_dir}/tools/
 
 cd $RPM_BUILD_DIR/.ssh
-cp -R ./ $RPM_BUILD_ROOT/home/%{user}/.ssh
+cp -R ./ $RPM_BUILD_ROOT%{hue_dir}/.ssh/
 
 
 
@@ -165,4 +165,4 @@ chkconfig --level 3 startup_script on
 %defattr(755,%{user},%{group})
 %{hue_dir}
 %defattr(600,%{user},%{group})
-/home/%{user}/.ssh
+%{hue_dir}/.ssh
