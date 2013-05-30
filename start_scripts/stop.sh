@@ -34,8 +34,9 @@ su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf sto
 echo "Stop the name node"
 su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf stop namenode"
 
-echo "Stop the hcat server"
-kill -9 `ps -ef | grep hive | grep hadoop | awk '{ print $2 }'`
+echo "Stop the hive server"
+kill `cat /var/run/hive/hive.pid` >/dev/null 2>&1
+kill `cat /var/run/hive/hive-server.pid` >/dev/null 2>&1
 
 echo "Stop MySQL server"
 /etc/init.d/mysqld stop
