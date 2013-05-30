@@ -21,7 +21,6 @@ package org.apache.hadoop.mapred;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
@@ -40,18 +39,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.Cluster;
-import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenIdentifier;
-import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Text;
+
 import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.Counters.Group;
-import org.apache.hadoop.mapred.JobTracker.State;
 import org.apache.hadoop.mapred.TaskStatus.Phase;
+
 import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.net.NetUtils;
-import org.apache.hadoop.security.Credentials;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.thriftfs.ThriftHandlerBase;
 import org.apache.hadoop.thriftfs.ThriftPluginServer;
@@ -60,8 +56,12 @@ import org.apache.hadoop.thriftfs.ThriftUtils;
 import org.apache.hadoop.thriftfs.api.IOException;
 import org.apache.hadoop.thriftfs.api.RequestContext;
 import org.apache.hadoop.thriftfs.api.ThriftDelegationToken;
+import org.apache.hadoop.thriftfs.jobtracker.api.JobNotFoundException;
 import org.apache.hadoop.thriftfs.jobtracker.api.JobTrackerState;
 import org.apache.hadoop.thriftfs.jobtracker.api.Jobtracker;
+import org.apache.hadoop.thriftfs.jobtracker.api.TaskAttemptNotFoundException;
+import org.apache.hadoop.thriftfs.jobtracker.api.TaskNotFoundException;
+import org.apache.hadoop.thriftfs.jobtracker.api.TaskTrackerNotFoundException;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftClusterStatus;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftCounter;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftCounterGroup;
@@ -70,13 +70,12 @@ import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobCounterRollups;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobID;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobInProgress;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobList;
-import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobStatusList;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobPriority;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobProfile;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobQueueInfo;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobQueueList;
-import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobStatus;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobState;
+import org.apache.hadoop.thriftfs.jobtracker.api.ThriftJobStatus;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftTaskAttemptID;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftTaskID;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftTaskInProgress;
@@ -89,10 +88,6 @@ import org.apache.hadoop.thriftfs.jobtracker.api.ThriftTaskTrackerStatus;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftTaskTrackerStatusList;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftTaskType;
 import org.apache.hadoop.thriftfs.jobtracker.api.ThriftUserJobCounts;
-import org.apache.hadoop.thriftfs.jobtracker.api.JobNotFoundException;
-import org.apache.hadoop.thriftfs.jobtracker.api.TaskNotFoundException;
-import org.apache.hadoop.thriftfs.jobtracker.api.TaskAttemptNotFoundException;
-import org.apache.hadoop.thriftfs.jobtracker.api.TaskTrackerNotFoundException;
 import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.TProcessorFactory;
@@ -361,7 +356,8 @@ public class ThriftJobTrackerPlugin implements org.apache.hadoop.util.ServicePlu
             tcs.setReduceTasks(cs.getReduceTasks());
             tcs.setMaxMapTasks(cs.getMaxMapTasks());
             tcs.setMaxReduceTasks(cs.getMaxReduceTasks());
-            tcs.setState(cs.getJobTrackerStatus() == Cluster.JobTrackerStatus.INITIALIZING ? JobTrackerState.INITIALIZING :
+            tcs.setState(cs.getJobTrackerState() == JobTracker.State.INITIALIZING ? JobTrackerState.INITIALIZING :
+                
                 JobTrackerState.RUNNING);
             tcs.setUsedMemory(cs.getUsedMemory());
             tcs.setMaxMemory(cs.getMaxMemory());
@@ -384,7 +380,7 @@ public class ThriftJobTrackerPlugin implements org.apache.hadoop.util.ServicePlu
             ThriftTaskTrackerStatus ttts = new ThriftTaskTrackerStatus();
             ttts.setTrackerName(t.getTrackerName());
             ttts.setAvailableSpace(t.getResourceStatus().getAvailableSpace());
-            ttts.setFailureCount(t.getFailures());
+            ttts.setFailureCount(t.getDirFailures());
             ttts.setHost(t.getHost());
             ttts.setHttpPort(t.getHttpPort());
             ttts.setLastSeen(t.getLastSeen());
@@ -1117,8 +1113,10 @@ public class ThriftJobTrackerPlugin implements org.apache.hadoop.util.ServicePlu
             }
 
             ThriftJobCounterRollups ret = new ThriftJobCounterRollups();
-            Counters mapCounters = jip.getMapCounters();
-            Counters reduceCounters = jip.getReduceCounters();
+            Counters mapCounters = new Counters(); 
+            jip.getMapCounters(mapCounters);
+            Counters reduceCounters = new Counters(); 
+            jip.getReduceCounters(reduceCounters);
             ret.mapCounters = new ThriftGroupList(
                 JTThriftUtils.toThrift(mapCounters));
             ret.reduceCounters = new ThriftGroupList(
