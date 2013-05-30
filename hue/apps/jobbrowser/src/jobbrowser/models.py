@@ -410,6 +410,7 @@ class TaskAttempt(object):
     self.mapFinishTimeMs = self.task_attempt.mapFinishTime # DO NOT USE, NOT VALID IN 0.20
     self.mapFinishTimeFormatted = format_unixtime_ms(self.task_attempt.mapFinishTime)
     self.counters = self.task_attempt.counters
+    self.is_mr2 = False
 
   def get_tracker(self):
     try:
@@ -450,12 +451,13 @@ class TaskAttempt(object):
 
     et = lxml.html.parse(data)
     log_sections = et.findall('body/pre')
-    if len(log_sections) != 3:
+    logs = [section.text or '' for section in log_sections]
+    if len(logs) < 3:
       LOGGER.warn('Error parsing task attempt log for %s at "%s". Found %d (not 3) log sections' %
                   (self.attemptId, url, len(log_sections)))
       err = _("Hue encountered an error while retrieving logs from '%s'.") % (url,)
-      return (err, err, err)
-    return [ section.text for section in log_sections ]
+      logs += [err] * (3 - len(logs))
+    return logs
 
 
 class Tracker(object):

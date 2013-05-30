@@ -380,7 +380,7 @@ public class ThriftJobTrackerPlugin implements org.apache.hadoop.util.ServicePlu
             ThriftTaskTrackerStatus ttts = new ThriftTaskTrackerStatus();
             ttts.setTrackerName(t.getTrackerName());
             ttts.setAvailableSpace(t.getResourceStatus().getAvailableSpace());
-            ttts.setFailureCount(t.getDirFailures());
+            ttts.setFailureCount(t.getTaskFailures());
             ttts.setHost(t.getHost());
             ttts.setHttpPort(t.getHttpPort());
             ttts.setLastSeen(t.getLastSeen());

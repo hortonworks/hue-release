@@ -19,7 +19,7 @@
 %>
 <%namespace name="comps" file="jobbrowser_components.mako" />
 
-${ commonheader(_('Task Attempt: %(attemptId)s - Job Browser') % dict(attemptId=attempt.attemptId_short), "jobbrowser", user) | n,unicode }
+${ commonheader(_('Task Attempt: %(attemptId)s') % dict(attemptId=attempt.attemptId_short), "jobbrowser", user) | n,unicode }
 <div class="container-fluid">
     <h1>${_('Task Attempt: %(attemptId)s - Job Browser') % dict(attemptId=attempt.attemptId_short)}</h1>
     <div class="row-fluid">
@@ -101,7 +101,13 @@ ${ commonheader(_('Task Attempt: %(attemptId)s - Job Browser') % dict(attemptId=
                         </tr>
                         <tr>
                             <td>${_('Task Tracker')}</td>
-                            <td><a href="/jobbrowser/trackers/${attempt.taskTrackerId}">${attempt.taskTrackerId}</a></td>
+                            <td>
+                              % if attempt.is_mr2:
+                                ${ comps.get_container_link(status, attempt.taskTrackerId) }
+                              % else:
+                                <a href="/jobbrowser/trackers/${attempt.taskTrackerId}" class="task_tracker_link">${attempt.taskTrackerId}</a>
+                              % endif
+                            </td>
                         </tr>
                         <tr>
                             <td>${_('Phase')}</td>

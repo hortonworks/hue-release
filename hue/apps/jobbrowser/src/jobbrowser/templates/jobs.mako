@@ -15,7 +15,6 @@
 ## limitations under the License.
 <%
   from jobbrowser.views import get_state_link
-  from desktop import appmanager
   from django.template.defaultfilters import urlencode
   from desktop.views import commonheader, commonfooter
   from django.utils.translation import ugettext as _
@@ -28,11 +27,10 @@
 %   endif
 </%def>
 
-% if jobs or filtered:
-${ commonheader(_('Job Browser'), "jobbrowser", user) | n,unicode }
+${ commonheader(None, "jobbrowser", user) | n,unicode }
 <div class="container-fluid">
-<h1>${_('Job Browser')}</h1>
-<form class="well form-inline" action="/jobbrowser/jobs" method="GET">
+  <h1>${_('Job Browser')}</h1>
+  <form class="well form-inline" action="/jobbrowser/jobs" method="GET">
     <label>
     ${_('Job status:')}
     <select name="state" class="submitter">
@@ -62,7 +60,7 @@ ${ commonheader(_('Job Browser'), "jobbrowser", user) | n,unicode }
         ${_('Username:')}
         <input type="text" name="user" title="${_('User Name Filter')}" value="${ user_filter or '' }" placeholder="${_('User Name Filter')}" class="submitter input-large search-query" />
     </label>
-</form>
+  </form>
 
 
 % if not jobs:
@@ -76,31 +74,26 @@ ${ commonheader(_('Job Browser'), "jobbrowser", user) | n,unicode }
 <table class="datatables table table-striped table-condensed">
     <thead>
         <tr>
-            <!--<th>${_('Logs')}</th>-->
-            <th>&nbsp;</th>
-            <th>${_('ID')}</th>
-            <th>${_('Name')}</th>
-            <th>${_('Status')}</th>
-            <th>${_('User')}</th>
-            <th>${_('Maps')}</th>
-            <th>${_('Reduces')}</th>
-            <th>${_('Queue')}</th>
-            <th>${_('Priority')}</th>
-            <th>${_('Duration')}</th>
-            <th>${_('Date')}</th>
-            <th data-row-selector-exclude="true"></th>
+            <th width="4%">${_('Logs')}</th>
+            <th width="10%">${_('ID')}</th>
+            <th width="49%">${_('Name')}</th>
+            <th width="5%">${_('Status')}</th>
+            <th width="5%">${_('User')}</th>
+            <th width="2%">${_('Maps')}</th>
+            <th width="2%">${_('Reduces')}</th>
+            <th width="5%">${_('Queue')}</th>
+            <th width="4%">${_('Priority')}</th>
+            <th width="4%">${_('Duration')}</th>
+            <th width="12%">${_('Date')}</th>
+            <th width="3%" data-row-selector-exclude="true" ></th>
         </tr>
     </thead>
     <tbody>
         % for job in jobs:
         <tr class="job-row">
-            <!--<td data-row-selector-exclude="true">
+            <td data-row-selector-exclude="true">
                 <a href="${ url('jobbrowser.views.job_single_logs', job=job.jobId) }" data-row-selector-exclude="true"><i class="icon-tasks"></i></a>
-            </td>-->
-            <td>
-              &nbsp;
             </td>
-
             <td>
                 <a href="${url('jobbrowser.views.single_job', job=job.jobId)}" title="${_('View this job')}" data-row-selector="true">${job.jobId_short}</a>
             </td>
@@ -155,21 +148,6 @@ ${ commonheader(_('Job Browser'), "jobbrowser", user) | n,unicode }
             % endfor
         </tbody>
     </table>
-    % endif
-
-    % else:
-        ${ commonheader(_('Job Browser'), "jobbrowser", user) | n,unicode }
-        <div class="container-fluid">
-        <h1>${_('Welcome to the Job Browser')}</h1>
-        <div>
-            <p>${_("There aren't any jobs running. Let's fix that.")}</p>
-            % if appmanager.get_desktop_module('jobsub') is not None:
-                <a href="/jobsub/">${_('Launch the Job Designer')}</a><br/>
-            % endif
-            % if appmanager.get_desktop_module('beeswax') is not None:
-                <a href="/beeswax/">${_('Launch Beeswax')}</a><br/>
-            % endif
-    </div>
     % endif
 </div>
 

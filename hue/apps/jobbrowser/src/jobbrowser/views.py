@@ -152,8 +152,8 @@ def job_attempt_logs_json(request, job, attempt_index=0, name='syslog', offset=0
     raise KeyError(_("Cannot find job attempt '%(id)s'") % {'id': job.jobId}, e)
 
   link = '/%s/' % name
-  if offset >= 0:
-    link += '?start=%d' % offset
+  if offset and int(offset) >= 0:
+    link += '?start=%s' % offset
 
   try:
     log = html.parse(log_link + link).xpath('/html/body/table/tbody/tr/td[2]')[0].text_content()
@@ -258,10 +258,9 @@ def single_task_attempt(request, job, taskid, attemptid):
   except (KeyError, RestException), e:
     raise PopupException(_("Cannot find attempt '%(id)s' in task") % {'id': attemptid}, e)
 
-  return render("attempt.mako", request,
-    {
-      "attempt":attempt,
-      "taskid":taskid,
+  return render("attempt.mako", request, {
+      "attempt": attempt,
+      "taskid": taskid,
       "joblnk": job_link,
       "task": task
     })
@@ -271,10 +270,6 @@ def single_task_attempt_logs(request, job, taskid, attemptid):
   jt = get_api(request.user, request.jt)
 
   job_link = jt.get_job_link(job.jobId)
-
-  if job_link.is_mr2:
-    return job_attempt_logs(request, job=job.jobId)
-
   task = job_link.get_task(taskid)
 
   try:
@@ -282,24 +277,44 @@ def single_task_attempt_logs(request, job, taskid, attemptid):
   except (KeyError, RestException), e:
     raise KeyError(_("Cannot find attempt '%(id)s' in task") % {'id': attemptid}, e)
 
+  first_log_tab = 0
+
   try:
     # Add a diagnostic log
-    diagnostic_log = ", ".join(task.diagnosticMap[attempt.attemptId])
-    logs = [ diagnostic_log ]
+    if job_link.is_mr2:
+      diagnostic_log = attempt.diagnostics
+    else:
+      diagnostic_log =  ", ".join(task.diagnosticMap[attempt.attemptId])
+    logs = [diagnostic_log]
     # Add remaining logs
-    logs += [ section.strip() for section in attempt.get_task_log() ]
+    logs += [section.strip() for section in attempt.get_task_log()]
+    log_tab = [i for i, log in enumerate(logs) if log]
+    if log_tab:
+      first_log_tab = log_tab[0]
   except TaskTrackerNotFoundException:
     # Four entries,
     # for diagnostic, stdout, stderr and syslog
-    logs = [ _("Failed to retrieve log. TaskTracker not found.") ] * 4
+    logs = [_("Failed to retrieve log. TaskTracker not found.")] * 4
 
-  return render("attempt_logs.mako", request, {
+  context = {
       "attempt": attempt,
       "taskid": taskid,
       "joblnk": job_link,
       "task": task,
-      "logs": logs
-    })
+      "logs": logs,
+      "first_log_tab": first_log_tab,
+  }
+
+  if request.GET.get('format') == 'python':
+    return context
+  elif request.GET.get('format') == 'json':
+    response = {
+      "logs": logs,
+      "isRunning": job.status.lower() in ('running', 'pending', 'prep')
+    }
+    return HttpResponse(json.dumps(response), mimetype="application/json")
+  else:
+    return render("attempt_logs.mako", request, context)
 
 @check_job_permission
 def task_attempt_counters(request, job, taskid, attemptid):
@@ -333,10 +348,9 @@ def trackers(request):
   return render("tasktrackers.mako", request, {'trackers':trackers})
 
 def single_tracker(request, trackerid):
-  """
-  We get here from /trackers/trackerid
-  """
-  tracker = Tracker.from_name(request.jt, trackerid)
+  jt = get_api(request.user, request.jt)
+
+  tracker = jt.get_tracker(trackerid)
   return render("tasktracker.mako", request, {'tracker':tracker})
 
 def clusterstatus(request):

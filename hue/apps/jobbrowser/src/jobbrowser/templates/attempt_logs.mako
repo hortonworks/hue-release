@@ -19,7 +19,7 @@
 %>
 <%namespace name="comps" file="jobbrowser_components.mako" />
 
-${ commonheader(_('Task Attempt: %(attemptId)s - Job Browser') % dict(attemptId=attempt.attemptId_short), "jobbrowser", user) | n,unicode }
+${ commonheader(_('Task Attempt: %(attemptId)s') % dict(attemptId=attempt.attemptId_short), "jobbrowser", user) | n,unicode }
 <div class="container-fluid">
     <h1>${_('Task Attempt: %(attemptId)s - Job Browser') % dict(attemptId=attempt.attemptId_short)}</h1>
     <div class="row-fluid">
@@ -73,34 +73,34 @@ ${ line | unicode,trim }
                   %>
                   <div class="tabbable">
                     <ul class="nav nav-pills">
-                      <li class="active"><a href="#logsDiagnostic" data-toggle="tab">${_('task diagnostic log')}</a></li>
-                      <li class=""><a href="#logsStdOut" data-toggle="tab">${_('stdout')}</a></li>
-                      <li class=""><a href="#logsStdErr" data-toggle="tab">${_('stderr')}</a></li>
-                      <li class=""><a href="#logsSysLog" data-toggle="tab">${_('syslog')}</a></li>
+                      <li class="${ first_log_tab == 0 and 'active' or '' }"><a href="#logsDiagnostic" data-toggle="tab">${_('task diagnostic log')}</a></li>
+                      <li class="${ first_log_tab == 1 and 'active' or '' }"><a href="#logsStdOut" data-toggle="tab">${_('stdout')}</a></li>
+                      <li class="${ first_log_tab == 2 and 'active' or '' }"><a href="#logsStdErr" data-toggle="tab">${_('stderr')}</a></li>
+                      <li class="${ first_log_tab == 3 and 'active' or '' }"><a href="#logsSysLog" data-toggle="tab">${_('syslog')}</a></li>
                     </ul>
                     <div class="tab-content">
-                      <div class="tab-pane active" id="logsDiagnostic">
+                      <div class="tab-pane ${ first_log_tab == 0 and 'active' or '' }" id="logsDiagnostic">
                           % if not log_diagnostic:
                             <pre>-- empty --</pre>
                           % else:
                             <pre>${format_log(log_diagnostic)}</pre>
                           % endif
                       </div>
-                      <div class="tab-pane" id="logsStdOut">
+                      <div class="tab-pane ${ first_log_tab == 1 and 'active' or '' }" id="logsStdOut">
                           % if not log_stdout:
                             <pre>-- empty --</pre>
                           % else:
                             <pre>${format_log(log_stdout)}</pre>
                           % endif
                       </div>
-                      <div class="tab-pane" id="logsStdErr">
+                      <div class="tab-pane ${ first_log_tab == 2 and 'active' or '' }" id="logsStdErr">
                           % if not log_stderr:
                             <pre>-- empty --</pre>
                           % else:
                             <pre>${format_log(log_stderr)}</pre>
                           % endif
                       </div>
-                      <div class="tab-pane" id="logsSysLog">
+                      <div class="tab-pane ${ first_log_tab == 3 and 'active' or '' }" id="logsSysLog">
                           % if not log_syslog:
                             <pre>-- empty --</pre>
                           % else:
@@ -116,40 +116,92 @@ ${ line | unicode,trim }
     </div>
 </div>
 
-<script type="text/javascript" charset="utf-8">
-    $(document).ready(function(){
-        $("#metadataTable").dataTable({
-            "bPaginate": false,
-            "bLengthChange": false,
-            "bInfo": false,
-            "bAutoWidth": false,
-            "bFilter": false,
-            "aoColumns": [
-                { "sWidth": "30%" },
-                { "sWidth": "70%" }
-            ],
-            "oLanguage": {
-                "sEmptyTable": "${_('No data available')}",
-                "sZeroRecords": "${_('No matching records')}",
-            }
-        });
+<script src="/jobbrowser/static/js/utils.js" type="text/javascript" charset="utf-8"></script>
 
-        $(".taskCountersTable").dataTable({
-            "bPaginate": false,
-            "bLengthChange": false,
-            "bInfo": false,
-            "bFilter": false,
-            "bAutoWidth": false,
-            "aoColumns": [
-                { "sWidth": "30%" },
-                { "sWidth": "70%" }
-            ],
-            "oLanguage": {
-                "sEmptyTable": "${_('No data available')}",
-                "sZeroRecords": "${_('No matching records')}",
-            }
-        });
+<script type="text/javascript" charset="utf-8">
+  $(document).ready(function () {
+    $("#metadataTable").dataTable({
+      "bPaginate": false,
+      "bLengthChange": false,
+      "bInfo": false,
+      "bAutoWidth": false,
+      "bFilter": false,
+      "aoColumns": [
+        { "sWidth": "30%" },
+        { "sWidth": "70%" }
+      ],
+      "oLanguage": {
+        "sEmptyTable": "${_('No data available')}",
+        "sZeroRecords": "${_('No matching records')}",
+      }
     });
+
+    $(".taskCountersTable").dataTable({
+      "bPaginate": false,
+      "bLengthChange": false,
+      "bInfo": false,
+      "bFilter": false,
+      "bAutoWidth": false,
+      "aoColumns": [
+        { "sWidth": "30%" },
+        { "sWidth": "70%" }
+      ],
+      "oLanguage": {
+        "sEmptyTable": "${_('No data available')}",
+        "sZeroRecords": "${_('No matching records')}",
+      }
+    });
+
+    refreshLogs();
+    var logsRefreshInterval = window.setInterval(function () {
+      refreshLogs();
+    }, 1000);
+
+    $(document).on("stopLogsRefresh", function () {
+      window.clearInterval(logsRefreshInterval);
+    });
+
+    initLogsElement($("#logsDiagnostic pre"));
+    initLogsElement($("#logsStdOut pre"));
+    initLogsElement($("#logsStdErr pre"));
+    initLogsElement($("#logsSysLog pre"));
+
+    function refreshLogs() {
+      $.getJSON("?format=json", function (data) {
+        if (data && data.logs && data.logs.length > 3) {
+          var log_diagnostic = data.logs[0];
+          var log_stdout = data.logs[1];
+          var log_stderr = data.logs[2];
+          var log_syslog = data.logs[3];
+
+          appendAndScroll($("#logsDiagnostic pre"), log_diagnostic);
+          appendAndScroll($("#logsStdOut pre"), log_stdout);
+          appendAndScroll($("#logsStdErr pre"), log_stderr);
+          appendAndScroll($("#logsSysLog pre"), log_syslog);
+
+          if (!data.isRunning) {
+            $(document).trigger("stopLogsRefresh");
+          }
+        }
+        else {
+          $(document).trigger("stopLogsRefresh");
+        }
+      });
+    }
+
+    $(document).on("resized", function () {
+      resizeLogs($("#logsDiagnostic pre"));
+      resizeLogs($("#logsStdOut pre"));
+      resizeLogs($("#logsStdErr pre"));
+      resizeLogs($("#logsSysLog pre"));
+    });
+
+    $("a[data-toggle='tab']").on("shown", function (e) {
+      resizeLogs($($(e.target).attr("href")).find("pre"));
+    });
+
+    $.jHueScrollUp();
+  });
 </script>
 
 ${ commonfooter(messages) | n,unicode }

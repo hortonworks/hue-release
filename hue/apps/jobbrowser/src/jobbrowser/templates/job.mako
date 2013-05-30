@@ -30,7 +30,7 @@
     <table class="taskTable table table-striped table-condensed">
         <thead>
         <tr>
-            <!--<th>${_('Logs')}</th>-->
+            <th>${_('Logs')}</th>
             <th>${_('Tasks')}</th>
             <th>${_('Type')}</th>
         </tr>
@@ -90,7 +90,7 @@
     % endfor
 </%def>
 
-${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short), "jobbrowser", user) | n,unicode }
+${ commonheader(_('Job: %(jobId)s') % dict(jobId=job.jobId_short), "jobbrowser", user) | n,unicode }
 
 <div class="container-fluid">
     <h1>${_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short)}</h1>
@@ -106,9 +106,9 @@ ${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short),
                     <li>
                         ${comps.get_status(job)}
                     </li>
-                    <!--<li class="nav-header">${_('Logs')}</li>
-                    <li><a href="${ url('jobbrowser.views.job_single_logs', job=job.jobId) }">${_('View logs')}</a></li>-->
-                    % if job.status.lower() == 'running' or job.status.lower() == 'pending':
+                    <li class="nav-header">${_('Logs')}</li>
+                    <li><a href="${ url('jobbrowser.views.job_single_logs', job=job.jobId) }"><i class="icon-tasks"></i> ${_('Logs')}</a></li>
+                    % if not job.is_mr2 and (job.status.lower() in ('running', 'pending')):
                         <li class="nav-header">${_('Kill Job')}</li>
                         <li>
                           <a href="#" title="${_('Kill this job')}" onclick="$('#kill-job').submit()">${_('Kill this job')}</a>
@@ -138,9 +138,11 @@ ${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short),
                             dir_name = basename.split('/')[-1]
                         %>
                         % if location_url != None:
-                                <a href="${location_url}" title="${output_dir}">${dir_name}</a>
-                        % else:
-                            ${dir_name}
+                            <a href="${location_url}" title="${output_dir}">
+                        % endif
+                        <i class="icon-folder-open"></i> ${dir_name}
+                        % if location_url != None:
+                            </a>
                         % endif
                         </li>
                     % endif
@@ -156,6 +158,9 @@ ${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short),
                     <li class="active"><a href="#tasks" data-toggle="tab">${_('Tasks')}</a></li>
                 % endif
                 <li><a href="#metadata" data-toggle="tab">${_('Metadata')}</a></li>
+                % if not job.is_retired:
+                    <li><a href="#counters" data-toggle="tab">${_('Counters')}</a></li>
+                % endif
             </ul>
 
             <div class="tab-content">
@@ -177,7 +182,7 @@ ${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short),
                                             </a>
                                         </td>
                                         <td>${ attempt['id'] }</td>
-                                        <td>${ attempt['containerId'] }</td>
+                                        <td>${ comps.get_container_link(job.status, attempt['containerId']) }</td>
                                     </tr>
                                 % endfor
                             </tbody>
@@ -217,7 +222,7 @@ ${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short),
                 <div id="metadata" class="tab-pane">
                     <div class="well hueWell">
                         <form class="form-search">
-                            ${_('Filter: ')}<input type="text" id="metadataFilter" class="input-xlarge search-query" placeholder="${_('Text Filter')}">
+                            <input type="text" id="metadataFilter" class="input-xlarge search-query" placeholder="${_('Text Filter')}">
                         </form>
                     </div>
                     <table id="metadataTable" class="table table-striped table-condensed">
@@ -304,6 +309,8 @@ ${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short),
                 <div id="counters" class="tab-pane">
                     % if job.is_mr2:
                       ${ comps.job_counters_mr2(job.counters) }
+                    % else:
+                      ${ comps.job_counters(job.counters) }
                     % endif
                 </div>
             </div>
@@ -326,7 +333,7 @@ ${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short),
             "aaSorting": [[ 1, "asc" ]],
             "oLanguage": {
                 "sEmptyTable": "${_('No data available')}",
-                "sZeroRecords": "${_('No matching records')}",
+                "sZeroRecords": "${_('No matching records')}"
             }
         });
 
@@ -341,7 +348,7 @@ ${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short),
             ],
             "oLanguage": {
                 "sEmptyTable": "${_('No data available')}",
-                "sZeroRecords": "${_('No matching records')}",
+                "sZeroRecords": "${_('No matching records')}"
             }
         });
 
@@ -356,11 +363,11 @@ ${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short),
             ],
             "oLanguage": {
                 "sEmptyTable": "${_('No data available')}",
-                "sZeroRecords": "${_('No matching records')}",
+                "sZeroRecords": "${_('No matching records')}"
             }
         });
 
-        $("#metadataFilter").keydown(function(){
+        $("#metadataFilter").keyup(function(){
             _metadataTable.fnFilter($(this).val());
             _rawConfigurationTable.fnFilter($(this).val());
         });
@@ -378,7 +385,7 @@ ${ commonheader(_('Job: %(jobId)s - Job Browser') % dict(jobId=job.jobId_short),
             ],
             "oLanguage": {
                 "sEmptyTable": "${_('No data available')}",
-                "sZeroRecords": "${_('No matching records')}",
+                "sZeroRecords": "${_('No matching records')}"
             }
         });
 
