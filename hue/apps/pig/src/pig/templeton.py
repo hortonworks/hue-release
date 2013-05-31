@@ -48,7 +48,10 @@ class Templeton(object):
             response = self.client.execute("PUT", url, params={"user.name": self.user}, data=data, headers={'Content-Type': 'application/json'})
             return json.loads(response.read())
         except http_client.RestException, error:
-            return json.loads(error.read())
+            try:
+                return json.loads(error.read())
+            except AttributeError:
+                raise error
 
     def delete(self, url, data=None):
         """
