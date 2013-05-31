@@ -5,11 +5,11 @@
 #require 'vagrant-hostmaster'
 
 Vagrant::Config.run do |config|
-  config.vm.box = "sandbox-condor-test"
+  config.vm.box = "sandbox-condor"
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
-  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-condor-test.box"
+  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-condor.box"
 
   # Boot with a GUI so you can see the screen. (Default is headless)
   config.vm.boot_mode = :gui
