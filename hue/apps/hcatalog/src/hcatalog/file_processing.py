@@ -406,8 +406,7 @@ class CommentsDetector():
                     new_c[0] = 0
                 if new_c[1] < 0:
                     new_c[1] = 0
-                if new_c[0] > 0 or new_c[1] > 0:
-                    new_comments.append(new_c)
+                new_comments.append(new_c)
         if cur_block_comment[0]:
             new_comments.append([cur_block_comment[0] - index_offset, len(chunk_buf)])
         self.clear_comment_intervals()
@@ -422,6 +421,8 @@ class CommentsDetector():
                     end_comment_pos = comment[1] + 2
                 elif '\r' == test_next_start[0:1] or '\n' == test_next_start[0:1]:
                     end_comment_pos = comment[1] + 1
+                else:
+                    end_comment_pos = comment[1]
             new_buffer += chunk_buf[end_comment_pos : len(chunk_buf)]
             return new_buffer
         return chunk_buf
@@ -669,8 +670,6 @@ class TextFileProcessor():
             for comment in comments:
                 content_to_copy = intervals_subtraction(content_to_copy, comment)
             for chunk_to_copy in content_to_copy:
-                # raise Exception('comments=%s\ncontent_to_copy=%s\nchunk_to_copy=%s\nintervals_intersection=%s' %
-                #                 (str(comments), str(content_to_copy), str(chunk_to_copy), str(intervals_intersection(content_to_copy + [chunk_to_copy]))))
                 sub_chunk = fs.read(src_path, chunk_to_copy.start, chunk_to_copy.end - chunk_to_copy.start)
                 if sub_chunk:
                     fs.append(dest_path, sub_chunk)
