@@ -37,7 +37,7 @@ from desktop.lib.django_util import render_json, render, copy_query_dict
 from desktop.lib.exceptions import MessageException
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.views import register_status_bar_view
-from hadoop.api.jobtracker.ttypes import ThriftJobPriority, TaskTrackerNotFoundException, ThriftJobState
+from hadoop.api.jobtracker.ttypes import ThriftJobPriority, TaskTrackerNotFoundException
 
 from jobbrowser import conf
 from jobbrowser.api import get_api
