@@ -5,8 +5,6 @@ from django.core.management.base import BaseCommand
 from hadoop import cluster
 from pig import conf
 from pig.models import UDF
-from useradmin.conf import DEFAULT_USERNAME
-from useradmin.management.commands import create_sandbox_user
 
 UDF_PATH = conf.UDF_PATH.get()
 
@@ -17,6 +15,11 @@ class Command(BaseCommand):
     help = 'Upload and register specific udfs. If no udfs presented, update udfs from hdfs.'
 
     def handle(self, *args, **options):
+        try:
+            default_user = User.objects.get(id=1)
+        except:
+            default_user = 
+            
         fs = cluster.get_hdfs()
         fs.setuser(fs.DEFAULT_USER)
         if not fs.exists(UDF_PATH):
@@ -25,12 +28,12 @@ class Command(BaseCommand):
         for f in args:
           file_name = os.path.split(f)[-1]
           path = fs.join(UDF_PATH, file_name)
-          fs.do_as_user(default_user.username, fs.copyFromLocal, f, path)
-          UDF.objects.create(url=path, file_name=file_name, owner=default_user)
+          fs.do_as_user(fs.DEFAULT_USER, fs.copyFromLocal, f, path)
+          UDF.objects.create(url=path, file_name=file_name, owner=User.objects.get(id=1))
         if not args:
           for f in fs.listdir(UDF_PATH):
             try:
               UDF.objects.get(file_name=f)
             except UDF.DoesNotExist:
               path = fs.join(UDF_PATH, f)
-              UDF.objects.create(url=path, file_name=f, owner=default_user)
+              UDF.objects.create(url=path, file_name=f, owner=User.objects.get(id=1))
