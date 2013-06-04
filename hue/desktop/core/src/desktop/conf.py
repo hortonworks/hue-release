@@ -19,13 +19,14 @@
 import os
 import socket
 import stat
+import re
 
 from django.utils.translation import ugettext_lazy as _
 
 from desktop.lib.conf import Config, ConfigSection, UnspecifiedConfigSection
 from desktop.lib.conf import coerce_bool, validate_path
 from desktop.lib.paths import get_desktop_root
-
+from desktop.lib.obfuscator import Obfuscator
 
 USE_CHERRYPY_SERVER = Config(
   key="use_cherrypy_server",
@@ -424,6 +425,15 @@ DJANGO_EMAIL_BACKEND = Config(
   default="django.core.mail.backends.smtp.EmailBackend"
 )
 
+###OBFUCATOR####
+def decrypt_values():
+  OBFUSCATOR = Obfuscator()
+  ENCRYPTED_VALUE_PATTERN = re.compile("\$\s{ALIAS=(\w+)}")
+  PASSWORD_VALUES = [DATABASE.PASSWORD, SMTP.PASSWORD, LDAP.BIND_PASSWORD]
+  for val in PASSWORD_VALUES:
+    match = ENCRYPTED_VALUE_PATTERN.match(val.get())
+    if match:
+      val.bind_to[val.grab_key] = OBFUSCATOR.get_value(match.group(1))
 
 def config_validator():
   """
