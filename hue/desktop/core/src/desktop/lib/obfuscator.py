@@ -7,6 +7,7 @@ from desktop.lib import encryptor
 from desktop.lib.paths import get_desktop_root
 import hashlib
 
+
 LOG = logging.getLogger(__name__)
 HUE_MASTER_FNAME = "hue-master"
 HUE_CONF_DIR = config_dir = getenv("HUE_CONF_DIR", get_desktop_root("conf"))
@@ -28,7 +29,10 @@ class Obfuscator(object):
           HUE_MASTER_PASSWORD = encryptor.DecryptWithAES(HARDCODED_SECRET, cyphertext, encryptor.STATIC_IV)
       except IOError:
         HUE_MASTER_PASSWORD = getpass.getpass("Enter a hue master password:\n")
-        want_to_persist = raw_input("Do you want to persist hue-master? (y/n):")
+        try:
+          want_to_persist = raw_input("Do you want to persist hue-master? (y/n):")
+        except EOFError:
+          want_to_persist = "y"
         if want_to_persist.lower() == "y":
           with open(hue_master_path, "w") as f:
               f.write(encryptor.EncryptWithAES(HARDCODED_SECRET, HUE_MASTER_PASSWORD, encryptor.STATIC_IV))

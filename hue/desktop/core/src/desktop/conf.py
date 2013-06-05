@@ -427,6 +427,9 @@ DJANGO_EMAIL_BACKEND = Config(
 
 ###OBFUCATOR####
 def decrypt_values():
+  from lockfile import FileLock
+  lock = FileLock("ENCR")
+  lock.acquire()
   OBFUSCATOR = Obfuscator()
   ENCRYPTED_VALUE_PATTERN = re.compile("\$\s{ALIAS=(\w+)}")
   PASSWORD_VALUES = [DATABASE.PASSWORD, SMTP.PASSWORD, LDAP.BIND_PASSWORD]
@@ -434,6 +437,7 @@ def decrypt_values():
     match = ENCRYPTED_VALUE_PATTERN.match(val.get())
     if match:
       val.bind_to[val.grab_key] = OBFUSCATOR.get_value(match.group(1))
+  lock.release()
 
 def config_validator():
   """
