@@ -41,7 +41,7 @@ postgresql:
 	$(call colorized,\
 		Postgre SQL, \
 		@/etc/init.d/postgresql start,\
-		sleep 5,)
+		sleep 10,)
 
 # ==== HDFS ====
 
