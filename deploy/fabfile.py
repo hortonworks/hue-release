@@ -88,25 +88,26 @@ def vagrant():
     local("cd ./vagrant; vagrant destroy -f; vagrant up")
 
 build_support = "/home/jenkins/workspace/build-support/"
-output_directory = build_support + 'bigtop-0.3/output/hue'
+output_directory = build_support + '%s/output/hue'
 
 
-def bt_get_out(name='repo'):
+def bt_get_out(name='repo', btbranch="bigtop-0.3"):
     "download rpmbuild result folder from BigTop, args: dirname"
     env.host_string = "root@127.0.0.1:2222"
     local('rm -rf ./' + name + '-bigtop')
-    get(output_directory, './' + name + "-bigtop")
+    get(output_directory % btbranch, './' + name + "-bigtop")
 
 
-def btrpm(name="repo", branch="Caterpillar"):
+def btrpm(name="repo", branch="Caterpillar", btbranch="bigtop-0.3"):
     "build and upload to s3 rpms _using BigTop_. args: s3dir,branch"
     env.host_string = "root@127.0.0.1:2222"
 
     put("HDP_variables.sh",
         "/home/jenkins/workspace/build-support/HDP_variables.sh")
     sed(build_support + 'HDP_variables.sh', 'Caterpillar', branch)
+    sed(build_support + 'HDP_variables.sh', 'bigtop-0.3', btbranch)
     sudo("cd " + build_support + "; BUILD_NUMBER=100 sh bigtop_build.sh hue", user="jenkins")
-    sudo("cd " + output_directory + "; createrepo .", user="jenkins")
-    bt_get_out(name)
+    sudo("cd " + output_directory % btbranch + "; createrepo .", user="jenkins")
+    bt_get_out(name, btbranch)
     upload('bigtop/' + name, "", local=name + '-bigtop/hue')
     print "Done!"

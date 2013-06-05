@@ -75,7 +75,7 @@ class sandbox_rpm {
     }
 
     exec { 'yum-cache':
-        command => "yum clean all --disablerepo='*' --enablerepo='sandbox'",
+        command => "yum clean all --disablerepo='*' --enablerepo='sandbox' --enablerepo='hue-bigtop'",
     }
 
     package { ['hue', 'hue-sandbox', 'hue-tutorials', 'hue-plugins']:
