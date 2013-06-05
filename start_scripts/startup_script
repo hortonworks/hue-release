@@ -1,6 +1,6 @@
 #!/bin/bash
 # startup script
-# chkconfig: 345 98 1
+# chkconfig: 345 89 1
 ### BEGIN INIT INFO
 # provides: Startup_Script
 # Required-Start:

@@ -100,6 +100,8 @@ parse_args() {
 }
 
 hue_setup() {
+        usermod -u 1042 hue
+
         mkdir -p "`dirname $LOCKFILE`"
         chown -R $USER:$GROUP /usr/lib/hue 
         chown -R $USER:$GROUP /var/lib/hue 
