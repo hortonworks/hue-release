@@ -434,6 +434,8 @@ def decrypt_values():
   ENCRYPTED_VALUE_PATTERN = re.compile("\$\s{ALIAS=(\w+)}")
   PASSWORD_VALUES = [DATABASE.PASSWORD, SMTP.PASSWORD, LDAP.BIND_PASSWORD]
   for val in PASSWORD_VALUES:
+    if not val.get():
+      continue
     match = ENCRYPTED_VALUE_PATTERN.match(val.get())
     if match:
       val.bind_to[val.grab_key] = OBFUSCATOR.get_value(match.group(1))
