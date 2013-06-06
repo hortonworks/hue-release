@@ -78,7 +78,7 @@ class sandbox_rpm {
         command => "yum clean all --disablerepo='*' --enablerepo='sandbox' --enablerepo='hue-bigtop'",
     }
 
-    package { ['hue', 'hue-sandbox', 'hue-tutorials', 'hue-plugins']:
+    package { ['hue', 'hue-sandbox', 'hue-plugins']:
         ensure => latest,
         require => [ File['sandbox.repo'],
                      Package['libxslt'],
@@ -87,6 +87,11 @@ class sandbox_rpm {
                      Package['yum-plugin-priorities'],
                      User['hue'],
                    ],
+    }
+
+    package {'hue-tutorials':
+        ensure => latest,
+        require => Package['hue-sandbox'],
     }
 
 /*  Disable single user mode
