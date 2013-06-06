@@ -102,7 +102,7 @@ hbase_master: postgresql zookeeper
 		sleep 25,\
 		/var/log/hbase/hbase-hbase-master-*.log)
 
-hbase_regionservers: namenode
+hbase_regionservers: namenode hbase_master
 	$(call colorized,\
 		hbase regionservers, \
 		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver",\
