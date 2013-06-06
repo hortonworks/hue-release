@@ -1,12 +1,11 @@
 #!/bin/bash
 
-touch /root/.start_ambari
-make --makefile /usr/lib/hue/tools/start_scripts/start_deps.mf -B Ambari -j -i
+service ambari start
 
 echo "======================================"
 echo
 echo "Ambari autostart enabled"
 echo "To disable auto-start of Ambari do"
-echo "  # rm /root/.start_ambari"
+echo "  # service ambari stop"
 echo
 echo "======================================"
