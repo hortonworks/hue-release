@@ -24,7 +24,7 @@ Vagrant::Config.run do |config|
   end
 
   config.vm.customize ["modifyvm", :id, "--rtcuseutc", "on"]
-  config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--groups", "/HortonWorks"]
+  config.vm.customize ["modifyvm", :id, "--name", "HDP Sandbox 1.3", "--groups", "/HortonWorks"]
 
   config.vm.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
   config.vm.customize ["modifyvm", :id, "--nic2", "none"]
