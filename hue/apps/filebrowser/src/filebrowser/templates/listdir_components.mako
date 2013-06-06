@@ -539,6 +539,16 @@ from django.utils.translation import ugettext as _
     });
 
     $(document).ready(function () {
+      $.ajaxSetup({
+        error: function (x, e) {
+          if (x.status == 500) {
+            $.jHueNotify.error("${_('There was a problem with your request.')}");
+            $("#hueBreadcrumbText").blur();
+          }
+        },
+        cache: false
+      });
+
       $("#chownForm select[name='user']").change(function () {
         if ($(this).val() == "__other__") {
           $("input[name='user_other']").show();
@@ -771,15 +781,6 @@ from django.utils.translation import ugettext as _
         $(this).hide();
         $(".hueBreadcrumb").show();
         $("#editBreadcrumb").show();
-      });
-
-      $.ajaxSetup({
-        error:function (x, e) {
-          if (x.status == 500) {
-            $.jHueNotify.error("${_('There was a problem with your request.')}");
-            $("#hueBreadcrumbText").blur();
-          }
-        }
       });
 
       $(window).bind("hashchange", function () {
@@ -1243,7 +1244,7 @@ from django.utils.translation import ugettext as _
           },
           onComplete:function (id, fileName, response) {
             num_of_pending_uploads--;
-            if (response.status != 0) {
+            if (response.status !== undefined && response.status != 0) {
               $.jHueNotify.error("${ _('Error: ') }" + (response['data'] ? response['data'] : "${ _('Check file permissions') }"));
             } else if (num_of_pending_uploads == 0) {
               window.location = "/filebrowser/view" + self.currentPath();
