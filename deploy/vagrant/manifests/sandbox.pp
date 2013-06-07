@@ -281,6 +281,13 @@ class sandbox {
         onlyif => "which ip6tables",
         require => Service['ip6tables']
     }
+
+    line { no_priority:
+        ensure => absent,
+        file => "/etc/yum.repos.d/sandbox.repo",
+        line => "priority=1",
+        require => Class[sandbox_rpm]
+    }
 }
 
 
