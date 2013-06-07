@@ -50,10 +50,10 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
     		</tr>
 			</thead>
 			<tbody>
-			  % for component, version in components.iteritems():
+			  % for component, version in components:
     			  <tr>
       			    <td>${component}</td>
-                            % if component == 'tutorials':
+                            % if component == 'Tutorials':
                             <td><div id="${component}">${version}</div></td>
         		    <td><a href="#" class="btn"
         		    id="updateTutorialsBtn">Update</a></td>

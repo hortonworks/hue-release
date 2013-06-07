@@ -24,37 +24,9 @@ TUTORIALS_INSTALLED = Config(
   type=bool,
 )
 
-HADOOP_VERSION = Config(
-  key="hadoop_version",
-  help="Version of Hadoop being used",
+SANDBOX_VERSION = Config(
+  key="sandbox_version",
+  help="Version of Sandbox being used",
   private=True,
-  default="1.1.2.21",
-)
-
-HCATALOG_VERSION = Config(
-  key="hcatalog_version",
-  help="Version of Hcatalog being used",
-  private=True,
-  default="0.5.0.21",
-)
-
-PIG_VERSION = Config(
-  key="pig_version",
-  help="Version of Pig being used",
-  private=True,
-  default="0.10.1.21",
-)
-
-HIVE_VERSION = Config(
-  key="hive_version",
-  help="Version of Hive being used",
-  private=True,
-  default="0.10.0.21",
-)
-
-HUE_VERSION = Config(
-  key="hue_version",
-  help="Version of Hue being used",
-  private=True,
-  default="2.2",
+  default="1.3",
 )
