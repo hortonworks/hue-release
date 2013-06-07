@@ -152,7 +152,7 @@ oozie: namenode
 ganglia: HDFS
 	$(call colorized,\
 		Ganglia, \
-		/etc/init.d/gmetad stop; /etc/init.d/gmond stop; /etc/init.d/hdp-gmetad start && /etc/init.d/hdp-gmond start,\
+		/etc/init.d/gmetad stop &>/dev/null; /etc/init.d/gmond stop &>/dev/null; /etc/init.d/hdp-gmetad start && /etc/init.d/hdp-gmond start,\
 		true)
 
 nagios: HDFS

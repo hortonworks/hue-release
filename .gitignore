@@ -31,5 +31,6 @@ dependency-reduced-pom.xml
 *.ova
 *.vhd
 *.vmdk
+*.zip
 aws_credentials.json
 deploy/vagrant/hyper-v/key
