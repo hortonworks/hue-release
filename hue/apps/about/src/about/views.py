@@ -18,8 +18,8 @@
 import logging
 import os
 from desktop.lib.django_util import render
+from desktop.lib.paths import get_run_root
 from django.http import HttpResponse
-from django.core import urlresolvers
 import simplejson as json
 
 from sh import bash
@@ -40,19 +40,36 @@ def index(request):
       'error': error
     }
     return HttpResponse(json.dumps(result))
+  components, HUE_VERSION = _get_components()
   return render('index.mako', request, {
-    'components': _get_components(),
-    'hue_version': conf.HUE_VERSION.get(),
+    'components': components,
+    'hue_version': HUE_VERSION,
   })
 
 
 def _get_components():
-  components = {
-    'Hadoop': conf.HADOOP_VERSION.get(),
-    'HCatalog': conf.HCATALOG_VERSION.get(),
-    'Pig': conf.PIG_VERSION.get(),
-    'Hive': conf.HIVE_VERSION.get()
-  }
+  components = []
+  HUE_VERSION = "2.2.0"
+  try:
+    with open(os.path.join(get_run_root(), "VERSIONS")) as f:
+      for line in f:
+        l = line.strip().split("=")
+        if len(l) < 2:
+          continue
+        component, version = l
+        if component == "HUE_VERSION":
+          HUE_VERSION = version
+        else:
+          components.append((component, version))
+  except Exception:
+    components = [
+      ('HDP', "1.3"),
+      ('Hadoop', "1.2.0.1.3.0.0-107"),
+      ('HCatalog', "0.11.0.1.3.0.0-107"),
+      ('Pig', "0.11.1.1.3.0.0-107"),
+      ('Hive', "0.11.0.1.3.0.0-107"),
+      ('Oozie', "3.3.2.1.3.0.0-107")
+    ]
 
   if conf.TUTORIALS_INSTALLED.get():
     TUTORIAL_VERSION_FILE = os.path.join(conf.TUTORIALS_PATH.get(), 'version')
@@ -64,5 +81,6 @@ def _get_components():
       msg = "Failed to open file '%s': %s" % (TUTORIAL_VERSION_FILE, ex)
       LOG.error(msg)
 
-    components['tutorials'] = tutorial_version
-  return components
+    components.insert(0, ('Tutorials', tutorial_version))
+    components.insert(0, ("Sandbox", conf.SANDBOX_VERSION.get()))
+  return components, HUE_VERSION

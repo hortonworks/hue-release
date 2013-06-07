@@ -3,12 +3,14 @@ set -e
 
 # VBox
 vagrant up
+MACHINE="$(VBoxManage list vms | grep `cat .vagrant/machines/default/virtualbox/id` | sed -r 's/\"(.*)\".*/\1/g')"
 vagrant ssh -c "echo 'vbox' | sudo tee /virtualization"
 vagrant halt
-MACHINE="$(VBoxManage list vms | grep `cat .vagrant/machines/default/virtualbox/id` | sed -r 's/\"(.*)\".*/\1/g')"
+VBoxManage sharedfolder remove "$MACHINE" --name '/vagrant'
+VBoxManage sharedfolder remove "$MACHINE" --name '/tmp/vagrant-puppet/manifests'
 echo $MACHINE
 VBoxManage modifyvm "$MACHINE" --memory 2048 --cpus 2
-VBoxManage export "$MACHINE" --output "$MACHINE VirtualBox".ova \
+VBoxManage export "$MACHINE" --output "HDP-Sandbox-1.3-VirtualBox".ova \
     --vsys 0 --vendor "HortonWorks" --version "1.3" --product "Sandbox"
 
 # VMware
@@ -19,7 +21,7 @@ vagrant halt
 
 HDDFILE="$(VBoxManage list hdds | grep -e "$MACHINE/" | sed -r "s/.*:[^/]*(.*)/\1/g")"
 cp "$HDDFILE" ./vmware/sandbox.vmdk
-ovftool ./vmware/vmware.vmx "./$MACHINE VMware.ova"
+ovftool "./vmware/HDP Sandbox 1.3.vmx" "./HDP-Sandbox-1.3-VMware.ova"
 
 # Hyper-V
 vagrant up --no-provision
@@ -27,6 +29,8 @@ vagrant ssh -c 'sudo sed -i /boot/grub/menu.lst -r -e "s/(kernel .*)$/\1 noapic/
 vagrant ssh -c "echo 'hyper-v' | sudo tee /virtualization"
 vagrant halt
 VBoxManage clonehd "$HDDFILE" ./hyper-v/sandbox.vhd --format vhd
+
+exit 0
 
 mkdir -p ./winshared
 sudo mount -t cifs //25.84.118.43/share -o uid=1000,gid=1000,username=Administrator,password='had1029oop!' ./winshared

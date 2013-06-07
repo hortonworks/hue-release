@@ -24,6 +24,8 @@ provides: hue-tutorials
 
 requires: python >= 2.6, httpd, git
 requires: hue
+requires: hue-sandbox
+
 
 %description
 Hue Tutorials

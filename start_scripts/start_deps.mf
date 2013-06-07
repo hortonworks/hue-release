@@ -41,7 +41,7 @@ postgresql:
 	$(call colorized,\
 		Postgre SQL, \
 		@/etc/init.d/postgresql start,\
-		sleep 5,)
+		sleep 10,)
 
 # ==== HDFS ====
 
@@ -102,7 +102,7 @@ hbase_master: postgresql zookeeper
 		sleep 25,\
 		/var/log/hbase/hbase-hbase-master-*.log)
 
-hbase_regionservers: namenode
+hbase_regionservers: namenode hbase_master
 	$(call colorized,\
 		hbase regionservers, \
 		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver",\
@@ -152,7 +152,7 @@ oozie: namenode
 ganglia: HDFS
 	$(call colorized,\
 		Ganglia, \
-		/etc/init.d/gmetad stop; /etc/init.d/gmond stop; /etc/init.d/hdp-gmetad start && /etc/init.d/hdp-gmond start,\
+		/etc/init.d/gmetad stop &>/dev/null; /etc/init.d/gmond stop &>/dev/null; /etc/init.d/hdp-gmetad start && /etc/init.d/hdp-gmond start,\
 		true)
 
 nagios: HDFS

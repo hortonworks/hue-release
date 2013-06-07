@@ -9,7 +9,7 @@ Vagrant::Config.run do |config|
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
-  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-condor.box"
+  config.vm.box_url = "https://copy.com/qMjCclCFEGPw/sandbox-condor.box?download=1"
 
   # Boot with a GUI so you can see the screen. (Default is headless)
   config.vm.boot_mode = :gui
@@ -24,7 +24,7 @@ Vagrant::Config.run do |config|
   end
 
   config.vm.customize ["modifyvm", :id, "--rtcuseutc", "on"]
-  config.vm.customize ["modifyvm", :id, "--name", "Sandbox HDP Caterpillar", "--groups", "/HortonWorks"]
+  config.vm.customize ["modifyvm", :id, "--name", "HDP Sandbox 1.3", "--groups", "/HortonWorks"]
 
   config.vm.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
   config.vm.customize ["modifyvm", :id, "--nic2", "none"]

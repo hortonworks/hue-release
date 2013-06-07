@@ -75,17 +75,23 @@ class sandbox_rpm {
     }
 
     exec { 'yum-cache':
-        command => "yum clean all --disablerepo='*' --enablerepo='sandbox'",
+        command => "yum clean all --disablerepo='*' --enablerepo='sandbox' --enablerepo='hue-bigtop'",
     }
 
-    package { ['hue', 'hue-sandbox', 'hue-tutorials', 'hue-plugins']:
+    package { ['hue', 'hue-sandbox', 'hue-plugins']:
         ensure => latest,
         require => [ File['sandbox.repo'],
                      Package['libxslt'],
                      Package['python-lxml'],
                      Exec['yum-cache'],
                      Package['yum-plugin-priorities'],
+                     User['hue'],
                    ],
+    }
+
+    package {'hue-tutorials':
+        ensure => latest,
+        require => Package['hue-sandbox'],
     }
 
 /*  Disable single user mode
@@ -98,12 +104,18 @@ class sandbox_rpm {
     user { "hue":
       ensure     => "present",
       managehome => true,
+      home => "/usr/lib/hue",
+      uid => "505",
       gid => "hadoop",
-      groups => ["admin"],
+      groups => ["admin", "users"],
       password => '$1$MwHL5JF5$1WmQPYETuWUyhCKLEyN9a1',
     }
 
     group { "hadoop":
+        ensure => "present",
+    }
+
+    group { "users":
         ensure => "present",
     }
 }
@@ -268,6 +280,13 @@ class sandbox {
     exec { 'ip6tables -F':
         onlyif => "which ip6tables",
         require => Service['ip6tables']
+    }
+
+    line { no_priority:
+        ensure => absent,
+        file => "/etc/yum.repos.d/sandbox.repo",
+        line => "priority=1",
+        require => Class[sandbox_rpm]
     }
 }
 
