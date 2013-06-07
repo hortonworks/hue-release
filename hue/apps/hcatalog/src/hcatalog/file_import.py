@@ -312,6 +312,9 @@ def make_up_hive_column_names(names):
     new_names = []
     for col_name in names:
         col_name = re.sub(r'[^a-zA-Z0-9]+', '_', unicode(col_name).lower())
+        if not col_name:
+            new_names.append('')
+            continue
         col_rename_idx = 0
         while (col_name + '_' + str(col_rename_idx) if col_rename_idx else col_name) in new_names:
             col_rename_idx += 1
