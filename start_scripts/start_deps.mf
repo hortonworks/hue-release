@@ -149,13 +149,13 @@ oozie: namenode
 		/var/log/oozie/oozie.log)
 
 
-ganglia: HDFS
+ganglia:
 	$(call colorized,\
 		Ganglia, \
 		/etc/init.d/gmetad stop &>/dev/null; /etc/init.d/gmond stop &>/dev/null; /etc/init.d/hdp-gmetad start && /etc/init.d/hdp-gmond start,\
 		true)
 
-nagios: HDFS
+nagios:
 	$(call colorized,\
 		Nagios, \
 		/etc/init.d/nagios start,\
@@ -164,7 +164,7 @@ nagios: HDFS
 
 # ==== Ambari ====
 
-ambari_server: HDFS ganglia nagios
+ambari_server: ganglia nagios
 	$(call colorized,\
 		Ambari server, \
 		ambari-server start,\
