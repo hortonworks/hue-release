@@ -743,9 +743,8 @@ $(document).ready(function () {
             var _field = $(this);
             if (!isDataValid($.trim(_field.val()))) {
                 showFieldError(_field);
-                if (scrollTo == 0) {
-                    scrollTo = $(this).position().top - $(this).closest(".well").height();
-                }
+                showMainError("One or more of defined column names are not valid. Make sure that there are no empty column names" +
+                        " and each of them is unique. Spaces are not allowed.")
                 isValid = false;
             }
             else {
