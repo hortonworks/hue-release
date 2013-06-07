@@ -110,9 +110,9 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
                     showError("Update tutorials failed: " + data.error);
                 }
             else {
-                var curVersion = $("#tutorials").text();
-                if (data.components.tutorials != curVersion) {
-                    showError("Tutorials were successfully updated to " + data.components.tutorials + " version");
+                var curVersion = $("#Tutorials").text();
+                if (data.tutorials != curVersion) {
+                    showError("Tutorials were successfully updated to " + data.tutorials + " version");
                     window.location.reload(true);
                 }
                 else{
