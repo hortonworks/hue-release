@@ -12,7 +12,7 @@ define line($file, $line, $ensure = 'present') {
             }
         }
         absent: {
-            exec { "/bin/grep -vFx '${line}' '${file}' | /usr/bin/tee '${file}' > /dev/null 2>&1":
+            exec { "/bin/grep -vFx '${line}' '${file}' | /usr/bin/tee '${file}.new' > /dev/null 2>&1; mv -f '${file}.new' '${file}' > /dev/null 2>&1":
               onlyif => "/bin/grep -qFx '${line}' '${file}'"
             }
 
