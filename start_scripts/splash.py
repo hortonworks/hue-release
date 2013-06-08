@@ -53,7 +53,7 @@ def make_ip_window():
         ip_win.addstr(3, 2, "in the browser's address field: ")
         ip_win.addstr(4, 2, "http://%s/" % ip)
         if platform == "vbox":
-            ip_win.addstr(6, 2, "You can access SSH on 127.0.0.1:2222" % ip)
+            ip_win.addstr(6, 2, "You can access SSH on 127.0.0.1:2222")
 
 
 def make_hint_window():
