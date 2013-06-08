@@ -231,6 +231,9 @@ class sandbox {
         mode => 0755,
       }
 
+    file {"/usr/lib/hue/apps/shell/src/shell/build/setuid":
+        mode => 0755,
+      }
 
     
     exec { 'start':
