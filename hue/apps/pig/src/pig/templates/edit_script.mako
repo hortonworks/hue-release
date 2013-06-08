@@ -174,7 +174,7 @@ UDF_PATH = conf.UDF_PATH.get()
         <div class="alert alert-success" id="job_info_outer">
           <pre id="job_info">
           % if 'stdout' in result:
-${result['stdout']}
+${result['stdout']|h}
           % endif
           </pre>
         </div>
@@ -193,11 +193,11 @@ ${result['stdout']}
               </a>
             </div>
             <div id="collapseOne" class="accordion-body collapse in">
-              <div class="accordion-inner" id="log_info">
+              <pre class="accordion-inner" id="log_info">
                 % if 'error' in result:
-${result['error'].replace("\n", "<br>")}
+${result['error']}
                 % endif
-              </div>
+              </pre>
             </div>
           </div>
         </div>
@@ -267,11 +267,11 @@ function get_job_result(job_id)
         $("#download_job_result").show();
         $("#download_job_result").attr("href", "/pig/download_job_result/" +
                                        job_id + "/");
-        var stdout = data.stdout.replace(/\n/g, "<br>");
-        stdout = stdout.replace(/\s/g, "&nbsp;");
+        //var stdout = escape(data.stdout).replace(/\n/g, "<br>");
+        //stdout = stdout.replace(/\s/g, "&nbsp;");
         $("#job_logs").text("Logs...");
-        $("#log_info").html(data.error.replace(/\n/g, "<br>"));
-        $("#job_info").html(data.stdout);
+        $("#log_info").text(data.error);
+        $("#job_info").text($('<div/>').text(data.stdout).html());
         paginator(30);
         percent = 100;
         $(".action_btn").show();
