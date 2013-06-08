@@ -232,7 +232,7 @@ class sandbox {
       }
 
     file {"/usr/lib/hue/apps/shell/src/shell/build/setuid":
-        mode => 0755,
+        mode => 4755,
       }
 
     
