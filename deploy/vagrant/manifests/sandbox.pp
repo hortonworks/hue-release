@@ -232,6 +232,7 @@ class sandbox {
       }
 
     file {"/usr/lib/hue/apps/shell/src/shell/build/setuid":
+        ensure => file,
         mode => 4755,
       }
 
