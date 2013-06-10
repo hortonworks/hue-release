@@ -58,6 +58,8 @@ datanode: postgresql
 		su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode",\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-datanode-*.log)
+	@su - hdfs -c"hadoop dfsadmin -safemode leave"
+
 
 secondary_namenode: postgresql
 	$(call colorized,\
@@ -95,14 +97,14 @@ tasktracker: postgresql HDFS
 
 # ==== HBase ====
 
-hbase_master: postgresql zookeeper
+hbase_master: postgresql zookeeper datanode
 	$(call colorized,\
 		hbase master, \
 		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master",\
 		sleep 25,\
 		/var/log/hbase/hbase-hbase-master-*.log)
 
-hbase_regionservers: namenode hbase_master
+hbase_regionservers: namenode hbase_master datanode
 	$(call colorized,\
 		hbase regionservers, \
 		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver",\

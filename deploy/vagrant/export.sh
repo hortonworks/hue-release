@@ -2,7 +2,7 @@
 set -e
 
 # VBox
-vagrant up
+#vagrant up
 MACHINE="$(VBoxManage list vms | grep `cat .vagrant/machines/default/virtualbox/id` | sed -r 's/\"(.*)\".*/\1/g')"
 vagrant ssh -c "echo 'vbox' | sudo tee /virtualization"
 vagrant halt

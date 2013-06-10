@@ -31,6 +31,7 @@ def update_rpm(branch):
     run('cd /home/sandbox/rpm-shared/ && git fetch '
         '&& git checkout %s && git pull' % branch)
     sed('/home/sandbox/rpm-shared/deploy/rpm/build.sh', 'Caterpillar', branch)
+    sed('/home/sandbox/rpm-shared/deploy/rpm/build.sh', 'sudo yum -y', '# sudo yum -y')
 
 
 def build_rpm():
