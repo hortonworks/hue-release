@@ -1,7 +1,7 @@
 cd $SRC/sandbox-shared
 
-HUE_RELEASE=$(git rev-list --full-history HEAD -- hue start_scripts deploy | wc -l)
-TUTORIALS_RELEASE=$(git rev-list --full-history HEAD -- tutorials | wc -l)
+HUE_RELEASE=$(git rev-list --full-history HEAD -- hue deploy | wc -l)
+TUTORIALS_RELEASE=$(git rev-list --full-history HEAD -- tutorials start_scripts deploy | wc -l)
 echo "New RPM release:"
 echo "hue: $HUE_RELEASE"
 echo "tutorials: $TUTORIALS_RELEASE"
