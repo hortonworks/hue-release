@@ -126,6 +126,10 @@ ln -sf %{hue_dir}/tools/start_scripts/tutorials /etc/init.d/tutorials
 chkconfig --add tutorials
 chkconfig tutorials on
 
+ln -sf %{hue_dir}/tools/start_scripts/ambari /etc/init.d/ambari
+chkconfig --add ambari
+chkconfig ambari off
+
 chkconfig httpd on
 service httpd start
 
