@@ -657,12 +657,18 @@ from django.utils.translation import ugettext as _
           show:true
         });
       });
+      $('#createDirectoryModal').on('shown', function () {
+          $(this).find("input[type='text']").focus();
+      });
 
       $(".create-file-link").click(function () {
         $("#createFileModal").modal({
           keyboard:true,
           show:true
         });
+      });
+      $('#createFileModal').on('shown', function () {
+          $(this).find("input[type='text']").focus();
       });
 
       $("#createDirectoryForm").submit(function () {
@@ -1080,6 +1086,9 @@ from django.utils.translation import ugettext as _
           show:true
         });
       };
+      $('#renameModal').on('shown', function () {
+          $(this).find("input[type='text']").focus();
+      });
 
       self.move = function () {
         var paths = [];
@@ -1093,6 +1102,9 @@ from django.utils.translation import ugettext as _
           show:true
         });
       };
+      $('#moveModal').on('shown', function () {
+          $(this).find("input[type='text']").focus();
+      });
 
       self.copy = function () {
         var paths = [];
@@ -1106,6 +1118,9 @@ from django.utils.translation import ugettext as _
           show:true
         });
       };
+      $('#copyModal').on('shown', function () {
+          $(this).find("input[type='text']").focus();
+      });
 
       self.changeOwner = function () {
         var paths = [];
