@@ -202,7 +202,11 @@ class HCatClient(Templeton):
             curr = time.time()
         raise Exception("""HCatalog client, do_hive_query_and_wait error: %s""" % "Timeout occurred")
 
-    def do_hive_query(self, hive_file=None, execute=None, timeout_sec=600.0):
+    def do_hive_query(self, hive_file=None, execute=None):
         statusdir = "/tmp/.hivejobs/%s" % datetime.now().strftime("%s")
-        job = self.hive_query(hive_file=hive_file, execute=execute, statusdir=statusdir)
+        try:
+            job = self.hive_query(hive_file=hive_file, execute=execute, statusdir=statusdir)
+        except Exception as ex:
+            LOG.exception(unicode(ex))
+            raise Exception('HCatClient error executing hive query: %s' % unicode(ex))
         return job['id'] if 'id' in job else None
