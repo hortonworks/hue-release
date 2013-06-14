@@ -21,6 +21,7 @@ import os
 import posixpath
 import tempfile
 from zipfile import ZipFile
+import itertools
 
 from django.utils.translation import ugettext as _
 
@@ -63,13 +64,24 @@ class ZipArchive(Archive):
 
     return directory
 
+  def _namelist(self):
+    """
+    Returns list of files in zipfile always with folders
+    """
+    filelist = self.zfh.namelist()
+    directories = (f.split('/')[:-1] for f in filelist)
+    dirlist = itertools.chain(*[['/'.join(dirl[:sdir[0]+1]) + '/' \
+      for sdir in enumerate(dirl)] for dirl in directories])
+
+    return list(set(itertools.chain(filelist, dirlist)))
+
   def _filenames(self):
     """
     List all dirs and files by reading the table of contents of the Zipfile.
     """
     dirs = []
     files = []
-    for name in self.zfh.namelist():
+    for name in self._namelist():
       if name.endswith(posixpath.sep):
         dirs.append(name)
       else:
