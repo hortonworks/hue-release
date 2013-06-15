@@ -70,6 +70,11 @@ class sandbox_rpm {
         ensure  => file,
     }
 
+    exec { 'splash':
+        command => "initctl restart tty TTY=/dev/tty5; initctl restart tty TTY=/dev/tty2; true",
+        require => File[issue],
+    }
+
     package { "libxslt":
         ensure => present,
         require => File['resolv.conf'],
