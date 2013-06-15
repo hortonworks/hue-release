@@ -64,6 +64,12 @@ class sandbox_rpm {
         require => Package['yum-plugin-priorities'],
     }
 
+    file { 'issue':
+        path    => "/etc/issue",
+        content => template("/vagrant/files/issue"),
+        ensure  => file,
+    }
+
     package { "libxslt":
         ensure => present,
         require => File['resolv.conf'],
