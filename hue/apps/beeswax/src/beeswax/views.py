@@ -191,6 +191,7 @@ def list_designs(request):
   prefix = 'q-'
   querydict_query = _copy_prefix(prefix, request.GET)
   # Manually limit up the user filter.
+  querydict_query[ prefix + 'page' ] = request.GET.get('page', 1)
   querydict_query[ prefix + 'user' ] = user
   querydict_query[ prefix + 'type' ] = app_name
   page, filter_params = _list_designs(querydict_query, DEFAULT_PAGE_SIZE, prefix)
@@ -1232,7 +1233,6 @@ def _list_designs(querydict, page_size, prefix=""):
   else:
     sort_dir, sort_attr = DEFAULT_SORT
   db_queryset = db_queryset.order_by(sort_dir + SORT_ATTR_TRANSLATION[sort_attr])
-
   pagenum = int(querydict.get(prefix + 'page', 1))
   paginator = Paginator(db_queryset, page_size)
   page = paginator.page(pagenum)
