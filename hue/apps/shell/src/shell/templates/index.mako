@@ -233,6 +233,7 @@ ${ commonheader(_('Hue Shell'), "shell", user, "100px") | n,unicode }
                     },
                     beforeSend: function(xhr){
                         xhr.setRequestHeader("X-Request", "JSON");
+                        $("#shellContent").append(command + "<br />");
                     },
                     success: function(data, status, xhr){
                         if (status == "success"){
