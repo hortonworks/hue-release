@@ -179,7 +179,7 @@ ${ layout.menubar(section='coordinators') }
 
     function toggleActions() {
       $(".toolbarBtn").attr("disabled", "disabled");
-      var selector = $(".hueCheckbox[checked='checked']");
+      var selector = $(".hueCheckbox[checked='checked']:not(.selectAll)");
       var can_modify = $(".hueCheckbox[checked='checked'][data-coordinator-id]");
       if (can_modify.length >= 1 && can_modify.length == selector.length) {
         $("#destroy-btn").removeAttr("disabled");
