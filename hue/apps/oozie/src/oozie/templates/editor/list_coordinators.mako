@@ -260,7 +260,7 @@ ${ layout.menubar(section='coordinators') }
         null,
         null,
         null,
-        { "sSortDataType":"dom-sort-value", "sType":"numeric" },
+        null,
         null,
         null
       ],
