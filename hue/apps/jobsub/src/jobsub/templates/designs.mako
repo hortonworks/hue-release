@@ -275,7 +275,7 @@ ${ commonheader("Job designer", "jobsub", user, "60px") | n,unicode }
 // This global context may need to be updated.
 // Global context is extended to provide any uniqueness.
 var global_action_context = {
-  'alert': "${_('You can parameterize the values, using')} <code>$myVar</code> ${_('or')} <code>${"${"}myVar}</code>. ${_('When the design is submitted, you will be prompted for the actual value of ')}<code>myVar</code>.",
+  'alert': "${_('You can parameterize the values, using')} <code>${"${"}myVar}</code>. ${_('When the design is submitted, you will be prompted for the actual value of ')}<code>myVar</code>.",
   'paths_alert': "${_('All the paths are relative to the deployment directory. They can be absolute but this is not recommended.')}",
   'smtp_alert': "${_('Requires some SMTP server configuration to be present (in oozie-site.xml).')}",
   'ssh_alert': "${_('The ssh server requires passwordless login.')}",
