@@ -248,7 +248,7 @@ class SavedQuery(models.Model):
   Note that this used to be called QueryDesign. Any references to 'design'
   probably mean a SavedQuery.
   """
-  DEFAULT_NEW_DESIGN_NAME = _('My saved query')
+  DEFAULT_NEW_DESIGN_NAME = _('Unsaved')
   AUTO_DESIGN_SUFFIX = _(' (new)')
   TYPES = HQL = 0
   TYPES_MAPPING = {'beeswax': HQL, 'hql': HQL}
