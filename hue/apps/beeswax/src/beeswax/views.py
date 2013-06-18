@@ -1149,11 +1149,15 @@ def execute_directly(request, query, query_server=None, design=None, tablename=N
   if design is not None:
     authorized_get_design(request, design.id)
 
-  db = dbms.get(request.user, query_server)
-  database = query.query.get('database', 'default')
-  db.use(database)
+  try:
+    db = dbms.get(request.user, query_server)
+    database = query.query.get('database', 'default')
+    db.use(database)
 
-  history_obj = db.execute_query(query, design)
+    history_obj = db.execute_query(query, design)
+  except BeeswaxException, ex:
+      error_message, logs = expand_exception(ex, db)
+      raise PopupException(_('Error occurred executing hive query: ' + error_message))
 
   watch_url = reverse(get_app_name(request) + ':watch_query', kwargs={'id': history_obj.id})
   if 'download' in kwargs and kwargs['download']:
