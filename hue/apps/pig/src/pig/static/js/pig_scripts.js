@@ -470,8 +470,8 @@ $("#save_button").live("click", function(){
 
       python_editor.refresh();
     }
-    var cur_val = pig_editor.getValue();
-    pig_editor.setValue(cur_val+$(this).text());
+    var cursor = pig_editor.getCursor();
+    pig_editor.replaceRange($(this).text(), cursor, cursor)
     pig_editor.focus();
     //pig_editor.setCursor({line:pig_editor.lineCount(), ch:"0"});
 
@@ -481,7 +481,8 @@ $("#save_button").live("click", function(){
       pig_editor.setOption("keyMap", "emacs");
 
     if(pos.length>1)
-      pig_editor.setSelection({line:pig_editor.lineCount()-1, ch:pos[0]},{line:pig_editor.lineCount()-1, ch:pos[1]+1});
+      pig_editor.setSelection({line:cursor['line'], ch:cursor['ch'] + pos[0]},
+        {line:cursor['line'], ch:cursor['ch'] + pos[1]+1});
 
     return false;
   });
