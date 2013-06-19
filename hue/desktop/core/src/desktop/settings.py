@@ -95,8 +95,6 @@ TEMPLATE_LOADERS = (
     'desktop.lib.template_loader.load_template_source',
 )
 
-X_FRAME_OPTIONS = desktop.conf.X_FRAME_OPTIONS.get()
-
 MIDDLEWARE_CLASSES = [
     'desktop.middleware.DatabaseLoggingMiddleware',
 
@@ -227,6 +225,9 @@ SERVER_EMAIL = desktop.conf.DJANGO_SERVER_EMAIL.get()
 
 # Email backend
 EMAIL_BACKEND = desktop.conf.DJANGO_EMAIL_BACKEND.get()
+
+# X-Frame-Options header
+X_FRAME_OPTIONS = desktop.conf.X_FRAME_OPTIONS.get()
 
 # Configure database
 if os.getenv('DESKTOP_DB_CONFIG'):
