@@ -95,6 +95,8 @@ TEMPLATE_LOADERS = (
     'desktop.lib.template_loader.load_template_source',
 )
 
+X_FRAME_OPTIONS = desktop.conf.X_FRAME_OPTIONS.get()
+
 MIDDLEWARE_CLASSES = [
     'desktop.middleware.DatabaseLoggingMiddleware',
 
@@ -116,6 +118,7 @@ MIDDLEWARE_CLASSES = [
     'desktop.middleware.ClusterMiddleware',
     'desktop.middleware.AppSpecificMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
+    'desktop.middleware.XFrameOptionsMiddleware',
     # 'debug_toolbar.middleware.DebugToolbarMiddleware'
 ]
 
