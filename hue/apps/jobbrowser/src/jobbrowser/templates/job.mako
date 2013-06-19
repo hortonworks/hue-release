@@ -69,6 +69,8 @@
             <%
                 url_splitted = request.fs.urlsplit(val)
                 is_hdfs_uri = bool(url_splitted[1])
+                if val[-1] != '/':
+                    val += '/'
             %>
             % if is_hdfs_uri:
                 <%

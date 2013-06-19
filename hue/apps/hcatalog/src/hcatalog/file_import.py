@@ -312,6 +312,9 @@ def make_up_hive_column_names(names):
     new_names = []
     for col_name in names:
         col_name = re.sub(r'[^a-zA-Z0-9]+', '_', unicode(col_name).lower())
+        if not col_name:
+            new_names.append('')
+            continue
         col_rename_idx = 0
         while (col_name + '_' + str(col_rename_idx) if col_rename_idx else col_name) in new_names:
             col_rename_idx += 1
@@ -648,6 +651,8 @@ HIVE_BOOLEAN_IDX = 5
 HIVE_FLOAT_IDX = 6
 HIVE_DOUBLE_IDX = 7
 HIVE_TIMESTAMP_IDX = 8
+HIVE_DECIMAL_IDX = 9
+HIVE_BINARY_IDX = 10
 HIVE_PRIMITIVES_LEN = len(hcatalog.forms.HIVE_PRIMITIVE_TYPES)
 
 

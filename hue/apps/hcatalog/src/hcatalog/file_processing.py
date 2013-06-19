@@ -723,10 +723,16 @@ def showable_cell_value(celltype, cellvalue, datemode):
         try:
             dt = xlrd.xldate_as_tuple(cellvalue, datemode)
             if len(dt) >= 6:
-                showval = datetime(*(dt[0:6])).isoformat(sep=' ')
+                try:
+                    showval = datetime(*(dt[0:6])).isoformat(sep=' ')
+                except ValueError:
+                    try:
+                        # it means that date is not valid and as result will be returned a string reflected only time
+                        showval = unicode(time(*(dt[3:6])))
+                    except ValueError:
+                        showval = ''
             else:
                 showval = ''
-
         except xlrd.XLDateError:
             showval = ''
     elif celltype == xlrd.XL_CELL_NUMBER:

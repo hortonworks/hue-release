@@ -36,7 +36,7 @@ def index(request):
     except Exception, ex:
       error = unicode(ex)
     result = {
-      'components': _get_components(),
+      'tutorials': _get_tutorials_version(),
       'error': error
     }
     return HttpResponse(json.dumps(result))
@@ -45,6 +45,17 @@ def index(request):
     'components': components,
     'hue_version': HUE_VERSION,
   })
+
+def _get_tutorials_version():
+  TUTORIAL_VERSION_FILE = os.path.join(conf.TUTORIALS_PATH.get(), 'version')
+  try:
+    with open(TUTORIAL_VERSION_FILE, 'r') as file_obj:
+      tutorial_version = file_obj.readlines()[0].strip()
+  except IOError, ex:
+    tutorial_version = "undefined"
+    msg = "Failed to open file '%s': %s" % (TUTORIAL_VERSION_FILE, ex)
+    LOG.error(msg)
+  return tutorial_version
 
 
 def _get_components():
@@ -72,15 +83,6 @@ def _get_components():
     ]
 
   if conf.TUTORIALS_INSTALLED.get():
-    TUTORIAL_VERSION_FILE = os.path.join(conf.TUTORIALS_PATH.get(), 'version')
-    try:
-      with open(TUTORIAL_VERSION_FILE, 'r') as file_obj:
-        tutorial_version = file_obj.readlines()[0].strip()
-    except IOError, ex:
-      tutorial_version = "undefined"
-      msg = "Failed to open file '%s': %s" % (TUTORIAL_VERSION_FILE, ex)
-      LOG.error(msg)
-
-    components.insert(0, ('Tutorials', tutorial_version))
+    components.insert(0, ('Tutorials', _get_tutorials_version()))
     components.insert(0, ("Sandbox", conf.SANDBOX_VERSION.get()))
   return components, HUE_VERSION

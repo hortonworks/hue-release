@@ -80,11 +80,10 @@ ROW FORMAT \
 %     endif
 %   endif
 % endif
-% if table.has_key('file_format'):
-  STORED AS ${table["file_format"] | n} \
-% endif
 % if table.get("file_format") == "InputFormat":
-INPUTFORMAT ${table["input_format_class"] | n} OUTPUTFORMAT ${table["output_format_class"] | n}
+  STORED AS INPUTFORMAT '${table["input_format_class"] | n}' OUTPUTFORMAT '${table["output_format_class"] | n}'
+% elif table.has_key('file_format'):
+  STORED AS ${table["file_format"] | n} \
 % endif
 % if not table.get("use_default_location", True):
 LOCATION "${table["external_location"] | n}"

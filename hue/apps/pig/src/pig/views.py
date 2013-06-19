@@ -22,6 +22,7 @@ from datetime import datetime
 from django.core.urlresolvers import reverse
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, Http404
+from django.utils.html import mark_safe
 
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_util import login_notrequired, render, get_desktop_uri_prefix
@@ -209,11 +210,11 @@ def _job_result(request, job):
     result = {}
     try:
         error = request.fs.do_as_superuser(request.fs.open, statusdir + "/stderr", "r")
-        result['error'] = error.read()
+        result['error'] = mark_safe(error.read())
         stdout = request.fs.do_as_superuser(request.fs.open, statusdir + "/stdout", "r")
-        result['stdout'] = stdout.read()
+        result['stdout'] = mark_safe(stdout.read())
         exit_code = request.fs.do_as_superuser(request.fs.open, statusdir + "/exit", "r")
-        result['exit'] = exit_code.read()
+        result['exit'] = mark_safe(exit_code.read())
         error.close()
         stdout.close()
         exit_code.close()

@@ -5,4 +5,4 @@
 <ClientMetaData>
 <clientMetaDataAttributes/>
 <HistoryEventList/></ClientMetaData>
-<vmxPathName type="string">Sandbox HDP 1.3.vmx</vmxPathName></VM></Foundry>
+<vmxPathName type="string">Hortonworks Sandbox 1.3.vmx</vmxPathName></VM></Foundry>

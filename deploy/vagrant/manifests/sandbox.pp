@@ -12,7 +12,7 @@ define line($file, $line, $ensure = 'present') {
             }
         }
         absent: {
-            exec { "/bin/grep -vFx '${line}' '${file}' | /usr/bin/tee '${file}' > /dev/null 2>&1":
+            exec { "/bin/grep -vFx '${line}' '${file}' | /usr/bin/tee '${file}.new' > /dev/null 2>&1; mv -f '${file}.new' '${file}' > /dev/null 2>&1":
               onlyif => "/bin/grep -qFx '${line}' '${file}'"
             }
 
@@ -62,6 +62,17 @@ class sandbox_rpm {
         content => template("/vagrant/files/sandbox.repo"),
         ensure  => file,
         require => Package['yum-plugin-priorities'],
+    }
+
+    file { 'issue':
+        path    => "/etc/issue",
+        content => template("/vagrant/files/issue"),
+        ensure  => file,
+    }
+
+    exec { 'splash':
+        command => "initctl restart tty TTY=/dev/tty5; initctl restart tty TTY=/dev/tty2; true",
+        require => File[issue],
     }
 
     package { "libxslt":
@@ -231,6 +242,11 @@ class sandbox {
         mode => 0755,
       }
 
+    file {"/usr/lib/hue/apps/shell/src/shell/build/setuid":
+        ensure => file,
+        mode => 4755,
+        require => Class[sandbox_rpm],
+      }
 
     
     exec { 'start':

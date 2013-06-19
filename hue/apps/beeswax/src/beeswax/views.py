@@ -191,6 +191,7 @@ def list_designs(request):
   prefix = 'q-'
   querydict_query = _copy_prefix(prefix, request.GET)
   # Manually limit up the user filter.
+  querydict_query[ prefix + 'page' ] = request.GET.get('page', 1)
   querydict_query[ prefix + 'user' ] = user
   querydict_query[ prefix + 'type' ] = app_name
   page, filter_params = _list_designs(querydict_query, DEFAULT_PAGE_SIZE, prefix)
@@ -1148,11 +1149,15 @@ def execute_directly(request, query, query_server=None, design=None, tablename=N
   if design is not None:
     authorized_get_design(request, design.id)
 
-  db = dbms.get(request.user, query_server)
-  database = query.query.get('database', 'default')
-  db.use(database)
+  try:
+    db = dbms.get(request.user, query_server)
+    database = query.query.get('database', 'default')
+    db.use(database)
 
-  history_obj = db.execute_query(query, design)
+    history_obj = db.execute_query(query, design)
+  except BeeswaxException, ex:
+      error_message, logs = expand_exception(ex, db)
+      raise PopupException(_('Error occurred executing hive query: ' + error_message))
 
   watch_url = reverse(get_app_name(request) + ':watch_query', kwargs={'id': history_obj.id})
   if 'download' in kwargs and kwargs['download']:
@@ -1232,7 +1237,6 @@ def _list_designs(querydict, page_size, prefix=""):
   else:
     sort_dir, sort_attr = DEFAULT_SORT
   db_queryset = db_queryset.order_by(sort_dir + SORT_ATTR_TRANSLATION[sort_attr])
-
   pagenum = int(querydict.get(prefix + 'page', 1))
   paginator = Paginator(db_queryset, page_size)
   page = paginator.page(pagenum)
