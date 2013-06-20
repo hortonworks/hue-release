@@ -625,6 +625,7 @@ $(document).ready(function () {
             delim1.css("visibility", "hidden");
             delim1.val('');
         }
+        $("input[name='table-autodetect_delimiter']").prop('checked', false);
         reactOnOptionChange();
     });
     delim1.bind("change paste keyup", reactOnOptionChange);
