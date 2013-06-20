@@ -89,6 +89,8 @@ def dt_login(request):
   """Used by the non-jframe login"""
   reload_config()
   redirect_to = request.REQUEST.get('next', '/')
+  if not redirect_to.startswith("/"):
+    redirect_to = "/"
   is_first_login_ever = first_login_ever()
 
   if SINGLE_USER_MODE or request.method == 'POST':

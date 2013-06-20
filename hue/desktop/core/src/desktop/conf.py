@@ -66,6 +66,10 @@ SECRET_KEY = Config(
   key="secret_key",
   help=_("Used in hashing algorithms for sessions."),
   default="")
+X_FRAME_OPTIONS = Config(
+  key="x_frame_options",
+  help=_("Options for X_FRAME_OPTIONS header."),
+  default="SAMEORIGIN")
 
 USER_ACCESS_HISTORY_SIZE = Config(
   key="user_access_history_size",
