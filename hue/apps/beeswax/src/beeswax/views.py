@@ -1341,10 +1341,10 @@ def _list_query_history(user, querydict, page_size, prefix=""):
   #
   # Queries without designs are the ones we submitted on behalf of the user,
   # (e.g. view table data). Exclude those when returning query history.
-  if not querydict.get(prefix + 'auto_query', False):
-    db_queryset = db_queryset.filter(design__isnull=False)
+  if querydict.get(prefix + 'auto_query', False):
+    saved_query_queryset = models.SavedQuery.objects.filter(is_auto=False)
+    db_queryset = db_queryset.exclude(design__id__in=[design.id for design in saved_query_queryset])
 
-  username = user.username
   user_filter = querydict.get(prefix + 'user', user.username)
   if user_filter != ':all':
     db_queryset = db_queryset.filter(owner__username=user_filter)
@@ -1396,7 +1396,6 @@ def _list_query_history(user, querydict, page_size, prefix=""):
   # We need to pass the parameters back to the template to generate links
   keys_to_copy = [ prefix + key for key in ('user', 'type', 'sort', 'design_id', 'auto_query') ]
   filter_params = copy_query_dict(querydict, keys_to_copy)
-
   return page, filter_params
 
 def _update_query_state(query_history):

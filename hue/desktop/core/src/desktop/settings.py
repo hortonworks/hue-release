@@ -118,6 +118,7 @@ MIDDLEWARE_CLASSES = [
     'desktop.middleware.ClusterMiddleware',
     'desktop.middleware.AppSpecificMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
+    'desktop.middleware.XFrameOptionsMiddleware',
     # 'debug_toolbar.middleware.DebugToolbarMiddleware'
 ]
 
