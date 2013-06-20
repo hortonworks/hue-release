@@ -97,6 +97,7 @@ def bt_get_out(name='repo', btbranch="bigtop-0.3"):
     env.host_string = "root@127.0.0.1:2222"
     local('rm -rf ./' + name + '-bigtop')
     get(output_directory % btbranch, './' + name + "-bigtop")
+    local('rm -f ./' + name + '-bigtop/hue-*.src.rpm')
 
 
 def btrpm(name="repo", branch="Caterpillar", btbranch="bigtop-0.3"):
