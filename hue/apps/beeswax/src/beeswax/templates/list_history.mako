@@ -103,7 +103,11 @@ ${ layout.menubar(section='history') }
             <tbody>
             % for query in page.object_list:
               <%
-                qcontext = query.design.get_query_context()
+                qcontext = None
+                try:
+                  qcontext = query.design.get_query_context()
+                except AttributeError:
+                  pass
               %>
               <tr class="histRow">
                 <td data-sort-value="${time.mktime(query.submission_date.timetuple())}">${query.submission_date.strftime("%x %X")}</td>

@@ -1335,32 +1335,24 @@ def _list_query_history(user, querydict, page_size, prefix=""):
     type='design__type',
   )
 
-  db_queryset = models.QueryHistory.objects.select_related()
+  db_queryset = models.QueryHistory.objects.select_related().all()
 
   # Filtering
   #
   # Queries without designs are the ones we submitted on behalf of the user,
   # (e.g. view table data). Exclude those when returning query history.
   if querydict.get(prefix + 'auto_query', False):
-    saved_query_queryset = models.SavedQuery.objects.filter(is_auto=False)
-    db_queryset = db_queryset.exclude(design__id__in=[design.id for design in saved_query_queryset])
+    db_queryset = db_queryset.filter(design__id__isnull=True)
+  else:
+    db_queryset = db_queryset.filter(design__id__isnull=False)
 
   user_filter = querydict.get(prefix + 'user', user.username)
   if user_filter != ':all':
     db_queryset = db_queryset.filter(owner__username=user_filter)
-
   # Design id
   design_id = querydict.get(prefix + 'design_id')
   if design_id:
     db_queryset = db_queryset.filter(design__id=int(design_id))
-
-  # Design type
-  d_type = querydict.get(prefix + 'type')
-  if d_type:
-    if d_type not in SavedQuery.TYPES_MAPPING.keys():
-      LOG.warn('Bad parameter to list_query_history: type=%s' % (d_type,))
-    else:
-      db_queryset = db_queryset.filter(design__type=SavedQuery.TYPES_MAPPING[d_type])
 
   # Ordering
   sort_key = querydict.get(prefix + 'sort')
@@ -1375,7 +1367,6 @@ def _list_query_history(user, querydict, page_size, prefix=""):
   else:
     sort_dir, sort_attr = DEFAULT_SORT
   db_queryset = db_queryset.order_by(sort_dir + SORT_ATTR_TRANSLATION[sort_attr])
-
   # Get the total return count before slicing
   total_count = db_queryset.count()
 
