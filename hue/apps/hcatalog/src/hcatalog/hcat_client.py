@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from time import time
+import time
 from pig.templeton import Templeton
 from beeswax.conf import BEESWAX_HIVE_HOME_DIR
 
@@ -180,7 +180,7 @@ class HCatClient(Templeton):
         except KeyError:
             pass
 
-    def do_hive_query_and_wait(self, hive_file=None, execute=None, timeout_sec=600.0):
+    def do_hive_query_and_wait(self, hive_file=None, execute=None, timeout_sec=1000.0):
         SLEEP_INTERVAL = 1.0
         statusdir = "/tmp/.hivejobs/%s" % datetime.now().strftime("%s")
         job = self.hive_query(hive_file=hive_file, execute=execute, statusdir=statusdir)
