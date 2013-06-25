@@ -39,7 +39,7 @@ ${layout.menubar(section='tables')}
                     </span>
                     <li class="nav-header">${_('Actions')}</li>
                     % if not examples_installed:
-                    <li><a href="#installSamples" data-toggle="modal">${_('Install samples')}</a></li>
+                    <!--<li><a href="#installSamples" data-toggle="modal">${_('Install samples')}</a></li>-->
                       % endif
                       <li><a href="${ url(app_name + ':import_wizard', database=database) }">${_('Create a new table from a file')}</a></li>
                     <li><a href="${ url(app_name + ':create_table', database=database) }">${_('Create a new table manually')}</a></li>
