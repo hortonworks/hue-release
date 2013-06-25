@@ -70,7 +70,7 @@ class sandbox_rpm {
         ensure  => file,
     }
 
-    exec { 'splash':
+    exec { 'issue-credentials':
         command => "initctl restart tty TTY=/dev/tty5; initctl restart tty TTY=/dev/tty2; true",
         require => File[issue],
     }
