@@ -46,7 +46,7 @@ LIB64="$HUE_ROOT/build/env/lib64"
 # commented out because on build machine it is possible that
 # target of broken link is exists, so in package remains broken link
 # if [ -L "$LIB64" -a ! -e "$LIB64" ] ; then
-  rm "$LIB64"
+  rm -f "$LIB64"
   ln -s lib "$LIB64"
 # fi
 
