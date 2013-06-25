@@ -432,7 +432,7 @@ DJANGO_EMAIL_BACKEND = Config(
 ###OBFUCATOR####
 def decrypt_values():
   from lockfile import FileLock
-  lock = FileLock("ENCR")
+  lock = FileLock("/tmp/ENCR")
   lock.acquire()
   OBFUSCATOR = Obfuscator()
   ENCRYPTED_VALUE_PATTERN = re.compile("\$\s{ALIAS=(\w+)}")
