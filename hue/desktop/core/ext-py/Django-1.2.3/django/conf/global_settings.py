@@ -412,7 +412,7 @@ MIDDLEWARE_CLASSES = (
 ############
 
 SESSION_COOKIE_NAME = 'sessionid'                       # Cookie name. This can be whatever you want.
-SESSION_COOKIE_AGE = 60 * 60 * 8                        # Age of cookie, in seconds (default: 8 hours).
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7 * 2               # Age of cookie, in seconds (default: 2 weeks).
 SESSION_COOKIE_DOMAIN = None                            # A string like ".lawrence.com", or None for standard domain cookie.
 SESSION_COOKIE_SECURE = False                           # Whether the session cookie should be secure (https:// only).
 SESSION_COOKIE_PATH = '/'                               # The path of the session cookie.
