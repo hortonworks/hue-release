@@ -270,6 +270,13 @@ EMAIL_HOST_PASSWORD = desktop.conf.SMTP.PASSWORD.get()
 EMAIL_USE_TLS = desktop.conf.SMTP.USE_TLS.get()
 DEFAULT_FROM_EMAIL = desktop.conf.SMTP.DEFAULT_FROM.get()
 
+############
+# SESSIONS #
+############
+
+# Age of cookie, in seconds (default: 8 hours).
+SESSION_COOKIE_AGE = 60 * 60 * 8
+
 # Used for securely creating sessions.  Should be unique and not shared with anybody.
 SECRET_KEY = desktop.conf.SECRET_KEY.get()
 if SECRET_KEY == "":
