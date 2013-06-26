@@ -5,14 +5,16 @@ from desktop.lib.conf import Config
 TEMPLETON_URL = Config(
   key="templeton_url",
   help="URL of Templeton(WebHcat) server",
-  default="http://localhost:50111/templeton/v1/"
+  default="http://localhost:50111/templeton/v1/",
+  private=False
 )
 
 SECURITY_ENABLED = Config(
   key="security_enabled",
   help="Whether to use kerberos auth",
   default=False,
-  type=bool
+  type=bool,
+  private=False
 )
 
 
@@ -30,4 +32,3 @@ def config_validator():
     return [ (TEMPLETON_URL, "%s" % (error.message)) ]
   else:
   	return []
-
