@@ -229,6 +229,12 @@ EMAIL_BACKEND = desktop.conf.DJANGO_EMAIL_BACKEND.get()
 # X-Frame-Options header
 X_FRAME_OPTIONS = desktop.conf.X_FRAME_OPTIONS.get()
 
+# Secure cookie transmission for HTTPS session
+if desktop.conf.is_https_enabled():
+  SESSION_COOKIE_PATH = '/;HttpOnly'
+  SESSION_COOKIE_SECURE = True
+
+
 # Configure database
 if os.getenv('DESKTOP_DB_CONFIG'):
   conn_string = os.getenv('DESKTOP_DB_CONFIG')
