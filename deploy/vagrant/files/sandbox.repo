@@ -9,7 +9,7 @@ gpgcheck=0
 [hue-bigtop]
 # dev repository
 name=Hue repository
-baseurl=http://10.2.2.239:4200
+baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/bigtop/Comanche/
 path=/
 enabled=1
 gpgcheck=0
