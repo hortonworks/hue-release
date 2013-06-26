@@ -16,6 +16,7 @@
 <%!
 from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
+from about import conf
 %>
 ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 
@@ -37,7 +38,9 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 			<div class="well sidebar-nav">
 				<ul class="nav nav-list">
 					<img src="/about/static/art/hortonworks_logo.png"/>
+                                % if conf.TUTORIALS_INSTALLED.get():
 		      		<li><a href="https://www.surveymonkey.com/s/Sandbox_Feedback">Leave Feedback</a></li>
+                                % endif
 				</ul>
 			</div>
 		</div>
