@@ -93,7 +93,7 @@ ${layout.menubar(section='tables')}
               <label class="control-label" id="formatRadio">${_('Record format')}</label>
               <div class="controls">
                   <label class="radio">
-                      <input type="radio" name="table-row_format" value="Delimited"
+                      <input type="radio" id="table-row_format_delimited" name="table-row_format" value="Delimited"
                           % if selected == "Delimited":
                              checked
                           % endif
@@ -104,7 +104,7 @@ ${layout.menubar(section='tables')}
                       </span>
                   </label>
                   <label class="radio">
-                      <input type="radio" name="table-row_format" value="SerDe"
+                      <input type="radio" id="table-row_format_serde" name="table-row_format" value="SerDe"
                           % if selected == "SerDe":
                              checked
                           % endif
@@ -166,6 +166,7 @@ ${layout.menubar(section='tables')}
                       placeholder='com.acme.hive.SerDe',
                       )
                       )}
+                      <span  class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed.')}</span>
                       <span class="help-block">
                           ${_('The Java class name of your SerDe.')} <em>${_('e.g.')}</em>, org.apache.hadoop.hive.contrib.serde2.RegexSerDe
                       </span>
@@ -178,6 +179,7 @@ ${layout.menubar(section='tables')}
                       placeholder='"prop" = "value", "prop2" = "value2"',
                       )
                       )}
+                      <span  class="help-inline error-inline hide">${_('This field is required.')}</span>
                       <span class="help-block">
                           ${_('Properties to pass to the (de)serialization mechanism.')} <em>${_('e.g.')},</em>, "input.regex" = "([^ ]*) ([^ ]*) ([^ ]*) (-|\\[[^\\]]*\\]) ([^ \"]*|\"[^\"]*\") (-|[0-9]*) (-|[0-9]*)(?: ([^ \"]*|\"[^\"]*\") ([^ \"]*|\"[^\"]*\"))?", "output.format.string" = "%1$s %2$s %3$s %4$s %5$s %6$s %7$s %8$s %9$s"
                       </span>
@@ -460,7 +462,8 @@ $(document).ready(function () {
 
   $(".step").click(function (event) {
     event.preventDefault();
-    if (validateForm()) {
+    var _step = $(this).attr("href");
+    if (validateForm(_step)) {
       $(".stepDetails").hide();
       var _step = $(this).attr("href");
       $(_step).css("visibility", "visible").show();
@@ -543,6 +546,7 @@ $(document).ready(function () {
     $(".stepDetailsInner").hide();
     $("#step3" + $(this).val()).show();
   });
+  $("input[id='table-row_format_delimited']").change();
 
   $("input[name='table-file_format']").change(function () {
     $("#inputFormatDetails").hide();
@@ -623,7 +627,7 @@ $(document).ready(function () {
     return step6Valid;
   }
 
-  function validateForm() {
+  function validateForm(nextStep) {
     // step 1
     var tableNameFld = $("input[name='table-name']");
     if (!isValid($.trim(tableNameFld.val()))) {
@@ -645,23 +649,54 @@ $(document).ready(function () {
       hideFieldError(fieldTerminatorFld);
     }
 
-    var collectionTerminatorFld = $("#id_table-collection_terminator_1");
-    if ($("#id_table-collection_terminator_0").val() == "__other__" && (!isValid($.trim(collectionTerminatorFld.val())) || $.trim(collectionTerminatorFld.val()).length != 1)) {
-      showFieldError(collectionTerminatorFld);
-      step3Valid = false;
+    if ($("input[id='table-row_format_delimited']").is(":checked")) {
+      var fieldTerminatorFld = $("#id_table-field_terminator_1");
+      if ($("#id_table-field_terminator_0").val() == "__other__" && (!isValid($.trim(fieldTerminatorFld.val())) || $.trim(fieldTerminatorFld.val()).length != 1)) {
+        showFieldError(fieldTerminatorFld);
+        step3Valid = false;
+      }
+      else {
+        hideFieldError(fieldTerminatorFld);
+      }
+
+      var collectionTerminatorFld = $("#id_table-collection_terminator_1");
+      if ($("#id_table-collection_terminator_0").val() == "__other__" && (!isValid($.trim(collectionTerminatorFld.val())) || $.trim(collectionTerminatorFld.val()).length != 1)) {
+        showFieldError(collectionTerminatorFld);
+        step3Valid = false;
+      }
+      else {
+        hideFieldError(collectionTerminatorFld);
+      }
+
+      var mapKeyTerminatorFld = $("#id_table-map_key_terminator_1");
+      if ($("#id_table-map_key_terminator_0").val() == "__other__" && (!isValid($.trim(mapKeyTerminatorFld.val())) || $.trim(mapKeyTerminatorFld.val()).length != 1)) {
+        showFieldError(mapKeyTerminatorFld);
+        step3Valid = false;
+      }
+      else {
+        hideFieldError(mapKeyTerminatorFld);
+      }
     }
-    else {
-      hideFieldError(collectionTerminatorFld);
+    if (nextStep == "#step4" && $("input[id='table-row_format_serde']").is(":checked")){
+      var serdeName = $("input[name='table-serde_name']");
+      if (!isValid($.trim(serdeName.val()))) {
+        showFieldError(serdeName);
+        step3Valid = false;
+      }
+      else {
+        hideFieldError(serdeName);
+      }
+
+      var serdeProperties = $("input[name='table-serde_properties']");
+      if (serdeProperties.val() == "") {
+        showFieldError(serdeProperties);
+        step3Valid = false;
+      }
+      else {
+        hideFieldError(serdeProperties);
+      }
     }
 
-    var mapKeyTerminatorFld = $("#id_table-map_key_terminator_1");
-    if ($("#id_table-map_key_terminator_0").val() == "__other__" && (!isValid($.trim(mapKeyTerminatorFld.val())) || $.trim(mapKeyTerminatorFld.val()).length != 1)) {
-      showFieldError(mapKeyTerminatorFld);
-      step3Valid = false;
-    }
-    else {
-      hideFieldError(mapKeyTerminatorFld);
-    }
     if (!step3Valid) {
       return false;
     }
