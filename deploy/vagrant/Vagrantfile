@@ -1,93 +1,90 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-#require 'vagrant-vbguest' #Comment since yet incopatible with vagrant 1.1
-#require 'vagrant-hostmaster'
-
-Vagrant::Config.run do |config|
+Vagrant.configure("2") do |config|
   config.vm.box = "sandbox-condor"
-
-  # The url from where the 'config.vm.box' box will be fetched if it
-  # doesn't already exist on the user's system.
   config.vm.box_url = "https://copy.com/qMjCclCFEGPw/sandbox-condor.box?download=1"
 
-  # Boot with a GUI so you can see the screen. (Default is headless)
-  config.vm.boot_mode = :gui
+  config.vm.hostname = "sandbox"
 
-  # config.vm.network :hostonly, "192.168.56.101"
-  config.vm.host_name = "sandbox"
-  config.vm.customize ["modifyvm", :id, "--memory", 3048] #For dev purpose
+  config.vm.provider :virtualbox do |vb|
+    vb.gui = true
+  
+    vb.customize ["modifyvm", :id, "--memory", 3048] #For dev purpose
+    vb.customize ["modifyvm", :id, "--rtcuseutc", "on"]
+    vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 1.3", "--groups", "/HortonWorks"]
+
+    vb.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
+    vb.customize ["modifyvm", :id, "--nic2", "none"]
+    vb.customize ["modifyvm", :id, "--mouse", "usbtablet"]
+  end
 
   config.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
     puppet.manifests_path = "manifests"
     puppet.manifest_file  = "sandbox.pp"
   end
 
-  config.vm.customize ["modifyvm", :id, "--rtcuseutc", "on"]
-  config.vm.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 1.3", "--groups", "/HortonWorks"]
 
-  config.vm.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
-  config.vm.customize ["modifyvm", :id, "--nic2", "none"]
-  config.vm.customize ["modifyvm", :id, "--mouse", "usbtablet"]
-  
-  config.vm.forward_port 22, 42022
-  config.vm.forward_port 25, 42025
-  config.vm.forward_port 68, 42068
-  config.vm.forward_port 80, 42080
-  config.vm.forward_port 111, 42111
-  config.vm.forward_port 161, 42161
-  config.vm.forward_port 199, 42199
-  config.vm.forward_port 465, 42465
-  config.vm.forward_port 587, 42587
-  config.vm.forward_port 631, 42631
-  config.vm.forward_port 878, 42878
-  config.vm.forward_port 897, 42897
-  config.vm.forward_port 2181, 2181
-  config.vm.forward_port 3306, 3306
-  config.vm.forward_port 5432, 5432
-  config.vm.forward_port 8000, 8000
-  config.vm.forward_port 8002, 8002
-  config.vm.forward_port 8010, 8010
-  config.vm.forward_port 8020, 8020
-  config.vm.forward_port 8080, 8080
-  config.vm.forward_port 8649, 8649
-  config.vm.forward_port 8651, 8651
-  config.vm.forward_port 8652, 8652
-  config.vm.forward_port 8888, 8888
-  config.vm.forward_port 9083, 9083
-  config.vm.forward_port 9290, 9290
-  config.vm.forward_port 9090, 9090
-  config.vm.forward_port 10000, 10000
-  config.vm.forward_port 11000, 11000
-  config.vm.forward_port 11001, 11001
-  config.vm.forward_port 34450, 34450
-  config.vm.forward_port 38481, 38481
-  config.vm.forward_port 39278, 39278
-  config.vm.forward_port 41021, 41021
-  config.vm.forward_port 43253, 43253
-  config.vm.forward_port 43342, 43342
-  config.vm.forward_port 43535, 43535
-  config.vm.forward_port 43706, 43706
-  config.vm.forward_port 46665, 46665
-  config.vm.forward_port 50010, 50010
-  config.vm.forward_port 50030, 50030
-  config.vm.forward_port 50060, 50060
-  config.vm.forward_port 50070, 50070
-  config.vm.forward_port 50075, 50075
-  config.vm.forward_port 50090, 50090
-  config.vm.forward_port 50111, 50111
-  config.vm.forward_port 50300, 50300
-  config.vm.forward_port 51076, 51076
-  config.vm.forward_port 51111, 51111
-  config.vm.forward_port 51809, 51809
-  config.vm.forward_port 53190, 53190
-  config.vm.forward_port 53302, 53302
-  config.vm.forward_port 54201, 54201
-  config.vm.forward_port 59620, 59620
-  config.vm.forward_port 60000, 60000
-  config.vm.forward_port 60010, 60010
-  config.vm.forward_port 60020, 60020
-  config.vm.forward_port 60030, 60030
-  config.vm.forward_port 60572, 60572
+  config.vm.network :forwarded_port, guest: 25, host: 42025, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 68, host: 42068, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 80, host: 42080, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 111, host: 42111, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 161, host: 42161, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 199, host: 42199, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 465, host: 42465, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 587, host: 42587, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 631, host: 42631, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 878, host: 42878, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 897, host: 42897, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 2181, host: 2181, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 3306, host: 3306, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 5432, host: 5432, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8000, host: 8000, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8002, host: 8002, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8010, host: 8010, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8020, host: 8020, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8042, host: 8042, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8080, host: 8080, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8088, host: 8088, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8649, host: 8649, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8651, host: 8651, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8652, host: 8652, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 8888, host: 8888, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 9083, host: 9083, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 9290, host: 9290, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 9090, host: 9090, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 10000, host: 10000, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 11000, host: 11000, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 11001, host: 11001, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 19888, host: 19888, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 34450, host: 34450, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 38481, host: 38481, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 39278, host: 39278, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 41021, host: 41021, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 43253, host: 43253, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 43342, host: 43342, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 43535, host: 43535, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 43706, host: 43706, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 46665, host: 46665, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 50010, host: 50010, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 50030, host: 50030, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 50060, host: 50060, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 50070, host: 50070, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 50075, host: 50075, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 50090, host: 50090, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 50111, host: 50111, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 50300, host: 50300, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 51076, host: 51076, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 51111, host: 51111, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 51809, host: 51809, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 53190, host: 53190, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 53302, host: 53302, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 54201, host: 54201, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 59620, host: 59620, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 60000, host: 60000, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 60010, host: 60010, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 60020, host: 60020, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 60030, host: 60030, host_ip: "127.0.0.1", auto_correct: false
+  config.vm.network :forwarded_port, guest: 60572, host: 60572, host_ip: "127.0.0.1", auto_correct: false
 
 end
