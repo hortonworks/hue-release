@@ -58,18 +58,18 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
   <table id="jobsTable" class="datatables table table-striped table-condensed">
     <thead>
     <tr>
-      <th width="4%">${_('Logs')}</th>
-      <th width="10%">${_('ID')}</th>
-      <th width="49%">${_('Name')}</th>
-      <th width="5%">${_('Status')}</th>
-      <th width="5%">${_('User')}</th>
-      <th width="2%">${_('Maps')}</th>
-      <th width="2%">${_('Reduces')}</th>
-      <th width="5%">${_('Queue')}</th>
-      <th width="4%">${_('Priority')}</th>
-      <th width="4%">${_('Duration')}</th>
-      <th width="12%">${_('Date')}</th>
-      <th width="3%" data-row-selector-exclude="true"></th>
+      <th>${_('Logs')}</th>
+      <th>${_('ID')}</th>
+      <th>${_('Name')}</th>
+      <th>${_('Status')}</th>
+      <th>${_('User')}</th>
+      <th>${_('Maps')}</th>
+      <th>${_('Reduces')}</th>
+      <th>${_('Queue')}</th>
+      <th>${_('Priority')}</th>
+      <th>${_('Duration')}</th>
+      <th>${_('Date')}</th>
+      <th data-row-selector-exclude="true"></th>
     </tr>
     </thead>
     <tbody>
@@ -102,23 +102,24 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
       "sPaginationType": "bootstrap",
       "iDisplayLength": 30,
       "bLengthChange": false,
+      "bAutoWidth": false,
       "sDom": "<'row'r>t<'row'<'span6'i><''p>>",
       "aaSorting": [
         [1, "desc"]
       ],
       "aoColumns": [
         {"bSortable": false, "sWidth": "20px"},
+        {"sWidth": "10%"},
         null,
-        null,
-        null,
-        null,
-        { "sType": "title-numeric", "sWidth": "60px" },
-        { "sType": "title-numeric", "sWidth": "60px" },
-        null,
-        null,
-        { "sType": "title-numeric" },
-        { "sType": "title-numeric" },
-        {"bSortable": false}
+        {"sWidth": "5%"},
+        {"sWidth": "5%"},
+        { "sType": "title-numeric", "sWidth": "50px"},
+        { "sType": "title-numeric", "sWidth": "50px"},
+        {"sWidth": "5%"},
+        {"sWidth": "4%"},
+        { "sType": "title-numeric", "sWidth": "4%" },
+        { "sType": "title-numeric", "sWidth": "12%" },
+        {"bSortable": false, "sWidth": "20px"}
       ],
       "oLanguage": {
         "sEmptyTable": "${_('No data available')}",
@@ -157,7 +158,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
       }
     }
 
-    var _isUpdating = false;
+    var isUpdating = false;
     var newRows = [];
 
     function updateRunning(data) {
@@ -187,6 +188,10 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
               newRows.push(job);
               try {
                 jobTable.fnAddData(getJobRow(job));
+                if ($("#noJobs").is(":visible")) {
+                  $("#noJobs").hide();
+                  $(".datatables").show();
+                }
                 $("a[data-row-selector='true']").jHueRowSelector();
               }
               catch (error) {
@@ -205,7 +210,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
           newRows.splice(i);
         }
       }
-      _isUpdating = false;
+      isUpdating = false;
     }
 
     function getJobRow(job) {
@@ -254,17 +259,17 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
     }
 
     function callJobDetails(job) {
-      $.getJSON(job.url + "?format=json&rnd=" + Math.random(), function (job) {
-        if (job != null) {
+      $.getJSON(job.url + "?format=json&rnd=" + Math.random(), function (data) {
+        if (data != null && data.job) {
           var jobTableNodes = jobTable.fnGetNodes();
           var _foundRow = null;
           $(jobTableNodes).each(function (iNode, node) {
-            if ($(node).children("td").eq(1).text().trim() == job.shortId) {
+            if ($(node).children("td").eq(1).text().trim() == data.job.shortId) {
               _foundRow = node;
             }
           });
           if (_foundRow != null) {
-            updateJobRow(job, _foundRow);
+            updateJobRow(data.job, _foundRow);
           }
         }
       });
@@ -281,7 +286,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
         }
       }
       else {
-        _isUpdating = true;
+        isUpdating = true;
         _url += "&state=running";
       }
       _url += "&user=" + $("#userFilter").val().trim();
@@ -356,7 +361,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
     callJsonData(populateTable);
 
     var _runningInterval = window.setInterval(function () {
-      if (!_isUpdating) {
+      if (!isUpdating) {
         callJsonData(updateRunning, true);
       }
     }, 2000);

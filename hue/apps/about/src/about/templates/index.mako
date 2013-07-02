@@ -20,6 +20,7 @@ from about import conf
 %>
 ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 
+        % if user.is_superuser:
 	<div class="subnav subnav-fixed">
 		<div class="container-fluid">
 		<ul class="nav nav-pills">
@@ -29,6 +30,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 		</ul>
 		</div>
 	</div>
+        % endif
 
 	<div class="container-fluid">
 		<h1 id="describe-header">Hortonworks Hue ${hue_version}</h1>
