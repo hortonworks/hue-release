@@ -461,7 +461,7 @@ $(document).ready(function () {
             if ("error" in data) {
                 showMainError(decodeUnicodeCharacters(data["error"]));
             }
-            else if ("results" in data) {
+            if ("results" in data) {
                 $('.scrollable').html(data["results"]);
                 $(".resultTable").dataTable({
                     "bPaginate": false,

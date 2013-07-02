@@ -47,6 +47,10 @@ def create_table(request, database='default'):
         if form.is_valid() and 'createTable' in request.POST:
             try:
                 columns = [f.cleaned_data for f in form.columns.forms]
+                column_names = [col["column_name"] for col in columns]
+                isTableValid, tableValidErrMsg = hcatalog.common.validateHiveTable(column_names)
+                if not isTableValid:
+                    raise Exception(tableValidErrMsg)
                 partition_columns = [f.cleaned_data for f in form.partitions.forms]
                 proposed_query = django_mako.render_to_string("create_table_statement.mako",
                                                               {
