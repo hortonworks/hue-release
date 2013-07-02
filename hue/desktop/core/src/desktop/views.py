@@ -64,6 +64,8 @@ def download_log_view(request):
   """
   Zip up the log buffer and then return as a file attachment.
   """
+  if not request.user.is_superuser:
+    return HttpResponse(_("You must be a superuser."))
   l = logging.getLogger()
   for h in l.handlers:
     if isinstance(h, desktop.log.log_buffer.FixedBufferHandler):

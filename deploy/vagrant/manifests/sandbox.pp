@@ -95,8 +95,8 @@ class sandbox_rpm {
                      Package['libxslt'],
                      Package['python-lxml'],
                      Exec['yum-cache'],
-                     Package['yum-plugin-priorities'],
-                     User['hue'],
+                     Package['yum-plugin-priorities']
+                     
                    ],
     }
 
@@ -112,23 +112,7 @@ class sandbox_rpm {
     }
 */
 
-    user { "hue":
-      ensure     => "present",
-      managehome => true,
-      home => "/usr/lib/hue",
-      uid => "505",
-      gid => "hadoop",
-      groups => ["admin", "users"],
-      password => '$1$MwHL5JF5$1WmQPYETuWUyhCKLEyN9a1',
-    }
 
-    group { "hadoop":
-        ensure => "present",
-    }
-
-    group { "users":
-        ensure => "present",
-    }
 }
 
 
