@@ -472,7 +472,7 @@ ${layout.menubar(section='query')}
              $("<input>").attr("type","hidden").attr("name","saveform-name")
                  .attr("value", $("input[name=saveform-name]").val()).appendTo($("#advancedSettingsForm"));
              $("<input>").attr("type","hidden").attr("name","saveform-desc")
-                 .attr("value", $("input[name=saveform-desc]").val()).appendTo($("#advancedSettingsForm"));
+                 .attr("value", $("textarea[name=saveform-desc]").val()).appendTo($("#advancedSettingsForm"));
 
             checkAndSubmit();
         });
