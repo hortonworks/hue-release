@@ -22,8 +22,11 @@ KEY_TMP=$TMP_DIR/server.key
 CSR_TMP=$TMP_DIR/server.csr
 CRT_TMP=$TMP_DIR/server.crt
 
-KEY_DEST=/etc/ssl/hue.key
-CRT_DEST=/etc/ssl/hue.crt
+DIR_DEST=/etc/ssl
+KEY_DEST=$DIR_DEST/hue.key
+CRT_DEST=$DIR_DEST/hue.crt
+
+[ ! -d $DIR_DEST ] &&  mkdir -p $DIR_DEST
 
 echo "Step 1: Generating a Private Key and CSR (Certificate Signing Request"
 echo
