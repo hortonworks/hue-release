@@ -179,18 +179,7 @@ class tutorials {
     }
       
 
-    file { 'load_videos.sh':
-      path    => "/tmp/load_videos.sh",
-      content => template("/vagrant/files/scripts/load_videos.sh"),
-    }
-
-    exec { "load_videos.sh":
-      command => '/bin/bash /tmp/load_videos.sh | tee /var/log/load_videos.log',
-      require => [File['load_videos.sh']],
-      timeout => 0,
-      logoutput => "on_failure",
-    }
-
+ 
     service { "httpd":
         ensure => running,
         require => [ Class[sandbox_rpm], ],
