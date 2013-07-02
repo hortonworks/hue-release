@@ -25,7 +25,7 @@ $(document).ready(function () {
 	var previewFrame = document.getElementById('preview');	
 	var preview =  previewFrame.contentDocument ||  previewFrame.contentWindow.document;
 
-	var csvfile = $('input[name=csv]').attr('value');
+	var csvfile = $('input[name=visualize_csv]').attr('value');
 	/*file conrtaining all needed js files to work with charts*/
 	var include = '<script src="/hcatalog/static/js/include.js"></script>';
 
@@ -38,7 +38,7 @@ $(document).ready(function () {
 		});
 	$.ajax({
         type: "GET",
-        url: csvfile,
+        url: csvfile+3,
         dataType: "text",
         success: function(data) {
 		var csvdata = $.csv.toObjects(data); 
@@ -111,7 +111,7 @@ $(document).ready(function () {
 				$('input[name=stacked]').attr('disabled',false);
 			}
 			updatePreview()
-		});
+		});	
 		$('input[name=stacked]').click(function(){updatePreview()});
 		$('input[name=yAxis]').click(function(){updatePreview()});
 		$('select[name=xAxis]').change(function(){
@@ -119,4 +119,4 @@ $(document).ready(function () {
 			$('input[value='+$('select[name=xAxis]').find(":selected").text()+']').attr('checked',false);
 			updatePreview();
 		});
-});
+	});
