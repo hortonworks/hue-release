@@ -146,13 +146,14 @@ def create_from_file(request, database='default'):
                         column_formset=parser_options['col_formset'],
                         row_start_index=row_start_index
                     ))
-
+                    isTableValid, tableValidErrMsg = hcatalog.common.validateHiveTable(parser_options['col_names'])
                 except Exception as ex:
                     preview_results['error'] = escapejs(ex.message)
                 else:
                     preview_results['results'] = preview_table_resp
+                    if not isTableValid:
+                        preview_results['error'] = escapejs(tableValidErrMsg)
                     options = {}
-
                     if file_type == hcatalog.forms.IMPORT_FILE_TYPE_TEXT:
                         options['delimiter_0'] = parser_options['delimiter_0']
                         options['delimiter_1'] = parser_options['delimiter_1']
@@ -179,13 +180,24 @@ def create_from_file(request, database='default'):
                 # getting back file_processor_type from preview
                 parser_options['file_processor_type'] = request.POST.get('file_processor_type', None)
                 user_def_columns = []
+                user_def_column_names = []
                 column_count = 0
                 while 'cols-%d-column_name' % column_count in request.POST \
                     and 'cols-%d-column_type' % column_count in request.POST:
+                    user_def_column_names.append(request.POST.get('cols-%d-column_name' % column_count))
                     user_def_columns.append(dict(column_name=request.POST.get('cols-%d-column_name' % column_count),
                                         column_type=request.POST.get('cols-%d-column_type' % column_count), ))
                     column_count += 1
                 try:
+                    isTableValid, tableValidErrMsg = hcatalog.common.validateHiveTable(user_def_column_names)
+                    if not isTableValid:
+                        return render("create_table_from_file.mako", request, dict(
+                            action="#",
+                            database=database,
+                            table_form=form.table,
+                            error=escapejs(tableValidErrMsg)
+                        ))
+
                     LOG.debug('Creating table by hcatalog')
                     proposed_query = django_mako.render_to_string("create_table_statement.mako",
                                                                   {
@@ -294,6 +306,7 @@ def _on_table_preview(fs, file_types, parser_options):
     col_formset = hcatalog.forms.ColumnTypeFormSet(prefix='cols', initial=columns)
     parser_options['col_formset'] = col_formset
     parser_options['columns'] = columns
+    parser_options['col_names'] = col_names
     return parser_options
 
 

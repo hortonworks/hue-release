@@ -25,6 +25,9 @@ import desktop.lib.i18n
 
 from django import forms
 
+# Hive tables restrictions from hive-schema-0.10.0.mysql.sql
+HIVE_COLUMN_NAME_MAX_LEN = 128
+
 HIVE_IDENTIFER_REGEX = re.compile("^[a-zA-Z0-9]\w*$")
 
 DL_FORMATS = ['csv', 'xls']
@@ -50,6 +53,17 @@ TERMINATORS = [
     (',', "Comma (,)", 44),
     (' ', "Space", 32),
 ]
+
+
+def validateHiveTable(column_name_list):
+
+    # validation column names
+    for col in column_name_list:
+        if len(col) > HIVE_COLUMN_NAME_MAX_LEN:
+            error = "The column name '%s' is too long (max column name length is %d)." % (unicode(col),
+                                                                                          HIVE_COLUMN_NAME_MAX_LEN)
+            return False, error
+    return True, None
 
 
 def to_choices(x):

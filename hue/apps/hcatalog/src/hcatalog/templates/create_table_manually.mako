@@ -478,6 +478,7 @@ $(document).ready(function () {
 
   $(".step").click(function (event) {
     event.preventDefault();
+    hideMainError();
     var _step = $(this).attr("href");
     if (validateForm(_step)) {
       $(".stepDetails").hide();
