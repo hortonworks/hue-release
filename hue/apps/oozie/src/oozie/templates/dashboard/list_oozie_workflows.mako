@@ -126,6 +126,7 @@ ${ layout.menubar(section='dashboard') }
       status: wf.status,
       statusClass: "label " + getStatusClass(wf.status),
       isRunning: wf.isRunning,
+      duration_sort: wf.duration_sort,
       duration: wf.duration,
       appName: wf.appName,
       progress: wf.progress,
@@ -322,7 +323,7 @@ ${ layout.menubar(section='dashboard') }
           $(nNodes).each(function (iNode, node) {
             var nodeFound = false;
             $(data).each(function (iWf, currentItem) {
-              if ($(node).children("td").eq(5).text() == currentItem.id) {
+              if ($(node).children("td").eq(8).text() == currentItem.id) {
                 nodeFound = true;
               }
             });
@@ -336,7 +337,7 @@ ${ layout.menubar(section='dashboard') }
             var wf = new Workflow(item);
             var foundRow = null;
             $(nNodes).each(function (iNode, node) {
-              if ($(node).children("td").eq(5).text() == wf.id) {
+              if ($(node).children("td").eq(8).text() == wf.id) {
                 foundRow = node;
               }
             });
@@ -372,7 +373,7 @@ ${ layout.menubar(section='dashboard') }
             if (foundRow == null) {
               if (['RUNNING', 'PREP', 'WAITING', 'SUSPENDED', 'PREPSUSPENDED', 'PREPPAUSED', 'PAUSED'].indexOf(wf.status) > -1) {
                 try {
-                  runningTable.fnAddData([
+                  var runningRow = runningTable.fnAddData([
                     emptyStringIfNull(wf.lastModTime),
                     '<span class="' + wf.statusClass + '">' + wf.status + '</span>',
                     wf.appName,
@@ -384,6 +385,7 @@ ${ layout.menubar(section='dashboard') }
                     '<a href="' + wf.absoluteUrl + '" data-row-selector="true">' + wf.id + '</a>',
                     killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(wf.status) > -1?suspendCell:resumeCell)
                   ]);
+                  runningTable.fnSettings().aoData[runningRow[0]].nTr.cells[3].setAttribute('data-sort-value',wf.progress)
                 }
                 catch (error) {
                   $.jHueNotify.error(error);
@@ -391,9 +393,9 @@ ${ layout.menubar(section='dashboard') }
               }
             }
             else {
-              runningTable.fnUpdate('<span class="' + wf.statusClass + '">' + wf.status + '</span>', foundRow, 1, false);
-              runningTable.fnUpdate('<div class="progress"><div class="' + wf.progressClass + '" style="width:' + wf.progress + '%">' + wf.progress + '%</div></div>', foundRow, 3, false);
-              runningTable.fnUpdate(killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(wf.status) > -1?suspendCell:resumeCell), foundRow, 9, false);
+              runningTable.fnUpdate('<span class="' + wf.statusClass + '">' + wf.status + '</span>', foundRow, 1, false, false);
+              runningTable.fnUpdate('<div class="progress"><div class="' + wf.progressClass + '" style="width:' + wf.progress + '%">' + wf.progress + '%</div></div>', foundRow, 3, false, false);
+              runningTable.fnUpdate(killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(wf.status) > -1?suspendCell:resumeCell), foundRow, 9, false, false);
             }
           });
         }
@@ -416,7 +418,7 @@ ${ layout.menubar(section='dashboard') }
         $(data).each(function (iWf, item) {
           var wf = new Workflow(item);
           try {
-            completedTable.fnAddData([
+            var completedRow = completedTable.fnAddData([
               emptyStringIfNull(wf.endTime),
               '<span class="' + wf.statusClass + '">' + wf.status + '</span>', decodeURIComponent(wf.appName),
               emptyStringIfNull(wf.duration),
@@ -426,6 +428,7 @@ ${ layout.menubar(section='dashboard') }
               wf.run,
               '<a href="' + wf.absoluteUrl + '" data-row-selector="true">' + wf.id + '</a>'
             ], false);
+            completedTable.fnSettings().aoData[completedRow[0]].nTr.cells[3].setAttribute('data-sort-value',wf.duration_sort)
           }
           catch (error) {
             $.jHueNotify.error(error);
