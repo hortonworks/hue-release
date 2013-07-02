@@ -616,7 +616,8 @@ def display(request, path):
     # Get contents as string for text mode, or at least try
     uni_contents = None
     if not mode or mode == 'text':
-        uni_contents = unicode(contents, encoding, errors='replace')
+        uni_contents = contents.replace('\001', '\t')  # for CSV files
+        uni_contents = unicode(uni_contents, encoding, errors='replace')
         is_binary = uni_contents.find(i18n.REPLACEMENT_CHAR) != -1
         # Auto-detect mode
         if not mode:
