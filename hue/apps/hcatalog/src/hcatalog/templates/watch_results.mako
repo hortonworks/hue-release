@@ -92,7 +92,7 @@ ${layout.menubar(section='tables')}
                 </ul>
             </div>
 
-          % if not query.is_finished():
+          % if not query.is_finished() and query and query.design:
             <div id="multiStatementsQuery" class="alert">
               <button type="button" class="close" data-dismiss="alert">&times;</button>
               <strong>${_('Multi-statement query')}</strong></br>
