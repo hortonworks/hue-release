@@ -709,7 +709,7 @@ def view_results(request, id, first_row=0):
     if downloadable:
       for format in common.DL_FORMATS:
         download_urls[format] = reverse(app_name + ':download', kwargs=dict(id=str(id), format=format))
-      visualize_url = reverse(app_name + ':visualize', kwargs=dict(id=str(id)))
+    visualize_url = reverse(app_name + ':visualize', kwargs=dict(id=str(id)))
 
     save_form = beeswax.forms.SaveResultsForm()
     results.start_row = first_row

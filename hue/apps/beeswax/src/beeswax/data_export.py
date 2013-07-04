@@ -57,7 +57,7 @@ def download(handle, format, db):
 
 def data_generator(handle, format, db, cut=None):
   """
-  data_generator(query_model, formatter) -> generator object
+  data_generator(query_model, format) -> generator object
 
   Return a generator object for a csv. The first line is the column names.
 
