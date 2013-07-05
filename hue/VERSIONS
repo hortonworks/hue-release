@@ -5,4 +5,4 @@ HCatalog=0.11.0.1.3.0.0-107
 Pig=0.11.1.1.3.0.0-107
 Hive=0.11.0.1.3.0.0-107
 Oozie=3.3.2.1.3.0.0-107
-
+#FIXME Don't remove this line: it marks to recheck versions during startup
