@@ -363,6 +363,7 @@ var previewEndIdx = 0;
 var filePath = "";
 var fileType = FileType.none
 var pingHiveJobTimer = null;
+var replaceDelimiterWithAuto = true;
 var viewModel = new AppViewModel();
 
 function AppViewModel() {
@@ -636,6 +637,7 @@ $(document).ready(function () {
     $("input[name='table-single_line_comment']").bind("change paste keyup", reactOnOptionChange);
     $("input[name='table-autodetect_delimiter']").change(function() {
         if($(this).is(":checked")) {
+            replaceDelimiterWithAuto = true;
             reactOnOptionChange();
         }
     });
@@ -651,6 +653,7 @@ $(document).ready(function () {
         field_1.addClass("input-small");
         field_1.css("margin-left", "4px").attr("placeholder", "${_('type here')}");
         field_0.change(function () {
+            reactOnOptionChange();
             if ($(this).val() == "__other__") {
                 field_1.css("visibility", "visible");
             }
@@ -659,14 +662,15 @@ $(document).ready(function () {
                 field_1.val('');
             }
         });
-        field_0.change();
+        field_1.bind("change paste keyup", reactOnOptionChange);
     }
 
     function updateTerminatorField(name) {
         var delim0 = $("#id_table-" + name + "_0");
         var delim1 = $("#id_table-" + name + "_1");
-        if($("input[name='table-autodetect_delimiter']").is(":checked"))
+        if(replaceDelimiterWithAuto)
         {
+            replaceDelimiterWithAuto = false;
             var delim_repl_with0 = $("select[name='table-replace_delimiter_with_0']");
             var delim_repl_with1 = $("input[name='table-replace_delimiter_with_1']");
             delim_repl_with0.val(delim0.val());
@@ -824,7 +828,8 @@ $(document).ready(function () {
         }
 
         var fieldTerminatorFld = $("#id_table-replace_delimiter_with_1");
-        if ($("#id_table-replace_delimiter_with_0").val() == "__other__" && (!isDataValid($.trim(fieldTerminatorFld.val())) || $.trim(fieldTerminatorFld.val()).length != 1)) {
+        if ($("#id_table-replace_delimiter_with_0").val() == "__other__" &&
+                (!isDataValid(fieldTerminatorFld.val() || (fieldTerminatorFld.val().length > 1 && !fieldTerminatorFld.val()[0] != "\\")))) {
             showFieldError(fieldTerminatorFld);
             isValid = false;
         }
@@ -834,7 +839,7 @@ $(document).ready(function () {
 
         var delimiterFld = $("#id_table-delimiter_1");
         if ($("#id_table-delimiter_0").val() == "__other__" &&
-                (!isDataValid(delimiterFld.val()) || (delimiterFld.val().length > 1 && delimiterFld.val()[0] != "\\"))) {
+                (!isDataValid(delimiterFld.val() || (delimiterFld.val().length > 1 && !delimiterFld.val()[0] != "\\")))) {
             showFieldError(delimiterFld);
             isValid = false;
         }
