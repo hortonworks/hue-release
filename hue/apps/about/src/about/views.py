@@ -65,7 +65,7 @@ def _get_components():
     with open(os.path.join(get_run_root(), "VERSIONS")) as f:
       for line in f:
         l = line.strip().split("=")
-        if len(l) < 2:
+        if len(l) < 2 or line.strip()[:1] == '#':
           continue
         component, version = l
         if component == "HUE_VERSION":
