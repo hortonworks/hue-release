@@ -275,7 +275,7 @@
   <div id="chooseFile" class="modal hide fade">
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
-      <h3>${ _('Choose a') } ${ if_true(select_folder, _('folder'), _('file')) }</h3>
+      <h3>${ _('Choose a') } <span class="choose-choice"></span></h3>
     </div>
     <div class="modal-body">
       <div id="fileChooserModal">
@@ -305,6 +305,11 @@
     function getFileBrowseButton(inputElement, selectFolder) {
       return $("<button>").addClass("btn").addClass("fileChooserBtn").text("..").click(function (e) {
         e.preventDefault();
+        if (selectFolder) {
+          $('.choose-choice').text('${_('folder')}')
+        } else {
+          $('.choose-choice').text('${_('file')}')
+        }
         // check if it's a relative path
         var pathAddition = "";
         if ($.trim(inputElement.val()) != "") {
