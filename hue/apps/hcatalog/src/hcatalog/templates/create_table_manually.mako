@@ -527,6 +527,7 @@ $(document).ready(function () {
 
   $("#id_table-field_terminator_1").css("margin-left", "4px").attr("placeholder", "${_('Type your field terminator here')}").hide();
   $("#id_table-field_terminator_0").change(function () {
+    $("#id_table-field_terminator_1").val("");
     if ($(this).val() == "__other__") {
       $("#id_table-field_terminator_1").show();
     }
@@ -536,6 +537,7 @@ $(document).ready(function () {
   });
   $("#id_table-collection_terminator_1").css("margin-left", "4px").attr("placeholder", "${_('Type your collection terminator here')}").hide();
   $("#id_table-collection_terminator_0").change(function () {
+    $("#id_table-collection_terminator_1").val("");
     if ($(this).val() == "__other__") {
       $("#id_table-collection_terminator_1").show();
     }
@@ -545,6 +547,7 @@ $(document).ready(function () {
   });
   $("#id_table-map_key_terminator_1").css("margin-left", "4px").attr("placeholder", "${_('Type your map key terminator here')}").hide();
   $("#id_table-map_key_terminator_0").change(function () {
+    $("#id_table-map_key_terminator_1").val("");
     if ($(this).val() == "__other__") {
       $("#id_table-map_key_terminator_1").show();
     }
