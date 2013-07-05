@@ -162,6 +162,7 @@ INSTALL_CORE_FILES = \
 	tools/app_reg \
 	tools/virtual-bootstrap \
 	tools/relocatable.sh \
+	tools/fill_versions.sh \
 	VERS* LICENSE* README*
 
 .PHONY: install
