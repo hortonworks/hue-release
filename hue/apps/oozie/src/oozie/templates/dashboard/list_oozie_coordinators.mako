@@ -326,7 +326,7 @@ ${layout.menubar(section='dashboard')}
           $(nNodes).each(function (iNode, node) {
             var nodeFound = false;
             $(data).each(function (iCoord, currentItem) {
-              if ($(node).children("td").eq(5).text() == currentItem.id) {
+              if ($(node).children("td").eq(8).text() == currentItem.id) {
                 nodeFound = true;
               }
             });
@@ -340,7 +340,7 @@ ${layout.menubar(section='dashboard')}
             var coord = new Coordinator(item);
             var foundRow = null;
             $(nNodes).each(function (iNode, node) {
-              if ($(node).children("td").eq(5).text() == coord.id) {
+              if ($(node).children("td").eq(8).text() == coord.id) {
                 foundRow = node;
               }
             });
@@ -376,7 +376,7 @@ ${layout.menubar(section='dashboard')}
             if (foundRow == null) {
               if (['RUNNING', 'PREP', 'WAITING', 'SUSPENDED', 'PREPSUSPENDED', 'PREPPAUSED', 'PAUSED'].indexOf(coord.status) > -1) {
                 try {
-                  runningTable.fnAddData([
+                  var runningRow = runningTable.fnAddData([
                     emptyStringIfNull(coord.endTime),
                     '<span class="' + coord.statusClass + '">' + coord.status + '</span>',
                     coord.appName,
@@ -388,6 +388,7 @@ ${layout.menubar(section='dashboard')}
                     '<a href="' + coord.absoluteUrl + '" data-row-selector="true">' + coord.id + '</a>',
                     killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(coord.status) > -1?suspendCell:resumeCell)
                   ]);
+                  runningTable.fnSettings().aoData[runningRow[0]].nTr.cells[3].setAttribute('data-sort-value',coord.progress)
                 }
                 catch (error) {
                   $.jHueNotify.error(error);
@@ -395,9 +396,9 @@ ${layout.menubar(section='dashboard')}
               }
             }
             else {
-              runningTable.fnUpdate('<span class="' + coord.statusClass + '">' + coord.status + '</span>', foundRow, 1, false);
-              runningTable.fnUpdate('<div class="progress"><div class="' + coord.progressClass + '" style="width:' + coord.progress + '%">' + coord.progress + '%</div></div>', foundRow, 3, false);
-              runningTable.fnUpdate(killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(coord.status) > -1?suspendCell:resumeCell), foundRow, 9, false);
+              runningTable.fnUpdate('<span class="' + coord.statusClass + '">' + coord.status + '</span>', foundRow, 1, false, false);
+              runningTable.fnUpdate('<div class="progress"><div class="' + coord.progressClass + '" style="width:' + coord.progress + '%">' + coord.progress + '%</div></div>', foundRow, 3, false, false);
+              runningTable.fnUpdate(killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(coord.status) > -1?suspendCell:resumeCell), foundRow, 9, false, false);
             }
           });
         }
@@ -420,7 +421,7 @@ ${layout.menubar(section='dashboard')}
         $(data).each(function (iWf, item) {
           var coord = new Coordinator(item);
           try {
-            completedTable.fnAddData([
+            var completedRow = completedTable.fnAddData([
               emptyStringIfNull(coord.endTime),
               '<span class="' + coord.statusClass + '">' + coord.status + '</span>',
               coord.appName,
@@ -431,6 +432,7 @@ ${layout.menubar(section='dashboard')}
               emptyStringIfNull(coord.startTime),
               '<a href="' + coord.absoluteUrl + '" data-row-selector="true">' + coord.id + '</a>'
             ], false);
+            completedTable.fnSettings().aoData[completedRow[0]].nTr.cells[3].setAttribute('data-sort-value',coord.duration_sort) 
           }
           catch (error) {
             $.jHueNotify.error(error);
