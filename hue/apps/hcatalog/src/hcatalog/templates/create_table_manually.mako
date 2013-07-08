@@ -21,7 +21,7 @@
 
 <%namespace name="comps" file="beeswax_components.mako" />
 <%namespace name="layout" file="layout.mako" />
-${ commonheader(_("HCatalog: Create table manually"), app_name, user, '100px') | n,unicode }
+${ commonheader(_("HCatalog: Create a new table manually"), app_name, user, '100px') | n,unicode }
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
