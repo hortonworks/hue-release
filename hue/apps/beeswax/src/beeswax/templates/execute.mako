@@ -281,6 +281,9 @@ ${layout.menubar(section='query')}
             <label class="control-label">${_('Name')}</label>
             <div class="controls">
               ${comps.field(form.saveform['name'], klass="input-xlarge")}
+              <div class="alert saveAsAlert">
+                <i class="icon-warning-sign"></i>
+                ${_('This name is already present in Saved Queries.')}</div>
             </div>
         </div>
         <div class="control-group">
@@ -340,6 +343,11 @@ ${layout.menubar(section='query')}
 
   .fileChooserBtn {
     border-radius: 0 3px 3px 0;
+  }
+
+  .saveAsAlert {
+    margin: 5px 0px 0px;
+    width: 230px;
   }
 
   /*.linedwrap {
@@ -463,18 +471,43 @@ ${layout.menubar(section='query')}
             checkAndSubmit();
         });
 
+        var checkSaveAsName = function (field, callback){
+            $.post(
+                '/beeswax/list_designs',
+                {name:field.val()},
+                function(data){
+                    if (data.thisname) {
+                        field.next('.alert').removeClass('hide');
+                    } else {
+                        field.next('.alert').addClass('hide');
+                    }
+                    if (typeof callback=='function'){
+                        callback(data)
+                    }
+                },
+                'json'
+            );
+        }
+
         $("#saveQueryAs").click(function(){
             $("<input>").attr("type","hidden").attr("name","saveform-saveas").attr("value","Save As...").appendTo($("#advancedSettingsForm"));
+            $("#saveAs").find("input[name=saveform-name]").keyup(function(){checkSaveAsName($(this));}).trigger('keyup');
             $("#saveAs").modal("show");
         });
 
         $("#saveAsNameBtn").click(function(){
-             $("<input>").attr("type","hidden").attr("name","saveform-name")
-                 .attr("value", $("input[name=saveform-name]").val()).appendTo($("#advancedSettingsForm"));
-             $("<input>").attr("type","hidden").attr("name","saveform-desc")
-                 .attr("value", $("textarea[name=saveform-desc]").val()).appendTo($("#advancedSettingsForm"));
-
-            checkAndSubmit();
+            checkSaveAsName(
+                $("input[name=saveform-name]"),
+                function (data){
+                    var org_name = $("input[name=saveform-name]").val();
+                    var saveasname = (data.thisname) ? org_name + ' (copy)' : org_name;
+                    $("<input>").attr("type","hidden").attr("name","saveform-name")
+                        .attr("value", saveasname).appendTo($("#advancedSettingsForm"));
+                    $("<input>").attr("type","hidden").attr("name","saveform-desc")
+                        .attr("value", $("textarea[name=saveform-desc]").val()).appendTo($("#advancedSettingsForm"));
+                    checkAndSubmit();
+                }
+            )
         });
 
         $("#explainQuery").click(function(){

@@ -197,6 +197,19 @@ def list_designs(request):
   querydict_query[ prefix + 'type' ] = app_name
   page, filter_params = _list_designs(querydict_query, DEFAULT_PAGE_SIZE, prefix)
 
+  if request.method == "POST":
+    srch_name = request.POST.get('name')
+
+    if srch_name is not None:
+      all_names = models.SavedQuery.objects.filter(is_auto=False)
+      exist_name = all_names.filter(Q(name=srch_name))
+
+      resp = {'thisname':bool(exist_name)}
+    else:
+      resp = None
+
+    return HttpResponse(json.dumps(resp), mimetype="application/json")
+
   return render('list_designs.mako', request, {
     'page': page,
     'filter_params': filter_params,
