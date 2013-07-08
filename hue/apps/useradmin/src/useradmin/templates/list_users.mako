@@ -97,10 +97,16 @@ ${layout.menubar(section='users', _=_)}
     <div id="syncLdap" class="modal hide fade"></div>
 
     <div id="deleteUser" class="modal hide fade">
-        <form id="dropTableForm" action="${ url('useradmin.views.delete_user') }" method="POST">
+        <form id="dropTableForm" class="form form-inline" action="${ url('useradmin.views.delete_user') }" method="POST">
             <div class="modal-header">
                 <a href="#" class="close" data-dismiss="modal">&times;</a>
                 <h3 id="deleteUserMessage">${ _("Are you sure you want to delete the selected user(s)?") }</h3>
+            </div>
+            <div class="modal-body">
+                <label class="control-label" for="delhome_conf">
+                  <input type="checkbox" name="user_delhome" id="delhome_conf">
+                  <span>Delete home directory(ies)</span>
+                </label>
             </div>
             <div class="modal-footer">
                 <a href="#" class="btn" data-dismiss="modal">${_('No')}</a>
@@ -111,6 +117,8 @@ ${layout.menubar(section='users', _=_)}
             </div>
         </form>
     </div>
+
+    <div id="sync_ldap_conf" class="modal hide fade"></div>
 
 </div>
 
@@ -159,8 +167,8 @@ ${layout.menubar(section='users', _=_)}
             },
             dataType: "html",
             success: function(data){
-                $("#deleteUser").html(data);
-                $("#deleteUser").modal("show");
+                $("#sync_ldap_conf").html(data);
+                $("#sync_ldap_conf").modal("show");
             }
         });
     });
