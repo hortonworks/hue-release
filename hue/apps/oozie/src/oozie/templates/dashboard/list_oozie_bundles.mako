@@ -314,7 +314,7 @@ ${layout.menubar(section='dashboard')}
           $(nNodes).each(function (iNode, node) {
             var nodeFound = false;
             $(data).each(function (iBundle, currentItem) {
-              if ($(node).children("td").eq(5).text() == currentItem.id) {
+              if ($(node).children("td").eq(6).text() == currentItem.id) {
                 nodeFound = true;
               }
             });
@@ -328,7 +328,7 @@ ${layout.menubar(section='dashboard')}
             var bundle = new Bundle(item);
             var foundRow = null;
             $(nNodes).each(function (iNode, node) {
-              if ($(node).children("td").eq(5).text() == bundle.id) {
+              if ($(node).children("td").eq(6).text() == bundle.id) {
                 foundRow = node;
               }
             });
@@ -364,7 +364,7 @@ ${layout.menubar(section='dashboard')}
             if (foundRow == null) {
               if (['RUNNING', 'PREP', 'WAITING', 'SUSPENDED', 'PREPSUSPENDED', 'PREPPAUSED', 'PAUSED'].indexOf(bundle.status) > -1) {
                 try {
-                  runningTable.fnAddData([
+                  var runningRow = runningTable.fnAddData([
                     emptyStringIfNull(bundle.kickoffTime),
                     '<span class="' + bundle.statusClass + '">' + bundle.status + '</span>',
                     bundle.appName,
@@ -374,6 +374,7 @@ ${layout.menubar(section='dashboard')}
                     '<a href="' + bundle.absoluteUrl + '" data-row-selector="true">' + bundle.id + '</a>',
                     killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(bundle.status) > -1?suspendCell:resumeCell)
                   ]);
+                  runningTable.fnSettings().aoData[runningRow[0]].nTr.cells[3].setAttribute('data-sort-value',bundle.progress)
                 }
                 catch (error) {
                   $.jHueNotify.error(error);
@@ -382,9 +383,9 @@ ${layout.menubar(section='dashboard')}
 
             }
             else {
-              runningTable.fnUpdate('<span class="' + bundle.statusClass + '">' + bundle.status + '</span>', foundRow, 1, false);
-              runningTable.fnUpdate('<div class="progress"><div class="' + bundle.progressClass + '" style="width:' + bundle.progress + '%">' + bundle.progress + '%</div></div>', foundRow, 3, false);
-              runningTable.fnUpdate(killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(bundle.status) > -1?suspendCell:resumeCell), foundRow, 7, false);
+              runningTable.fnUpdate('<span class="' + bundle.statusClass + '">' + bundle.status + '</span>', foundRow, 1, false, false);
+              runningTable.fnUpdate('<div class="progress"><div class="' + bundle.progressClass + '" style="width:' + bundle.progress + '%">' + bundle.progress + '%</div></div>', foundRow, 3, false, false);
+              runningTable.fnUpdate(killCell + " " + (['RUNNING', 'PREP', 'WAITING'].indexOf(bundle.status) > -1?suspendCell:resumeCell), foundRow, 7, false, false);
             }
           });
         }

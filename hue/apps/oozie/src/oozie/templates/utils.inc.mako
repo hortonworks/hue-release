@@ -335,8 +335,10 @@
               }
             },
             onFileChoose:function (filePath) {
-              handleChoice(filePath);
-              $("#chooseFile").modal("hide");
+              if (!selectFolder) {
+                handleChoice(filePath);
+                $("#chooseFile").modal("hide");
+              }
             },
             createFolder:false,
             uploadFile:true,
