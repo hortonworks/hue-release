@@ -79,13 +79,19 @@ def delete_user(request):
     raise PopupException(_('A POST request is required.'))
 
   ids = request.POST.getlist('user_ids')
+  delhomedir = request.POST.get('user_delhome')
   global __users_lock
   __users_lock.acquire()
   try:
     if str(request.user.id) in ids:
       raise PopupException(_("You cannot remove yourself."), error_code=401)
 
-    UserProfile.objects.filter(user__id__in=ids).delete()
+    userp = UserProfile.objects.filter(user__id__in=ids)
+    if delhomedir:
+      for user in userp:
+        request.fs.do_as_superuser(request.fs.rmtree, user.home_directory)
+      
+    userp.delete()
     User.objects.filter(id__in=ids).delete()
   finally:
     __users_lock.release()
