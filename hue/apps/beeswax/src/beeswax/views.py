@@ -21,6 +21,7 @@ except ImportError:
   import simplejson as json
 import logging
 import re
+import os
 
 from django import forms
 from django.contrib import messages
@@ -795,7 +796,12 @@ def save_results(request, id):
             raise PopupException(_('Saving results from a query with no MapReduce jobs is not supported. '
                                    'You may copy manually from the HDFS location %(path)s.') % {'path': result_meta.table_dir})
           target_dir = form.cleaned_data['target_dir']
-          request.fs.rename_star(result_meta.table_dir, target_dir)
+          sources = result_meta.table_dir
+          sources = sources[0 if sources.find('/') == -1 else sources.find('/') : ]
+          if request.fs.exists(sources):
+            request.fs.rename_star(result_meta.table_dir, target_dir)
+          elif not request.fs.exists(sources) and os.path.exists(sources):
+            request.fs.copyFromLocal(sources, target_dir)
           LOG.debug("Moved results from %s to %s" % (result_meta.table_dir, target_dir))
           query_history.save_state(models.QueryHistory.STATE.expired)
           return redirect(reverse('filebrowser.views.view', kwargs={'path': target_dir}))
@@ -871,8 +877,13 @@ def _save_results_ctas(request, query_history, target_table, result_meta):
     # 2. Move the results into the table's storage
     table_obj = db.get_table('default', target_table)
     table_loc = request.fs.urlsplit(table_obj.path_location)[2]
-    request.fs.rename_star(result_meta.table_dir, table_loc)
-    LOG.debug("Moved results from %s to %s" % (result_meta.table_dir, table_loc))
+    sources = result_meta.table_dir
+    sources = sources[0 if sources.find('/') == -1 else sources.find('/') : ]
+    if request.fs.exists(sources):
+      request.fs.rename_star(result_meta.table_dir, table_loc)
+    elif not request.fs.exists(sources) and os.path.exists(sources):
+      request.fs.copyFromLocal(sources, table_loc)
+    LOG.debug("Moved results from %s to %s" % (sources, table_loc))
     messages.info(request, _('Saved query results as new table %(table)s') % {'table': target_table})
     query_history.save_state(models.QueryHistory.STATE.expired)
   except Exception, ex:
