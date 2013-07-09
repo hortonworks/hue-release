@@ -435,7 +435,8 @@ $(document).ready(function(){
             if (response.status != 0) {
               $.jHueNotify.error("Error: " + (response['error'] ? response['error'] : " occured. Please check udf_path setting in hue.ini" ));
             } else {
-              window.location.reload(true);
+                $.jHueNotify.info("UDF was successfully uploaded");
+                setTimeout("window.location.reload(true)", 1000);
             }
           },
   });
