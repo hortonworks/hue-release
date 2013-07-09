@@ -135,8 +135,9 @@ ${ commonheader(_('Job: %(jobId)s') % dict(jobId=job.jobId_short), "jobbrowser",
                         location_url = location_to_url(output_dir)
                         basename = os.path.basename(output_dir)
                         dir_name = basename.split('/')[-1]
+                        output_location = request.fs.urlsplit(output_dir)
                     %>
-                    % if dir_name != '':
+                    % if dir_name != '' and len(output_location) > 2 and request.fs.exists(output_location[2]):
                         <li class="nav-header">${_('Output')}</li>
                         <li>
                         <%
