@@ -87,7 +87,7 @@ UDF_PATH = conf.UDF_PATH.get()
             <li>
               <form id="udfs_form" enctype="multipart/form-data"
                   action="${url('pig.views.udf_create')}"
-                  method="post" data-destination="${UDF_PATH}">
+                  method="post" data-destination="${UDF_PATH}"> ${ csrf_token_field | n } 
                   <div id="udf_file_upload"><i class="icon-upload icon-white"></i> Upload UDF jar</div>                
               </form>
             </li>
@@ -97,7 +97,7 @@ UDF_PATH = conf.UDF_PATH.get()
     <div class="span9" style="float: left; width: 70%;">
       <div class="clearfix">
         <div class="input">
-            <form action="${url("root_pig")}" method="post" id="pig_script_form">
+            <form action="${url("root_pig")}" method="post" id="pig_script_form"> ${ csrf_token_field | n } 
             <input type="hidden" name="script_id"  value="${result.get('id','')}" >
             <label for="id_title">Title:</label>
             <div class="control-group">

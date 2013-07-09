@@ -135,7 +135,7 @@ ${layout.menubar(section='tables')}
 
 
 <div id="dropTable" class="modal hide fade">
-    <form id="dropTableForm" method="POST">
+    <form id="dropTableForm" method="POST"> ${ csrf_token_field | n } 
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal">&times;</a>
             <h3 id="dropTableMessage">${_('Confirm action')}</h3>
@@ -156,7 +156,7 @@ ${layout.menubar(section='tables')}
 % if is_table_partitioned and has_partitions:
   % for indx, part in enumerate(table['partitions']):
 <div id="dropPartition${indx}" class="modal hide fade">
-	<form id="dropPartitionForm">
+	<form id="dropPartitionForm"> ${ csrf_token_field | n } 
 	<input id="partition_name" type="hidden" value=${part['name']} name="partition_name"/>
 	<div class="modal-header">
 		<a href="#" class="close" data-dismiss="modal">&times;</a>
@@ -176,7 +176,7 @@ ${layout.menubar(section='tables')}
 % endif
 
 <div id="importData" class="modal hide fade">
-	<form id="importDataForm" class="form-stacked">
+	<form id="importDataForm" class="form-stacked"> ${ csrf_token_field | n } 
 	<div class="modal-header">
 		<a href="#" class="close" data-dismiss="modal">&times;</a>
 		<h3>Import data</h3>

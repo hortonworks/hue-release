@@ -35,7 +35,7 @@ ${ layout.menubar(section='bundles') }
     </div>
 
     <div style="min-height:300px">
-      <form class="form-horizontal" id="bundleForm" action="${ url('oozie:create_bundle') }" method="POST">
+      <form class="form-horizontal" id="bundleForm" action="${ url('oozie:create_bundle') }" method="POST"> ${ csrf_token_field | n } 
 
       <div class="row-fluid">
         <div class="span2">

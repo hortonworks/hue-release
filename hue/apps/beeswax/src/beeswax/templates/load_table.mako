@@ -29,7 +29,7 @@ ${layout.menubar()}
   <h1>${_('Load Data into %(table)s') % {'table': table}}</h1>
 
   <div class="prompt_popup">
-    <form action="${action}" method="POST">
+    <form action="${action}" method="POST"> ${ csrf_token_field | n } 
       <dl>
         ${util.render_field(form["path"])}
         <a class="hue-chooseFile" data-filters="ArtButton" data-icon-styles="{'width': 16, 'height': 16, 'top': 6, 'left': 6 }" data-chooseFor="path">

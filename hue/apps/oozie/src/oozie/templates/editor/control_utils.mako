@@ -26,7 +26,7 @@
   <script type="text/html" id="${node_type}ConvertTemplate">
 % endif
   <div data-bind="with: context().node">
-    <form class="form-horizontal" id="${node_type}-convert-form" method="POST">
+    <form class="form-horizontal" id="${node_type}-convert-form" method="POST"> ${ csrf_token_field | n } 
       <div class="modal-header">
         <a href="#" class="close" data-dismiss="modal">&times;</a>
         <h3 class="message" data-bind="text: '${_('Edit Node: ')}' + name()"></h3>
@@ -59,7 +59,7 @@
   <script type="text/html" id="${node_type}EditTemplate">
 % endif
   <div data-bind="with: context().node">
-    <form class="form-horizontal" id="${node_type}-action-form" method="POST">
+    <form class="form-horizontal" id="${node_type}-action-form" method="POST"> ${ csrf_token_field | n } 
       <div class="modal-header">
         <a href="#" class="close" data-dismiss="modal">&times;</a>
         <h3 class="message" data-bind="text: '${_('Edit Node: ')}' + name()"></h3>
@@ -94,7 +94,7 @@
   <script type="text/html" id="${node_type}EditTemplate">
 % endif
   <div data-bind="with: context().node">
-    <form class="form-horizontal" id="${node_type}-action-form" method="POST">
+    <form class="form-horizontal" id="${node_type}-action-form" method="POST"> ${ csrf_token_field | n } 
       <div class="modal-header">
         <a href="#" class="close" data-dismiss="modal">&times;</a>
         <h3 class="message" data-bind="text: '${_('Edit Node: ')}' + name()"></h3>

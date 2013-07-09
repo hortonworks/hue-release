@@ -98,7 +98,7 @@ ${layout.menubar(section='query')}
               <strong>${_('Multi-statement query')}</strong></br>
               ${_('Hue stopped as one of your query contains some results.') }
               ${_('Click on') }
-              <form action="${ url(app_name + ':watch_query', query.id) }?context=${ query.design.get_query_context() }" method="POST">
+              <form action="${ url(app_name + ':watch_query', query.id) }?context=${ query.design.get_query_context() }" method="POST"> ${ csrf_token_field | n } 
                 <input type="submit" value="${ _("next") }"/ class="btn btn-danger">
               </form>
               ${_('for continuing the execution of the remaining statements.') }
@@ -288,7 +288,7 @@ ${layout.menubar(section='query')}
 ## duplication from save_results.mako
 <div id="saveAs" class="modal hide fade">
   <form id="saveForm" action="${url(app_name + ':save_results', query.id) }" method="POST"
-        class="form form-inline form-padding-fix">
+        class="form form-inline form-padding-fix"> ${ csrf_token_field | n } 
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
       <h3>${_('Save Query Results')}</h3>

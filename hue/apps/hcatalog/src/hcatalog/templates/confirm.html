@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 {% endcomment %}
 {% block content %}
-<form action="{{ url }}" method="POST">>
+<form action="{{ url }}" method="POST"> ${ csrf_token_field | n } >
 <div class="modal-header">
 	<a href="#" class="close">&times;</a>
 	<h3>Confirm action</h3>
