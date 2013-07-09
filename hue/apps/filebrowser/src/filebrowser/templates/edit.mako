@@ -36,7 +36,7 @@ ${ commonheader(_('%(filename)s - File Viewer') % dict(filename=truncate(filenam
 
 <div class="container-fluid">
 <div class="well" >
-    <form class="form-stacked" method="post" action="${url('filebrowser.views.save_file')}">
+    <form class="form-stacked" method="post" action="${url('filebrowser.views.save_file')}"> ${ csrf_token_field | n } 
     <div class="toolbar">
 		<a class="btn" href="${url('filebrowser.views.view', path=dirname_enc)}">${_('View Location')}</a>
 	</div>
@@ -63,7 +63,7 @@ ${ commonheader(_('%(filename)s - File Viewer') % dict(filename=truncate(filenam
 
 
 <div id="saveAsModal" class="modal hide fade">
-    <form id="saveAsForm" action="${url('filebrowser.views.save_file')}" method="POST" class="form-stacked form-padding-fix">
+    <form id="saveAsForm" action="${url('filebrowser.views.save_file')}" method="POST" class="form-stacked form-padding-fix"> ${ csrf_token_field | n } 
     <div class="modal-header">
         <a href="#" class="close" data-dismiss="modal">&times;</a>
         <h3>${_('Save As')}</h3>

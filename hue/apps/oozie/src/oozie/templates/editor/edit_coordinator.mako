@@ -86,7 +86,7 @@ ${ layout.menubar(section='coordinators') }
       </div>
     </div>
     <div class="span10">
-      <form id="jobForm" class="form-horizontal" action="${ url('oozie:edit_coordinator', coordinator=coordinator.id) }" method="POST">
+      <form id="jobForm" class="form-horizontal" action="${ url('oozie:edit_coordinator', coordinator=coordinator.id) }" method="POST"> ${ csrf_token_field | n } 
       <div id="properties" class="section">
         <ul class="nav nav-pills">
           <li class="active"><a href="#step1" class="step">${ _('Step 1: General') }</a></li>
@@ -418,8 +418,8 @@ ${ layout.menubar(section='coordinators') }
 
 <div id="submit-job-modal" class="modal hide"></div>
 
-<form class="form-horizontal" id="add-dataset-form"></form>
-<form class="form-horizontal" id="edit-dataset-form"></form>
+<form class="form-horizontal" id="add-dataset-form"> ${ csrf_token_field | n } </form>
+<form class="form-horizontal" id="edit-dataset-form"> ${ csrf_token_field | n } </form>
 
 
 

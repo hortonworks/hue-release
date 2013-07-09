@@ -31,7 +31,7 @@ ${ layout.menubar(section='history') }
 <div class="container-fluid">
   <h1>${ _('Submission History') }</h1>
   <div class="well hueWell">
-    <form class="form-search">
+    <form class="form-search"> ${ csrf_token_field | n } 
       <input type="text" id="filterInput" class="input-xlarge search-query" placeholder="${ _('Search for username, name, etc...') }">
     </form>
   </div>

@@ -200,7 +200,7 @@ from django.utils.translation import ugettext as _
             <p>${_('Are you sure you want to delete these files?')}</p>
         </div>
         <div class="modal-footer">
-            <form id="deleteForm" action="/filebrowser/rmtree" method="POST" enctype="multipart/form-data" class="form-stacked">
+            <form id="deleteForm" action="/filebrowser/rmtree" method="POST" enctype="multipart/form-data" class="form-stacked"> ${ csrf_token_field | n } 
                 <a class="btn" data-dismiss="modal">${_('No')}</a>
                 <input type="submit" value="${_('Yes')}" class="btn btn-danger" />
             </form>
@@ -217,7 +217,7 @@ from django.utils.translation import ugettext as _
             <p>${_('Are you sure you want to restore these files?')}</p>
         </div>
         <div class="modal-footer">
-            <form id="restoreTrashForm" action="/filebrowser/trash/restore" method="POST" enctype="multipart/form-data" class="form-stacked">
+            <form id="restoreTrashForm" action="/filebrowser/trash/restore" method="POST" enctype="multipart/form-data" class="form-stacked"> ${ csrf_token_field | n } 
                 <a class="btn" data-dismiss="modal">${_('No')}</a>
                 <input type="submit" value="${_('Yes')}" class="btn btn-primary" />
             </form>
@@ -234,7 +234,7 @@ from django.utils.translation import ugettext as _
             <p>${_('Are you sure you want to permanently delete all your trash?')}</p>
         </div>
         <div class="modal-footer">
-            <form id="purgeTrashForm" action="/filebrowser/trash/purge" method="POST" enctype="multipart/form-data" class="form-stacked">
+            <form id="purgeTrashForm" action="/filebrowser/trash/purge" method="POST" enctype="multipart/form-data" class="form-stacked"> ${ csrf_token_field | n } 
                 <a class="btn" data-dismiss="modal">${_('Cancel')}</a>
                 <input type="submit" value="${_('Delete')}" class="btn btn-primary" />
             </form>
@@ -243,7 +243,7 @@ from django.utils.translation import ugettext as _
 
     <!-- rename modal -->
     <div id="renameModal" class="modal hide fade">
-        <form id="renameForm" action="/filebrowser/rename?next=${current_request_path}" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix">
+        <form id="renameForm" action="/filebrowser/rename?next=${current_request_path}" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix"> ${ csrf_token_field | n } 
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal">&times;</a>
             <h3>${_('Renaming:')} <span id="renameFileName">file name</span></h3>
@@ -272,7 +272,7 @@ from django.utils.translation import ugettext as _
         <%
           select_filter = is_superuser and 'SelectWithOther' or ''
         %>
-        <form id="chownForm" action="/filebrowser/chown" method="POST" enctype="multipart/form-data" class="form-stacked form-padding-fix">
+        <form id="chownForm" action="/filebrowser/chown" method="POST" enctype="multipart/form-data" class="form-stacked form-padding-fix"> ${ csrf_token_field | n } 
             <div class="modal-header">
                 <a href="#" class="close" data-dismiss="modal">&times;</a>
                 <h3>${_('Change Owner / Group')}</h3>
@@ -303,7 +303,7 @@ from django.utils.translation import ugettext as _
 
     <!-- chmod modal -->
     <div id="changePermissionModal" class="modal hide fade">
-        <form action="/filebrowser/chmod" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix" id="chmodForm">
+        <form action="/filebrowser/chmod" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix" id="chmodForm"> ${ csrf_token_field | n } 
             <div class="modal-header">
                 <a href="#" class="close" data-dismiss="modal">&times;</a>
                 <h3>${_('Change Permissions:')} </h3>
@@ -365,7 +365,7 @@ from django.utils.translation import ugettext as _
 
     <!-- move modal -->
     <div id="moveModal" class="modal hide fade">
-        <form id="moveForm" action="/filebrowser/move" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix">
+        <form id="moveForm" action="/filebrowser/move" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix"> ${ csrf_token_field | n } 
             <div class="modal-header">
                 <a href="#" class="close" data-dismiss="modal">&times;</a>
                 <h3>${_('Move:')}</h3>
@@ -391,7 +391,7 @@ from django.utils.translation import ugettext as _
 
     <!-- copy modal -->
     <div id="copyModal" class="modal hide fade">
-        <form id="copyForm" action="/filebrowser/copy" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix">
+        <form id="copyForm" action="/filebrowser/copy" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix"> ${ csrf_token_field | n } 
             <div class="modal-header">
                 <a href="#" class="close" data-dismiss="modal">&times;</a>
                 <h3>${_('Copy:')}</h3>
@@ -450,7 +450,7 @@ from django.utils.translation import ugettext as _
 
     <!-- new directory modal -->
     <div id="createDirectoryModal" class="modal hide fade">
-        <form id="createDirectoryForm" data-bind="submit: createDirectory" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix">
+        <form id="createDirectoryForm" data-bind="submit: createDirectory" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix"> ${ csrf_token_field | n } 
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal">&times;</a>
             <h3>${_('Create Directory')}</h3>
@@ -474,7 +474,7 @@ from django.utils.translation import ugettext as _
 
     <!-- new directory modal -->
     <div id="createFileModal" class="modal hide fade">
-        <form id="createFileForm" data-bind="submit: createFile" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix">
+        <form id="createFileForm" data-bind="submit: createFile" method="POST" enctype="multipart/form-data" class="form-inline form-padding-fix"> ${ csrf_token_field | n } 
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal">&times;</a>
             <h3>${_('Create File')}</h3>

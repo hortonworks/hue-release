@@ -22,7 +22,7 @@
 <%namespace name="utils" file="../utils.inc.mako" />
 
 
-<form action="${ action }" method="POST">
+<form action="${ action }" method="POST"> ${ csrf_token_field | n } 
   <div class="modal-header">
     <a href="#" class="close" data-dismiss="modal">&times;</a>
     <h2>${ _('Rerun this job?') }</h2>

@@ -223,7 +223,7 @@ ${ commonheader(_('Job: %(jobId)s') % dict(jobId=job.jobId_short), "jobbrowser",
                 </div>
                 <div id="metadata" class="tab-pane">
                     <div class="well hueWell">
-                        <form class="form-search">
+                        <form class="form-search"> ${ csrf_token_field | n } 
                             <input type="text" id="metadataFilter" class="input-xlarge search-query" placeholder="${_('Text Filter')}">
                         </form>
                     </div>

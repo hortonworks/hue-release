@@ -54,7 +54,7 @@ ${ layout.menubar(section='dashboard') }
     <div class="tab-content" style="padding-bottom:200px">
       <div class="tab-pane active" id="instrumentation">
         <div class="well hueWell">
-            <form class="form-search">
+            <form class="form-search"> ${ csrf_token_field | n } 
                 <input type="text" class="searchFilter input-xlarge search-query" placeholder="${_('Text Filter')}">
             </form>
         </div>
@@ -121,7 +121,7 @@ ${ layout.menubar(section='dashboard') }
 
       <div class="tab-pane" id="configuration">
         <div class="well hueWell">
-            <form class="form-search">
+            <form class="form-search"> ${ csrf_token_field | n } 
                 ${_('Filter: ')}<input type="text" class="searchFilter input-xlarge search-query" placeholder="${_('Text Filter')}">
             </form>
         </div>

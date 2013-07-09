@@ -32,7 +32,7 @@ ${layout.menubar(section='tables')}
                     <span>
                     <li class="nav-header">${_('database')}</li>
                     <li>
-                       <form action="${ url(app_name + ':show_tables') }" id="db_form" method="POST">
+                       <form action="${ url(app_name + ':show_tables') }" id="db_form" method="POST"> ${ csrf_token_field | n } 
                          ${ db_form | n,unicode }
                        </form>
                     </li>
@@ -100,7 +100,7 @@ ${layout.menubar(section='tables')}
 % endif
 
 <div id="dropTable" class="modal hide fade">
-  <form id="dropTableForm" action="${ url(app_name + ':drop_table', database=database) }" method="POST">
+  <form id="dropTableForm" action="${ url(app_name + ':drop_table', database=database) }" method="POST"> ${ csrf_token_field | n } 
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
       <h3 id="dropTableMessage">${_('Confirm action')}</h3>

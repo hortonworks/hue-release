@@ -30,7 +30,7 @@ ${ layout.menubar(section='workflows') }
 
 
 <div id="workflow" class="container-fluid">
-  <form class="form-horizontal" id="jobForm" method="POST">
+  <form class="form-horizontal" id="jobForm" method="POST"> ${ csrf_token_field | n } 
   <div class="ribbon-wrapper hide">
     <div class="ribbon">${ _('Unsaved') }</div>
   </div>

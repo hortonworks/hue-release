@@ -16,7 +16,7 @@
 <%!
 from django.utils.translation import ugettext as _
 %>
-<form id="deleteGroupForm" action="${path}" method="POST">
+<form id="deleteGroupForm" action="${path}" method="POST"> ${ csrf_token_field | n } 
 <div class="modal-header">
     <a href="#" class="close" data-dismiss="modal">&times;</a>
     <h3 id="deleteGroupMessage">${_("Are you sure you want to delete")} ${groupname}${_("?")}</h3>

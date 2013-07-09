@@ -34,7 +34,7 @@ ${layout.menubar()}
             action = url(app_name + ':execute_parameterized_query', design.id)
             btn = _("Execute query")
     %>
-    <form method="POST" action="${action}" class="form-horizontal">
+    <form method="POST" action="${action}" class="form-horizontal"> ${ csrf_token_field | n } 
         <fieldset>
             <legend>${_('Please specify parameters for this query:')}</legend>
             % for field in form:

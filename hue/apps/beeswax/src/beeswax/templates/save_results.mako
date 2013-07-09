@@ -35,7 +35,7 @@ ${layout.menubar(section='query')}
 % endif
   <h1>${_('Save Query Results')}</h1>
 
-  <form id="saveForm" action="${action}" method="POST" class="form form-inline">
+  <form id="saveForm" action="${action}" method="POST" class="form form-inline"> ${ csrf_token_field | n } 
     <fieldset>
       <div class="control-group">
         <div class="controls">

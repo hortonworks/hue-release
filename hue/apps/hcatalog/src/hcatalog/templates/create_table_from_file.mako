@@ -50,7 +50,7 @@ ${layout.menubar(section='tables')}
                 <pre id="error-message"/>
                 <small></small>
             </div>
-            <form action="#" method="POST" id="mainForm" class="form-horizontal">
+            <form action="#" method="POST" id="mainForm" class="form-horizontal"> ${ csrf_token_field | n } 
                 <div>
                     <fieldset>
                         <div class="alert alert-info">${_('Table options')}</div>

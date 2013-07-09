@@ -62,7 +62,7 @@ ${layout.menubar(section='query')}
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
-                <form id="advancedSettingsForm" action="${action}" method="POST" class="form form-horizontal noPadding">
+                <form id="advancedSettingsForm" action="${action}" method="POST" class="form form-horizontal noPadding"> ${ csrf_token_field | n } 
                     <ul class="nav nav-list">
                         <li class="nav-header">${_('database')}</li>
                         <li>
@@ -274,7 +274,7 @@ ${layout.menubar(section='query')}
         <h3>${_('Choose a name')}</h3>
     </div>
     <div class="modal-body">
-      <form class="form-horizontal">
+      <form class="form-horizontal"> ${ csrf_token_field | n } 
         <div class="control-group">
             <label class="control-label">${_('Name')}</label>
             <div class="controls">

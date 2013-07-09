@@ -43,7 +43,7 @@ ${layout.menubar(section='tables')}
                 <li class="active"><a href="#">${_('Step 2: Choose Delimiter')}</a></li>
                 <li><a id="step3" href="#">${_('Step 3: Define Columns')}</a></li>
             </ul>
-            <form id="delimiterForm" action="${action}" method="POST" class="form-horizontal">
+            <form id="delimiterForm" action="${action}" method="POST" class="form-horizontal"> ${ csrf_token_field | n } 
                 <div class="hide">
                     ${util.render_form(file_form)}
                     ${comps.field(delim_form['file_type'])}

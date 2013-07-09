@@ -43,7 +43,7 @@ ${layout.menubar(section='tables')}
                 <li><a id="step2" href="#">${_('Step 2: Choose Delimiter')}</a></li>
                 <li class="active"><a href="#">${_('Step 3: Define Columns')}</a></li>
             </ul>
-            <form action="${action}" method="POST" class="form-stacked">
+            <form action="${action}" method="POST" class="form-stacked"> ${ csrf_token_field | n } 
                 <div class="hide">
                     ${util.render_form(file_form)}
                 ${util.render_form(delim_form)}
