@@ -1228,7 +1228,7 @@ from django.utils.translation import ugettext as _
           paths.push(file.path);
         });
         hiddenFields($("#purgeTrashForm"), 'path', paths);
-        $("#purgeTrashForm").attr("action", "/filebrowser/trash/purge?next=${url('filebrowser.views.view', path=urlencode('/'))}" + "." + self.currentPath());
+        $("#purgeTrashForm").attr("action", "/filebrowser/trash/purge?next=${url('filebrowser.views.view', path=urlencode('/'))}?default_to_home");
         $("#purgeTrashModal").modal({
           keyboard:true,
           show:true
