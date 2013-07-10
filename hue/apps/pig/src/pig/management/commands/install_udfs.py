@@ -15,11 +15,6 @@ class Command(BaseCommand):
     help = 'Upload and register specific udfs. If no udfs presented, update udfs from hdfs.'
 
     def handle(self, *args, **options):
-        try:
-            default_user = User.objects.get(id=1)
-        except:
-            default_user = 
-            
         fs = cluster.get_hdfs()
         fs.setuser(fs.DEFAULT_USER)
         if not fs.exists(UDF_PATH):
