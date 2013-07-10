@@ -7,3 +7,8 @@ dn: ou=People,dc=sandbox,dc=hortonworks,dc=com
 ou: People
 objectClass: top
 objectClass: organizationalUnit
+
+dn: ou=Group,dc=sandbox,dc=hortonworks,dc=com
+ou: Group
+objectClass: top
+objectClass: organizationalUnit

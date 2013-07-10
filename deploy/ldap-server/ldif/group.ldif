@@ -1,0 +1,7 @@
+dn: cn=hadoop,ou=Group,dc=sandbox,dc=hortonworks,dc=com
+objectClass: posixGroup
+objectClass: top
+cn: hadoop
+userPassword: 1111
+gidNumber: 1000
+memberUid: hue
