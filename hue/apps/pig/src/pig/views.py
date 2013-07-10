@@ -23,6 +23,7 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 from django.utils.html import mark_safe
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_util import login_notrequired, render, get_desktop_uri_prefix
@@ -238,10 +239,21 @@ def get_job_result(request):
 
 
 def query_history(request):
+    jobs_list = Job.objects.filter(script__user=request.user).order_by("-start_time").all()
+    paginator = Paginator(jobs_list, 20)
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+
+    try:
+        jobs = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        jobs = paginator.page(paginator.num_pages)
     return render(
         "query_history.mako",
         request,
-        dict(jobs=Job.objects.filter(script__user=request.user).order_by("-start_time").all())
+        {"jobs": jobs}
     )
 
 

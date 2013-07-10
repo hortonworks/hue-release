@@ -17,7 +17,7 @@ ${shared.menubar(section='Query history')}
     </tr>
 </thead>
 <tbody>
-% for job in jobs:
+% for job in jobs.object_list:
     <tr>
       <td>${job.start_time.strftime('%d.%m.%Y %H:%M')}</td>
       <td><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.title}</a></td>
@@ -37,5 +37,17 @@ ${shared.menubar(section='Query history')}
 % endfor
 </tbody>
 </table>
+<div class="pagination">
+   <ul>
+     % if jobs.has_previous():
+     <li><a href="?page=${jobs.previous_page_number()}">previous</a></li>
+     % endif
+     <li class="active"><span>Page ${jobs.number } of ${jobs.paginator.num_pages}.</span></li>
+     
+     % if jobs.has_next():
+     <li><a href="?page=${jobs.next_page_number()}">next</a></li>
+     % endif
+   </ul>
+</div>
 </div>
 ${commonfooter(messages)| n,unicode}
