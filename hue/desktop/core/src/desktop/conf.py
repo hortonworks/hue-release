@@ -20,6 +20,7 @@ import os
 import socket
 import stat
 import re
+import random
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -211,7 +212,7 @@ KERBEROS = ConfigSection(
     CCACHE_PATH=Config(
       key='ccache_path',
       help=_("Path to keep Kerberos credentials cached."),
-      private=True,
+      private=False,
       type=str,
       default="/tmp/hue_krb5_ccache",
     ),
@@ -432,7 +433,7 @@ DJANGO_EMAIL_BACKEND = Config(
 ###OBFUCATOR####
 def decrypt_values():
   from lockfile import FileLock
-  lock = FileLock("/tmp/ENCR")
+  lock = FileLock("/tmp/ENCR.lock")
   lock.acquire()
   OBFUSCATOR = Obfuscator()
   ENCRYPTED_VALUE_PATTERN = re.compile("\$\s{ALIAS=(\w+)}")
