@@ -478,8 +478,10 @@ ${layout.menubar(section='query')}
                 function(data){
                     if (data.thisname) {
                         field.next('.alert').removeClass('hide');
+                        $("#saveAsNameBtn").attr("disabled", "disabled");
                     } else {
                         field.next('.alert').addClass('hide');
+                        $("#saveAsNameBtn").removeAttr("disabled");
                     }
                     if (typeof callback=='function'){
                         callback(data)
