@@ -21,7 +21,7 @@ class Obfuscator(object):
 
   def set_master_password(self):
     if self.__HUE_MASTER_PASSWORD is None:
-      hue_master_path = path.join(HUE_CONF_DIR, HUE_MASTER_FNAME)
+      hue_master_path = path.join("/tmp", HUE_MASTER_FNAME)
       try:
         with open(hue_master_path, "r") as f:
           cyphertext = f.readline()
@@ -36,7 +36,7 @@ class Obfuscator(object):
   def get_value(self, key):
     if self.__HUE_MASTER_PASSWORD is None:
         self.set_master_password()
-    with open(path.join(HUE_CONF_DIR, "hue-credentials.hks"), "a+") as f:
+    with open(path.join("/tmp", "hue-credentials.hks"), "a+") as f:
         md5 = hashlib.md5()
         md5.update(self.__HUE_MASTER_PASSWORD)
         result = None
