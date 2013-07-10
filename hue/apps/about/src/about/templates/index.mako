@@ -16,9 +16,11 @@
 <%!
 from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
+from about import conf
 %>
 ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 
+        % if user.is_superuser:
 	<div class="subnav subnav-fixed">
 		<div class="container-fluid">
 		<ul class="nav nav-pills">
@@ -28,6 +30,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 		</ul>
 		</div>
 	</div>
+        % endif
 
 	<div class="container-fluid">
 		<h1 id="describe-header">Hortonworks Hue ${hue_version}</h1>
@@ -37,7 +40,9 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 			<div class="well sidebar-nav">
 				<ul class="nav nav-list">
 					<img src="/about/static/art/hortonworks_logo.png"/>
+                                % if conf.TUTORIALS_INSTALLED.get():
 		      		<li><a href="https://www.surveymonkey.com/s/Sandbox_Feedback">Leave Feedback</a></li>
+                                % endif
 				</ul>
 			</div>
 		</div>

@@ -262,7 +262,8 @@ ${layout.menubar(section='query')}
 					<input type="radio" name="stacked" value="false"  /> <img src='/hcatalog/static/css/images/charts/stack.png'> stack<br/>
 					<input type="radio" name="stacked" value="true" checked="checked" /> <img src='/hcatalog/static/css/images/charts/value.png'> value<br/>
 				</div>
-				<input type="hidden" value='${download_urls["csv"]}' name="csv"/>
+        <input type="hidden" value='${download_urls["csv"]}' name="csv"/>
+				<input type="hidden" value='${visualize_url}' name="visualize_csv"/>
 			</div>
 			<iframe id="preview"></iframe>
 

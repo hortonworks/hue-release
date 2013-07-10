@@ -439,6 +439,17 @@ def download(request, id, format):
   return data_export.download(query_history.get_handle(), format, db)
 
 
+def visualize(request, id, cut=None):
+
+  query_history = authorized_get_history(request, id, must_exist=True)
+  db = dbms.get(request.user, query_history.get_query_server_config())
+  LOG.debug('Results for query %s: [ %s ]' % (query_history.server_id, query_history.query))
+
+  gen = data_export.data_generator(query_history.get_handle(), 'csv', db, cut)
+  resp = HttpResponse(gen, mimetype='application/csv')
+  resp['Content-Disposition'] = 'attachment; filename=query_result.%s' % ('csv',)
+  
+  return resp
 
 """
 Queries Views
@@ -712,6 +723,7 @@ def view_results(request, id, first_row=0):
     if downloadable:
       for format in common.DL_FORMATS:
         download_urls[format] = reverse(app_name + ':download', kwargs=dict(id=str(id), format=format))
+    visualize_url = reverse(app_name + ':visualize', kwargs=dict(id=str(id)))
 
     save_form = beeswax.forms.SaveResultsForm()
     results.start_row = first_row
@@ -724,6 +736,7 @@ def view_results(request, id, first_row=0):
       'expected_first_row': first_row,
       'columns': results.columns,
       'download_urls': download_urls,
+      'visualize_url': visualize_url,
       'save_form': save_form,
       'can_save': query_history.owner == request.user and not download,
     })

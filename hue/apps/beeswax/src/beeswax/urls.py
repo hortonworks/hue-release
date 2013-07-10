@@ -34,6 +34,7 @@ urlpatterns = patterns('beeswax.views',
   url(r'^watch/json/(?P<id>\d+)$', 'watch_query_refresh_json', name='watch_query_refresh_json'),
   url(r'^results/(?P<id>\d+)/(?P<first_row>\d+)$', 'view_results', name='view_results'),
   url(r'^download/(?P<id>\d+)/(?P<format>\w+)$', 'download', name='download'),
+  url(r'^visualize/(?P<id>\d+)/(?P<cut>\d+)?$', 'visualize', name='visualize'),
   url(r'^save_results/(?P<id>\d+)$', 'save_results', name='save_results'),
 
   url(r'^my_queries$', 'my_queries', name='my_queries'),

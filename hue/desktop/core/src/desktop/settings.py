@@ -20,6 +20,7 @@
 # Local customizations are done by symlinking a file
 # as local_settings.py.
 
+
 import logging
 import os
 import sys
@@ -27,6 +28,7 @@ import desktop.conf
 import desktop.log
 from desktop.lib.paths import get_desktop_root
 import pkg_resources
+
 
 HUE_DESKTOP_VERSION = pkg_resources.get_distribution("desktop").version or "Unknown"
 NICE_NAME = "Hue"
@@ -202,6 +204,7 @@ _app_conf_modules.append(dict(module=desktop.conf, config_key=None))
 conf.initialize(_lib_conf_modules, _config_dir)
 conf.initialize(_app_conf_modules, _config_dir)
 
+desktop.conf.decrypt_values()
 # Now that we've loaded the desktop conf, set the django DEBUG mode based on the conf.
 DEBUG = desktop.conf.DJANGO_DEBUG_MODE.get()
 TEMPLATE_DEBUG = DEBUG
@@ -300,3 +303,4 @@ if default_db['ENGINE'] == 'moxy':
 # Set up environment variable so Kerberos libraries look at our private
 # ticket cache
 os.environ['KRB5CCNAME'] = desktop.conf.KERBEROS.CCACHE_PATH.get()
+

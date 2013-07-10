@@ -616,7 +616,8 @@ def display(request, path):
     # Get contents as string for text mode, or at least try
     uni_contents = None
     if not mode or mode == 'text':
-        uni_contents = unicode(contents, encoding, errors='replace')
+        uni_contents = contents.replace('\001', '\t')  # for CSV files
+        uni_contents = unicode(uni_contents, encoding, errors='replace')
         is_binary = uni_contents.find(i18n.REPLACEMENT_CHAR) != -1
         # Auto-detect mode
         if not mode:
@@ -1058,7 +1059,8 @@ def copy(request):
     params = ['src_path']
     def bulk_copy(*args, **kwargs):
         for arg in args:
-            request.fs.copy(arg['src_path'], arg['dest_path'], recursive=True, owner=request.user)
+            request.fs.copy(arg['src_path'], arg['dest_path'], recursive=True, owner=request.user,
+                            allow_duplicate=True)
     return generic_op(CopyFormSet, request, bulk_copy, ["src_path", "dest_path"], None,
                       data_extractor=formset_data_extractor(recurring, params),
                       arg_extractor=formset_arg_extractor,
@@ -1303,7 +1305,7 @@ def location_to_url(location, strict=True):
     if location is None:
       return None
     split_path = Hdfs.urlsplit(location)
-    if strict and not split_path[1]:
+    if strict and not split_path[1] or not split_path[2]:
       # No netloc, not full url
       return None
     return urlresolvers.reverse("filebrowser.views.view", kwargs=dict(path=split_path[2]))

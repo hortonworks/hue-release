@@ -538,7 +538,8 @@ class WebHdfs(Hdfs):
         self.do_as_superuser(self.chown, destination_file, owner, owner)
 
 
-  def copy(self, src, dest, recursive=False, dir_mode=0755, owner=None):
+  def copy(self, src, dest, recursive=False, dir_mode=0755, owner=None,
+           allow_duplicate=False, duplicate_prefix="copy_"):
     """
     Copy file, or directory, in HDFS to another location in HDFS.
 
@@ -591,7 +592,12 @@ class WebHdfs(Hdfs):
       # If 'dest' is a directory, then copy 'src' into that directory.
       # Other wise, copy to 'dest'.
       if self.exists(dest) and self.isdir(dest):
-        self.copyfile(src, self.join(dest, self.basename(src)))
+        target_file = self.join(dest, self.basename(src))
+        if self.exists(target_file) and allow_duplicate:
+          LOG.info("File '%s' copied to itself: duplication." % target_file)
+          self.copyfile(src, self.join(dest, duplicate_prefix + self.basename(src)))
+        else:
+          self.copyfile(src, target_file)
       else:
         self.copyfile(src, dest)
 

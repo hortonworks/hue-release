@@ -34,3 +34,8 @@ dependency-reduced-pom.xml
 *.zip
 aws_credentials.json
 deploy/vagrant/hyper-v/key
+
+sftp-config.json
+
+
+*.box

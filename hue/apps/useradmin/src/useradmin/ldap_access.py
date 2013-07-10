@@ -43,7 +43,7 @@ def get_connection():
   if ldap_url is None:
     raise Exception('No LDAP URL was specified')
 
-  return LdapConnection(ldap_url, get_ldap_username(username, nt_domain),
+  return LdapConnection(ldap_url, username, #get_ldap_username(username, nt_domain), -- need to investigate
                         password, ldap_cert)
 
 def get_ldap_username(username, nt_domain):

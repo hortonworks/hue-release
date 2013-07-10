@@ -615,6 +615,7 @@ def massaged_oozie_jobs_for_json(oozie_jobs, user):
       'status': job.status,
       'isRunning': job.is_running(),
       'duration': job.endTime and job.startTime and format_duration_in_millis(( time.mktime(job.endTime) - time.mktime(job.startTime) ) * 1000) or None,
+      'duration_sort': job.endTime and job.startTime and (time.mktime(job.endTime) - time.mktime(job.startTime)) or 0,
       'appName': job.appName,
       'progress': job.get_progress(),
       'user': job.user,

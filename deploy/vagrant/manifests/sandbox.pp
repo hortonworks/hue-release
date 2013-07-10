@@ -70,7 +70,7 @@ class sandbox_rpm {
         ensure  => file,
     }
 
-    exec { 'splash':
+    exec { 'issue-credentials':
         command => "initctl restart tty TTY=/dev/tty5; initctl restart tty TTY=/dev/tty2; true",
         require => File[issue],
     }
@@ -95,8 +95,8 @@ class sandbox_rpm {
                      Package['libxslt'],
                      Package['python-lxml'],
                      Exec['yum-cache'],
-                     Package['yum-plugin-priorities'],
-                     User['hue'],
+                     Package['yum-plugin-priorities']
+                     
                    ],
     }
 
@@ -112,23 +112,7 @@ class sandbox_rpm {
     }
 */
 
-    user { "hue":
-      ensure     => "present",
-      managehome => true,
-      home => "/usr/lib/hue",
-      uid => "505",
-      gid => "hadoop",
-      groups => ["admin", "users"],
-      password => '$1$MwHL5JF5$1WmQPYETuWUyhCKLEyN9a1',
-    }
 
-    group { "hadoop":
-        ensure => "present",
-    }
-
-    group { "users":
-        ensure => "present",
-    }
 }
 
 
@@ -179,18 +163,7 @@ class tutorials {
     }
       
 
-    file { 'load_videos.sh':
-      path    => "/tmp/load_videos.sh",
-      content => template("/vagrant/files/scripts/load_videos.sh"),
-    }
-
-    exec { "load_videos.sh":
-      command => '/bin/bash /tmp/load_videos.sh | tee /var/log/load_videos.log',
-      require => [File['load_videos.sh']],
-      timeout => 0,
-      logoutput => "on_failure",
-    }
-
+ 
     service { "httpd":
         ensure => running,
         require => [ Class[sandbox_rpm], ],
