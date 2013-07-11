@@ -75,6 +75,10 @@ class sandbox_rpm {
         require => File[issue],
     }
 
+    exec { 'proxyuser-groups':
+        command => "sed -i.bak 's/<value>users<\/value>/<value>*<\/value>/g' core-site.xml",
+    }
+
     package { "libxslt":
         ensure => present,
         require => File['resolv.conf'],
