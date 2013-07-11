@@ -24,6 +24,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 from django.utils.html import mark_safe
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
+from hadoop.fs.webhdfs import DEFAULT_HDFS_SUPERUSER
 
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_util import login_notrequired, render, get_desktop_uri_prefix
@@ -112,6 +113,7 @@ def script_clone(request, obj_id):
 def udf_create(request):
     response = {'status': -1, 'data': ''}
     try:
+        request.fs.do_as_user(DEFAULT_HDFS_SUPERUSER, request.fs.chmod, UDF_PATH, 0777, True)
         resp = _upload_file(request)
         response.update(resp)
         UDF.objects.create(url=resp['path'], file_name=request.FILES['hdfs_file'].name, owner=request.user)
