@@ -112,6 +112,7 @@ def script_clone(request, obj_id):
 def udf_create(request):
     response = {'status': -1, 'data': ''}
     try:
+        request.fs.do_as_user(DEFAULT_HDFS_SUPERUSER, request.fs.chmod, UDF_PATH, 0777, True)
         resp = _upload_file(request)
         response.update(resp)
         UDF.objects.create(url=resp['path'], file_name=request.FILES['hdfs_file'].name, owner=request.user)
