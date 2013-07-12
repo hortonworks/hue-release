@@ -76,7 +76,7 @@ class sandbox_rpm {
     }
 
     exec { 'proxyuser-groups':
-        command => "sed -i.bak 's/<value>users<\/value>/<value>*<\/value>/g' core-site.xml",
+        command => "sed -i.bak 's/<value>users<\/value>/<value>*<\/value>/g' /etc/hadoop/conf/core-site.xml",
     }
 
     package { "libxslt":
@@ -230,6 +230,7 @@ class sandbox {
         command => "/etc/init.d/startup_script restart",
       require => [   File["/usr/lib/hive/lib/hcatalog-core.jar"],
                      Class[sandbox_rpm],
+                     Exec['proxyuser-groups']
                     ],
     }
 
