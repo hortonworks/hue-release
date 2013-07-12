@@ -86,20 +86,23 @@ ${layout.menubar(section='dump_config')}
              % else:
                   <td>
              % endif
+              <% hasObjects=False%>
               % if isinstance(config_obj, BoundContainer):
-                <% isFirstObject=True%>
                 % for v in config_obj.get().values():
             <%
                   # Don't recurse into private variables.
                   if v.config.private and not show_private:
                     continue
             %>
-                % if isFirstObject and config_obj.config.help:
+                % if not hasObjects and config_obj.config.help:
                     <p class="dump_config_help"><i>${config_obj.config.help}</i></p>
-                    <% isFirstObject=False %>
+                    <% hasObjects=True %>
                 % endif
                 ${recurse(v, depth + 1)}
                 % endfor
+                % if not hasObjects:
+                    <p class="dump_config_help"><i>${_('No variables are currently configured for the ')}${config_obj.config.key}${_(' application')}</i></p>
+                % endif
               % else:
                 <p>${str(config_obj.get_raw())}</p>
                 % if config_obj.config.help:

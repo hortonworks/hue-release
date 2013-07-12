@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Configuration options for the "user admin" application
+Configuration options for the user admin application
 """
 
 from desktop.lib.conf import Config
