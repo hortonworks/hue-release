@@ -11,9 +11,9 @@ ERROR_STRING=[$(ERROR_COLOR)ERRORS$(NO_COLOR)]
 WARN_STRING=[$(WARN_COLOR)WARNINGS$(NO_COLOR)]
 
 ECHO=echo -e
-ECHO_ERR=printf 'Starting %-50s$(ERROR_STRING)\n' "$1"
-ECHO_WARN=printf 'Starting %-50s$(WARN_STRING)\n' "$1"
-ECHO_OK=printf 'Starting %-50s$(OK_STRING)\n' "$1"
+ECHO_ERR=printf 'Starting%-50s$(ERROR_STRING)\n' "$1"
+ECHO_WARN=printf 'Starting%-50s$(WARN_STRING)\n' "$1"
+ECHO_OK=printf 'Starting%-50s$(OK_STRING)\n' "$1"
 CAT=cat
 
 define colorized
