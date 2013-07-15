@@ -82,9 +82,12 @@ function chart(x,y,min,max)
 	} 
 	
 	this.paint = function(csvfile,type,stacked){
+		$('.spin').show();
 		d3.csv(csvfile,function(dataset){
-		dataset.forEach(function(d,i){getData(d,i);});
-		setGraph(type,stacked);});
+			$('.spin').hide();
+			dataset.forEach(function(d,i){getData(d,i);});
+			setGraph(type,stacked);
+		});
 	};
 }
 
