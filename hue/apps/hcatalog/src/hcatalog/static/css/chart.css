@@ -1,3 +1,6 @@
+html {
+	height: 530px;
+}
 .x_label
 {
 	display:none;
@@ -29,14 +32,15 @@
 }
 #legend
 {
-	top:-450px;
+	/*top:-450px;*/
 	float:right;
+	position: absolute;
+	right: 0;
 }
 
 .chart_wrap
 {
 	width:1170px;
-	padding-top:50px;
 }
 
 #x_axis>svg>g>g>text{
@@ -50,8 +54,8 @@ transform: translate(0px,23px) rotate(340deg);
 }
 	body
 	{
-		height:600px;
-		/*verflow-y: hidden; */
+		height:510px;
+		/*overflow-y: scroll;*/
 		font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
 		font-weight:500;
 	}
@@ -75,4 +79,20 @@ transform: translate(0px,23px) rotate(340deg);
 .showlegend
 {
 	text-decoration:none!important;
+}
+
+.spin{
+	display: none;
+	padding: 3px 15px;
+	font-size: 16px;
+	font-weight: bold;
+	line-height: 20px;
+	color: #999;
+	text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+	text-transform: uppercase;
+}
+
+.spin img{
+  vertical-align: baseline;
+  opacity: 0.5;
 }

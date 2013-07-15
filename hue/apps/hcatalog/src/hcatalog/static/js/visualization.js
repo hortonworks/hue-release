@@ -49,9 +49,13 @@ $(document).ready(function () {
 					if(isNaN(csvdata[m][yAxis[j]]))
 					{
 						$('input[value='+yAxis[j]+']').attr('disabled',true).attr('checked',false);
+					} else {
+						$('input[value='+yAxis[j]+']').removeAttr('disabled');
 					}
 				}
 			}
+		$('.y_axis input[disabled!=disabled]').attr('checked',true);
+		$('.y_axis input[value='+$('select[name=xAxis]').find(":selected").text()+']').attr('checked',false);
 		}
     });
 	/*******/
@@ -72,6 +76,7 @@ $(document).ready(function () {
 		var numcharts = i;
 		preview.open();
 			var build_chart_file = '';
+			build_chart_file += '<div class="spin">Loading data...<img src="/static/art/spinner.gif" width="16" height="16"></div>'
 
 			if(type=="pie")
 			{//including additional library for pie chart
@@ -86,7 +91,7 @@ $(document).ready(function () {
 			
 			if (jQuery.browser.msie == true) { 
 			styles += '</style>';
-			lib += '</script><div class="chart_wrap"><div id="y_axis"></div><div id="chart"></div><div id="slider"></div><div id="x_axis"></div><div id="legend"></div></div>';
+			lib += '</script><div class="chart_wrap"><div id="legend"></div><div id="y_axis"></div><div id="chart"></div><div id="slider"></div><div id="x_axis"></div></div>';
 			preview.write(lib+styles+include+build_chart_file);
 			}
 			else
@@ -113,10 +118,14 @@ $(document).ready(function () {
 			updatePreview()
 		});	
 		$('input[name=stacked]').click(function(){updatePreview()});
+
 		$('input[name=yAxis]').click(function(){updatePreview()});
+
 		$('select[name=xAxis]').change(function(){
 			//$('input[name=yAxis]').attr('disabled',false);
-			$('input[value='+$('select[name=xAxis]').find(":selected").text()+']').attr('checked',false);
+			$('.y_axis input[disabled!=disabled]').attr('checked',true);
+			$('.y_axis input[value='+$('select[name=xAxis]').find(":selected").text()+']').attr('checked',false);
 			updatePreview();
 		});
-	});
+
+});

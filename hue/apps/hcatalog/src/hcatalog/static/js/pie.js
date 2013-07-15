@@ -55,8 +55,10 @@ var showlegend = d3.select("body")
 	 
 /*adding legend*/   
 var legend = d3.select("body").append("div").attr("class","legend");
-   
+
+$('.spin').show();
 d3.csv(csvfile, function(error, data) {
+	$('.spin').hide();
 	var dt = [];
 	min = 0;
 	max = (data.length-1);

@@ -9,4 +9,4 @@ document.write('<script type="text/javascript" src="/hcatalog/static/js/d3.v3.mi
 document.write('<script type="text/javascript" src="/hcatalog/static/js/lib/d3.layout.min.js"></script>');
 document.write('<script type="text/javascript" src="/hcatalog/static/js/lib/rickshaw.min.js"></script>');
 document.write('<script type="text/javascript" src="/hcatalog/static/js/chart.js"></script>');
-document.write('<div class="chart_wrap"><div id="y_axis"></div><div id="chart"></div><div id="slider"></div><div id="x_axis"></div><div id="legend"></div></div>');
+document.write('<div class="chart_wrap"><div id="legend"></div><div id="y_axis"></div><div id="chart"></div><div id="slider"></div><div id="x_axis"></div></div>');
