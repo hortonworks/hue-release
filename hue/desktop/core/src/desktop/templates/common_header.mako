@@ -100,6 +100,9 @@ from django.utils.translation import ugettext as _
 
   <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
+      $.ajaxSetup({
+        cache: false
+      });
       $("input:text[placeholder]").simplePlaceholder();
       $(".submitter").keydown(function(e){
         if (e.keyCode==13){
