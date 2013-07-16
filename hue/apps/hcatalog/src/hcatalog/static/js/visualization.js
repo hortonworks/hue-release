@@ -9,6 +9,7 @@ $(document).ready(function () {
 			$.get('/hcatalog/static/js/d3.v3.min.js', function(data) {lib += data;});
 			$.get('/hcatalog/static/js/lib/d3.layout.min.js', function(data) {lib += data;});
 			$.get('/hcatalog/static/js/lib/rickshaw.min.js', function(data) {lib += data;});
+			$.get('/hcatalog/static/js/lib/jquery.csv-0.71.min.js', function(data) {lib += data;});
 			$.get('/hcatalog/static/js/chart.js', function(data) {lib += data;});			
 			$.get('/hcatalog/static/js/pie.js', function(data) {lib += data;});
 
@@ -54,7 +55,7 @@ $(document).ready(function () {
 					}
 				}
 			}
-		$('.y_axis input[disabled!=disabled]').attr('checked',true);
+		$('.y_axis input:enabled').attr('checked',true);
 		$('.y_axis input[value='+$('select[name=xAxis]').find(":selected").text()+']').attr('checked',false);
 		}
     });
@@ -100,11 +101,19 @@ $(document).ready(function () {
 			}
 		preview.close();
     }
+
+    function redrawPreview () {
+		rdscript = preview.createElement('script');
+		rdscript.textContent = "c.redraw('"+$('input[name=type]:checked').attr('value')+"',"+$('input[name=stacked]:checked').attr('value')+");";
+		preview.body.removeChild(preview.body.childNodes[preview.body.childNodes.length-1]);
+		preview.body.appendChild(rdscript);
+    }
 	  
 	$('a[href="#visualizations"]').live('click',function(){/*bug, in mozilla some times iframe is not updating on page load*/if(jQuery.browser.mozilla){preview.open(); preview.write();preview.close(); updatePreview();}});
       setTimeout(updatePreview, 700);
 	  
 	  /*functions for updating chart on changing different features*/
+		var needupdate;
 		$('input[name=type]').click(function(){
 			if(($(this).attr('value')=='line')||($(this).attr('value')=='scatterplot')||($(this).attr('value')=='pie'))
 			{
@@ -115,9 +124,19 @@ $(document).ready(function () {
 			{
 				$('input[name=stacked]').attr('disabled',false);
 			}
-			updatePreview()
+			if ($(this).attr('value')=='pie') {
+				updatePreview();
+				needupdate = true;
+			} else {
+				if (!needupdate) {
+					redrawPreview();
+				} else {
+					updatePreview();
+				};
+				needupdate = false;
+			}
 		});	
-		$('input[name=stacked]').click(function(){updatePreview()});
+		$('input[name=stacked]').click(function(){redrawPreview()});
 
 		$('input[name=yAxis]').click(function(){updatePreview()});
 
