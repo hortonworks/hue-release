@@ -43,7 +43,7 @@ ${layout.menubar(section='tables')}
                 <li><a id="step2" href="#">${_('Step 2: Choose Delimiter')}</a></li>
                 <li><a href="#">${_('Step 3: Define Columns')}</a></li>
             </ul>
-            <form action="${action}" method="POST" class="form-horizontal">
+            <form action="${action}" method="POST" class="form-horizontal"> ${ csrf_token_field | n } 
                 <fieldset>
                     <div class="alert alert-info"><h3>${_('Name Your Table and Choose A File')}</h3></div>
                     <div class="control-group">

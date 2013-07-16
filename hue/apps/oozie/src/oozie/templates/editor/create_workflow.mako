@@ -34,7 +34,7 @@ ${ layout.menubar(section='workflows') }
     </div>
 
     <div style="min-height:300px">
-      <form class="form-horizontal" id="workflowForm" action="${ url('oozie:create_workflow') }" method="POST">
+      <form class="form-horizontal" id="workflowForm" action="${ url('oozie:create_workflow') }" method="POST"> ${ csrf_token_field | n } 
 
       <div class="row-fluid">
         <div class="span2">

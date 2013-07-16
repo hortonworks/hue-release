@@ -28,7 +28,7 @@ ${layout.menubar()}
 <div class="container-fluid">
   <h1>Load Data into <tt>${table}</tt></h1>
   <div class="prompt_popup">
-    <form action="${action}" method="POST">
+    <form action="${action}" method="POST"> ${ csrf_token_field | n } 
       <dl>
         ${util.render_field(form["path"])}
         <a class="hue-chooseFile" data-filters="ArtButton" data-icon-styles="{'width': 16, 'height': 16, 'top': 6, 'left': 6 }" data-chooseFor="path">Open File Chooser </a>

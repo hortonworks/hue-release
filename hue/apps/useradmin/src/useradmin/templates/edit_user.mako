@@ -33,7 +33,7 @@ ${ commonheader(_('Hue Users'), "useradmin", user, "100px") | n,unicode }
         <h1>${_('Hue Users - Create user')}</h1>
     % endif
 
-  <form id="editForm" method="POST" class="form form-horizontal" autocomplete="off">
+  <form id="editForm" method="POST" class="form form-horizontal" autocomplete="off"> ${ csrf_token_field | n } 
 
       <div id="properties" class="section">
         <ul class="nav nav-tabs">

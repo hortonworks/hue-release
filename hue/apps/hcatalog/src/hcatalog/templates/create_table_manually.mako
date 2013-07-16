@@ -55,7 +55,7 @@ ${layout.menubar(section='tables')}
     <li><a href="#step6" class="step">${_('Step 6: Columns')}</a></li>
 </ul>
 
-<form action="#" method="POST" id="mainForm" class="form-horizontal">
+<form action="#" method="POST" id="mainForm" class="form-horizontal"> ${ csrf_token_field | n } 
 <div class="steps">
 
   <div id="step1" class="stepDetails">

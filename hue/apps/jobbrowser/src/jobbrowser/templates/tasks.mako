@@ -32,7 +32,7 @@ ${ commonheader(_('Task View: Job: %(jobId)s') % dict(jobId=job.jobId_short), "j
 <div class="container-fluid">
     <h1>${_('Task View: Job: %(jobId)s') % dict(jobId=job.jobId_short)}</h1>
     <div class="well hueWell">
-        <form method="get" action="${ url('jobbrowser.views.tasks', job=job.jobId) }">
+        <form method="get" action="${ url('jobbrowser.views.tasks', job=job.jobId) }"> ${ csrf_token_field | n } 
             <b>${_('Filter tasks:')}</b>
 
             <select name="taskstate" class="submitter">

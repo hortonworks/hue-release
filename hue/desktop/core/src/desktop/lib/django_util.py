@@ -26,6 +26,7 @@ import datetime
 from django.utils.tzinfo import LocalTimezone
 from django.utils.translation import ungettext, ugettext
 from django.core import urlresolvers, serializers
+from django.core.context_processors import csrf
 from django.conf import settings
 from django.utils.http import urlencode # this version is unicode-friendly
 from django.http import QueryDict, HttpResponse, HttpResponseRedirect
@@ -135,13 +136,20 @@ def _get_template_lib(template, kwargs):
   return template_lib
 
 
-def _render_to_response(template, *args, **kwargs):
+def csrf_token(context):
+    csrf_token = context.get('csrf_token', '')
+    if csrf_token == 'NOTPROVIDED':
+        return ''
+    return u'<div style="display:none"><input type="hidden" name="csrfmiddlewaretoken" value="%s" /></div>' % (csrf_token)
+
+def _render_to_response(template, context, *args, **kwargs):
   template_lib = _get_template_lib(template, kwargs)
 
   if template_lib == DJANGO:
-    return django_render_to_response(template, *args, **kwargs)
+    return django_render_to_response(template, context, *args, **kwargs)
   elif template_lib == MAKO:
-    return django_mako.render_to_response(template, *args, **kwargs)
+    context['csrf_token_field'] = csrf_token(context)
+    return django_mako.render_to_response(template, context, *args, **kwargs)
   else:
     raise Exception("Bad template lib: %s" % template_lib)
 

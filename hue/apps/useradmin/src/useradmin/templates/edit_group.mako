@@ -55,7 +55,7 @@ ${layout.menubar(section='groups', _=_)}
 
     <br/>
 
-	<form id="editForm" action="${urllib.quote(action)}" method="POST" class="form form-horizontal" autocomplete="off">
+	<form id="editForm" action="${urllib.quote(action)}" method="POST" class="form form-horizontal" autocomplete="off"> ${ csrf_token_field | n } 
 		<fieldset>
 		% for field in form:
 			${render_field(field)}

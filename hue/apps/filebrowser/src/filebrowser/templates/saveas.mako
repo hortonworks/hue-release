@@ -27,7 +27,7 @@
       </div>
     % endif
     <div class="saveAsPrompt_popup">
-      <form method="post" action="${url('filebrowser.views.save_file')}">
+      <form method="post" action="${url('filebrowser.views.save_file')}"> ${ csrf_token_field | n } 
           Please enter the location where you'd like to save the file.
           ${edit.render_field(form["path"], notitle=True)}
           <div>${edit.render_field(form["contents"], hidden=True)}</div>

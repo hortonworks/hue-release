@@ -100,7 +100,7 @@ ${ commonheader(_('%(filename)s - File Viewer') % dict(filename=truncate(filenam
               <li class="last-block next"><a href="javascript:void(0);" data-bind="click: lastBlock">${_('Last Block')}</a></li>
           </ul>
 
-          <form action="${url('filebrowser.views.view', path=path_enc)}" method="GET" class="form-inline pull-right">
+          <form action="${url('filebrowser.views.view', path=path_enc)}" method="GET" class="form-inline pull-right"> ${ csrf_token_field | n } 
             <span>${_('Viewing Bytes:')}</span>
             <input type="text" name="begin" value="${view['offset'] + 1}" data-bind="value: begin" class="input-mini" />
             -

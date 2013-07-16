@@ -65,7 +65,7 @@ ${ layout.menubar(section='coordinators') }
         <li><a href="#step4" class="step">${ _('Step 4: Outputs') }</a></li>
         <li><a href="#step5" class="step">${ _('Step 5: Advanced settings') }</a></li>
       </ul>
-      <form class="form-horizontal" action="${ url('oozie:create_coordinator') }" method="POST">
+      <form class="form-horizontal" action="${ url('oozie:create_coordinator') }" method="POST"> ${ csrf_token_field | n } 
 
         <div class="steps">
 

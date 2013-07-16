@@ -90,7 +90,7 @@ ${ layout.menubar(section='bundles') }
     </div>
 
     <div class="span10">
-      <form id="jobForm" class="form-horizontal" action="${ url('oozie:edit_bundle', bundle=bundle.id) }" method="POST">
+      <form id="jobForm" class="form-horizontal" action="${ url('oozie:edit_bundle', bundle=bundle.id) }" method="POST"> ${ csrf_token_field | n } 
 
       <div id="properties" class="section">
         <ul class="nav nav-pills">

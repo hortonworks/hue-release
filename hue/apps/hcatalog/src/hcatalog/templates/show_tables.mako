@@ -67,7 +67,7 @@ ${layout.menubar(section='tables')}
 </style>
 
 <div id="dropTable" class="modal hide fade">
-    <form id="dropTableForm" method="POST">
+    <form id="dropTableForm" method="POST"> ${ csrf_token_field | n } 
     <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal">&times;</a>
             <h3 id="dropTableMessage">${_('Confirm action')}</h3>

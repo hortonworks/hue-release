@@ -119,7 +119,7 @@ ${ layout.menubar(section='workflows') }
 <div id="submit-wf-modal" class="modal hide"></div>
 
 <div id="trashWf" class="modal hide fade">
-  <form id="trashWfForm" action="${ url('oozie:delete_workflow') }" method="POST">
+  <form id="trashWfForm" action="${ url('oozie:delete_workflow') }" method="POST"> ${ csrf_token_field | n } 
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
       <h3 id="trashWfMessage">${ _('Move the selected workflow(s) to trash?') }</h3>
@@ -135,7 +135,7 @@ ${ layout.menubar(section='workflows') }
 </div>
 
 <div id="destroyWf" class="modal hide fade">
-  <form id="destroyWfForm" action="${ url('oozie:delete_workflow') }?skip_trash=true" method="POST">
+  <form id="destroyWfForm" action="${ url('oozie:delete_workflow') }?skip_trash=true" method="POST"> ${ csrf_token_field | n } 
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
       <h3 id="destroyWfMessage">${ _('Delete the selected workflow(s)?') }</h3>

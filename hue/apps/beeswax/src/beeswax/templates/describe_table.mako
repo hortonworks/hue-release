@@ -131,7 +131,7 @@ ${layout.menubar(section='tables')}
 
 
 <div id="dropTable" class="modal hide fade">
-    <form id="dropTableForm" method="POST" action="${ url(app_name + ':drop_table', database=database) }">
+    <form id="dropTableForm" method="POST" action="${ url(app_name + ':drop_table', database=database) }"> ${ csrf_token_field | n } 
     <div class="modal-header">
         <a href="#" class="close" data-dismiss="modal">&times;</a>
         <h3>${_('Drop Table')}</h3>
@@ -155,7 +155,7 @@ ${layout.menubar(section='tables')}
 
 
 <div id="importData" class="modal hide fade">
-    <form method="POST" action="${ url(app_name + ':load_table', database=database, table=table.name) }" class="form-horizontal">
+    <form method="POST" action="${ url(app_name + ':load_table', database=database, table=table.name) }" class="form-horizontal"> ${ csrf_token_field | n } 
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal">&times;</a>
             <h3>${_('Import data')}</h3>

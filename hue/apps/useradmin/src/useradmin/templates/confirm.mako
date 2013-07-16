@@ -20,7 +20,7 @@ from django.utils.translation import ugettext as _
 ${ commonheader(title, "useradmin", user) | n,unicode }
 <div class="container-fluid">
 	<h1>${_('Confirm')}</h1>
-	<form action="${path}" method="POST">
+	<form action="${path}" method="POST"> ${ csrf_token_field | n } 
 		${title}
 		<input type="submit" value="${_('Yes')}">
 	</form>

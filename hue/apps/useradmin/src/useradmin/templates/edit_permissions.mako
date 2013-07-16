@@ -41,7 +41,7 @@ ${layout.menubar(section='permissions', _=_)}
 
 <div class="container-fluid">
 	<h1>${_('Hue Permissions - Edit app: %(app)s') % dict(app=app)}</h1>
-	<form id="editForm" action="${urllib.quote(action)}" method="POST" class="form form-horizontal">
+	<form id="editForm" action="${urllib.quote(action)}" method="POST" class="form form-horizontal"> ${ csrf_token_field | n } 
 		<fieldset>
 			% for field in form:
 				${render_field(field)}
