@@ -113,7 +113,7 @@ def script_clone(request, obj_id):
 def udf_create(request):
     response = {'status': -1, 'data': ''}
     try:
-        request.fs.do_as_user(DEFAULT_HDFS_SUPERUSER, request.fs.chmod, UDF_PATH, 0777, True)
+        request.fs.chmod(UDF_PATH, 0777, True)
         resp = _upload_file(request)
         response.update(resp)
         UDF.objects.create(url=resp['path'], file_name=request.FILES['hdfs_file'].name, owner=request.user)
@@ -146,7 +146,7 @@ def start_job(request):
     if "autosave" in request.session:
         del request.session['autosave']
     t = Templeton(request.user.username)
-    statusdir = "/tmp/.pigjobs/%s" % datetime.now().strftime("%s")
+    statusdir = "/tmp/.pigjobs/%s/%s_%s" % (request.user.username, request.POST['title'].lower().replace(" ", "_"),  datetime.now().strftime("%s"))
     script_file = statusdir + "/script.pig"
     pig_script = request.POST['pig_script']
     if request.POST.get("python_script"):
@@ -164,7 +164,7 @@ def start_job(request):
         arg.append("-check")
         job_type = Job.SYNTAX_CHECK
     callback = request.build_absolute_uri("/pig/notify/$jobId/")
-    LOG.debug("Starting pig job via templeton. Script file: %s, statusdir: %s, callback: %s, arg: %s" % (script_file, statusdir, callback, arg))
+    LOG.debug("User %s started pig job via webhcat: curl -s -d file=%s -d statusdir=%s -d callback=%s -d arg=%s" % (request.user.username, script_file, statusdir, callback, arg))
     job = t.pig_query(pig_file=script_file, execute=execute, statusdir=statusdir, callback=callback, arg=arg)
 
     if request.POST.get("script_id"):
@@ -215,9 +215,9 @@ def _job_result(request, job):
         stderr_file = statusdir + "/stderr"
         stdout_file = statusdir + "/stdout"
         exit_code_file = statusdir + "/exit"
-        error = request.fs.do_as_user(DEFAULT_HDFS_SUPERUSER, request.fs.read, stderr_file, 0, request.fs.stats(stderr_file).size)
-        stdout = request.fs.do_as_user(DEFAULT_HDFS_SUPERUSER, request.fs.read, stdout_file, 0, request.fs.stats(stdout_file).size)
-        exit_code = request.fs.do_as_user(DEFAULT_HDFS_SUPERUSER, request.fs.read, exit_code_file, 0, request.fs.stats(exit_code_file).size)
+        error = request.fs.do_as_user(request.fs.DEFAULT_USER, request.fs.read, stderr_file, 0, request.fs.stats(stderr_file).size)
+        stdout = request.fs.do_as_user(request.fs.DEFAULT_USER, request.fs.read, stdout_file, 0, request.fs.stats(stdout_file).size)
+        exit_code = request.fs.do_as_user(request.fs.DEFAULT_USER, request.fs.read, exit_code_file, 0, request.fs.stats(exit_code_file).size)
         result['error'] = mark_safe(error)
         result['stdout'] = mark_safe(stdout)
         result['exit'] = mark_safe(exit_code)
