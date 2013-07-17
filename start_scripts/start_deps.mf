@@ -111,6 +111,13 @@ hbase_regionservers: namenode hbase_master datanode
 		sleep 5,\
 		/var/log/hbase/hbase-hbase-regionserver-*.log)
 
+hbase_thrift: hbase_master
+	$(call colorized,\
+		hbase thrift, \
+		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start thrift",\
+		sleep 5,\
+		/var/log/hbase/hbase-hbase-thrift-*.log)
+
 # ==== Hive ====
 
 hive: postgresql
@@ -134,7 +141,7 @@ zookeeper: namenode
 		zookeeper nodes, \
 		su - zookeeper -c  'source /etc/zookeeper/conf/zookeeper-env.sh ; /bin/env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/lib/zookeeper/bin/zkServer.sh start',\
 		true)
-	
+
 
 templeton: hcat HDFS
 	$(call colorized,\
@@ -178,4 +185,4 @@ ambari_agent: ambari_server
 		Ambari agent, \
 		ambari-agent start,true)
 
-	
+

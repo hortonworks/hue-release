@@ -41,7 +41,8 @@ APPS := about \
   shell \
   useradmin \
   hcatalog \
-  pig
+  pig \
+  hbase
 
 
 ################################################
