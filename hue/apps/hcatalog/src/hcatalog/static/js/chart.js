@@ -26,13 +26,10 @@ function chart(x,y,min,max)
 	}
 
 	getScale = function(){
-		difarr = [];
-		$.each($(d3.select('#slider').node()).find('a'),function (i,el) {
-			difarr[i] = parseInt(el.style.left);
-		});
-		section = difarr[1]-difarr[0];
+		section = parseInt(d3.select('#slider .ui-slider-range').node().style.width);
 		density = formin.length/graphwidth;
-		return (parseInt((density/100)*section)==0)?1:parseInt((density/100)*section);
+		if ((scl = parseInt(density/100*section))==0) scl=1;
+		return scl;
 	}
 
 	setGraph = function(type,unstack)
