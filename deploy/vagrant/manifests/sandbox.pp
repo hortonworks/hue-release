@@ -34,11 +34,6 @@ define replace($file, $pattern, $replacement) {
 
 
 class sandbox_rpm {
-    replace { "/etc/hive/conf/hive-site.xml":
-       file => "/etc/hive/conf/hive-site.xml",
-       pattern => "jdbc:mysql:\\/\\/sandbox.hortonworks.com",
-       replacement => "jdbc:mysql:\\/\\/localhost:3306"
-    }
 
     file { '/etc/sysconfig/network-scripts/ifcfg-eth1':
         ensure => absent,
