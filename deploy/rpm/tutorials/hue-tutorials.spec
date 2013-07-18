@@ -103,8 +103,6 @@ ln -s $TUTORIALS/hue_common_header.js \
 cat << EOF > /tmp/common_header.mako.patch
 99a100
 >   <script src="/static/js/hue_common_header.js"></script>
-117a120
->       handleAutoLogin();
 EOF
 
 patch $HUE/desktop/core/src/desktop/templates/common_header.mako < /tmp/common_header.mako.patch
