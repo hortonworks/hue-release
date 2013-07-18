@@ -32,7 +32,7 @@ Ambari: ambari_server ambari_agent ganglia nagios
 HDFS: namenode secondary_namenode datanode
 MapReduce: jobtracker historyserver tasktracker
 Zookeeper: zookeeper
-HBase: hbase_master hbase_regionservers
+HBase: hbase_master hbase_regionservers hbase_thrift
 Hive_Metastore: hive hcat
 Templeton: templeton
 Oozie: oozie
