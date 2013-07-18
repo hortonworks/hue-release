@@ -206,14 +206,14 @@ ${layout.menubar(section='query')}
         % if columns:
         <!--- Visualization -->
         <link href="/pig/static/css/codemirror.css" rel="stylesheet">
-        <link href="/hcatalog/static/css/visualization.css" rel="stylesheet">
+        <link href="/beeswax/static/css/visualization.css" rel="stylesheet">
         <script src="/pig/static/js/codemirror.js"></script>
-        <script src="/hcatalog/static/js/visualization.js"></script>
-        <script src="/hcatalog/static/js/htmlmixed.js"></script>
-        <script src="/hcatalog/static/js/xml.js"></script>
-        <script src="/hcatalog/static/js/css.js"></script>
-        <script src="/hcatalog/static/js/javascript.js"></script>
-        <script src="/hcatalog/static/js/lib/jquery.csv-0.71.min.js"></script>
+        <script src="/beeswax/static/js/visualization.js"></script>
+        <script src="/beeswax/static/js/htmlmixed.js"></script>
+        <script src="/beeswax/static/js/xml.js"></script>
+        <script src="/beeswax/static/js/css.js"></script>
+        <script src="/beeswax/static/js/javascript.js"></script>
+        <script src="/beeswax/static/js/lib/jquery.csv-0.71.min.js"></script>
         <div class="tab-pane" id="visualizations">
               <!--<textarea id="vis_code" name="code">
                 <script>
@@ -256,8 +256,8 @@ ${layout.menubar(section='query')}
             </div>
             <div class='chart_type_wrap value_type'>
               <div class="nav-header">value type:</div>
-              <input type="radio" name="stacked" value="false"  /> <img src='/hcatalog/static/css/images/charts/stack.png'> stack<br/>
-              <input type="radio" name="stacked" value="true" checked="checked" /> <img src='/hcatalog/static/css/images/charts/value.png'> value<br/>
+              <input type="radio" name="stacked" value="false"  /> <img src='/beeswax/static/css/images/charts/stack.png'> stack<br/>
+              <input type="radio" name="stacked" value="true" checked="checked" /> <img src='/beeswax/static/css/images/charts/value.png'> value<br/>
             </div>
 
             <input type="hidden" value='${download_urls["csv"]}' name="csv"/>

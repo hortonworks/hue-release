@@ -1,0 +1,98 @@
+html {
+	height: 530px;
+}
+.x_label
+{
+	display:none;
+}
+#y_axis,#y_axis>svg
+{
+	width:100px!important;
+}
+#y_axis,#chart
+{
+	display:inline-block; 
+	vertical-align:top;
+	position: relative;
+}
+
+#x_axis,#slider
+{
+	position: relative;
+	left: 100px; 
+	bottom:30px;
+}
+#x_axis>svg
+{
+	height: 110px;
+}
+#slider
+{
+	width:900px;
+}
+#legend
+{
+	/*top:-450px;*/
+	float:right;
+	position: absolute;
+	right: 0;
+}
+
+.chart_wrap
+{
+	width:1170px;
+}
+
+#x_axis>svg>g>g>text{
+text-anchor:end!important;
+display:inline-block;
+transform: translate(0px,23px) rotate(340deg);
+-ms-transform: translate(0px,23px) rotate(340deg);
+-webkit-transform: translate(0px,23px) rotate(340deg); 
+-o-transform: translate(0px,23px) rotate(340deg); 
+-moz-transform: translate(0px,23px) rotate(340deg); 
+}
+	body
+	{
+		height:510px;
+		/*overflow-y: scroll;*/
+		font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-weight:500;
+	}
+	
+.pielabel
+{
+	opacity:0.7;
+	padding:2px 5px 2px 5px;
+	border-radius:5px;
+	display:none;
+	background-color:#000;
+	position:absolute;
+	color:white;
+	text-align:center;
+}
+.legend
+{
+	font-size:9pt!important;
+}
+
+.showlegend
+{
+	text-decoration:none!important;
+}
+
+.spin{
+	display: none;
+	padding: 3px 15px;
+	font-size: 16px;
+	font-weight: bold;
+	line-height: 20px;
+	color: #999;
+	text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+	text-transform: uppercase;
+}
+
+.spin img{
+  vertical-align: baseline;
+  opacity: 0.5;
+}
