@@ -41,7 +41,8 @@ def create_table(request):
     try:
       cfs = json.loads(request.POST.get("data"))
       get_client().create_table(request.POST["table_name"], cfs)
-      return redirect('/hbase')
+      #return redirect('/hbase')
+      return HttpResponse(json.dumps(cfs))
     except Exception as ex:
       raise PopupException(ex)
 
@@ -107,3 +108,13 @@ def drop_table(request, table):
     return HttpResponse(json.dumps({"status": "done"}))
   except Exception as ex:
     return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+
+
+def compact_table(request, table):
+  try:
+    get_client().compact_table(table, bool(request.POST.get("compactionType", False)))
+    return HttpResponse(json.dumps({"status": "done"}))
+  except Exception as ex:
+    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+
+  

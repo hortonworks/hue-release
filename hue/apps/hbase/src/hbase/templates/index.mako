@@ -14,7 +14,7 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
 
                 <button id="browseBtn" class="btn toolbarBtn"
                 title="${_('Compact the selected table')}"
-                data-bind="enable: selectedFilter().lenght, click: askCompactionType"><i class="icon-hdd"></i>
+                data-bind="enable: selectedFilter().length, click: askCompactionType"><i class="icon-hdd"></i>
                 ${_('Compact')}</button>
 
                 <button id="browseBtn" class="btn toolbarBtn"
@@ -29,7 +29,7 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
                 
                 <button id="dropBtn" class="btn toolbarBtn"
                         title="${_('Delete the selected tables')}"
-                        data-bind="click: deleteTables, enable: selectedFilter().length">
+                        data-bind="click: confirmDelete, enable: selectedFilter().length">
                   <i class="icon-trash"></i>  ${_('Drop')}</button>
 
           </%def>
@@ -85,7 +85,24 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
   <div class="modal-body">
     <p>
       <input type="radio" name="compactionType" value="major" />Major
-      <input type="radio" name="compactionType" value="minor" />Minor
+      <input type="radio" name="compactionType" value="minor" checked/>Minor
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    <button class="btn btn-primary" data-bind="click: compact">Compact</button>
+  </div>
+</div>
+
+<div id="compactionModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3>Choose compaction type</h3>
+  </div>
+  <div class="modal-body">
+    <p>
+      <input type="radio" name="compactionType" value="major" />Major
+      <input type="radio" name="compactionType" value="minor" checked/>Minor
     </p>
   </div>
   <div class="modal-footer">
@@ -95,5 +112,24 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
 </div>
 
 
+<div id="modal-from-dom" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal">&times;</a>
+         <h3>Delete Tables?</h3>
+    </div>
+    <div class="modal-body">
+        <p>You are about to delete next tables:</p>
+        <p>
+          <ul id="deleteTableList">
+            
+          </ul>
+        </p>
+        <p>Are you sure you want to delete them?</p>
+    </div>
+    <div class="modal-footer">
+        <a class="btn danger" data-bind="click: deleteTables">Yes</a>
+        <a href="javascript:$('#modal-from-dom').modal('hide')" class="btn secondary">No</a>
+    </div>
+</div>
 
 ${ commonfooter(messages) | n,unicode }

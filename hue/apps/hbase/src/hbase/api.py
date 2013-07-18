@@ -77,8 +77,12 @@ class HBase(object):
     with self.pool.connection() as connection:
       return connection.enable_table(table)
 
-  def delete_table(self, table, dasable=True):
+  def delete_table(self, table, disable=True):
     with self.pool.connection() as connection:
       return connection.delete_table(table, disable)
+
+  def compact_table(self, table, major=False):
+    with self.pool.connection() as connection:
+      return connection.compact_table(table, major)
 
     

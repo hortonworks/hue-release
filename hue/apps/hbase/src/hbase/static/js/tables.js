@@ -49,10 +49,19 @@ $(document).ready(function (){
 
         self.compact = function() {
             var tables = self.selectedFilter();
+            var mode = $("input[name=compactionType]").val() == "major" ? "compactionType=true" : "";
             for (var i = 0; i < tables.length; i++){
                 var table = tables[i];
-                
+                console.log(table.name());
+                $.ajax({url: "/hbase/table/compact/" + table.name(), 
+                        async: false,
+                        data: mode,
+                        type: "POST", 
+                        success: function(result){
+                            table.selected(false);
+                    }});
             }
+            $("#compactionModal").modal('hide');
                 
         }
 
@@ -66,7 +75,7 @@ $(document).ready(function (){
                     var table = tables[i];
                     $.ajax({url: "/hbase/table/disable/" + table.name(), 
                             async: false,
-                            method: "POST", success: function(result){
+                            type: "POST", success: function(result){
                        table.selected(false);
                         table.enabled(false);
                        $(".bar").css("width", table.length / i + "%");
@@ -79,7 +88,6 @@ $(document).ready(function (){
         self.enableTables = function(){
             var tables = self.selectedFilter();
             ko.utils.arrayForEach(tables, function(table) {
-                console.log(table.enabled());
                 if (table.enabled()) {
                     $("#alertText").text("Table " + table.name() + "already enabled.");
                     $("#tableAlert").modal();
@@ -87,22 +95,40 @@ $(document).ready(function (){
                 }
             });
 
-            for (var i = 0; i < tables.length; i++)
-                {
-                    var table = tables[i];
+            $(tables).map(function (i, table){
                     $.ajax({url: "/hbase/table/enable/" + table.name(), 
                             async: false,
-                            method: "POST", success: function(result){
+                            type: "POST", success: function(result){
                        table.selected(false);
                        table.enabled(true);
                        console.log(table.name());
 
                     }});
-                }
+                });
         };
 
-        self.deleteTables = function(){}
-
+        self.confirmDelete = function () {
+            var tables = self.selectedFilter();
+            $("#deleteTableList").empty()
+            $(tables).map(function (i, table) {
+                console.log(table);
+                $("#deleteTableList").append("<li>" + table.name() + "</li>");
+            });
+            $('#modal-from-dom').modal();
+        }
+        
+        self.deleteTables = function(){
+            var tables = self.selectedFilter();
+            $(tables).map(function (i, table) {
+                $.ajax({url: "/hbase/table/drop/" + table.name(), 
+                        async: false,
+                        type: "DELETE", 
+                        success: function(result){
+                            table.selected(false);
+                        }});
+            });
+            $('#modal-from-dom').modal('hide');
+        }
 
 
     }
