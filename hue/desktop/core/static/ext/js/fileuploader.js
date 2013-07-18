@@ -1131,8 +1131,10 @@ qq.extend(qq.UploadHandlerForm.prototype, {
         // form.setAttribute('method', 'post');
         // form.setAttribute('enctype', 'multipart/form-data');
         // Because in this case file won't be attached to request
-        var form = qq.toElement('<form method="post" enctype="multipart/form-data"></form>');
-
+        
+        var form = qq.toElement('<form method="post" enctype="multipart/form-data">' +
+            getCSRFInputField() + '</form>');
+        
         form.setAttribute('action', this._options.action);
         form.setAttribute('target', iframe.name);
         form.style.display = 'none';
@@ -1230,6 +1232,7 @@ qq.extend(qq.UploadHandlerXhr.prototype, {
         var formData = new FormData();
         formData.append(params.fileFieldLabel, file);
         formData.append('dest', params.dest);
+        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
         var action = this._options.action + "?dest=" + params.dest;
         xhr.open("POST", action, true);
