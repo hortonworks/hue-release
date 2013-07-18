@@ -1,8 +1,3 @@
-// auto login and anonymous users
-function handleAutoLogin() {
-    //
-}
-
 
 if(window.top != window) {
     //we are in frame
