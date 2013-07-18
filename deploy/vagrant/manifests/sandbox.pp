@@ -88,7 +88,7 @@ class sandbox_rpm {
         command => "yum clean all --disablerepo='*' --enablerepo='sandbox' --enablerepo='hue-bigtop'",
     }
 
-    package { ['hue', 'hue-sandbox', 'hue-plugins']:
+    package { ['hue', 'hue-sandbox', 'hue-plugins', 'hue-hbase']:
         ensure => latest,
         require => [ File['sandbox.repo'],
                      Package['libxslt'],
