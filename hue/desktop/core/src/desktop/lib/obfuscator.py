@@ -2,11 +2,12 @@ import getpass
 import logging
 import string
 import base64
-from os import path, getenv
+import stat
+from os import path, getenv, chmod
 from desktop.lib import encryptor
 from desktop.lib.paths import get_desktop_root
 import hashlib
-
+from desktop.conf import KREDENTIALS_DIR
 
 LOG = logging.getLogger(__name__)
 HUE_MASTER_FNAME = "hue-master"
@@ -21,7 +22,7 @@ class Obfuscator(object):
 
   def set_master_password(self):
     if self.__HUE_MASTER_PASSWORD is None:
-      hue_master_path = path.join("/tmp", HUE_MASTER_FNAME)
+      hue_master_path = path.join(KREDENTIALS_DIR.get(), HUE_MASTER_FNAME)
       try:
         with open(hue_master_path, "r") as f:
           cyphertext = f.readline()
@@ -32,11 +33,14 @@ class Obfuscator(object):
         if want_to_persist.lower() == "y":
           with open(hue_master_path, "w") as f:
               f.write(encryptor.EncryptWithAES(HARDCODED_SECRET, self.__HUE_MASTER_PASSWORD, encryptor.STATIC_IV))
+          chmod(hue_master_path, stat.S_IREAD)
+
 
   def get_value(self, key):
     if self.__HUE_MASTER_PASSWORD is None:
         self.set_master_password()
-    with open(path.join("/tmp", "hue-credentials.hks"), "a+") as f:
+    kredentials_path = path.join(KREDENTIALS_DIR.get(), "hue-credentials.hks")
+    with open(kredentials_path, "a+") as f:
         md5 = hashlib.md5()
         md5.update(self.__HUE_MASTER_PASSWORD)
         result = None
@@ -50,4 +54,5 @@ class Obfuscator(object):
             iv = encryptor.IV()
             f.write(base64.b64encode(("%s::%s::%s" % (key, iv, encryptor.EncryptWithAES(md5.hexdigest(), password, iv)))) + "\n")
             result = password
+    chmod(kredentials_path, stat.S_IREAD|stat.S_IWRITE)
     return result

@@ -20,13 +20,21 @@ import os
 import socket
 import stat
 import re
+import sys
 
 from django.utils.translation import ugettext_lazy as _
 
 from desktop.lib.conf import Config, ConfigSection, UnspecifiedConfigSection
 from desktop.lib.conf import coerce_bool, validate_path
 from desktop.lib.paths import get_desktop_root
-from desktop.lib.obfuscator import Obfuscator
+
+
+KREDENTIALS_DIR = Config(
+  key="kredentials_dir",
+  help="Directory, where kredentials files would be stored",
+  private=True,
+  default="/tmp"
+)
 
 USE_CHERRYPY_SERVER = Config(
   key="use_cherrypy_server",
@@ -429,10 +437,11 @@ DJANGO_EMAIL_BACKEND = Config(
   default="django.core.mail.backends.smtp.EmailBackend"
 )
 
-###OBFUCATOR####
+###OBFUCATOR####                             
 def decrypt_values():
   from lockfile import FileLock
-  lock = FileLock("/tmp/ENCR")
+  from desktop.lib.obfuscator import Obfuscator
+  lock = FileLock("/tmp/ENCR.lock")
   lock.acquire()
   OBFUSCATOR = Obfuscator()
   ENCRYPTED_VALUE_PATTERN = re.compile("\$\s{ALIAS=(\w+)}")
@@ -442,7 +451,12 @@ def decrypt_values():
       continue
     match = ENCRYPTED_VALUE_PATTERN.match(val.get())
     if match:
-      val.bind_to[val.grab_key] = OBFUSCATOR.get_value(match.group(1))
+        try:
+            decrypted_value = OBFUSCATOR.get_value(match.group(1))
+            val.bind_to[val.grab_key] = decrypted_value
+        except Exception as ex:
+            lock.release()
+            sys.exit("Error occured!\n%s\n" % ex)
   lock.release()
 
 def config_validator():
