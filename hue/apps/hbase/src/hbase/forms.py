@@ -1,4 +1,4 @@
-# Licensed to Cloudera, Inc. under one
+# Licensed to Hortonworks, inc. under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
 # regarding copyright ownership.  Cloudera, Inc. licenses this file
