@@ -492,7 +492,6 @@ ${layout.menubar(section='query')}
         }
 
         $("#saveQueryAs").click(function(){
-            $("<input>").attr("type","hidden").attr("name","saveform-saveas").attr("value","Save As...").appendTo($("#advancedSettingsForm"));
             $("#saveAs").find("input[name=saveform-name]").keyup(function(){checkSaveAsName($(this));}).trigger('keyup');
             $("#saveAs").modal("show");
         });
@@ -503,6 +502,8 @@ ${layout.menubar(section='query')}
                 function (data){
                     var org_name = $("input[name=saveform-name]").val();
                     var saveasname = (data.thisname) ? org_name + ' (copy)' : org_name;
+                    $("<input>").attr("type","hidden").attr("name","saveform-saveas")
+                        .attr("value","Save As...").appendTo($("#advancedSettingsForm"));
                     $("<input>").attr("type","hidden").attr("name","saveform-name")
                         .attr("value", saveasname).appendTo($("#advancedSettingsForm"));
                     $("<input>").attr("type","hidden").attr("name","saveform-desc")
