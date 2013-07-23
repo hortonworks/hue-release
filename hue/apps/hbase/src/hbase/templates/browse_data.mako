@@ -29,97 +29,56 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
   <a href="" class="btn toolbarBtn" data-bind="click: addRowModal"> <i class="icon-plus-sign"></i>
     ${_('Add row')}</a>
   
-  
-  <button id="dropBtn" class="btn toolbarBtn" title="${_('Delete rows')}" data-bind="disable: slectedRows().length==0">
-    <i class="icon-trash"></i>  ${_('Delete rows')}</button>
 
-  <button id="dropBtn" class="btn toolbarBtn" title="${_('Browse all versions')}" 
-          data-bind="click: getVersions,disable: slectedRows().length!=1">
-    <i class=" icon-list-alt"></i>  ${_('Browse all versions')}</button>
-
- </div>
+</div>
 
 </%def>
 </%actionbar:render>
-<div class="span12">
-
-  <!--   <tbody data-bind="foreach: rows"> -->
-  <!--     <tr> -->
-  <!--       <td><input type="checkbox" data-bind="checked: selected" /></td> -->
-  <!--       <td data-bind="text: row"></td> -->
-  <!--       <td data-bind="text:column"></td> -->
-  <!--       <td> -->
-  <!--         <div><span data-bind="text: -->
-  <!--         value"></span> <span class="badge -->
-  <!--         badge-success"> -->
-  <!--             <a data-bind="click: editValue" href="javascript:void(0);"><i class="icon-pencil"></i></a></span></div>  -->
-  <!--         <ul data-bind="foreach: versions"> -->
-  <!--           <li> -->
-  <!--             <i class="icon-time"></i> <span data-bind="text: timestamp"></span><br> -->
-  <!--             <span data-bind="text: prevValue"></span> -->
-  <!--           </li> -->
-  <!--         </ul> -->
-  <!--       </td> -->
-  <!--     </tr> -->
-  <!--   </tbody> -->
-  <!-- </table> -->
-  
+<div class="span11">
 
 
-
-<!-- <div class="show-grid"> -->
-<!--   <div class="span1" data-bind="text: row"></div> -->
-<!--   <div class="row" data-bind="foreach: rows"> -->
-<!--     <div class="span1" data-bind="text: row"></div> -->
-<!--     <\!-- ko foreach: {data: columnFamilies, as: 'cf'} -\-> -->
-<!--       <div data-bind="attr:{class: $parent.cfCount()}"> -->
-<!--         <div data-bind="text: cf.cfName"></div> -->
-<!--         <div data-bind="foreach: {data: cf.columns, as: 'col'}"> -->
-<!--           <div data-bind="text: col.columnName"></div> -->
-<!--           <div data-bind="text: col.value"></div> -->
-<!--         </div> -->
-<!--       </div>  -->
-<!--       <\!-- /ko -\-> -->
-<!--   </div> -->
-<!-- </div> -->
-
-
-<div class="row-fluid show-grid">
+ 
   <!-- ko foreach: rows -->
-  <div class="span1" data-bind="text: row"></div>
-  <div class="span10 offset1">
-    <div class="accordion" data-bind="attr: {id: row}">
-      <!-- ko foreach: {data: columnFamilies, as: 'cf'} -->
-      <div class="accordion-group">
-        <div class="accordion-heading">
-          <a class="accordion-toggle collapsed" data-toggle="collapse"
-             data-bind="text: cf.cfName,attr: {href: '#' + $parent.row() + cf.cfName(), 'data-parent': $parent.nameID()}">
-          </a>
-        </div>
-        <div data-bind="attr: {id: $parent.row() + cf.cfName() }" class="accordion-body collapse"
-             style="height: 0px;">
-          <div class="pagination">
-            <ul>
-          <!-- ko foreach: {data: cf.columns, as: 'col'} -->
-          <li>
-            <a href="javascript:void(0);" data-bind="text:
-            col.columnName() + ':'"></a>
-          </li>
-          <li>
-            <a href="javascript:void(0);" data-bind="text: col.value()"></a>
-          </li>
-          <li><a href="javascript:void(0)">&nbsp;</a></li>
-          <!-- /ko -->
-            </ul>
+  <div class="row-fluid show-grid">
+    <div class="span1">
+      <div data-bind="text: row"></div>
+      <a data-bind="click: dropRow"><i class="icon-trash" title="Drop row"></i></a>
+    </div>
+    <div class="span10 offset1">
+      <div class="accordion" data-bind="attr: {id: row}">
+        <!-- ko foreach: {data: columnFamilies, as: 'cf'} -->
+        <div class="accordion-group">
+          <div class="accordion-heading">
+            <a class="accordion-toggle collapsed" data-toggle="collapse"
+               data-bind="text: cf.cfName,attr: {href: '#' +
+               $parent.row() + cf.cfName(), 'data-parent': '#' + $parent.row()}">
+            </a>
+          </div>
+          <div data-bind="attr: {id: $parent.row() + cf.cfName() }" class="accordion-body collapse"
+               style="height: 0px;">
+            
+                <!-- ko foreach: {data: cf.columns, as: 'col'} -->
+                <div class="span2">
+                  <div class="modal-header">
+                    <h3 data-bind="text: col.columnName"></h3>
+                  </div>
+                  <div class="modal-body">
+                    <p data-bind="text: col.value"></p>
+                    <a data-bind="click:
+                    getVersions"><i class="icon-pencil" title="Edit cell"></i></a>
+                    <a data-bind="click: getVersions"><i class="icon-eye-open" title="Browse previous
+                    versions"></i></a>
+                    <a data-bind="click:  dropCell"><i class="icon-trash" title="Remove cell"></i></a>
+                  </div>
+                </div>
+                <!-- /ko -->
           </div>
         </div>
+        <!-- /ko -->
       </div>
-      <!-- /ko -->
     </div>
   </div>
   <!-- /ko -->
-</div>
-
 
 
 </div>

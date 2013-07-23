@@ -8,6 +8,31 @@ function Version(data){
 function Column(data){
     this.columnName = ko.observable(data.columnName);
     this.value = ko.observable(data.value);
+    this.versions = ko.observableArray(data.versions);
+    
+    this.editValue = function (){} //TODO
+    this.dropCell = function(){} //TODO
+
+    this.getVersions = function() {
+        //TODO for cell
+        // $.ajax("/hbase/table/versions/json/" + self.tableName + "/" + row.row() + "/" + row.column() , 
+        //        {
+        //            dataType: "JSON",
+        //            success: function(resp) {
+        //                console.log(resp.length);
+        //                if (resp.length == 1) $.jHueNotify.info("There are no previous versions for this row");
+        //                else {
+        //                    for (var i = 1; i < resp.length; i++) {
+        //                        console.log(resp[i]);
+        //                        row.versions.push(new Version({prevValue: resp[i][0], timestamp: resp[i][1]}));
+        //                    }
+        //                }
+        //            },
+            
+        //        });
+    }
+
+
 }
     
 function ColumnFamily(data){
@@ -21,12 +46,11 @@ function Row(data)
     this.row = ko.observable(data.row);
     this.selected = ko.observable(data.selected);
     this.columnFamilies = ko.observableArray(data.columFamilies);
-    //this.value = ko.observable(data.value);
-    this.versions = ko.observableArray(data.versions);
-
-    this.nameID = function(){return "#" + this.row();}
     
-    this.editValue = function (){}
+    this.dropRow = function(){
+        
+    }
+
 }
 
 function dataViewModel(){
@@ -57,24 +81,6 @@ function dataViewModel(){
         return ko.utils.arrayFilter(self.rows(), function(row) { return row.selected() });
     }
 
-    self.getVersions = function() {
-        var row = self.slectedRows()[0];
-        $.ajax("/hbase/table/versions/json/" + self.tableName + "/" + row.row() + "/" + row.column() , 
-               {
-                   dataType: "JSON",
-                   success: function(resp) {
-                       console.log(resp.length);
-                       if (resp.length == 1) $.jHueNotify.info("There are no previous versions for this row");
-                       else {
-                           for (var i = 1; i < resp.length; i++) {
-                               console.log(resp[i]);
-                               row.versions.push(new Version({prevValue: resp[i][0], timestamp: resp[i][1]}));
-                           }
-                       }
-                   },
-            
-               });
-    }
 
     self.addRowModal = function (){
         $("#add_row").modal('show');
@@ -91,14 +97,7 @@ function dataViewModel(){
         
         $.post("/hbase/table/data/add/" + self.tableName, {"data": ko.toJSON(data)}, function(result){
             if(result["status"] == "done")
-                self.rows.push(new Row({
-                    row: self.rowKeyValue(),
-                    column: fqcn,
-                    value: self.valueVal()
-                }));
-            self.rowKeyValue(false);
-            self.valueVal(false);
-            $("#add_row").modal('hide');
+                window.location.reload(true); // TODO: make something dynamic.
         }, "JSON");
     }
 
