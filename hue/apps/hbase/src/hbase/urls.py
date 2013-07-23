@@ -27,6 +27,7 @@ urlpatterns = patterns('hbase.views',
   url(r'table/enable/(?P<table>.+)$', 'enable_table'),
   url(r'table/versions/json/(?P<table>\S+)/(?P<row>\S+)/(?P<column>\S+)$', 'get_versions_json'),
   url(r'table/data/json/(?P<table>.+)$', 'get_data_json'),
+  url(r'table/data/add/(?P<table>.+)$', 'add_row'),
   url(r'tables/list/json$', 'table_list_json'),
   url(r'^$', 'index'),
 )

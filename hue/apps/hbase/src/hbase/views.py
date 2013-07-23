@@ -41,8 +41,7 @@ def create_table(request):
     try:
       cfs = json.loads(request.POST.get("data"))
       get_client().create_table(request.POST["table_name"], cfs)
-      #return redirect('/hbase')
-      return HttpResponse(json.dumps(cfs))
+      return redirect('/hbase')
     except Exception as ex:
       raise PopupException(ex)
 
@@ -72,8 +71,14 @@ def get_data_json(request, table):
   for i in xrange(20):
     try:
       r = data.next()
+      row = [r[0]]
+      cols = {}
       for k, v in r[1].iteritems():
-        rows.append((r[0], k, v))
+        cf, column = k.split(":")
+        cols.setdefault(cf, [])
+        cols[cf].append({column: v})
+      row.append(cols)
+      rows.append(row)
     except StopIteration:
       break
   result["data"] = rows
@@ -113,6 +118,16 @@ def drop_table(request, table):
 def compact_table(request, table):
   try:
     get_client().compact_table(table, bool(request.POST.get("compactionType", False)))
+    return HttpResponse(json.dumps({"status": "done"}))
+  except Exception as ex:
+    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+
+
+def add_row(request, table):
+  try:
+    table = get_client().get_table(table, False)
+    data = json.loads(request.POST["data"])
+    table.put(data["row"], {data["column"]: data["value"]})
     return HttpResponse(json.dumps({"status": "done"}))
   except Exception as ex:
     return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))

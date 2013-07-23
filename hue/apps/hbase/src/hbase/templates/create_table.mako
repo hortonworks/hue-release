@@ -81,7 +81,7 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
         <option>None</option>
         <option value="LZO">LZO</option>
         <option value="GZip">GZip</option>
-        <option value="Snappy">Snappy</option>
+        <option value="SNAPPY">Snappy</option>
       </select>
       <label class="checkbox">
         <input type="checkbox" data-bind="checked: inMemoryValue"> In memory

@@ -5,13 +5,28 @@ function Version(data){
     this.prevValue = ko.observable(data.prevValue);
 }
 
+function Column(data){
+    this.columnName = ko.observable(data.columnName);
+    this.value = ko.observable(data.value);
+}
+    
+function ColumnFamily(data){
+    this.cfName = ko.observable(data.cfName);
+    this.columns = ko.observableArray(data.columns);
+
+}
+
 function Row(data)
 {
     this.row = ko.observable(data.row);
     this.selected = ko.observable(data.selected);
-    this.column = ko.observable(data.column);
-    this.value = ko.observable(data.value);
+    this.columnFamilies = ko.observableArray(data.columFamilies);
+    //this.value = ko.observable(data.value);
     this.versions = ko.observableArray(data.versions);
+
+    this.nameID = function(){return "#" + this.row();}
+    
+    this.editValue = function (){}
 }
 
 function dataViewModel(){
@@ -21,6 +36,11 @@ function dataViewModel(){
     self.column_families = ko.observableArray([]);
     self.nextPageRow = ko.observable();
     self.prevPageRow = ko.observable();
+
+    self.cfValue = ko.observable().extend({ required: true });
+    self.rowKeyValue = ko.observable().extend({ required: true });
+    self.columnValue = ko.observable().extend({ required: true });
+    self.valueVal = ko.observable().extend({ required: true });
     
     self.selectAlldata = function(data, event)
     {
@@ -56,13 +76,50 @@ function dataViewModel(){
                });
     }
 
+    self.addRowModal = function (){
+        $("#add_row").modal('show');
+    }
+
+    self.addRow = function(){
+        var fqcn = self.cfValue() + ":" + self.columnValue();
+        var data = {
+            "row": self.rowKeyValue(),
+            "column": fqcn, 
+            "value": self.valueVal(),
+            
+        };
+        
+        $.post("/hbase/table/data/add/" + self.tableName, {"data": ko.toJSON(data)}, function(result){
+            if(result["status"] == "done")
+                self.rows.push(new Row({
+                    row: self.rowKeyValue(),
+                    column: fqcn,
+                    value: self.valueVal()
+                }));
+            self.rowKeyValue(false);
+            self.valueVal(false);
+            $("#add_row").modal('hide');
+        }, "JSON");
+    }
+
     $.getJSON("/hbase/table/data/json/" + self.tableName , function(allData) {
-        self.column_families = allData["cfs"];
+        $(allData["cfs"]).map(function(i, cf){self.column_families.push(cf)});
         var data = allData["data"];
-        for (var i = 0 ; i < data.length; i++){
-            var r = new Row({row: data[i][0], column: data[i][1], value: data[i][2]});
-            self.rows.push(r);
-        }
+        $(data).map(function(i, el){
+            var row = new Row({row: el[0]});
+            for (var cf in el[1]){
+                var columnFamily = new ColumnFamily({cfName: cf});
+                $(el[1][cf]).map(function(i, data){
+                    for(var c in data){
+                        console.log("Adding column...");
+                        //console.log({columnName: c, value: data[c]});
+                        columnFamily.columns.push(new Column({columnName: c, value: data[c]}))
+                    }
+                });
+                row.columnFamilies.push(columnFamily);
+            }
+            self.rows.push(row);
+        });
     });  
     
 
