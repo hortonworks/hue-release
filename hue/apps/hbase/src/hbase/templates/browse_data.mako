@@ -20,32 +20,40 @@ from django.utils.translation import ugettext as _
 %>
 
 ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
-<%namespace name="actionbar" file="actionbar.mako" />
 
 <div class="container-fluid" id="tables">
   <input type="hidden" id="table_name" value="${table.name}" />
-  <%actionbar:render>
-  <%def name="actions()">
-  <a href="" class="btn toolbarBtn" data-bind="click: addRowModal"> <i class="icon-plus-sign"></i>
-    ${_('Add row')}</a>
   
 
+  <div class="well" style="padding-top: 10px; padding-bottom: 0">
+    <div class="pull-right" style="margin:0"></div>
+    <div style="margin: 0px 0px 10px 0px">
+      <form data-bind="submit: filterData"><input name="filter" type="text" data-bind="value: queryFilter"
+             class="input-xlarge search-query"
+             placeholder="row_key1,row_key2 ...">&nbsp;&nbsp;&nbsp;&nbsp;
+
+      <a href="" class="btn toolbarBtn" data-bind="click: addRowModal"> <i class="icon-plus-sign"></i>
+        ${_('Add row')}
+      </a>
+      </form>
+    </div>
+  </div>
+ 
 </div>
 
-</%def>
-</%actionbar:render>
+
 <div class="span11">
 
 
  
-  <!-- ko foreach: rows -->
+  <!-- ko foreach: {data: rows, as: 'r'} -->
   <div class="row-fluid show-grid">
     <div class="span1">
-      <div data-bind="text: row"></div>
-      <a data-bind="click: dropRow"><i class="icon-trash" title="Drop row"></i></a>
+      <div data-bind="text: r.row"></div>
+      <a data-bind="click: dropRow" href="javascript:void(0);"><i class="icon-trash" title="Drop row"></i></a>
     </div>
     <div class="span10 offset1">
-      <div class="accordion" data-bind="attr: {id: row}">
+      <div class="accordion" data-bind="attr: {id: r.row}">
         <!-- ko foreach: {data: columnFamilies, as: 'cf'} -->
         <div class="accordion-group">
           <div class="accordion-heading">
@@ -63,12 +71,25 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
                     <h3 data-bind="text: col.columnName"></h3>
                   </div>
                   <div class="modal-body">
-                    <p data-bind="text: col.value"></p>
-                    <a data-bind="click:
-                    getVersions"><i class="icon-pencil" title="Edit cell"></i></a>
-                    <a data-bind="click: getVersions"><i class="icon-eye-open" title="Browse previous
-                    versions"></i></a>
-                    <a data-bind="click:  dropCell"><i class="icon-trash" title="Remove cell"></i></a>
+                    <p data-bind="text: col.value, attr: {id: 'p_' + col.rowID()}" ></p>
+                    <textarea data-bind="value: col.editValue,
+                                         attr:{id: col.rowID()}"
+                    style="display:none;" ></textarea>
+                    <div data-bind="foreach: {data: col.versions, as: 'version'}">
+                        <p><i class=" icon-time"></i><span data-bind="text: version.timestamp"></span></p>
+                        <p data-bind="text: version.prevValue"></p>
+                    </div>
+                      
+                    <a href="javascript:void(0);" data-bind="click: editCell">
+                      <i class="icon-pencil" title="Edit cell"></i>
+                      <i class="icon-ok" title="Save cell" style="display:none;"></i>
+                    </a>
+                    <a href="javascript:void(0)"
+                       data-bind="click: getVersions">
+                      
+                      <i class="icon-eye-open" title="Browse previous versions"></i>
+                    </a>
+                    <a href="javascript:void(0)" data-bind="click:  dropCell"><i class="icon-trash" title="Remove cell"></i></a>
                   </div>
                 </div>
                 <!-- /ko -->
@@ -116,15 +137,16 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
     </p>
   </div>
   <div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-    <button type="submit">Add row</button>
+    <button class="btn btn-success" type="submit">Add row</button>
   </div>
   </form>
 </div>
 
 <script src="/static/ext/js/knockout-min.js" type="text/javascript"
         charset="utf-8"></script>
-<script src="/hbase/static/js/knockout.validation.js" type="text/javascript" charset="utf-8"></script>
+<script src="/hbase/static/js/knockout.validation.js"
+        type="text/javascript" charset="utf-8"></script>
+<script src="/hbase/static/js/json2.js" type="text/javascript" charset="utf-8"></script>
 <script src="/hbase/static/js/browse_data.js" type="text/javascript"
         charset="utf-8"></script>
 

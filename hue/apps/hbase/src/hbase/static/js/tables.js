@@ -48,11 +48,11 @@ $(document).ready(function (){
         }
 
         self.compact = function() {
+            //TODO make some spinner
             var tables = self.selectedFilter();
             var mode = $("input[name=compactionType]").val() == "major" ? "compactionType=true" : "";
             for (var i = 0; i < tables.length; i++){
                 var table = tables[i];
-                console.log(table.name());
                 $.ajax({url: "/hbase/table/compact/" + table.name(), 
                         async: false,
                         data: mode,
@@ -68,7 +68,7 @@ $(document).ready(function (){
         
         
         self.disableTables = function(){
-            $("#op_progres").show();
+            $("#op_progres").show(); //TODO: do this progresbar;
             var tables = self.enabledFilter();
             for (var i = 0; i < tables.length; i++)
                 {
@@ -86,6 +86,7 @@ $(document).ready(function (){
         
 
         self.enableTables = function(){
+            //TODO: make progresbar
             var tables = self.selectedFilter();
             ko.utils.arrayForEach(tables, function(table) {
                 if (table.enabled()) {
@@ -111,7 +112,6 @@ $(document).ready(function (){
             var tables = self.selectedFilter();
             $("#deleteTableList").empty()
             $(tables).map(function (i, table) {
-                console.log(table);
                 $("#deleteTableList").append("<li>" + table.name() + "</li>");
             });
             $('#modal-from-dom').modal();

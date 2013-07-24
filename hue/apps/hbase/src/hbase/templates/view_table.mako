@@ -28,6 +28,11 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
             <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Actions')}</li>
+                    % if is_enabled:
+                    <li><a href="/hbase/table/drop/${table.name}">${_('Disable table')}</a></li>
+                    % else:        
+                    <li><a href="/hbase/table/drop/${table.name}">${_('Enable table')}</a></li>
+                    % endif
                     <li><a href="/hbase/table/drop/${table.name}">${_('Drop table')}</a></li>
                     <li><a href="/hbase/table/browse/${table.name}">${_('Brows data')}</a></li>
                 </ul>

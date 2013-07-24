@@ -21,6 +21,7 @@ import simplejson as json
 from desktop.lib.exceptions_renderable import PopupException
 from django.shortcuts import redirect
 from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods
 
 
 def index(request):
@@ -48,8 +49,10 @@ def create_table(request):
 
 def view_table(request, table):
   try:
-    table = get_client().get_table(table, False)
-    return render('view_table.mako', request, {"table": table})
+    client = get_client() 
+    is_enabled = client.is_table_enabled(table)
+    table = client.get_table(table, False)     
+    return render('view_table.mako', request, {"table": table, "is_enabled": is_enabled})
   except Exception as ex:
     raise PopupException(ex)
 
@@ -66,7 +69,10 @@ def get_data_json(request, table):
   result = {}
   table = get_client().get_table(table, False)
   result["cfs"] = [k for k in table.families().iterkeys()]
-  data = table.scan(row_start=request.POST.get("row_start"), row_stop=request.POST.get("row_stop"))
+  if request.REQUEST.get("query"):
+    data = iter(table.rows(request.REQUEST.get("query").split(",")))
+  else:
+    data = table.scan(row_start=request.POST.get("row_start"), row_stop=request.POST.get("row_stop"))
   rows = []
   for i in xrange(20):
     try:
@@ -85,12 +91,41 @@ def get_data_json(request, table):
   return HttpResponse(json.dumps(result))
 
 
-def get_versions_json(request, table, row, column):
+def get_versions_json(request, table):
+  row = request.REQUEST["row"]
+  column = request.REQUEST["col"]
   table = get_client().get_table(table, False)
   cells = table.cells(row, column, include_timestamp=True)
   return HttpResponse(json.dumps(cells))
 
 
+@require_http_methods(["DELETE", "POST"])
+def delete_data(request, table):
+  row = request.REQUEST["row"]
+  column = request.REQUEST.get("col")
+  try:
+    if column and not isinstance(column, list):
+      column = [column]
+    table = get_client().get_table(table, False)
+    table.delete(row, column)
+    return HttpResponse(json.dumps({"status": "done"}))
+  except Exception as ex:
+    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+
+
+@require_http_methods(["PUT", "POST"])
+def edit_data(request, table):
+  row = request.REQUEST["row"]
+  column = request.REQUEST["col"]
+  try:
+    table = get_client().get_table(table, False)
+    table.put(row, {column: request.REQUEST["val"]})
+    return HttpResponse(json.dumps({"status": "done"}))
+  except Exception as ex:
+    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+
+
+@require_http_methods(["POST"])
 def disable_table(request, table):
   try:
     get_client().disable_table(table)
@@ -99,6 +134,7 @@ def disable_table(request, table):
     return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
 
 
+@require_http_methods(["POST"])
 def enable_table(request, table):
   try:
     get_client().enable_table(table)
@@ -107,6 +143,7 @@ def enable_table(request, table):
     return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
 
 
+@require_http_methods(["DELETE", "POST"])
 def drop_table(request, table):
   try:
     get_client().delete_table(table, True)
@@ -115,6 +152,7 @@ def drop_table(request, table):
     return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
 
 
+@require_http_methods(["POST"])
 def compact_table(request, table):
   try:
     get_client().compact_table(table, bool(request.POST.get("compactionType", False)))
@@ -123,6 +161,7 @@ def compact_table(request, table):
     return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
 
 
+@require_http_methods(["PUT", "POST"])
 def add_row(request, table):
   try:
     table = get_client().get_table(table, False)
@@ -131,5 +170,3 @@ def add_row(request, table):
     return HttpResponse(json.dumps({"status": "done"}))
   except Exception as ex:
     return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
-
-  
