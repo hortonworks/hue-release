@@ -80,7 +80,9 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
         </div>
 </div>
 <script src="/static/ext/js/knockout-min.js" type="text/javascript" charset="utf-8"></script>
-<script src="/hbase/static/js/tables.js" type="text/javascript"></script>
+<script src="/hbase/static/js/tables.js"
+        type="text/javascript"></script>
+<script src="/hbase/static/js/common.js" type="text/javascript"></script>
 
 
 

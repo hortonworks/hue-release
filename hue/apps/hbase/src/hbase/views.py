@@ -20,7 +20,7 @@ from api import get_client
 import simplejson as json
 from desktop.lib.exceptions_renderable import PopupException
 from django.shortcuts import redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseServerError
 from django.views.decorators.http import require_http_methods
 
 
@@ -59,7 +59,10 @@ def view_table(request, table):
 
 def browse_data(request, table):
   try:
-    table = get_client().get_table(table, False)
+    client = get_client()
+    if not client.is_table_enabled(table):
+        raise PopupException("Table is disabled.")
+    table = client.get_table(table, False)
     return render('browse_data.mako', request, {"table": table})
   except Exception as ex:
     raise PopupException(ex)
@@ -72,9 +75,9 @@ def get_data_json(request, table):
   if request.REQUEST.get("query"):
     data = iter(table.rows(request.REQUEST.get("query").split(",")))
   else:
-    data = table.scan(row_start=request.POST.get("row_start"), row_stop=request.POST.get("row_stop"))
+    data = table.scan(row_start=request.REQUEST.get("row_start"), row_stop=request.REQUEST.get("row_stop"))
   rows = []
-  for i in xrange(20):
+  for i in xrange(21):
     try:
       r = data.next()
       row = [r[0]]
@@ -110,7 +113,7 @@ def delete_data(request, table):
     table.delete(row, column)
     return HttpResponse(json.dumps({"status": "done"}))
   except Exception as ex:
-    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+    return HttpResponseServerError(str(ex))
 
 
 @require_http_methods(["PUT", "POST"])
@@ -122,7 +125,7 @@ def edit_data(request, table):
     table.put(row, {column: request.REQUEST["val"]})
     return HttpResponse(json.dumps({"status": "done"}))
   except Exception as ex:
-    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+    return HttpResponseServerError(str(ex))
 
 
 @require_http_methods(["POST"])
@@ -131,7 +134,7 @@ def disable_table(request, table):
     get_client().disable_table(table)
     return HttpResponse(json.dumps({"status": "done"}))
   except Exception as ex:
-    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+    return HttpResponseServerError(str(ex))
 
 
 @require_http_methods(["POST"])
@@ -140,7 +143,7 @@ def enable_table(request, table):
     get_client().enable_table(table)
     return HttpResponse(json.dumps({"status": "done"}))
   except Exception as ex:
-    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+    return HttpResponseServerError(str(ex))
 
 
 @require_http_methods(["DELETE", "POST"])
@@ -149,7 +152,7 @@ def drop_table(request, table):
     get_client().delete_table(table, True)
     return HttpResponse(json.dumps({"status": "done"}))
   except Exception as ex:
-    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+    return HttpResponseServerError(str(ex))
 
 
 @require_http_methods(["POST"])
@@ -158,7 +161,7 @@ def compact_table(request, table):
     get_client().compact_table(table, bool(request.POST.get("compactionType", False)))
     return HttpResponse(json.dumps({"status": "done"}))
   except Exception as ex:
-    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+    return HttpResponseServerError(str(ex))
 
 
 @require_http_methods(["PUT", "POST"])
@@ -169,4 +172,4 @@ def add_row(request, table):
     table.put(data["row"], {data["column"]: data["value"]})
     return HttpResponse(json.dumps({"status": "done"}))
   except Exception as ex:
-    return HttpResponse(json.dumps({"status": "failure", "error": str(ex)}))
+    return HttpResponseServerError(str(ex))

@@ -55,3 +55,60 @@
 .show-grid [class*="span"] [class*="span"] [class*="span"] {
   background-color: #999;
 }
+
+
+
+  .accordion {
+    margin: 0;
+  }
+
+  .hrow {
+    border: 2px solid #ccc;
+  }
+
+  .hrow textarea {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    height: auto;
+  }
+
+  .accordion-heading {
+    text-align: left;
+    position: relative;
+  }
+
+  .rowhead {
+    display: inline-block;
+  }
+  
+  .hcell {
+    margin: 5px !important;
+    min-width: 100px;
+    width: auto;
+  }
+
+  .hcell p {
+    word-wrap: break-word;
+  }
+
+  .shadow {
+    -webkit-box-shadow: rgb(17, 17, 17) 0px 0px 10px -4px inset;
+    -moz-box-shadow: rgb(17, 17, 17) 0px 0px 10px -4px inset;
+    box-shadow: rgb(17, 17, 17) 0px 0px 10px -4px inset;
+  }
+
+  .label-info {
+    background-color: #3ea211;
+  }
+
+  .pull-right {
+    margin-right: 10px;
+  }
+
+  .cell-control {
+    line-height: 20px;
+    text-align: right;
+    padding: 5px;
+  }

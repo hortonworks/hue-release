@@ -119,5 +119,5 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
 <script src="/hbase/static/js/create_table.js" type="text/javascript"
         charset="utf-8"></script>
 <script src="/hbase/static/js/json2.js" type="text/javascript" charset="utf-8"></script>
-
+<script src="/hbase/static/js/common.js" type="text/javascript"></script>
 ${ commonfooter(messages) | n,unicode }

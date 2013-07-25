@@ -35,6 +35,7 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
                     % endif
                     <li><a href="/hbase/table/drop/${table.name}">${_('Drop table')}</a></li>
                     <li><a href="/hbase/table/browse/${table.name}">${_('Brows data')}</a></li>
+                    <li><a href="/hbase/table/browse/pig/${table.name}">${_('View in pig')}</a></li>
                 </ul>
             </div>
         </div>

@@ -48,29 +48,32 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
  
   <!-- ko foreach: {data: rows, as: 'r'} -->
   <div class="row-fluid show-grid">
-    <div class="span1">
-      <div data-bind="text: r.row"></div>
-      <a data-bind="click: dropRow" href="javascript:void(0);"><i class="icon-trash" title="Drop row"></i></a>
-    </div>
-    <div class="span10 offset1">
+    <!-- <div class="span1"> </div> -->
+    <div class="span10 hrow">
+      <div>
+        <h5>
+          <div class="rowhead" data-bind="text: r.row"></div>
+          <a data-bind="click: dropRow" href="javascript:void(0);"><i class="icon-trash pull-right" title="Drop row"></i></a>
+        </h5>
+      </div>
       <div class="accordion" data-bind="attr: {id: r.row}">
         <!-- ko foreach: {data: columnFamilies, as: 'cf'} -->
         <div class="accordion-group">
           <div class="accordion-heading">
-            <a class="accordion-toggle collapsed" data-toggle="collapse"
-               data-bind="text: cf.cfName,attr: {href: '#' +
-               $parent.row() + cf.cfName(), 'data-parent': '#' + $parent.row()}">
+          <h5 class="accordion-toggle collapsed" data-toggle="collapse" data-bind="attr: {href: '#' + $parent.row() + cf.cfName(), 'data-parent': '#' + $parent.row()}">
+            <a class="label label-info" data-bind="text: cf.cfName">
             </a>
+          </h5>
           </div>
           <div data-bind="attr: {id: $parent.row() + cf.cfName() }" class="accordion-body collapse"
                style="height: 0px;">
             
                 <!-- ko foreach: {data: cf.columns, as: 'col'} -->
-                <div class="span2">
+                <div class="span2 hcell shadow ">
                   <div class="modal-header">
-                    <h3 data-bind="text: col.columnName"></h3>
+                    <h3 class="label label-info shadow" data-bind="text: col.columnName"></h3>
                   </div>
-                  <div class="modal-body">
+                  <div>
                     <p data-bind="text: col.value, attr: {id: 'p_' + col.rowID()}" ></p>
                     <textarea data-bind="value: col.editValue,
                                          attr:{id: col.rowID()}"
@@ -79,17 +82,19 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
                         <p><i class=" icon-time"></i><span data-bind="text: version.timestamp"></span></p>
                         <p data-bind="text: version.prevValue"></p>
                     </div>
-                      
-                    <a href="javascript:void(0);" data-bind="click: editCell">
-                      <i class="icon-pencil" title="Edit cell"></i>
-                      <i class="icon-ok" title="Save cell" style="display:none;"></i>
-                    </a>
-                    <a href="javascript:void(0)"
-                       data-bind="click: getVersions">
-                      
-                      <i class="icon-eye-open" title="Browse previous versions"></i>
-                    </a>
-                    <a href="javascript:void(0)" data-bind="click:  dropCell"><i class="icon-trash" title="Remove cell"></i></a>
+                    <div class="cell-control">
+                      <a href="javascript:void(0);" data-bind="click: editCell">
+                        <i class="icon-pencil" title="Edit cell"></i>
+                        <i class="icon-ok" title="Save cell" style="display:none;"></i>
+                      </a>
+                      <a href="javascript:void(0)" data-bind="click: getVersions">
+                        <i class="icon-eye-open" title="Browse previous versions"></i>
+                      </a>
+                      <a href="javascript:void(0)" data-bind="click:  dropCell">
+                        <i class="icon-trash" title="Remove cell"></i>
+                      </a>
+                    </div>
+
                   </div>
                 </div>
                 <!-- /ko -->
@@ -101,6 +106,10 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
   </div>
   <!-- /ko -->
 
+<ul class="pager">
+  <li><a href="javascript:void(0);" data-bind="visible: prevPageRow,click: getPrevData">Previous</a></li>
+  <li><a href="javascript:void(0);" data-bind="visible: nextPageRow,click: getNextData">Next</a></li>
+</ul>
 
 </div>
 
@@ -149,7 +158,7 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
 <script src="/hbase/static/js/json2.js" type="text/javascript" charset="utf-8"></script>
 <script src="/hbase/static/js/browse_data.js" type="text/javascript"
         charset="utf-8"></script>
-
+<script src="/hbase/static/js/common.js" type="text/javascript"></script>
 <link rel="stylesheet" href="/hbase/static/css/hbase.css" type="text/css" media="screen" />
 
 ${ commonfooter(messages) | n,unicode }

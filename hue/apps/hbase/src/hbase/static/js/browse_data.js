@@ -18,39 +18,53 @@ function Column(data){
     this.fqcn = this.parent().cfName() + ':' + this.columnName();
     
     this.editMode = false;
+    this.editModeValue = '';
 
     this.rowID = function(){
         return self.rowKey + '_' + this.parent().cfName() + '_' + this.columnName();
     }
 
     this.editCell = function (data, event){
+        var valbox = $('#p_'+self.rowID());
+
+        var showMode =  function (){
+          $(event.target).prev().show();
+          $(event.target).hide();
+          
+          valbox.next().css("height", '38').hide();
+          valbox.show();
+          self.editMode = false;
+          self.value(self.editValue());
+        }
+        
         if (!self.editMode){
             $(event.target).next().show();
             $(event.target).hide();
             
             console.log(self.rowID());
-            
-            $('#p_'+self.rowID()).next().show()
-            $('#p_'+self.rowID()).hide();
+            this.editModeValue = self.editValue();
+
+            valbox.next().show();
+            scrollHeight = valbox.next()[0].scrollHeight;
+            if (scrollHeight)
+              valbox.next().css("height", scrollHeight + 5);
+
+            valbox.hide();
             self.editMode = true;
-        }
-        else {
-            $.ajax({
-                url: '/hbase/table/data/edit/' + self.tableName,
-                dataType: "json",
-                type: "POST",
-                data: "row=" + self.rowKey + "&col=" + self.fqcn + "&val=" + self.editValue(),
-                success: function(result){
-                    $(event.target).prev().show();
-                    $(event.target).hide();
-                    
-                    $('#p_'+self.rowID()).next().hide()
-                    $('#p_'+self.rowID()).show();
-                    self.editMode = false;
-                    self.value(self.editValue());
-                }
-            });
-            
+        } else {
+            if (this.editModeValue != self.editValue()){
+              $.ajax({
+                  url: '/hbase/table/data/edit/' + self.tableName,
+                  dataType: "json",
+                  type: "POST",
+                  data: "row=" + self.rowKey + "&col=" + self.fqcn + "&val=" + self.editValue(),
+                  success: function(result){
+                      showMode();
+                  }
+              });
+            } else {
+              showMode();  
+            }
         }
     } 
 
@@ -63,9 +77,19 @@ function Column(data){
             type: "POST",
             dataType: "json",
             success: function(result){
-                if (result["status"] == "done")
-                    window.location.reload(true);
-                // TODO:
+                //
+                if (self.parent().columns().length == 1){
+                    if (self.parent().parent().columnFamilies().length == 1) {                        
+                        self.parent().parent().removeMyself();
+                    }
+                    else{
+                        self.parent().parent().columnFamilies(self.parent().parent().columnFamilies.remove(self.parent()));
+                    }
+                }
+                else{
+                    self.parent().columns(self.parent().columns.remove(self));
+                }
+
                 // self.parent().columns.remove(self);
                 // if self.parent().columns().lenght == 0 - If there are no columns in CF
                 // && self.parent().parent().columnFamilies().lenght == 1 And only one CF left
@@ -111,6 +135,11 @@ function Row(data)
     this.columnFamilies = ko.observableArray(data.columFamilies);
     this.tableName = $("#table_name").val();
     
+    this.parent = ko.observable(data.parent);
+
+    this.removeMyself = function(){
+        self.parent().rows.remove(self);
+    }
     
     this.dropRow = function(){
         if (!confirm("Are you sure you want to delete row?")) return; //TODO Change confirm to modal
@@ -119,12 +148,7 @@ function Row(data)
             data: "row=" + self.row(),
             type: "POST",
             dataType: "json",
-            success: function(result){
-                if (result["status"] == "done")
-                    window.location.reload(true);
-                // TODO: 
-                //delete self from Rows array;
-            }
+            success: self.removeMyself,
         });
     }
 
@@ -138,7 +162,7 @@ function dataViewModel(){
     self.tableName = $("#table_name").val();
     self.rows = ko.observableArray([]);
     self.column_families = ko.observableArray([]);
-    self.nextPageRow = ko.observable(); //TODO: make pagination
+    self.nextPageRow = ko.observable(); 
     self.prevPageRow = ko.observable();
 
     self.cfValue = ko.observable().extend({ required: true });
@@ -178,9 +202,44 @@ function dataViewModel(){
         };
         
         $.post("/hbase/table/data/add/" + self.tableName, {"data": ko.toJSON(data)}, function(result){
-            if(result["status"] == "done")
-                window.location.reload(true); 
-            // TODO: 
+            var row =  ko.utils.arrayFilter(self.rows(), function(r){ return r.row() == self.rowKeyValue();});
+            console.log(row);
+            if (row.length) { //If there is row
+                row = row[0];
+                var cf = ko.utils.arrayFilter(row.columnFamilies(), function(cf) {return cf.cfName() == self.cfValue();});
+                console.log(cf);
+                if (!cf.length) //There is no Column Family
+                {
+                    console.log("DDD");
+                    var newColumFamily = new ColumnFamily({parent: row, cfName: self.cfValue()});
+                    var col = new Column({columnName: self.columnValue(), value: self.valueVal(), parent: newColumFamily});
+                    newColumFamily.columns.push(col);
+                    row.columnFamilies.push(newColumFamily);
+                }
+                else{ //There is column family. Let's search for column
+                    cf = cf[0];
+                    var col = ko.utils.arrayFilter(cf.columns(), function(c) {return c.columnName() == self.columnValue();});
+                    if (!col.length) // There is no column. 
+                    {
+                        col = new Column({parent: cf, value: self.valueVal(), columnName: self.columnValue()});
+                        cf.columns.push(col);
+                    }
+                    else // Update value
+                    {
+                        col = col[0];
+                        col.value(self.valueVal());
+                    }
+                }
+            }
+            else{ //There is no row. Simply add it
+                var newRow = new Row({parent: self, row: self.rowKeyValue()});
+                var cf = new ColumnFamily({parent: newRow, cfName: self.cfValue()});
+                var col = new Column({parent: cf, columnName: self.columnValue(), value: self.valueVal()});
+                cf.columns.push(col);
+                newRow.columnFamilies([cf]);
+                self.rows.push(newRow);
+            }
+            $("#add_row").modal('hide');
             //if self.rows.filter(self.rowKeyValue()) -If there is row with such key
             // Find this row-> search for column.
             //If column exists -> Update value for column
@@ -196,7 +255,7 @@ function dataViewModel(){
         $(allData["cfs"]).map(function(i, cf){self.column_families.push(cf)});
         var data = allData["data"];
         $(data).map(function(i, el){
-            var row = new Row({row: el[0]});
+            var row = new Row({row: el[0], parent: self});            
             for (var cf in el[1]){
                 var columnFamily = new ColumnFamily({cfName: cf, parent: row});
                 $(el[1][cf]).map(function(i, data){
@@ -208,6 +267,15 @@ function dataViewModel(){
             }
             self.rows.push(row);
         });
+        if (data.length == 21) {
+            self.nextPageRow(self.rows.pop());
+        }
+        else{
+            self.nextPageRow(null);
+        }
+        
+        if (self.rows()[0] == self.prevPageRow()) // If it's first page
+            self.prevPageRow(false);
     }
 
     $.getJSON("/hbase/table/data/json/" + self.tableName, self.addData);  
@@ -215,6 +283,17 @@ function dataViewModel(){
     self.filterData = function(data, event) {
         $.getJSON("/hbase/table/data/json/" + self.tableName, "query="+ self.queryFilter(), self.addData);  
     }    
+
+    self.getNextData = function(){
+        self.prevPageRow(self.rows()[0]);
+        $.getJSON("/hbase/table/data/json/" + self.tableName, "row_start=" + self.nextPageRow().row(), self.addData);  
+    }
+
+    self.getPrevData = function()
+    {
+        
+        $.getJSON("/hbase/table/data/json/" + self.tableName, "row_start=" + self.prevPageRow().row(), self.addData);  
+    }
 
 }
     
