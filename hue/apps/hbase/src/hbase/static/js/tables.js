@@ -125,6 +125,7 @@ $(document).ready(function (){
                         type: "DELETE", 
                         success: function(result){
                             table.selected(false);
+                            self.tables.remove(table);
                         }});
             });
             $('#modal-from-dom').modal('hide');

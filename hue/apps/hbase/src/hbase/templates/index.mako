@@ -23,9 +23,9 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
 <%namespace name="actionbar" file="actionbar.mako" />
 
 <div class="container-fluid" id="tables">
-          <%actionbar:render>
-            <%def name="actions()">
-                <a href="/hbase/table/new" class="btn toolbarBtn"> <i class="icon-plus-sign"></i>
+  <%actionbar:render>
+  <%def name="actions()">
+  <a href="/hbase/table/new" class="btn toolbarBtn"> <i class="icon-plus-sign"></i>
                 ${_('Create new table')}</a>
 
                 <button id="browseBtn" class="btn toolbarBtn"

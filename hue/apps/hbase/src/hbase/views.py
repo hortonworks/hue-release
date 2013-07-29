@@ -77,7 +77,11 @@ def get_data_json(request, table):
   else:
     data = table.scan(row_start=request.REQUEST.get("row_start"), row_stop=request.REQUEST.get("row_stop"))
   rows = []
-  for i in xrange(21):
+  try:
+    rows_per_page = int(request.REQUEST.get("rows"))
+  except Exception:
+    rows_per_page = 11
+  for i in xrange(rows_per_page):
     try:
       r = data.next()
       row = [r[0]]

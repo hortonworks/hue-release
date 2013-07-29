@@ -28,7 +28,7 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
   <div class="well" style="padding-top: 10px; padding-bottom: 0">
     <div class="pull-right" style="margin:0"></div>
     <div style="margin: 0px 0px 10px 0px">
-      <form data-bind="submit: filterData"><input name="filter" type="text" data-bind="value: queryFilter"
+      <form data-bind="submit: getJSONData"><input name="filter" type="text" data-bind="value: queryFilter"
              class="input-xlarge search-query"
              placeholder="row_key1,row_key2 ...">&nbsp;&nbsp;&nbsp;&nbsp;
 
@@ -40,6 +40,7 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
   </div>
  
 </div>
+
 
 
 <div class="span11">
@@ -111,7 +112,21 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
   <li><a href="javascript:void(0);" data-bind="visible: nextPageRow,click: getNextData">Next</a></li>
 </ul>
 
+
+<label for="rows_per_page">
+Rows per page:
+</label>
+
+<select id="rows_per_page" data-bind="value: rowsPerPage">
+  <option value="10">10</option>
+  <option value="20">20</option>
+  <option value="50">50</option>
+  <option value="100">100</option>
+</select>
+
+
 </div>
+
 
 <div class="modal hide fade" id="add_row"> 
  <form data-bind="submit: addRow">

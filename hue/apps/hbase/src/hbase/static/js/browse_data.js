@@ -164,6 +164,11 @@ function dataViewModel(){
     self.column_families = ko.observableArray([]);
     self.nextPageRow = ko.observable(); 
     self.prevPageRow = ko.observable();
+    
+    
+    self.rowsPerPage = ko.observable();
+    self.rowsPerPage.subscribe(function(newVal){self.getJSONData()});
+    self.veryFirstRow = null;
 
     self.cfValue = ko.observable().extend({ required: true });
     self.rowKeyValue = ko.observable().extend({ required: true });
@@ -267,32 +272,46 @@ function dataViewModel(){
             }
             self.rows.push(row);
         });
-        if (data.length == 21) {
+        
+
+        if (data.length == (parseInt(self.rowsPerPage()) + 1)) {
             self.nextPageRow(self.rows.pop());
         }
         else{
             self.nextPageRow(null);
         }
         
-        if (self.rows()[0] == self.prevPageRow()) // If it's first page
+
+        if ((self.veryFirstRow != null) && (self.rows()[0].row() == self.veryFirstRow.row())) // If it's first page
             self.prevPageRow(false);
+        
+        if(self.veryFirstRow === null)
+            self.veryFirstRow = self.rows()[0];
+
     }
 
-    $.getJSON("/hbase/table/data/json/" + self.tableName, self.addData);  
+    this.getJSONData = function(nextRow){
+        params = {};
+        params.rows = parseInt(self.rowsPerPage())+1;
+        if (self.queryFilter())
+            params.query = self.queryFilter();
+        if (nextRow && self.nextPageRow())
+            params.row_start = self.nextPageRow().row()
 
-    self.filterData = function(data, event) {
-        $.getJSON("/hbase/table/data/json/" + self.tableName, "query="+ self.queryFilter(), self.addData);  
-    }    
+        $.getJSON("/hbase/table/data/json/" + self.tableName, $.param(params), self.addData);  
+    };
+
+    this.getJSONData();
 
     self.getNextData = function(){
         self.prevPageRow(self.rows()[0]);
-        $.getJSON("/hbase/table/data/json/" + self.tableName, "row_start=" + self.nextPageRow().row(), self.addData);  
+        self.getJSONData(true);
     }
 
     self.getPrevData = function()
     {
-        
-        $.getJSON("/hbase/table/data/json/" + self.tableName, "row_start=" + self.prevPageRow().row(), self.addData);  
+        self.nextPageRow(self.prevPageRow());
+        self.getJSONData(true);
     }
 
 }
