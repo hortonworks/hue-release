@@ -53,7 +53,7 @@ class Templeton(object):
             except AttributeError:
                 raise error
 
-    def delete(self, url, data=None):
+    def delete(self, url, params=None, data=None):
         """
         Make DELETE query to templeton url.
         """
@@ -61,7 +61,11 @@ class Templeton(object):
             data['user.name'] = self.user
         else:
             data = {"user.name": self.user}
-        response = self.client.execute("DELETE", url, params={"user.name": self.user}, data=data)
+        if params is not None:
+            params['user.name'] = self.user
+        else:
+            params = {"user.name": self.user}
+        response = self.client.execute("DELETE", url, params=params, data=data)
         return json.loads(response.read())
 
     def pig_query(self, execute=None, pig_file=None, statusdir=None, callback=None, arg=None):

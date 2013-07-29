@@ -66,6 +66,19 @@ def query_form():
         saveform=SaveForm)
 
 
+class DbForm(forms.Form):
+    database = forms.ChoiceField(required=False,
+                                 label='',
+                                 choices=(('default', 'default'),),
+                                 initial=0,
+                                 widget=forms.widgets.Select(attrs={'class': 'span6'}))
+
+    def __init__(self, *args, **kwargs):
+        databases = kwargs.pop('databases')
+        super(DbForm, self).__init__(*args, **kwargs)
+        self.fields['database'].choices = ((db, db) for db in databases)
+
+
 class SaveForm(forms.Form):
     """Used for saving query design and report design."""
     name = forms.CharField(required=False,
@@ -340,3 +353,32 @@ class LoadDataForm(forms.Form):
                                          label="%s (partition key with type %s)" % (column['name'], column['type']))
             self.fields[name] = char_field
             self.partition_columns[name] = column['name']
+
+
+def _clean_databasename(name):
+    try:
+        pass
+        # if name in db.get_databases():
+        #     raise forms.ValidationError(_('Database "%(name)s" already exists') % {'name': name})
+    except Exception:
+        return name
+
+
+class CreateDatabaseForm(DependencyAwareForm):
+    """
+    Form used in the create database page
+    """
+    dependencies = []
+
+    # Basic Data
+    db_name = common.HiveIdentifierField(label="Database Name", required=True)
+    comment = forms.CharField(label="Description", required=False)
+
+    # External if not true
+    use_default_location = forms.BooleanField(required=False, initial=True, label="Use default location")
+    external_location = forms.CharField(required=False, help_text="Path to HDFS directory or file of database data.")
+
+    dependencies += [("use_default_location", False, "external_location")]
+
+    def clean_name(self):
+        return _clean_databasename(self.cleaned_data['name'])

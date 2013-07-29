@@ -20,31 +20,21 @@
 %>
 <%namespace name="actionbar" file="actionbar.mako" />
 <%namespace name="layout" file="layout.mako" />
-${ commonheader(_('HCatalog: Table List'), app_name, user, '100px') | n,unicode }
-${layout.menubar(section='tables')}
+<%
+    default_header_msg = _('HCatalog: Database List')
+%>
+${ commonheader(default_header_msg, app_name, user, '100px') | n,unicode }
+${layout.menubar(section='databases')}
 
 <div class="container-fluid">
-    <h1 id="main-spin">${_('HCatalog: Table List')}</h1>
-    <div id="getting-tables-spin" class="hidden-initially" data-bind="visible: gettingTables"><h1>${_('Loading the table list...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-    <div id="dropping-tables-spin" class="hidden-initially" data-bind="visible: droppingTables"><h1>${_('Dropping the table(s)...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+    <div><h1 id="header-msg">${default_header_msg}</h1></div>
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
                 <ul class="nav nav-list">
-                    <span>
-                    <li class="nav-header">${_('database')}</li>
-                    <li>
-                        <form action="${ url(app_name + ':show_tables') }" id="db_form" method="POST"> ${ csrf_token_field | n }
-                            ${ db_form | n,unicode }
-                        </form>
-                    </li>
-                    </span>
                     <li class="nav-header">${_('Actions')}</li>
                     <li>
-                        <a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file')}</a>
-                    </li>
-                    <li>
-                        <a href="${ url(app_name + ':create_table', database=database)}">${_('Create a new table manually')}</a>
+                        <a href="${ url(app_name + ':create_database')}">${_('Create a new database')}</a>
                     </li>
                 </ul>
             </div>
@@ -58,7 +48,7 @@ ${layout.menubar(section='tables')}
             <div>
                 <%actionbar:render>
                     <%def name="actions()">
-                            <button id="dropBtn" class="btn toolbarBtn" title="${_('Delete the selected tables')}"
+                            <button id="dropBtn" class="btn toolbarBtn" title="${_('Delete the selected databases')}"
                                     disabled="disabled"><i class="icon-trash"></i>  ${_('Drop')}</button>
                     </%def>
                 </%actionbar:render>
@@ -74,18 +64,20 @@ ${layout.menubar(section='tables')}
     }
 </style>
 
-<div id="dropTable" class="modal hide fade">
-    <form id="dropTableForm" method="POST"> ${ csrf_token_field | n } 
-    <div class="modal-header">
+<div id="dropDatabase" class="modal hide fade">
+    <form id="dropDatabaseForm" method="POST"> ${ csrf_token_field | n }
+        <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal">&times;</a>
-            <h3 id="dropTableMessage">${_('Confirm action')}</h3>
+
+            <h3 id="dropDatabaseMessage">${_('Confirm action')}</h3>
         </div>
         <div class="modal-footer">
-            <input type="button" class="btn" data-dismiss="modal" value="${_('Cancel')}" />
+            <input type="button" class="btn" data-dismiss="modal" value="${_('Cancel')}"/>
             <input type="submit" class="btn btn-danger" value="${_('Yes')}"/>
         </div>
         <div class="hide">
-            <select name="table_selection" data-bind="options: availableTables, selectedOptions: chosenTables" size="5" multiple="true"></select>
+            <select name="database_selection" data-bind="options: availableDatabases, selectedOptions: chosenDatabases"
+                    size="5" multiple="true"></select>
         </div>
     </form>
 </div>
@@ -95,31 +87,30 @@ ${layout.menubar(section='tables')}
 
 <script type="text/javascript" charset="utf-8">
 
-    function onBrowse() {
-        $(".btn.btn-primary.browse").attr("disabled", "disabled");
-        $(".btn.btn-primary.browse").addClass("disabled");
-    }
-
-    function gettingTables(flag) {
-        if(flag) {
-            $("#main-spin").hide();
-            $("#getting-tables-spin").show();
+    function setHeaderMsg(msg, hasSpinner) {
+        if (hasSpinner) {
+            $("#header-msg").html(msg + '&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/>')
         }
         else {
-            $("#getting-tables-spin").hide();
-            $("#main-spin").show();
-
+            $("#header-msg").html(msg);
         }
     }
 
-    function droppingTables(flag) {
-        if(flag) {
-            $("#main-spin").hide();
-            $("#dropping-tables-spin").show();
+    function gettingDatabases(flag) {
+        if (flag) {
+            setHeaderMsg("${_('Loading the database list...')}", true);
         }
         else {
-            $("#dropping-tables-spin").hide();
-            $("#main-spin").show();
+            setHeaderMsg("${default_header_msg}", false);
+        }
+    }
+
+    function droppingDatabases(flag) {
+        if (flag) {
+            setHeaderMsg("${_('Dropping the database(s)...')}", true);
+        }
+        else {
+            setHeaderMsg("${default_header_msg}", false);
         }
     }
 
@@ -134,23 +125,23 @@ ${layout.menubar(section='tables')}
     }
 
     $(document).ready(function () {
-        init();
+
         var viewModel = {
-            availableTables : ko.observableArray([]),
-            chosenTables : ko.observableArray([])
+            availableDatabases: ko.observableArray([]),
+            chosenDatabases: ko.observableArray([])
         };
         ko.applyBindings(viewModel);
-        var tables = undefined;
+        var databases = undefined;
 
         $(document).on("change paste keyup", "#filterInput", function () {
-            if(tables != undefined) {
-                tables.fnFilter($(this).val());
+            if (databases != undefined) {
+                databases.fnFilter($(this).val());
             }
         });
 
         $("#id_database").change(function () {
             $.cookie("hueHcatalogLastDatabase", $(this).val(), {expires:90, path:"/"});
-            getTables();
+            getDatabases($(this).val());
         });
 
         $(document).on("click", ".selectAll", function () {
@@ -165,7 +156,7 @@ ${layout.menubar(section='tables')}
             toggleActions();
         });
 
-        $(document).on("click", ".tableCheck", function () {
+        $(document).on("click", ".databaseCheck", function () {
             if ($(this).attr("checked")) {
                 $(this).removeClass("icon-ok").removeAttr("checked");
             }
@@ -176,10 +167,9 @@ ${layout.menubar(section='tables')}
             toggleActions();
         });
 
-        function init() {
-            $.cookie("hueHcatalogLastDatabase", "${database}", {expires:90, path:"/"});
-            getTables();
-        }
+        $(document).on("click", "td a", function () {
+            $.cookie("hueHcatalogLastDatabase", $(this).text(), {expires:90, path:"/"});
+        });
 
         function toggleActions() {
             $(".toolbarBtn").attr("disabled", "disabled");
@@ -190,20 +180,18 @@ ${layout.menubar(section='tables')}
         }
 
         $(document).on("click", "#dropBtn", function () {
-            viewModel.chosenTables.removeAll();
-            $(".hueCheckbox[checked='checked']").each(function( index ) {
-                viewModel.chosenTables.push($(this).data("drop-name"));
+            viewModel.chosenDatabases.removeAll();
+            $(".hueCheckbox[checked='checked']").each(function (index) {
+                viewModel.chosenDatabases.push($(this).data("drop-name"));
             });
-            $("#dropTable").modal("show");
+            $("#dropDatabase").modal("show");
         });
 
-        $('form#dropTableForm').submit(function (event) {
+        $('form#dropDatabaseForm').submit(function (event) {
             event.preventDefault();
             $(this).closest(".modal").modal("hide");
-            droppingTables(true);
-            var postData = $(this).serializeArray();
-            postData.push({ name: "database", value: $("#id_database").val() });
-            $.post("${url(app_name + ':drop_table')}", postData, function(data){
+            droppingDatabases(true);
+            $.post("${url(app_name + ':drop_database')}", $(this).serializeArray(),function (data) {
                 if ("error" in data) {
                     showMainError(decodeUnicodeCharacters(data["error"]));
                 }
@@ -212,27 +200,28 @@ ${layout.menubar(section='tables')}
                     window.location.replace(data.on_success_url);
                     return;
                 }
-                droppingTables(false);
+                droppingDatabases(false);
             }, "json").error(function () {
-                        droppingTables(false);
+                        droppingDatabases(false);
                     });
 
         });
-        $.getJSON("${ url(app_name + ':drop_table')}",
-                { name: "database", value: $("#id_database").val() }, function (data) {
-                    $("#dropTableMessage").text(data.title);
-                });
 
-        function getTables() {
-            gettingTables(true);
-            $.post("${url(app_name + ':show_tables')}",function (data) {
+        $.getJSON("${ url(app_name + ':drop_database')}", function (data) {
+            $("#dropDatabaseMessage").text(data.title);
+        });
+
+        getDatabases();
+        function getDatabases() {
+            gettingDatabases(true);
+            $.post("${url(app_name + ':show_databases')}",function (data) {
                 if ("error" in data) {
                     showMainError(decodeUnicodeCharacters(data["error"]));
                 }
-                else if ("table_list_rendered" in data && "tables" in data) {
-                    $('#table-wrap').html(data["table_list_rendered"]);
-                    viewModel.availableTables = data["tables"];
-                    tables = $(".datatables").dataTable({
+                else if ("database_list_rendered" in data && "databases" in data) {
+                    $('#table-wrap').html(data["database_list_rendered"]);
+                    viewModel.availableDatabases = data["databases"];
+                    databases = $(".datatables").dataTable({
                         "sDom": "<'row'r>t<'row'<'span8'i><''p>>",
                         "bPaginate": false,
                         "bLengthChange": false,
@@ -240,19 +229,18 @@ ${layout.menubar(section='tables')}
                         "bFilter": true,
                         "aoColumns": [
                             {"bSortable": false, "sWidth": "1%" },
-                            null,
-                            {"bSortable": false, "sWidth": "130px" }
+                            null
                         ],
                         "oLanguage": {
-                            "sEmptyTable": "${_('No tables available')}",
+                            "sEmptyTable": "${_('No databases available')}",
                             "sZeroRecords": "${_('No matching records')}"
                         }
                     });
                     $("a[data-row-selector='true']").jHueRowSelector();
-                    gettingTables(false);
+                    gettingDatabases(false);
                 }
             }, "json").error(function () {
-                        gettingTables(false);
+                        gettingDatabases(false);
                     });
         }
 

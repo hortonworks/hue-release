@@ -20,24 +20,72 @@ from pig.templeton import Templeton
 from beeswax.conf import BEESWAX_HIVE_HOME_DIR
 
 from datetime import datetime
+import simplejson as json
 import logging
 
 LOG = logging.getLogger("analitics")
 
 
 class HCatClient(Templeton):
-
     def __init__(self, user="sandbox"):
         super(HCatClient, self).__init__(user)
 
-    def get_databases(self):
+    def get_databases(self, like="*"):
         """
         List the databases.
         """
+        data = {'like': like}
         try:
-            return self.get("ddl/database")['databases']
+            return self.get("ddl/database", data)['databases']
         except Exception as ex:
             error = """HCatClient: error on getting a database list: %s""" % unicode(ex)
+            LOG.exception(error)
+            raise Exception(error)
+
+    def create_database(self, database, group=None, permissions=None, location=None, comment=None, properties=None):
+        """
+        Create database.
+        """
+        LOG.info('HCatalog client, creating database \'%s\'' % (database))
+        resp = {}
+        data = {}
+        data['group'] = group
+        data['permissions'] = permissions
+        data['location'] = location
+        data['comment'] = comment
+        data['properties'] = properties
+        try:
+            resp = self.put('ddl/database/%s' % database, data=json.dumps(data))
+            if not ('database' in resp and resp['database'] == database):
+                LOG.warning('HCatClient error on create database: internal error')
+            if 'error' in resp:
+                LOG.error(resp['error'])
+                raise Exception('HCatClient error on create table: %s' % (resp['error']))
+        except Exception as ex:
+            LOG.exception(unicode(ex))
+            raise Exception('HCatClient error on create database: %s' % unicode(ex))
+
+    def drop_database(self, database, if_exists=False, option=None, group=None, permissions=None):
+        """
+        Drop a database.
+        """
+        params = {}
+        params['ifExists'] = if_exists
+        if option is not None:
+            params['option'] = option
+        if group is not None:
+            params['group'] = group
+        if permissions is not None:
+            params['permissions'] = permissions
+        try:
+            resp = self.delete("ddl/database/%s" % database, params=params)
+            if not ('database' in resp and resp['database'] == database):
+                LOG.warning('HCatClient error on deleting database: internal error')
+            if 'error' in resp:
+                LOG.error(resp['error'])
+                raise Exception('HCatClient error on deleting database: %s' % (resp['error']))
+        except Exception as ex:
+            error = """HCatClient: error on delete database: %s""" % unicode(ex)
             LOG.exception(error)
             raise Exception(error)
 
@@ -194,10 +242,11 @@ class HCatClient(Templeton):
                 raise Exception("""HCatalog client, do_hive_query_and_wait error: %s""" % unicode(ex))
             if 'exitValue' in result and result['exitValue']:
                 if 'status' in result and 'failureInfo' in result['status'] and result['status']['failureInfo'] != 'NA':
-                    raise Exception("""HCatalog client, do_hive_query_and_wait error: %s""" % unicode(result.status.failureInfo))
+                    raise Exception(
+                        """HCatalog client, do_hive_query_and_wait error: %s""" % unicode(result.status.failureInfo))
             if ('completed' in result and result['completed']) or \
                     ('status' in result and 'jobComplete' in result['status'] and result['status']['jobComplete']):
-                return  # success
+                return # success
             time.sleep(SLEEP_INTERVAL)
             curr = time.time()
         raise Exception("""HCatalog client, do_hive_query_and_wait error: %s""" % "Timeout occurred")
