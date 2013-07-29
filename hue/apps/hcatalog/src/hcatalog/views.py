@@ -49,14 +49,33 @@ LOG = logging.getLogger(__name__)
 
 
 def index(request):
-    return show_tables(request, database='default')
+    database = _get_last_database(request)
+    return show_tables(request, database=database)
 
-
-def show_tables(request, database='default'):
+def show_databases(request):
     if request.method == 'POST':
         resp = {}
         try:
-            tables = _get_table_list(request)
+            databases = HCatClient(request.user.username).get_databases(like="*")
+            databases_list_rendered = django_mako.render_to_string("database_list.mako", dict(
+                app_name=get_app_name(request),
+                databases=databases))
+        except Exception as ex:
+            resp['error'] = escapejs(ex.message)
+        else:
+            resp['database_list_rendered'] = databases_list_rendered
+            resp['databases'] = databases
+        return HttpResponse(json.dumps(resp))
+    return render("show_databases.mako", request, {})
+
+
+def show_tables(request, database=None):
+    if database is None:
+        database = _get_last_database(request, database)
+    if request.method == 'POST':
+        resp = {}
+        try:
+            tables = _get_table_list(request, database)
             table_list_rendered = django_mako.render_to_string("table_list.mako", dict(
                 app_name=get_app_name(request),
                 database=database,
@@ -68,7 +87,37 @@ def show_tables(request, database='default'):
             resp['table_list_rendered'] = table_list_rendered
             resp['tables'] = tables
         return HttpResponse(json.dumps(resp))
-    return render("show_tables.mako", request, dict(database=database, ))
+
+    db = dbms.get(request.user)
+    databases = db.get_databases()
+    db_form = hcatalog.forms.DbForm(initial={'database': database}, databases=databases)
+    return render("show_tables.mako", request, {
+        'database': database,
+        'db_form': db_form,
+    })
+
+
+def create_database(request):
+    if request.method == "POST":
+        data = request.POST.copy()
+        data.setdefault("use_default_location", False)
+        form = hcatalog.forms.CreateDatabaseForm(data)
+
+        if form.is_valid():
+            database = form.cleaned_data['db_name']
+            comment = form.cleaned_data['comment']
+            location = None
+            if not form.cleaned_data['use_default_location']:
+                location = form.cleaned_data['external_location']
+            hcat_cli = HCatClient(request.user.username)
+            hcat_cli.create_database(database=database, comment=comment, location=location)
+            return render("show_databases.mako", request, {})
+    else:
+        form = hcatalog.forms.CreateDatabaseForm()
+
+    return render("create_database.mako", request, {
+        'database_form': form,
+    })
 
 
 def describe_table_json(request, database, table):
@@ -79,12 +128,12 @@ def describe_table_json(request, database, table):
 
 def describe_table(request, database, table):
     try:
-        table_desc_extended = HCatClient(request.user.username).describe_table_extended(table)
+        table_desc_extended = HCatClient(request.user.username).describe_table_extended(table, db=database)
         is_table_partitioned = table_desc_extended['partitioned']
         partitions = []
         partitionColumns = []
         if is_table_partitioned:
-            partitions = HCatClient(request.user.username).get_partitions(table)
+            partitions = HCatClient(request.user.username).get_partitions(table, db=database)
             partitionColumns = table_desc_extended['partitionColumns']
         table_obj = {'tableName': table, 'columns': table_desc_extended['columns'], 'partitionKeys': partitionColumns,
                      'partitions': partitions}
@@ -103,11 +152,29 @@ def describe_table(request, database, table):
     ))
 
 
-def drop_table(request, database):
+def drop_database(request):
+    if request.method == 'GET':
+        title = _("Do you really want to delete the database(s)?")
+        return render('confirm.html', request, dict(url=request.path, title=title))
+    elif request.method == 'POST':
+        resp = {}
+        try:
+            for database in request.POST.getlist('database_selection'):
+                HCatClient(request.user.username).drop_database(database, if_exists=True, option="cascade")
+        except Exception as ex:
+            resp['error'] = escapejs(ex.message)
+        else:
+            on_success_url = urlresolvers.reverse(get_app_name(request) + ':show_databases')
+            resp['on_success_url'] = on_success_url
+        return HttpResponse(json.dumps(resp))
+
+
+def drop_table(request, database=None):
     if request.method == 'GET':
         title = _("Do you really want to delete the table(s)?")
         return render('confirm.html', request, dict(url=request.path, title=title))
     elif request.method == 'POST':
+        database = _get_last_database(request, database)
         resp = {}
         try:
             tables = request.POST.getlist('table_selection')
@@ -126,7 +193,7 @@ def load_table(request, database, table):
     Loads data into a table.
     """
     try:
-        table_desc_extended = HCatClient(request.user.username).describe_table_extended(table)
+        table_desc_extended = HCatClient(request.user.username).describe_table_extended(table, db=database)
         is_table_partitioned = table_desc_extended['partitioned']
         partitionColumns = []
         if is_table_partitioned:
@@ -146,7 +213,7 @@ def load_table(request, database, table):
             if form.cleaned_data['overwrite']:
                 hql += " OVERWRITE"
             hql += " INTO TABLE "
-            hql += "`%s`" % (table,)
+            hql += "`%s.%s`" % (database, table)
             if len(form.partition_columns) > 0:
                 hql += " PARTITION ("
                 vals = []
@@ -180,7 +247,7 @@ def browse_partition(request, database, table):
     if request.method == 'POST':
         try:
             partition_name = request.POST.get('partition_name')
-            location = HCatClient(request.user.username).get_partition_location(table, partition_name)
+            location = HCatClient(request.user.username).get_partition_location(table, partition_name, db=database)
             url = location_to_url(request, location)
             result = {'url': url}
             return HttpResponse(json.dumps(result))
@@ -195,7 +262,7 @@ def drop_partition(request, database, table):
     elif request.method == 'POST':
         try:
             partition_name = request.POST.get('partition_name')
-            HCatClient(request.user.username).drop_partition(table, partition_name)
+            HCatClient(request.user.username).drop_partition(table, partition_name, db=database)
         except Exception as ex:
             raise PopupException('Drop partition', title="Drop partition", detail=str(ex))
         on_success_url = urlresolvers.reverse(get_app_name(request) + ':describe_table',
@@ -204,22 +271,25 @@ def drop_partition(request, database, table):
         return HttpResponse(json.dumps(result))
 
 
-def pig_view(request, database='default', table=None):
+def pig_view(request, database=None, table=None):
+    database = _get_last_database(request, database)
     try:
         from pig.views import index as pig_view_for_hcat
     except:
         raise Http404
     request.session['autosave'] = {
-        "pig_script": 'A = LOAD \'{t}\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;'.format(t=table),
-        'title': '{t}'.format(t=table)
+        "pig_script": 'A = LOAD \'%s.%s\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;' % (
+        database if database else "default", table),
+        'title': '%s' % table
     }
     return pig_view_for_hcat(request)
 
 
-def hive_view(request, database='default', table=None):
+def hive_view(request, database=None, table=None):
+    database = _get_last_database(request, database)
     query_msg = ''
     if table is not None:
-        query_msg = 'SELECT * FROM `{t}`'.format(t=table)
+        query_msg = 'SELECT * FROM `%s.%s`;' % (database if database else "default", table)
     return confirm_query(request, query_msg)
 
 
@@ -310,11 +380,9 @@ def execute_query(request, design_id=None, query_msg=''):
 
 
 def read_table(request, database, table):
-    database = 'default'
+    database = _get_last_database(request, database)
     db = dbms.get(request.user)
-
     table = db.get_table(database, table)
-
     try:
         history = db.select_star_from(database, table)
         get = request.GET.copy()
@@ -362,7 +430,9 @@ def execute_directly(request, query, query_server=None, design=None, tablename=N
         authorized_get_design(request, design.id)
 
     db = dbms.get(request.user, query_server)
-    database = query.query.get('database', 'default')
+    database = query.query.get('database')
+    if database is None:
+        database = _get_last_database(request)
     db.use(database)
 
     history_obj = db.execute_query(query, design)
@@ -569,12 +639,24 @@ def get_tables(request):
     return HttpResponse(json.dumps(tables))
 
 
-def _get_table_list(request):
+def _get_table_list(request, database=None):
     """Returns a table list"""
-    database = request.POST.get('database', 'default')  # Assume always 'default'
+    database = _get_last_database(request, database)
     db = dbms.get(request.user)
     tables = db.get_tables(database=database)
     return tables
+
+
+def _get_last_database(request, database=None):
+    if database is not None:
+        LOG.debug("Getting database name from argument")
+    elif request and request.method == 'POST' and request.POST.get('database'):
+        database = request.POST.get('database')
+        LOG.debug("Getting database name from request")
+    elif request:
+        database = request.COOKIES.get('hueHcatalogLastDatabase', 'default')
+        LOG.debug("Getting database name from cookies")
+    return database
 
 
 def listdir(request, path):

@@ -32,7 +32,8 @@ def is_selected(section, matcher):
 <div class="subnav subnav-fixed">
 	<div class="container-fluid">
 		<ul class="nav nav-pills">
-			<li class="${is_selected(section, 'tables')}"><a href="${ url(app_name + ':show_tables', database='default')}">${_('Tables')}</a></li>
+            <li class="${is_selected(section, 'databases')}"><a href="${ url(app_name + ':show_databases')}">${_('Databases')}</a></li>
+		    <li class="${is_selected(section, 'tables')}"><a href="${ url(app_name + ':show_tables')}">${_('Tables')}</a></li>
 		</ul>
 	</div>
 </div>

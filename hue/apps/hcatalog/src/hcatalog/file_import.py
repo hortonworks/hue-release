@@ -29,7 +29,7 @@ from django.template.defaultfilters import escapejs
 
 import hcatalog.common
 import hcatalog.forms
-from hcatalog.views import _get_table_list
+from hcatalog.views import _get_table_list, _get_last_database
 from hcatalog.file_processing import GzipFileProcessor, TextFileProcessor, XlsFileProcessor, CommentsDetector
 from hcat_client import HCatClient
 
@@ -64,8 +64,10 @@ def get_xls_file_processor():
     return XLS_FILE_PROCESSOR
 
 
-def create_from_file(request, database='default'):
+def create_from_file(request, database=None):
     """Create a table by import from file"""
+    if database is None:
+        database = _get_last_database(request)
     form = MultiForm(
         table=hcatalog.forms.CreateTableFromFileForm,
     )
@@ -210,8 +212,8 @@ def create_from_file(request, database='default'):
                                                                       'partition_columns': []
                                                                   })
                     proposed_query = proposed_query.decode('utf-8')
-                    hcat = HCatClient(request.user.username)
-                    hcat.create_table(database, table_name, proposed_query)
+                    hcat_cli = HCatClient(request.user.username)
+                    hcat_cli.create_table(database, table_name, proposed_query)
 
                     do_import_data = parser_options.get('do_import_data', True)
                     LOG.debug('Data processing stage')
@@ -226,9 +228,9 @@ def create_from_file(request, database='default'):
                             msg = 'Internal error: Missing needed parameter to load data into table'
                             LOG.error(msg)
                             raise Exception(msg)
-                        LOG.info("Auto loading data from %s into table %s" % (path, table_name))
-                        hql = "LOAD DATA INPATH '%s' INTO TABLE `%s`" % (path, table_name)
-                        job_id = hcat.do_hive_query(execute=hql)
+                        LOG.info("Auto loading data from %s into table %s%s" % (path, database, table_name))
+                        hql = "LOAD DATA INPATH '%s' INTO TABLE `%s.%s`" % (path, database, table_name)
+                        job_id = hcat_cli.do_hive_query(execute=hql)
                         on_success_url = urlresolvers.reverse(get_app_name(request) + ':index')
                         return render("create_table_from_file.mako", request, dict(
                             action="#",
@@ -244,7 +246,12 @@ def create_from_file(request, database='default'):
                     if tmp_dir and request.fs.exists:
                         request.fs.rmtree(tmp_dir)
 
-                    return render("show_tables.mako", request, dict(database=database, tables=_get_table_list(request)))
+                    databases = hcat_cli.get_databases(like="*")
+                    db_form = hcatalog.forms.DbForm(initial={'database': database}, databases=databases)
+                    return render("show_tables.mako", request, {
+                        'database': database,
+                        'db_form': db_form,
+                    })
 
                 except Exception as ex:
                     return render("create_table_from_file.mako", request, dict(

@@ -432,13 +432,13 @@ ${layout.menubar(section='query')}
         }
 
         $("#id_query-database").change(function(){
-             $.cookie("hueBeeswaxLastDatabase", $(this).val(), {expires: 90});
+             $.cookie("hueHcatalogLastDatabase", $(this).val(), {expires:90, path:"/"});
         });
 
         ## If no particular query is loaded
         % if design is None or design.id is None:
-            if ($.cookie("hueBeeswaxLastDatabase") != null) {
-                $("#id_query-database").val($.cookie("hueBeeswaxLastDatabase"));
+            if ($.cookie("hueHcatalogLastDatabase") != null) {
+                $("#id_query-database").val($.cookie("hueHcatalogLastDatabase"));
             }
         % endif
 
