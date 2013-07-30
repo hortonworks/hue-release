@@ -24,7 +24,6 @@ from desktop.lib.django_forms import ChoiceOrOtherField, MultiForm, SubmitButton
 from hcatalog import common
 from hcatalog.common import UnicodeEncodingField
 from hcat_client import HCatClient
-
 import filebrowser.forms
 
 
@@ -225,6 +224,10 @@ class CreateTableForm(DependencyAwareForm):
         ("use_default_location", False, "external_location")
     ]
 
+    def __init__(self, *args, **kwargs):
+        DependencyAwareForm.__init__(self, *args, **kwargs)
+        self.table_list = []
+
     def clean_field_terminator(self):
         return _clean_terminator(self.cleaned_data.get('field_terminator'))
 
@@ -355,13 +358,10 @@ class LoadDataForm(forms.Form):
             self.partition_columns[name] = column['name']
 
 
-def _clean_databasename(name):
-    try:
-        pass
-        # if name in db.get_databases():
-        #     raise forms.ValidationError(_('Database "%(name)s" already exists') % {'name': name})
-    except Exception:
-        return name
+def _clean_databasename(database_list, db_name):
+    if db_name in database_list:
+        raise forms.ValidationError('Database "%(db_name)s" already exists' % {'db_name': db_name})
+    return db_name
 
 
 class CreateDatabaseForm(DependencyAwareForm):
@@ -380,5 +380,9 @@ class CreateDatabaseForm(DependencyAwareForm):
 
     dependencies += [("use_default_location", False, "external_location")]
 
-    def clean_name(self):
-        return _clean_databasename(self.cleaned_data['name'])
+    def __init__(self, *args, **kwargs):
+        DependencyAwareForm.__init__(self, *args, **kwargs)
+        self.database_list = []
+
+    def clean_db_name(self):
+        return _clean_databasename(self.database_list, self.cleaned_data['db_name'])

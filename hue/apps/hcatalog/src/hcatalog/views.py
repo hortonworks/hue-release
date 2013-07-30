@@ -98,26 +98,34 @@ def show_tables(request, database=None):
 
 
 def create_database(request):
+    error = None
     if request.method == "POST":
-        data = request.POST.copy()
-        data.setdefault("use_default_location", False)
-        form = hcatalog.forms.CreateDatabaseForm(data)
+        try:
+            data = request.POST.copy()
+            data.setdefault("use_default_location", False)
+            db = dbms.get(request.user)
+            databases = db.get_databases()
+            form = hcatalog.forms.CreateDatabaseForm(data)
+            form.database_list = databases
 
-        if form.is_valid():
-            database = form.cleaned_data['db_name']
-            comment = form.cleaned_data['comment']
-            location = None
-            if not form.cleaned_data['use_default_location']:
-                location = form.cleaned_data['external_location']
-            hcat_cli = HCatClient(request.user.username)
-            hcat_cli.create_database(database=database, comment=comment, location=location)
-            return render("show_databases.mako", request, {})
+            if form.is_valid():
+                database = form.cleaned_data['db_name']
+                comment = form.cleaned_data['comment']
+                location = None
+                if not form.cleaned_data['use_default_location']:
+                    location = form.cleaned_data['external_location']
+                hcat_cli = HCatClient(request.user.username)
+                hcat_cli.create_database(database=database, comment=comment, location=location)
+                return render("show_databases.mako", request, {})
+        except Exception as ex:
+            error = ex.message
     else:
         form = hcatalog.forms.CreateDatabaseForm()
 
-    return render("create_database.mako", request, {
-        'database_form': form,
-    })
+    return render("create_database.mako", request, dict(
+        database_form=form,
+        error=error
+    ))
 
 
 def describe_table_json(request, database, table):
