@@ -42,11 +42,13 @@ ${layout.menubar(section='databases')}
         </div>
 
         <div class="span9">
-            <div id="alert-error-main" class="alert alert-error hidden-initially">
+            % if error:
+            <div id="alert-error-main" class="alert alert-error">
                 <p><strong>The following error(s) occurred:</strong></p>
-                <pre id="error-message"/>
+                <pre id="error-message">${ error | n,unicode }</pre>
                 <small></small>
             </div>
+            % endif
 
             <ul id="step-nav" class="nav nav-pills">
                 <li class="active"><a href="#step/1" class="step">${_('Step 1: Name')}</a></li>
