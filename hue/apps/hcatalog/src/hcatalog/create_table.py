@@ -27,6 +27,7 @@ import hcatalog.common
 import hcatalog.forms
 from hcatalog.views import _get_table_list, _get_last_database
 from hcat_client import HCatClient
+from beeswax.server import dbms
 from desktop.context_processors import get_app_name
 
 import logging
@@ -42,6 +43,9 @@ def create_table(request, database=None):
         table=hcatalog.forms.CreateTableForm,
         columns=hcatalog.forms.ColumnTypeFormSet,
         partitions=hcatalog.forms.PartitionTypeFormSet)
+    db = dbms.get(request.user)
+    databases = db.get_databases()
+    db_form = hcatalog.forms.DbForm(initial={'database': database}, databases=databases)
     error = None
     if request.method == "POST":
         form.bind(request.POST)
@@ -77,6 +81,7 @@ def create_table(request, database=None):
         form.bind()
     return render("create_table_manually.mako", request, dict(
         database=database,
+        db_form=db_form,
         table_form=form.table,
         columns_form=form.columns,
         partitions_form=form.partitions,

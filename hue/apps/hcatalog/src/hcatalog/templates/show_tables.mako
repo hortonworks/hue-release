@@ -25,26 +25,32 @@ ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
     <h1 id="main-spin">${_('HCatalog: Table List')}</h1>
-    <div id="getting-tables-spin" class="hidden-initially" data-bind="visible: gettingTables"><h1>${_('Loading the table list...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-    <div id="dropping-tables-spin" class="hidden-initially" data-bind="visible: droppingTables"><h1>${_('Dropping the table(s)...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+
+    <div id="getting-tables-spin" class="hidden-initially" data-bind="visible: gettingTables">
+        <h1>${_('Loading the table list...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1>
+    </div>
+    <div id="dropping-tables-spin" class="hidden-initially" data-bind="visible: droppingTables">
+        <h1>${_('Dropping the table(s)...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <span>
-                    <li class="nav-header">${_('database')}</li>
-                    <li>
-                        <form action="${ url(app_name + ':show_tables') }" id="db_form" method="POST"> ${ csrf_token_field | n }
-                            ${ db_form | n,unicode }
-                        </form>
-                    </li>
+                        <li class="nav-header">${_('database')}</li>
+                        <li>
+                            <form action="${ url(app_name + ':show_tables') }" id="db_form"
+                                    method="POST"> ${ csrf_token_field | n }
+                                    ${ db_form | n,unicode }
+                            </form>
+                        </li>
                     </span>
+
                     <li class="nav-header">${_('Actions')}</li>
                     <li>
-                        <a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file')}</a>
+                        <a href="${ url(app_name + ':create_from_file')}">${_('Create a new table from a file')}</a>
                     </li>
                     <li>
-                        <a href="${ url(app_name + ':create_table', database=database)}">${_('Create a new table manually')}</a>
+                        <a href="${ url(app_name + ':create_table')}">${_('Create a new table manually')}</a>
                     </li>
                 </ul>
             </div>
@@ -75,17 +81,19 @@ ${layout.menubar(section='tables')}
 </style>
 
 <div id="dropTable" class="modal hide fade">
-    <form id="dropTableForm" method="POST"> ${ csrf_token_field | n } 
-    <div class="modal-header">
+    <form id="dropTableForm" method="POST"> ${ csrf_token_field | n }
+        <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal">&times;</a>
+
             <h3 id="dropTableMessage">${_('Confirm action')}</h3>
         </div>
         <div class="modal-footer">
-            <input type="button" class="btn" data-dismiss="modal" value="${_('Cancel')}" />
+            <input type="button" class="btn" data-dismiss="modal" value="${_('Cancel')}"/>
             <input type="submit" class="btn btn-danger" value="${_('Yes')}"/>
         </div>
         <div class="hide">
-            <select name="table_selection" data-bind="options: availableTables, selectedOptions: chosenTables" size="5" multiple="true"></select>
+            <select name="table_selection" data-bind="options: availableTables, selectedOptions: chosenTables" size="5"
+                    multiple="true"></select>
         </div>
     </form>
 </div>
@@ -101,7 +109,7 @@ ${layout.menubar(section='tables')}
     }
 
     function gettingTables(flag) {
-        if(flag) {
+        if (flag) {
             $("#main-spin").hide();
             $("#getting-tables-spin").show();
         }
@@ -113,7 +121,7 @@ ${layout.menubar(section='tables')}
     }
 
     function droppingTables(flag) {
-        if(flag) {
+        if (flag) {
             $("#main-spin").hide();
             $("#dropping-tables-spin").show();
         }
@@ -136,20 +144,20 @@ ${layout.menubar(section='tables')}
     $(document).ready(function () {
         init();
         var viewModel = {
-            availableTables : ko.observableArray([]),
-            chosenTables : ko.observableArray([])
+            availableTables: ko.observableArray([]),
+            chosenTables: ko.observableArray([])
         };
         ko.applyBindings(viewModel);
         var tables = undefined;
 
         $(document).on("change paste keyup", "#filterInput", function () {
-            if(tables != undefined) {
+            if (tables != undefined) {
                 tables.fnFilter($(this).val());
             }
         });
 
         $("#id_database").change(function () {
-            $.cookie("hueHcatalogLastDatabase", $(this).val(), {expires:90, path:"/"});
+            $.cookie("hueHcatalogLastDatabase", $(this).val(), {expires: 90, path: "/"});
             getTables();
         });
 
@@ -177,7 +185,7 @@ ${layout.menubar(section='tables')}
         });
 
         function init() {
-            $.cookie("hueHcatalogLastDatabase", "${database}", {expires:90, path:"/"});
+            $.cookie("hueHcatalogLastDatabase", "${database}", {expires: 90, path: "/"});
             getTables();
         }
 
@@ -191,7 +199,7 @@ ${layout.menubar(section='tables')}
 
         $(document).on("click", "#dropBtn", function () {
             viewModel.chosenTables.removeAll();
-            $(".hueCheckbox[checked='checked']").each(function( index ) {
+            $(".hueCheckbox[checked='checked']").each(function (index) {
                 viewModel.chosenTables.push($(this).data("drop-name"));
             });
             $("#dropTable").modal("show");
@@ -203,12 +211,11 @@ ${layout.menubar(section='tables')}
             droppingTables(true);
             var postData = $(this).serializeArray();
             postData.push({ name: "database", value: $("#id_database").val() });
-            $.post("${url(app_name + ':drop_table')}", postData, function(data){
+            $.post("${url(app_name + ':drop_table')}", postData,function (data) {
                 if ("error" in data) {
                     showMainError(decodeUnicodeCharacters(data["error"]));
                 }
-                else if ("on_success_url" in data && data.on_success_url)
-                {
+                else if ("on_success_url" in data && data.on_success_url) {
                     window.location.replace(data.on_success_url);
                     return;
                 }

@@ -42,11 +42,11 @@ urlpatterns = patterns('hcatalog.views',
 
 urlpatterns += patterns(
   'hcatalog.create_table',
-  url(r'^create/create_table/(?P<database>\w+)$', 'create_table', name='create_table'),
+  url(r'^create/create_table/(?P<database>\w+)?$', 'create_table', name='create_table'),
 )
 
 urlpatterns += patterns(
     'hcatalog.file_import',
-    url(r'^create/create_from_file/(?P<database>\w+)$', 'create_from_file', name='create_from_file'),
+    url(r'^create/create_from_file/(?P<database>\w+)?$', 'create_from_file', name='create_from_file'),
 
     )
