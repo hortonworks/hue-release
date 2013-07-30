@@ -234,7 +234,7 @@ ${layout.menubar(section='query')}
             <div class='chart_type_wrap x_axis'>
               <div class="nav-header">x Axis:</div>
               <select name="xAxis" id="xAxis">
-                % for col in columns[0:]:
+                % for col in columns:
                 <option value='"${col}"'>${col}</option>
                 % endfor
               </select>
@@ -259,10 +259,22 @@ ${layout.menubar(section='query')}
               <input type="radio" name="stacked" value="false"  /> <img src='/beeswax/static/css/images/charts/stack.png'> stack<br/>
               <input type="radio" name="stacked" value="true" checked="checked" /> <img src='/beeswax/static/css/images/charts/value.png'> value<br/>
             </div>
+            <div class='chart_type_wrap sort'>
+              <div class="nav-header">Sort:</div>
+              <select name="sort" id="graph_sort">
+                <option value=''></option>
+              </select>
+            </div>
+            <div class="chart_type_wrap direction">
+              <div class="nav-header">Direction:</div>
+              <input type="radio" name="direction" value="true" checked="checked" />  asc<br/>
+              <input type="radio" name="direction" value="false"  /> desc<br/>
+            </div>
 
             <input type="hidden" value='${download_urls["csv"]}' name="csv"/>
             <input type="hidden" value='${visualize_url}' name="visualize_csv"/>
           </div>
+          <div class='nav-header chart_toobig_message hide'>${_('Can\'t show visualizations for more than 1000 rows')}</div>
           <iframe id="preview" class="well"></iframe>
         </div>
         <!--/Visualization -->

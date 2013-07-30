@@ -9,4 +9,4 @@ document.write('<script type="text/javascript" src="/beeswax/static/js/d3.v3.min
 document.write('<script type="text/javascript" src="/beeswax/static/js/lib/d3.layout.min.js"></script>');
 document.write('<script type="text/javascript" src="/beeswax/static/js/lib/rickshaw.min.js"></script>');
 document.write('<script type="text/javascript" src="/beeswax/static/js/chart.js"></script>');
-document.write('<div class="chart_wrap"><div id="legend"></div><div id="y_axis"></div><div id="chart"></div><div id="slider"></div><div id="x_axis"></div></div>');
+document.write('<div class="chart_wrap"><div id="legend"></div><div id="y_axis"></div><div id="chart"></div><div id="slider"></div><div id="x_axis"></div></div><div class="pie_warp"></div>');

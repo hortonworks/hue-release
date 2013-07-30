@@ -71,3 +71,12 @@
 .rickshaw_graph .detail .dot.active {
 	display: block;
 }
+.rickshaw_graph .detail_swatch{
+	float: right;
+	width: 10px;
+	height: 10px;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+}
+.rickshaw_graph .yelement{
+	margin-right: 15px;
+}
