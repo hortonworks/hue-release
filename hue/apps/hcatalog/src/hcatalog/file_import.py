@@ -32,6 +32,7 @@ import hcatalog.forms
 from hcatalog.views import _get_table_list, _get_last_database
 from hcatalog.file_processing import GzipFileProcessor, TextFileProcessor, XlsFileProcessor, CommentsDetector
 from hcat_client import HCatClient
+from beeswax.server import dbms
 
 import logging
 import csv
@@ -71,6 +72,10 @@ def create_from_file(request, database=None):
     form = MultiForm(
         table=hcatalog.forms.CreateTableFromFileForm,
     )
+    db = dbms.get(request.user)
+    databases = db.get_databases()
+    db_form = hcatalog.forms.DbForm(initial={'database': database}, databases=databases)
+
     if request.method == "POST":
         form.bind(request.POST)
 
@@ -176,6 +181,7 @@ def create_from_file(request, database=None):
                     return render("create_table_from_file.mako", request, dict(
                         action="#",
                         database=database,
+                        db_form=db_form,
                         table_form=form.table,
                         error=err_msg)
                     )
@@ -196,6 +202,7 @@ def create_from_file(request, database=None):
                         return render("create_table_from_file.mako", request, dict(
                             action="#",
                             database=database,
+                            db_form=db_form,
                             table_form=form.table,
                             error=escapejs(tableValidErrMsg)
                         ))
@@ -237,6 +244,7 @@ def create_from_file(request, database=None):
                             job_id=job_id,
                             on_success_url=on_success_url,
                             database=database,
+                            db_form=db_form,
                             table_form=form.table,
                             error=None,
                         ))
@@ -257,6 +265,7 @@ def create_from_file(request, database=None):
                     return render("create_table_from_file.mako", request, dict(
                         action="#",
                         database=database,
+                        db_form=db_form,
                         table_form=form.table,
                         error=escapejs(ex.message)
                     ))
@@ -264,6 +273,7 @@ def create_from_file(request, database=None):
         return render("create_table_from_file.mako", request, dict(
             action="#",
             database=database,
+            db_form=db_form,
             table_form=form.table,
             error="User form is not valid. Please check all input parameters.",
         ))
@@ -272,6 +282,7 @@ def create_from_file(request, database=None):
     return render("create_table_from_file.mako", request, dict(
             action="#",
             database=database,
+            db_form=db_form,
             table_form=form.table,
             error=None,
     ))

@@ -25,234 +25,250 @@ ${ commonheader(_("HCatalog: Create a new table from a file"), app_name, user, '
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid" id="container-fluid-top">
-    <h1 id="main-spin">${_('Create a new table from a file')}</h1>
-    <div id="creating-table-spin" class="hidden-initially"><h1>${_('Creating the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-    <div id="importing-data-spin" class="hidden-initially"><h1>${_('Importing data into the table...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-    <div id="preview-data-spin" class="hidden-initially" data-bind="visible: previewData()"><h1>${_('Processing the file to preview...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
-    <div class="row-fluid">
-        <div class="span3">
-            <div class="well sidebar-nav">
-                <ul class="nav nav-list">
-                    <li class="nav-header">${_('Actions')}</li>
-                    <li>
-                        <a href="${ url(app_name + ':create_from_file', database=database)}">${_('Create a new table from a file')}</a>
+<h1 id="main-spin">${_('Create a new table from a file')}</h1>
+
+<div id="creating-table-spin" class="hidden-initially"><h1>${_('Creating the table...')}&nbsp;<img
+        src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+<div id="importing-data-spin" class="hidden-initially"><h1>${_('Importing data into the table...')}&nbsp;<img
+        src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+<div id="preview-data-spin" class="hidden-initially" data-bind="visible: previewData()">
+    <h1>${_('Processing the file to preview...')}&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1>
+</div>
+<div class="row-fluid">
+<div class="span3">
+    <div class="well sidebar-nav">
+        <ul class="nav nav-list">
+            <span>
+                <li class="nav-header">${_('database')}</li>
+                <li>
+                    <form action="${ url(app_name + ':show_tables') }" id="db_form"
+                            method="POST"> ${ csrf_token_field | n }
+                            ${ db_form | n,unicode }
+                    </form>
+                </li>
+            </span>
+
+            <li class="nav-header">${_('Actions')}</li>
+            <li>
+                <a href="${ url(app_name + ':create_from_file')}">${_('Create a new table from a file')}</a>
+            </li>
+            <li>
+                <a href="${ url(app_name + ':create_table')}">${_('Create a new table manually')}</a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="span9">
+<div id="alert-error-main" class="alert alert-error hidden-initially">
+    <p><strong>The following error(s) occurred:</strong></p>
+    <pre id="error-message"/>
+    <small></small>
+</div>
+<form action="#" method="POST" id="mainForm" class="form-horizontal"> ${ csrf_token_field | n }
+<div>
+    <fieldset>
+        <div class="alert alert-info">${_('Table options')}</div>
+        <div class="well">
+            <table>
+                </tr>
+                <td>
+                    <div class="control-group">
+                        ${comps.bootstrapLabel(table_form["name"])}
+                        <div class="controls">
+                            ${comps.field(table_form["name"], attrs=dict(placeholder=_('table_name'), ))}
+                            <span class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed.')}</span>
+                            <span class="help-inline error-inline error-inline-bis hide">${_('Table with this name already exists. Table names must be globally unique.')}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="control-group">
+                        ${comps.bootstrapLabel(table_form["comment"])}
+                        <div class="controls">
+                            ${comps.field(table_form["comment"], attrs=dict(placeholder=_('Optional'),))}
+                        </div>
+                    </div>
+                </td>
+                </tr>
+            </table>
+        </div>
+        <div class="alert alert-info">${_('File options')}</div>
+        <div class="well" id="div-file-selector">
+            <div class="control-group">
+                ${comps.bootstrapLabel(table_form["path"])}
+                <div class="controls">
+                    ${comps.field(table_form["path"],
+                    placeholder="/user/user_name/data_dir",
+                    klass="pathChooser",
+                    file_chooser=True,
+                    show_errors=False
+                    )}
+                    <span class="help-inline error-inline hide">${_('This field is required. Select path to the file on HDFS.')}</span>
+                </div>
+                <input id="file-type" name="file_type" value="text" style="display: none"/>
+            </div>
+        </div>
+        <div class="well" id="file-options-text">
+            <table>
+                </tr>
+                <td>
+                    <div class="control-group">
+                        ${comps.bootstrapLabel(table_form["encoding"])}
+                        <div class="controls">
+                            ${comps.field(table_form["encoding"], render_default=True)}
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="control-group">
+                        ${comps.bootstrapLabel(table_form["read_column_headers"])}
+                        <div class="controls">
+                            ${comps.field(table_form["read_column_headers"], render_default=True)}
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="control-group">
+                        ${comps.bootstrapLabel(table_form["import_data"])}
+                        <div class="controls">
+                            ${comps.field(table_form["import_data"], render_default=True)}
+                        </div>
+                    </div>
+                </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="control-group">
+                            ${comps.bootstrapLabel(table_form["delimiter"])}
+                            <div class="controls">
+                                ${comps.field(table_form["delimiter"], render_default=True)}
+                                <span class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed. Terminator must be exactly one character.')}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="control-group">
+                            ${comps.bootstrapLabel(table_form["autodetect_delimiter"])}
+                            <div class="controls">
+                                ${comps.field(table_form["autodetect_delimiter"], render_default=True)}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="control-group">
+                            ${comps.bootstrapLabel(table_form["ignore_whitespaces"])}
+                            <div class="controls">
+                                ${comps.field(table_form["ignore_whitespaces"], render_default=True)}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="control-group">
+                            ${comps.bootstrapLabel(table_form["replace_delimiter_with"])}
+                            <div class="controls">
+                                ${comps.field(table_form["replace_delimiter_with"], render_default=True)}
+                                <span class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed. Terminator must be exactly one character.')}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="control-group">
+                            ${comps.bootstrapLabel(table_form["java_style_comments"])}
+                            <div class="controls">
+                                ${comps.field(table_form["java_style_comments"], render_default=True)}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="control-group">
+                            ${comps.bootstrapLabel(table_form["ignore_tabs"])}
+                            <div class="controls">
+                                ${comps.field(table_form["ignore_tabs"], render_default=True)}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="control-group">
+                            ${comps.bootstrapLabel(table_form["single_line_comment"])}
+                            <div class="controls">
+                                ${comps.field(table_form["single_line_comment"], render_default=True)}
+                            </div>
+                        </div>
+                    </td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+        <div class="well" id="file-options-ss">
+            <table>
+                <tr>
+                    <td>
+                        <div class="control-group">
+                            ${comps.bootstrapLabel(table_form["xls_sheet"])}
+                            <div class="controls">
+                                ${comps.field(table_form["xls_sheet"], render_default=True)}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="control-group">
+                            ${comps.bootstrapLabel(table_form["xls_cell_range"])}
+                            <div class="controls">
+                                ${comps.field(table_form["xls_cell_range"], attrs=dict(placeholder=_('e.g. A1:D30'),))}
+                                <span class="help-inline error-inline hide">${_('Cell range must be in excel format (e.g. A1:D30). You could leave this parameter empty to match all cells.')}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="control-group">
+                            ${comps.bootstrapLabel(table_form["xls_read_column_headers"])}
+                            <div class="controls">
+                                ${comps.field(table_form["xls_read_column_headers"], render_default=True)}
+                            </div>
+                        </div>
+                    </td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="preview-div">
+            <div class="alert alert-info">${_('Table preview')}</div>
+            <div class="scrollable"></div>
+            <div class="pagination pull-right" id="preview-pagination">
+                <ul>
+                    <li id="submit-preview-begin" class="prev"><a title="${_('Beginning of List')}"
+                                                                  href="javascript:void(0)">&larr; ${_('Beginning of List')}</a>
                     </li>
-                    <li>
-                        <a href="${ url(app_name + ':create_table', database=database)}">${_('Create a new table manually')}</a>
+                    <li id="submit-preview-next"><a title="${_('Next page')}"
+                                                    href="javascript:void(0)">${_('Next Page')} &rarr;</a>
                     </li>
                 </ul>
             </div>
         </div>
+    </fieldset>
+</div>
+<input name="file_processor_type" data-bind="value: fileProcessorType" value="" style="display: none"/>
 
-        <div class="span9">
-            <div id="alert-error-main" class="alert alert-error hidden-initially">
-                <p><strong>The following error(s) occurred:</strong></p>
-                <pre id="error-message"/>
-                <small></small>
-            </div>
-            <form action="#" method="POST" id="mainForm" class="form-horizontal"> ${ csrf_token_field | n } 
-                <div>
-                    <fieldset>
-                        <div class="alert alert-info">${_('Table options')}</div>
-                        <div class="well">
-                            <table>
-                                </tr>
-                                <td>
-                                    <div class="control-group">
-                                        ${comps.bootstrapLabel(table_form["name"])}
-                                        <div class="controls">
-                                            ${comps.field(table_form["name"], attrs=dict(placeholder=_('table_name'), ))}
-                                            <span class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed.')}</span>
-                                            <span  class="help-inline error-inline error-inline-bis hide">${_('Table with this name already exists. Table names must be globally unique.')}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="control-group">
-                                        ${comps.bootstrapLabel(table_form["comment"])}
-                                        <div class="controls">
-                                            ${comps.field(table_form["comment"], attrs=dict(placeholder=_('Optional'),))}
-                                        </div>
-                                    </div>
-                                </td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="alert alert-info">${_('File options')}</div>
-                        <div class="well" id="div-file-selector">
-                            <div class="control-group">
-                                ${comps.bootstrapLabel(table_form["path"])}
-                                <div class="controls">
-                                    ${comps.field(table_form["path"],
-                                    placeholder="/user/user_name/data_dir",
-                                    klass="pathChooser",
-                                    file_chooser=True,
-                                    show_errors=False
-                                    )}
-                                    <span class="help-inline error-inline hide">${_('This field is required. Select path to the file on HDFS.')}</span>
-                                </div>
-                                <input id="file-type" name="file_type" value="text" style="display: none"/>
-                            </div>
-                        </div>
-                        <div class="well" id="file-options-text">
-                            <table>
-                                </tr>
-                                <td>
-                                    <div class="control-group">
-                                        ${comps.bootstrapLabel(table_form["encoding"])}
-                                        <div class="controls">
-                                            ${comps.field(table_form["encoding"], render_default=True)}
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="control-group">
-                                        ${comps.bootstrapLabel(table_form["read_column_headers"])}
-                                        <div class="controls">
-                                            ${comps.field(table_form["read_column_headers"], render_default=True)}
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="control-group">
-                                        ${comps.bootstrapLabel(table_form["import_data"])}
-                                        <div class="controls">
-                                            ${comps.field(table_form["import_data"], render_default=True)}
-                                        </div>
-                                    </div>
-                                </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["delimiter"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["delimiter"], render_default=True)}
-                                                <span class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed. Terminator must be exactly one character.')}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["autodetect_delimiter"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["autodetect_delimiter"], render_default=True)}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["ignore_whitespaces"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["ignore_whitespaces"], render_default=True)}
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["replace_delimiter_with"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["replace_delimiter_with"], render_default=True)}
-                                                <span class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed. Terminator must be exactly one character.')}</span>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["java_style_comments"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["java_style_comments"], render_default=True)}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["ignore_tabs"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["ignore_tabs"], render_default=True)}
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["single_line_comment"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["single_line_comment"], render_default=True)}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="well" id="file-options-ss">
-                            <table>
-                                <tr>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["xls_sheet"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["xls_sheet"], render_default=True)}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["xls_cell_range"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["xls_cell_range"], attrs=dict(placeholder=_('e.g. A1:D30'),))}
-                                                <span class="help-inline error-inline hide">${_('Cell range must be in excel format (e.g. A1:D30). You could leave this parameter empty to match all cells.')}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="control-group">
-                                            ${comps.bootstrapLabel(table_form["xls_read_column_headers"])}
-                                            <div class="controls">
-                                                ${comps.field(table_form["xls_read_column_headers"], render_default=True)}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </table>
-                        </div>
-
-                        <div id="preview-div">
-                            <div class="alert alert-info">${_('Table preview')}</div>
-                            <div class="scrollable"></div>
-                            <div class="pagination pull-right" id="preview-pagination">
-                                <ul>
-                                    <li id="submit-preview-begin" class="prev"><a title="${_('Beginning of List')}"
-                                                                                  href="javascript:void(0)">&larr; ${_('Beginning of List')}</a>
-                                    </li>
-                                    <li id="submit-preview-next"><a title="${_('Next page')}"
-                                                                    href="javascript:void(0)">${_('Next Page')} &rarr;</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </fieldset>
-                </div>
-                <input name="file_processor_type" data-bind="value: fileProcessorType" value="" style="display: none"/>
-                <div class="form-actions">
-                    <input id="submit-create" type="submit" name="createTable" class="btn btn-primary disable-feedback"
-                           value="${_('Create table')}"/>
-                </div>
-            </form>
-        </div>
-    </div>
+<div class="form-actions">
+    <input id="submit-create" type="submit" name="createTable" class="btn btn-primary disable-feedback"
+           value="${_('Create table')}"/>
+</div>
+</form>
+</div>
+</div>
 </div>
 
 
@@ -358,7 +374,7 @@ ${layout.menubar(section='tables')}
 
 <script type="text/javascript" charset="utf-8">
 
-var PreviewType = {"preview": 0, "preview_next": 1, "preview_beginning":2};
+var PreviewType = {"preview": 0, "preview_next": 1, "preview_beginning": 2};
 var FileType = {"text": "text", "spreadsheet": "spreadsheet", "none": "none"};
 
 var tableList = [];
@@ -378,7 +394,7 @@ ko.applyBindings(viewModel);
 
 function importingData(flag) {
     lockControls(flag);
-    if(flag) {
+    if (flag) {
         $("#main-spin").hide();
         $("#importing-data-spin").show();
     }
@@ -390,7 +406,7 @@ function importingData(flag) {
 
 function creatingTable(flag) {
     lockControls(flag);
-    if(flag) {
+    if (flag) {
         $("#main-spin").hide();
         $("#creating-table-spin").show();
     }
@@ -402,7 +418,7 @@ function creatingTable(flag) {
 
 function previewData(flag) {
     lockControls(flag);
-    if(flag) {
+    if (flag) {
         $("#main-spin").hide();
         $("#preview-data-spin").show();
     }
@@ -413,7 +429,7 @@ function previewData(flag) {
 }
 
 function lockControls(flag) {
-    if(flag) {
+    if (flag) {
         $("#submit-preview-begin").prop('disabled', true);
         $("#submit-preview-next").prop('disabled', true);
         $("#submit-create").prop('disabled', true);
@@ -440,7 +456,7 @@ $(document).ready(function () {
     initUI();
     function submitPreview(preview_type) {
         submitPreviewStart();
-        if(PreviewType.preview == preview_type){
+        if (PreviewType.preview == preview_type) {
             $("#preview-div").hide();
         }
         if (!validatePreviewForm()) {
@@ -449,15 +465,15 @@ $(document).ready(function () {
         }
         var postQueryData = $('form#mainForm').serializeArray();
         postQueryData.push({ name: "file_type", value: fileType });
-        if(PreviewType.preview == preview_type){
+        if (PreviewType.preview == preview_type) {
             postQueryData.push({ name: "submitPreviewAction", value: "" });
         }
-        else if(PreviewType.preview_next == preview_type){
+        else if (PreviewType.preview_next == preview_type) {
             postQueryData.push({ name: "submitPreviewNext", value: "" });
             postQueryData.push({ name: "preview_start_idx", value: previewStartIdx });
             postQueryData.push({ name: "preview_end_idx", value: previewEndIdx });
         }
-        else if(PreviewType.preview_beginning == preview_type){
+        else if (PreviewType.preview_beginning == preview_type) {
             postQueryData.push({ name: "submitPreviewBeginning", value: "" });
             postQueryData.push({ name: "preview_start_idx", value: previewStartIdx });
             postQueryData.push({ name: "preview_end_idx", value: previewEndIdx });
@@ -478,7 +494,7 @@ $(document).ready(function () {
                         "sEmptyTable": "${_('No data available')}",
                         "sZeroRecords": "${_('No matching records')}"
                     },
-                    "fnDrawCallback": function( oSettings ) {
+                    "fnDrawCallback": function (oSettings) {
                         $(".resultTable").jHueTableExtender({
                             hintElement: "#jumpToColumnAlert",
                             firstColumnTooltip: true
@@ -496,7 +512,7 @@ $(document).ready(function () {
                     previewEndIdx = data["options"]["preview_end_idx"];
                 }
                 if ("preview_has_more" in data["options"]) {
-                    if(data["options"]["preview_has_more"]) {
+                    if (data["options"]["preview_has_more"]) {
                         $("#submit-preview-next").show();
                     }
                     else {
@@ -513,9 +529,15 @@ $(document).ready(function () {
                 });
     };
 
-    $("#submit-preview").click(function(){ submitPreview(PreviewType.preview)});
-    $("#submit-preview-next").click(function(){ submitPreview(PreviewType.preview_next)});
-    $("#submit-preview-begin").click(function(){ submitPreview(PreviewType.preview_beginning)});
+    $("#submit-preview").click(function () {
+        submitPreview(PreviewType.preview)
+    });
+    $("#submit-preview-next").click(function () {
+        submitPreview(PreviewType.preview_next)
+    });
+    $("#submit-preview-begin").click(function () {
+        submitPreview(PreviewType.preview_beginning)
+    });
 
     $(".fileChooserBtn").addClass("btn-primary disable-feedback");
     $(".fileChooserBtn").text("Choose a file");
@@ -543,6 +565,10 @@ $(document).ready(function () {
         }
     });
 
+    $("#id_database").change(function () {
+        $.cookie("hueHcatalogLastDatabase", $(this).val(), {expires: 90, path: "/"});
+    });
+
     function setFileType(ft) {
         fileType = ft;
         $("input[name='file_type']").val(ft);
@@ -567,7 +593,7 @@ $(document).ready(function () {
         $(".scrollable").css("max-width", $(".form-actions").outerWidth() + "px");
 
         % if error is not None:
-        showMainError("${error}");
+                showMainError("${error}");
         % endif
 
         $.post("${url(app_name + ':get_tables')}", function (data) {
@@ -585,7 +611,7 @@ $(document).ready(function () {
         filePath = newPath;
         $(".pathChooser").val(filePath);
         if (filePath.indexOf(".csv") != -1 || filePath.indexOf(".tsv") != -1 ||
-                filePath.indexOf(".dsv") != -1 || filePath.indexOf(".txt") != -1 ) {
+                filePath.indexOf(".dsv") != -1 || filePath.indexOf(".txt") != -1) {
             setFileType(FileType.text);
             $("div.well#div-file-selector").addClass("div-file-selector");
             $("#file-options-ss").hide();
@@ -639,8 +665,8 @@ $(document).ready(function () {
     $("input[name='table-ignore_tabs']").change(reactOnOptionChange);
     $("input[name='table-java_style_comments']").change(reactOnOptionChange);
     $("input[name='table-single_line_comment']").bind("change paste keyup", reactOnOptionChange);
-    $("input[name='table-autodetect_delimiter']").change(function() {
-        if($(this).is(":checked")) {
+    $("input[name='table-autodetect_delimiter']").change(function () {
+        if ($(this).is(":checked")) {
             replaceDelimiterWithAuto = true;
             reactOnOptionChange();
         }
@@ -672,8 +698,7 @@ $(document).ready(function () {
     function updateTerminatorField(name) {
         var delim0 = $("#id_table-" + name + "_0");
         var delim1 = $("#id_table-" + name + "_1");
-        if(replaceDelimiterWithAuto)
-        {
+        if (replaceDelimiterWithAuto) {
             replaceDelimiterWithAuto = false;
             var delim_repl_with0 = $("select[name='table-replace_delimiter_with_0']");
             var delim_repl_with1 = $("input[name='table-replace_delimiter_with_1']");
@@ -696,15 +721,13 @@ $(document).ready(function () {
         }
     }
 
-    function updateOption(optionName, options)
-    {
-        if(optionName in options ) {
+    function updateOption(optionName, options) {
+        if (optionName in options) {
             $("#id_table-" + optionName).val(options[optionName]);
         }
     }
 
-    function updateListOption(optionName, listOptionName, options)
-    {
+    function updateListOption(optionName, listOptionName, options) {
         if (optionName in options && listOptionName in options) {
             var sel = $("#id_table-" + optionName);
             sel.empty(options[optionName]);
@@ -714,8 +737,7 @@ $(document).ready(function () {
         }
     }
 
-    function updateOptions(options)
-    {
+    function updateOptions(options) {
         updateOption("replace_delimiter_with_0", options);
         updateOption("replace_delimiter_with_1", options);
         updateOption("delimiter_0", options);
@@ -801,7 +823,7 @@ $(document).ready(function () {
             hideSecondFieldError(tableNameFld);
         }
 
-        if(!validatePreviewForm()) {
+        if (!validatePreviewForm()) {
             isValid = false;
         }
         return isValid;
@@ -819,7 +841,7 @@ $(document).ready(function () {
             hideFieldError(filePathField);
         }
 
-        if(fileType == FileType.spreadsheet) {
+        if (fileType == FileType.spreadsheet) {
             var cellRange = $("input[name='table-xls_cell_range']");
             if (cellRange.val().length > 0 && cellRange.attr("placeholder") !== cellRange.val()
                     && cellRange.val().match(/^[a-zA-Z]+\d+:[a-zA-Z]+\d+$/) == undefined) {
@@ -864,8 +886,8 @@ $(document).ready(function () {
     }
 
     function hideFieldError(field) {
-        field.nextAll(".error-inline").each(function() {
-            if(!($(this).hasClass("hide"))) {
+        field.nextAll(".error-inline").each(function () {
+            if (!($(this).hasClass("hide"))) {
                 $(this).addClass("hide");
             }
         });
