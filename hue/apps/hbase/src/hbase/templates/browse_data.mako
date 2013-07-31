@@ -68,20 +68,26 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
           </div>
           <div data-bind="attr: {id: $parent.row() + cf.cfName() }" class="accordion-body collapse"
                style="height: 0px;">
-            
+                <div class="cells-wrap">
                 <!-- ko foreach: {data: cf.columns, as: 'col'} -->
                 <div class="span2 hcell shadow ">
                   <div class="modal-header">
                     <h3 class="label label-info shadow" data-bind="text: col.columnName"></h3>
                   </div>
                   <div>
+                    <div class="hcell-value">
                     <p data-bind="text: col.value, attr: {id: 'p_' + col.rowID()}" ></p>
                     <textarea data-bind="value: col.editValue,
                                          attr:{id: col.rowID()}"
                     style="display:none;" ></textarea>
-                    <div data-bind="foreach: {data: col.versions, as: 'version'}">
-                        <p><i class=" icon-time"></i><span data-bind="text: version.timestamp"></span></p>
-                        <p data-bind="text: version.prevValue"></p>
+                    </div>
+                    <div class="hcell-versions" >
+                      <ul data-bind="foreach: {data: col.versions, as: 'version'}">
+                        <li>
+                        <span data-bind="text: version.prevValue"></span>
+                        <span><i class=" icon-time"></i><span data-bind="text: version.timestamp"></span></span>
+                        </li>
+                      </ul>
                     </div>
                     <div class="cell-control">
                       <a href="javascript:void(0);" data-bind="click: editCell">
@@ -99,6 +105,8 @@ ${ commonheader(_('Hbase'), 'hbase', user) | n,unicode }
                   </div>
                 </div>
                 <!-- /ko -->
+                </div>
+
           </div>
         </div>
         <!-- /ko -->

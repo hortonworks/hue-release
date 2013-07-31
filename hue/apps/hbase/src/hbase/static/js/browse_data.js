@@ -102,7 +102,11 @@ function Column(data){
     this.tableName = $("#table_name").val();
 
     this.getVersions = function(data, event) {
-        self.versions([]);
+        var cid = this.rowID();
+        if (self.versions().length>0) {
+            $('#'+cid).parents('.hcell').css('width','').find('.hcell-versions').animate({height:'0px'});
+            self.versions([]);
+        } else {
         $.ajax("/hbase/table/versions/json/" + this.tableName, 
                {
                    dataType: "JSON",
@@ -113,9 +117,12 @@ function Column(data){
                            for (var i = 1; i < resp.length; i++) {
                                self.versions.push(new Version({prevValue: resp[i][0], timestamp: resp[i][1]}));
                            }
+                            $('#'+cid).parents('.hcell').css('width','300px').find('.hcell-versions').animate({height:'90px'});
+                            $('#'+cid).parents('.hcell')
                        }
                    },
                });
+        }
     }
     
 

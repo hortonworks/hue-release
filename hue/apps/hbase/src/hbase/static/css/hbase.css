@@ -79,6 +79,12 @@
     position: relative;
   }
 
+  .cells-wrap {
+    white-space: nowrap;
+    overflow-x: auto;
+    text-align: left;
+  }
+
   .rowhead {
     display: inline-block;
   }
@@ -87,10 +93,50 @@
     margin: 5px !important;
     min-width: 100px;
     width: auto;
+    display: inline-block !important;
+    float: none !important;
+    overflow: hidden;
+    vertical-align: top;
+    transition-property: width 1s;
+    transition-property: height 1s;
   }
 
   .hcell p {
     word-wrap: break-word;
+    white-space: normal;
+  }
+
+  .hcell textarea {
+    max-width: 105px;
+  }
+
+  .hcell-value {
+    width: 100px;
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  .hcell-versions {
+    display: inline-block;
+    overflow-x: hidden;
+    width: 190px;
+    vertical-align: top;
+    
+  }
+
+  .hcell-versions ul {
+    text-align: left;
+    list-style: none;
+    word-wrap: break-word;
+    white-space: normal;
+  }
+
+  .hcell-versions li{
+    border-bottom: 1px solid #999;
+  }
+
+  .v-show {
+    width: 300px !important;
   }
 
   .shadow {
