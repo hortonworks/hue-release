@@ -151,7 +151,7 @@ def start_job(request):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
     pig_script = process_pig_script(pig_script, request)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
-    arg = []
+    arg = ["-useHCatalog"]
     job_type = Job.EXECUTE
     execute = None
     if request.POST.get("explain"):
