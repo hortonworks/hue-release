@@ -367,3 +367,33 @@ class LoadDataForm(forms.Form):
       char_field = forms.CharField(required=True, label=_t("%(column_name)s (partition key with type %(column_type)s)") % {'column_name': column.name, 'column_type': column.type})
       self.fields[name] = char_field
       self.partition_columns[name] = column.name
+
+
+def _clean_databasename(name):
+  try:
+    if name in db.get_databases():
+      raise forms.ValidationError(_('Database "%(name)s" already exists.') % {'name': name})
+  except Exception:
+    return name
+
+
+class CreateDatabaseForm(DependencyAwareForm):
+  """
+  Form used in the create database page
+  """
+  dependencies = []
+
+  # Basic Data
+  name = common.HiveIdentifierField(label=_t("Database Name"), required=True)
+  comment = forms.CharField(label=_t("Description"), required=False)
+
+  # External if not true
+  use_default_location = forms.BooleanField(required=False, initial=True, label=_t("Use default location"))
+  external_location = forms.CharField(required=False, help_text=_t("Path to HDFS directory or file of database data."))
+
+  dependencies += [
+    ("use_default_location", False, "external_location")
+  ]
+
+  def clean_name(self):
+    return _clean_databasename(self.cleaned_data['name'])

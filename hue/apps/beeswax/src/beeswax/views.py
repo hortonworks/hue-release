@@ -57,7 +57,6 @@ LOG = logging.getLogger(__name__)
 SAVE_RESULTS_CTAS_TIMEOUT = 300         # seconds
 
 
-
 def index(request):
   try:
     tables = dbms.get(request.user).get_tables()
@@ -69,6 +68,42 @@ def index(request):
 
   return execute_query(request)
 
+
+"""
+Database Views
+"""
+
+
+def databases(request):
+    db = dbms.get(request.user)
+    databases = db.get_databases()
+
+    return render("databases.mako", request, {
+        'breadcrumbs': [],
+        'databases': databases,
+        'databases_json': json.dumps(databases),
+        })
+
+
+def drop_database(request):
+    db = dbms.get(request.user)
+
+    if request.method == 'POST':
+        databases = request.POST.getlist('database_selection')
+
+        try:
+            # Can't be simpler without an important refactoring
+            design = SavedQuery.create_empty(app_name='beeswax', owner=request.user)
+            query_history = db.drop_databases(databases, design)
+            url = reverse('beeswax:watch_query', args=[query_history.id]) + '?on_success_url=' + reverse('beeswax:databases')
+            return redirect(url)
+        except Exception, ex:
+            error_message, log = dbms.expand_exception(ex, db)
+            error = _("Failed to remove %(databases)s.  Error: %(error)s") % {'databases': ','.join(databases), 'error': error_message}
+            raise PopupException(error, title=_("Beeswax Error"), detail=log)
+    else:
+        title = _("Do you really want to delete the database(s)?")
+        return render('confirm.html', request, dict(url=request.path, title=title))
 
 """
 Design views

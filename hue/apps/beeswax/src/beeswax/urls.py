@@ -20,6 +20,8 @@ from django.conf.urls.defaults import patterns, url
 urlpatterns = patterns('beeswax.views',
   url(r'^$', 'index', name='index'),
 
+  url(r'^databases/?$', 'databases', name='databases'),
+  url(r'^databases/drop/?$', 'drop_database', name='drop_database'),
   url(r'^tables/(?P<database>\w+)?$', 'show_tables', name='show_tables'),
   url(r'^tables/drop/(?P<database>\w+)$', 'drop_table', name='drop_table'),
   url(r'^table/(?P<database>\w+)/(?P<table>\w+)$', 'describe_table', name='describe_table'),
@@ -54,4 +56,9 @@ urlpatterns += patterns(
   url(r'^create/create_table/(?P<database>\w+)$', 'create_table', name='create_table'),
   url(r'^create/import_wizard/(?P<database>\w+)$', 'import_wizard', name='import_wizard'),
   url(r'^create/auto_load/(?P<database>\w+)$', 'load_after_create', name='load_after_create'),
+)
+
+urlpatterns += patterns(
+    'beeswax.create_database',
+    url(r'^create/database$', 'create_database', name='create_database'),
 )
