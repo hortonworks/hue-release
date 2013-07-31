@@ -440,7 +440,7 @@ ${layout.menubar(section='query')}
         }
 
         $("#id_query-database").change(function(){
-             $.cookie("hueBeeswaxLastDatabase", $(this).val(), {expires: 90});
+             $.cookie("hueBeeswaxLastDatabase", $(this).val(), {path: "/", expires: 90});
         });
 
         ## If no particular query is loaded
