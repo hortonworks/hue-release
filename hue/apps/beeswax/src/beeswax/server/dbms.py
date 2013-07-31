@@ -26,7 +26,7 @@ from filebrowser.views import location_to_url
 from beeswaxd.ttypes import BeeswaxException
 
 from beeswax.conf import BEESWAX_SERVER_HOST, BEESWAX_SERVER_PORT,\
-  BROWSE_PARTITIONED_TABLE_LIMIT
+  BROWSE_PARTITIONED_TABLE_LIMIT, SERVER_INTERFACE
 from beeswax.design import hql_query
 from beeswax.models import QueryHistory, HIVE_SERVER2
 from beeswax.conf import SERVER_INTERFACE
@@ -143,6 +143,89 @@ class Dbms:
     design.save()
 
     return self.execute_query(query, design)
+
+
+  def drop_database(self, database):
+    return self.execute_statement("DROP DATABASE `%s`" % database)
+
+
+  def drop_databases(self, databases, design):
+    hql = []
+
+    for database in databases:
+      hql.append("DROP DATABASE `%s`" % database)
+    query = hql_query(';'.join(hql), database)
+    design.data = query.dumps()
+    design.save()
+
+    return self.execute_query(query, design)
+
+  def insert_query_into_directory(self, query_history, target_dir):
+    design = query_history.design.get_design()
+
+    hql = "INSERT OVERWRITE DIRECTORY '%s' %s" % (target_dir, design.query['query'])
+    return self.execute_statement(hql)
+
+
+  def create_table_as_a_select(self, request, query_history, target_table, result_meta):
+    design = query_history.design.get_design()
+    database = design.query['database']
+
+    # Case 1: Hive Server 2 backend or results straight from an existing table
+    if result_meta.in_tablename:
+      hql = 'CREATE TABLE `%s.%s` AS %s' % (database, target_table, design.query['query'])
+      #query = hql_query(hql, database=database)
+      query_history = self.execute_statement(hql)
+      url = redirect(reverse('beeswax:watch_query', args=[query_history.id]) + '?on_success_url=' + reverse('metastore:describe_table', args=[database, target_table]))
+    else:
+      # Case 2: The results are in some temporary location
+      # Beeswax backward compatibility and optimization
+      # 1. Create table
+      cols = ''
+      schema = result_meta.schema
+      for i, field in enumerate(schema.fieldSchemas):
+        if i != 0:
+          cols += ',\n'
+        cols += '`%s` %s' % (field.name, field.type)
+
+      # The representation of the delimiter is messy.
+      # It came from Java as a string, which might has been converted from an integer.
+      # So it could be "1" (^A), or "10" (\n), or "," (a comma literally).
+      delim = result_meta.delim
+      if not delim.isdigit():
+        delim = str(ord(delim))
+
+      hql = '''
+            CREATE TABLE `%s` (
+            %s
+            )
+            ROW FORMAT DELIMITED
+            FIELDS TERMINATED BY '\%s'
+            STORED AS TextFile
+            ''' % (target_table, cols, delim.zfill(3))
+
+      query = hql_query(hql)
+      self.execute_and_wait(query)
+
+      try:
+        # 2. Move the results into the table's storage
+        table_obj = self.get_table('default', target_table)
+        table_loc = request.fs.urlsplit(table_obj.path_location)[2]
+        result_dir = request.fs.urlsplit(result_meta.table_dir)[2]
+        request.fs.rename_star(result_dir, table_loc)
+        LOG.debug("Moved results from %s to %s" % (result_meta.table_dir, table_loc))
+        request.info(request, _('Saved query results as new table %(table)s') % {'table': target_table})
+        query_history.save_state(QueryHistory.STATE.expired)
+      except Exception, ex:
+        query = hql_query('DROP TABLE `%s`' % target_table)
+        try:
+          self.execute_and_wait(query)
+        except Exception, double_trouble:
+          LOG.exception('Failed to drop table "%s" as well: %s' % (target_table, double_trouble))
+        raise ex
+      url = format_preserving_redirect(request, reverse('metastore:index'))
+
+    return url
 
 
   def use(self, database):
