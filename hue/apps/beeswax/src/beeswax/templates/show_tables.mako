@@ -120,6 +120,7 @@ ${layout.menubar(section='tables')}
 
 <script type="text/javascript" charset="utf-8">
   $(document).ready(function () {
+    $.cookie("hueBeeswaxLastDatabase", "${database}", {path:"/", expires:90});
     var viewModel = {
         availableTables : ko.observableArray(${ tables_json | n }),
         chosenTables : ko.observableArray([])
@@ -150,7 +151,7 @@ ${layout.menubar(section='tables')}
     $("a[data-row-selector='true']").jHueRowSelector();
 
     $("#id_database").change(function () {
-      $.cookie("hueBeeswaxLastDatabase", $(this).val(), {expires:90});
+      $.cookie("hueBeeswaxLastDatabase", $(this).val(), {path: "/", expires: 90});
       $('#db_form').submit();
     });
 

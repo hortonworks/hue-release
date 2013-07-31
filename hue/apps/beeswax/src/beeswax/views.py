@@ -336,8 +336,7 @@ Table Views
 """
 
 def show_tables(request, database=None):
-  if database is None:
-    database = request.COOKIES.get('hueBeeswaxLastDatabase', 'default') # Assume always 'default'
+  database = _get_last_database(request, database)
   db = dbms.get(request.user)
 
   databases = db.get_databases()
@@ -385,7 +384,8 @@ def describe_table(request, database, table):
   })
 
 
-def drop_table(request, database):
+def drop_table(request, database=None):
+  database = _get_last_database(request, database)
   db = dbms.get(request.user)
 
   if request.method == 'POST':
@@ -1482,3 +1482,14 @@ WHITESPACE = re.compile("\s+", re.MULTILINE)
 def collapse_whitespace(s):
   return WHITESPACE.sub(" ", s).strip()
 
+
+def _get_last_database(request, database=None):
+  if database is not None:
+    LOG.debug("Getting database name from argument")
+  elif request and request.method == 'POST' and request.POST.get('database'):
+    database = request.POST.get('database')
+    LOG.debug("Getting database name from request")
+  elif request:
+    database = request.COOKIES.get('hueBeeswaxLastDatabase', 'default')
+    LOG.debug("Getting database name from cookies")
+  return database

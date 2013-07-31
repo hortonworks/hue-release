@@ -38,14 +38,15 @@ from beeswax.forms import CreateTableForm, ColumnTypeFormSet,\
   PartitionTypeFormSet, CreateByImportFileForm, CreateByImportDelimForm,\
   TERMINATOR_CHOICES
 from beeswax.server import dbms
-from beeswax.views import execute_directly
+from beeswax.views import execute_directly, _get_last_database
 
 
 LOG = logging.getLogger(__name__)
 
 
-def create_table(request, database='default'):
+def create_table(request, database=None):
   """Create a table by specifying its attributes manually"""
+  database = _get_last_database(request, database)
   db = dbms.get(request.user)
 
   form = MultiForm(
@@ -97,7 +98,7 @@ DELIMITER_READABLE = {'\\001' : _('ctrl-As'),
                       ' '     : _('spaces')}
 FILE_READERS = [ ]
 
-def import_wizard(request, database='default'):
+def import_wizard(request, database=None):
   """
   Help users define table and based on a file they want to import to Hive.
   Limitations:
@@ -107,6 +108,7 @@ def import_wizard(request, database='default'):
     - No partition table.
     - Does not work with binary data.
   """
+  database = _get_last_database(request, database)
   encoding = i18n.get_site_encoding()
   app_name = get_app_name(request)
 
