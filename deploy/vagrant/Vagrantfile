@@ -2,8 +2,8 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "sandbox-condor"
-  config.vm.box_url = "https://copy.com/qMjCclCFEGPw/sandbox-condor.box?download=1"
+  config.vm.box = "sandbox-comanche"
+  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-comanche.box"
 
   config.vm.hostname = "sandbox"
 
