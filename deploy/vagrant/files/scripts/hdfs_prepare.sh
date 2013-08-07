@@ -1,11 +1,6 @@
 USER=hue
 
 [ ! -f /root/.hdfs_prepared ] && (
-usermod -a -G users hdfs
-usermod -a -G users hive
-usermod -a -G users oozie
-usermod -a -G users hcat
-
 su - hcat -c "hadoop dfs -copyFromLocal /usr/share/HDP-webhcat/pig.tar.gz /apps/webhcat/"
 su - hcat -c "hadoop dfs -copyFromLocal /usr/share/HDP-webhcat/hive.tar.gz /apps/webhcat/"
 su - hcat -c "hadoop dfs -copyFromLocal /usr/lib/hadoop/contrib/streaming/hadoop-streaming*.jar /apps/webhcat/"

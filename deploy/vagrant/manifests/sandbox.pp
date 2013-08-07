@@ -203,6 +203,21 @@ class hdfs_prepare {
       }
 }
 
+class groups_fix {
+      file { 'groups_fix.sh':
+        path    => "/tmp/groups_fix.sh",
+        content => template("/vagrant/files/scripts/groups_fix.sh"),
+      }
+
+      exec { "groups_fix.sh":
+        command => '/bin/bash /tmp/groups_fix.sh |tee /var/log/groups_fix.log',
+        require => File['groups_fix.sh'],
+        timeout => 0,
+        logoutput=> "on_failure",
+      }
+}
+
+
 class sandbox {
     include java_home
     include sandbox_rpm
@@ -226,6 +241,7 @@ class sandbox {
         command => "/etc/init.d/startup_script restart",
       require => [   File["/usr/lib/hive/lib/hcatalog-core.jar"],
                      Class[sandbox_rpm],
+                     Class[groups_fix],
                     ],
     }
 
