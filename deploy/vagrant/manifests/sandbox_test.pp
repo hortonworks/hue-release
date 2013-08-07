@@ -1,4 +1,4 @@
-import "sandbox.pp"
+import "sandbox_full.pp"
 
 class test_data {
 	include sandbox

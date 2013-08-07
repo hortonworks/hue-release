@@ -1,0 +1,113 @@
+import "sandbox-base.pp"
+
+class splash_opts {
+    file { 'ttys':
+        path    => "/etc/init/start-ttys.conf",
+        content => template("/vagrant/files/splash/start-ttys.conf"),
+    }
+
+    file { 'tty1':
+        path    => "/etc/init/tty-splash.conf",
+        content => template("/vagrant/files/splash/tty-splash.conf"),
+    }
+
+    file { 'bashrc':
+        path    => "/root/.bashrc",
+        content => template("/vagrant/files/splash/bashrc"),
+    }
+
+    package { 'python-pip':
+        ensure => present,
+    }
+
+    exec { 'python-sh':
+        command => "pip-python install sh",
+        require => Package["python-pip"],
+        cwd     => "/root",
+    }
+}
+
+
+class splash {
+    include splash_opts
+
+    exec { 'splash':
+        command => "initctl stop tty TTY=/dev/tty1; initctl start tty-splash TTY=/dev/tty1; true",
+        require => [Class["splash_opts"],
+                    Class["sandbox"] ],
+    }
+}
+
+
+class tutorials {
+    include sandbox_rpm
+
+    package {'hue-tutorials':
+        ensure => latest,
+        require => Package['hue-sandbox'],
+    }
+
+/*  Disable single user mode
+    file {'/var/lib/hue/single_user_mode':
+        ensure => absent,
+        require => Package['hue-tutorials'],
+    }
+*/
+
+    service { "httpd":
+        ensure => running,
+        require => [ Class[sandbox_rpm], ],
+    }
+
+    file { 'apache-hue.conf':
+        path    => "/etc/httpd/conf.d/hue.conf",
+        content => template("/vagrant/files/apache-hue.conf"),
+        ensure  => file,
+        notify  => Service['httpd'],
+    }
+}
+
+class java_home {
+    file { "/etc/bashrc": ensure => present, }
+
+    line { java_home:
+        file => "/etc/bashrc",
+        line => "export JAVA_HOME=/usr/jdk/jdk1.6.0_31/",
+    }
+}
+
+class sandbox_customize {
+    include java_home
+    include sandbox_rpm
+    include tutorials
+    include hdfs_prepare
+    include sandbox
+
+    service { "hue":
+        ensure => running,
+        require => [ Class[sandbox_rpm],
+                     Exec[start] ],
+    }
+
+    service { "tutorials":
+        ensure => running,
+        require => [ Class[sandbox_rpm],
+                     Package['hue-tutorials'],
+                     Exec[start] ],
+    }
+
+    file {'/root/start_ambari.sh':
+        ensure => link,
+        target => "/usr/lib/hue/tools/start_scripts/start_ambari.sh",
+        mode => 0755,
+    }
+
+    package { 'acpid':
+        ensure => installed,
+    }
+
+}
+
+
+include splash
+include sandbox_customize
