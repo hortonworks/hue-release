@@ -34,6 +34,33 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  config.vm.define :test do |subconf|
+    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
+      puppet.manifests_path = "manifests"
+      puppet.manifest_file  = "sandbox_test_machine.pp"
+    end
+
+    subconf.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--name", "Sandbox Testbox", "--groups", "/HortonWorks"]
+    end
+  end
+
+
+  config.vm.define :secure do |subconf|
+    config.vm.box = "sandbox-comanche-secure"
+    config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-comanche-secure.box"
+
+
+    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
+      puppet.manifests_path = "manifests"
+      puppet.manifest_file  = "sandbox_secure.pp"
+    end
+
+    subconf.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 1.3 Secure", "--groups", "/HortonWorks"]
+    end
+  end
+
 
   ['default', 'dev', 'secure'].each do |vm|
       config.vm.define vm do |subconf|
@@ -99,33 +126,6 @@ Vagrant.configure("2") do |config|
         subconf.vm.network :forwarded_port, guest: 60030, host: 60030, host_ip: "127.0.0.1", auto_correct: false
         subconf.vm.network :forwarded_port, guest: 60572, host: 60572, host_ip: "127.0.0.1", auto_correct: false
       end
-  end
-
-  config.vm.define :test do |subconf|
-    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
-      puppet.manifests_path = "manifests"
-      puppet.manifest_file  = "sandbox-base.pp"
-    end
-
-    subconf.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--name", "Sandbox Testbox", "--groups", "/HortonWorks"]
-    end
-  end
-
-
-  config.vm.define :secure do |subconf|
-    config.vm.box = "sandbox-comanche-secure"
-    config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-comanche-secure.box"
-
-
-    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
-      puppet.manifests_path = "manifests"
-      puppet.manifest_file  = "sandbox_secure.pp"
-    end
-
-    subconf.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 1.3 Secure", "--groups", "/HortonWorks"]
-    end
   end
 
 end
