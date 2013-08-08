@@ -76,12 +76,9 @@ class java_home {
     }
 }
 
-class sandbox_customize {
+class sandbox_customize inherits sandbox {
     include java_home
-    include sandbox_rpm
     include tutorials
-    include hdfs_prepare
-    include sandbox
 
     service { "hue":
         ensure => running,

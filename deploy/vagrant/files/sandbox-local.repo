@@ -1,0 +1,16 @@
+[sandbox]
+name=Sandbox repo
+baseurl=http://10.2.2.239:8142/sandbox/Comanche/
+path=/
+enabled=1
+gpgcheck=0
+
+
+[hue-bigtop]
+# dev repository
+name=Hue repository
+baseurl=http://10.2.2.239:8142/bigtop/centos6-Comanche/
+path=/
+enabled=1
+gpgcheck=0
+priority=1

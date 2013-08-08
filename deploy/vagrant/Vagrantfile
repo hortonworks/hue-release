@@ -26,7 +26,16 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  ['default', 'secure'].each do |vm|
+
+  config.vm.define :dev do |subconf|
+    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
+      puppet.manifests_path = "manifests"
+      puppet.manifest_file  = "sandbox_dev.pp"
+    end
+  end
+
+
+  ['default', 'dev', 'secure'].each do |vm|
       config.vm.define vm do |subconf|
         subconf.vm.network :forwarded_port, guest: 25, host: 42025, host_ip: "127.0.0.1", auto_correct: false
         subconf.vm.network :forwarded_port, guest: 68, host: 42068, host_ip: "127.0.0.1", auto_correct: false

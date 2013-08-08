@@ -61,7 +61,7 @@ class sandbox_rpm {
         path    => "/etc/yum.repos.d/sandbox.repo",
         content => template("/vagrant/files/sandbox.repo"),
         ensure  => file,
-        require => Package['yum-plugin-priorities'],
+        require => [Package['yum-plugin-priorities']],
     }
 
     file { 'issue':
@@ -134,8 +134,11 @@ class groups_fix {
       }
 }
 
-
 class sandbox {
+    include sandbox_rpm
+    include hdfs_prepare
+    include groups_fix
+
     file {"/usr/lib/hive/lib/hcatalog-core.jar":
         ensure => link,
         target => "/usr/lib/hcatalog/share/hcatalog/hcatalog-core.jar",
@@ -185,6 +188,4 @@ class sandbox {
 
 }
 
-include sandbox_rpm
-include hdfs_prepare
 include sandbox
