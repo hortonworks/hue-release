@@ -41,6 +41,7 @@ Vagrant.configure("2") do |config|
     end
 
     subconf.vm.provider :virtualbox do |vb|
+      vb.gui = false
       vb.customize ["modifyvm", :id, "--name", "Sandbox Testbox", "--groups", "/HortonWorks"]
     end
   end
