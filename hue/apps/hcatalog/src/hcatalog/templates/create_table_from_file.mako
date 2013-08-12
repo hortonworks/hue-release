@@ -592,7 +592,7 @@ $(document).ready(function () {
                 showMainError("${error}");
         % endif
 
-        $.post("${url(app_name + ':get_tables')}", function (data) {
+        $.post("${url(app_name + ':list_tables_json')}", function (data) {
             tableList = data;
         }, "json");
     }
