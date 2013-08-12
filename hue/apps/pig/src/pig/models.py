@@ -18,6 +18,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class PigScript(models.Model):
 
     title = models.CharField('Title', max_length=200)
@@ -26,6 +27,7 @@ class PigScript(models.Model):
     python_script = models.TextField(null=True, blank=True)
     date_created = models.DateTimeField('Date', auto_now_add=True, auto_now=True)
     saved = models.BooleanField(default=True)
+    arguments = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ['title']
@@ -73,6 +75,7 @@ class Job(models.Model):
     status = models.SmallIntegerField(choices=JOB_STATUSES, default=1)
     job_type = models.SmallIntegerField(choices=JOB_TYPE, default=EXECUTE)
     email_notification = models.BooleanField(default=True)
+    
 
     def __unicode__(self):
         return u"%s" % self.job_id

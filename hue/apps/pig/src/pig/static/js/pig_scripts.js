@@ -1,7 +1,9 @@
 var pigKeywordsT=[];
+var pigKeywordsD=[];
 var dollarSaveParamTrig = 0;
 var varSaveParamTrig = 0;
 var submitFormPopup=false;
+var db_list = {};
 var table_fields={};
 var tmpDirList={path:"",list:[]};
 
@@ -13,7 +15,7 @@ function ping_job(job_id){
         if (data.exitValue !== null)
         {
           if (data.status.failureInfo != 'NA')
-            $("#failure_info").html(data.status.failureInfo);
+            $("#failure_info").removeClass('hide').html(data.status.failureInfo);
 	  	percent += 0.5;
 		$(".bar").css("width", percent+"%");
 	        globalTimer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
@@ -75,7 +77,6 @@ function listdir(_context){
     cache: false,
     async: false,
     success: function(data) {
-      //console.log(data);
         for (var i = 0; i < data.length; i++) {
             contentList.push(data[i]);
         }
@@ -88,28 +89,41 @@ function listdir(_context){
   return contentList;
 }
 
-function getTables(){
-  $.get("/hcatalog/get_tables", function(data){
-    //$.get("tables.php", function(data){
+function getDatabases(){
+  $.get("/hcatalog/databases/json" , function(data){
+    for (var db in data){
+      pigKeywordsD.push(db);
+      db_list[db]= {};
+      for (var i = data[db].length - 1; i >= 0; i--) {
+        pigKeywordsT.push(data[db][i]);
+        db_list[db][data[db][i]] = {};
+        $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + db + "." + data[db][i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
+      };
+    }
+  },"json");
+}
+
+function getTables(database){
+  var database = database || 'default';
+  $.get("/hcatalog/tables/json/" + database, function(data){
       if(pigKeywordsT.length<1){
         for (var i = 0; i < data.length; i++) {
           pigKeywordsT.push(data[i]);
-          table_fields[data[i]]={};
-          $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + data[i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
+          db_list[database][data[i]]={};
+          $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + database + "." + data[i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
         }
       }
 
   },"json");
 }
 
-function getTableFields(table,target){
-
-  $.get("/hcatalog/table/default/"+table+"/json/", function(data){
-    //$.get("table_f.php?con=" + table, function(data){
+function getTableFields(table, target, database, callback){
+  var database = database || 'default';
+  $.get("/hcatalog/table/"+database+"/"+table+"/json/", function(data){
 
     if(typeof (data) !=="undefined" && data.hasOwnProperty("columns") && data.columns.length>0)
     {
-      table_fields[table]=data;
+      db_list[database][table]=data;
 
       $.each(data.columns, function(e){
         if(this.name != "" )
@@ -123,7 +137,7 @@ function getTableFields(table,target){
         CodeMirror.simpleHint(pig_editor, CodeMirror.pigHint, "", target , true );
 
     }else{
-      delete table_fields[table];
+      delete db_list[database][table];
     }
 
   },"json");
@@ -284,41 +298,62 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     }
     else if(lastKey == "." )
     {
-      var table_name=from.getLine(from.getCursor().line).substr(0,from.getCursor().ch-1);
-      table_name=table_name.match(/\w*$/);
-      if(table_name!="")
-      {
-        var fields_hint=[];
+      if ($.isEmptyObject(db_list)) 
+        return false;
 
-        change.from.ch=from.getCursor().ch;
+      var tline=from.getLine(from.getCursor().line).substr(0,from.getCursor().ch-1);
+      var targetT=tline.match(/\w*$/);
+      var targetD = (tline.match(/(\w*)+(\.)+(\w*)$/))?tline.match(/(\w*)+(\.)+(\w*)$/)[1]:undefined;
+      var fields_hint=[];
 
-        var dirArr={
-          from: change.from,
-          list:fields_hint,
-          to: change.from
-        };
+      change.from.ch=from.getCursor().ch;      
 
-        $.each(table_fields, function(e){
-          if(e == table_name)
-          {
-            if(typeof (this.columns) !== "undefined")
-            {
-              $.each(this.columns, function(e){
-                if(this.name != "" )
-                  fields_hint.push(this.name + ":" + this.type);
-              })
-            }else{
-              getTableFields(e, dirArr);
+      var dirArr={
+        from: change.from,
+        list:fields_hint,
+        to: change.from
+      }
+      
+      if (!targetD) {
+        if (targetT in db_list.default) {
+          for (var tablenameD in db_list.default){
+            if (tablenameD == targetT) {
+              if (typeof (db_list.default[tablenameD].columns) !== "undefined") {
+                $.each(db_list.default[tablenameD].columns, function(e){
+                  if(this.name != "" )
+                    fields_hint.push(this.name + ":" + this.type);
+                })
+              } else {
+                getTableFields(targetT, dirArr);
+              }
             }
           }
-        })
-
-        if(fields_hint.length<2 && fields_hint.length>0)
-          fields_hint.push("");
-
-        if(fields_hint.length>0 && fields_hint[0].name !=""){
-          CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr , true );
+        } else {
+          $.each(db_list, function(db){
+            if (targetT == db) {
+              for (var tablename in this){
+                fields_hint.push(tablename);
+              }
+            }
+          });
         }
+      } else {
+        if (targetT in db_list[targetD]) {
+          if (typeof (db_list[targetD].columns) !== "undefined") {
+            $.each(db_list[targetD].columns, function(e){
+              if(this.name != "" )
+                fields_hint.push(this.name + ":" + this.type);
+            })
+          }else{
+            getTableFields(targetT, dirArr, targetD);
+          }
+        }
+      }
+
+      if(fields_hint.length<2 && fields_hint.length>0)
+        fields_hint.push("");
+      if(fields_hint.length>0 && fields_hint[0].name !=""){
+        CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr , true );
       }
     }
 
@@ -369,15 +404,14 @@ function paginator(lines_per_page){
     return;
   }
 
-  $("#job_info_outer").append("<div class='pagination_controls'></div>");
+  $("#job_info_outer").removeClass('hide')
+    .append("<div class='pagination_controls'></div>")
+    .css({"padding-bottom" : "30px"});
   $(".pagination_controls").pagination(lines.length, {
     items_per_page:lines_per_page,
     callback:handlePaginationClick
   });
 
-  $("#job_info_outer").css({
-    "padding-bottom" : "30px"
-  })
 
   function handlePaginationClick(new_page_index, pagination_container) {
     //console.log(new_page_index,pagination_container)
@@ -406,15 +440,15 @@ $(document).ready(function(){
 
   paginator(30);
 
-  getTables();
+  getDatabases();
 
   $(".email").change(
-      function(){
-      if($(this).attr('checked') == 'checked')
-      {$('.intoemail').attr('value', 'checked')}
-      else
-      {$('.intoemail').attr('value', 'no checked')};
-    });
+    function(){
+    if($(this).attr('checked') == 'checked')
+    {$('.intoemail').attr('value', 'checked')}
+    else
+    {$('.intoemail').attr('value', 'no checked')};
+  });
 
   var uploader = new qq.FileUploader({
           //debug: true,
@@ -495,4 +529,6 @@ $("#save_button").live("click", function(){
     python_editor.save();
     return true;
   });
+
+    
 });

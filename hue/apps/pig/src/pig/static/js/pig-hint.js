@@ -120,6 +120,7 @@
         forEach(pigKeywordsU, maybeAdd);
         forEach(pigKeywordsL, maybeAdd);
         forEach(pigKeywordsT, maybeAdd);
+        forEach(pigKeywordsD, maybeAdd);
       }
     }
 

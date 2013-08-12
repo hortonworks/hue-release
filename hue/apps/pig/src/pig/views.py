@@ -48,11 +48,14 @@ def index(request, obj_id=None):
             raise PopupException(
                 "".join(["%s: %s" % (field, error) for field, error in form.errors.iteritems()])
             )
+        form.cleaned_data["arguments"] = "\t".join(request.POST.getlist("pigParams"))
         if "autosave" in request.session:
             del request.session['autosave']
         if request.POST.get("script_id"):
             instance = PigScript.objects.get(pk=request.POST['script_id'])
-            form = PigScriptForm(request.POST, instance=instance)
+            args = request.POST.copy()
+            args["arguments"] = "\t".join(request.POST.getlist("pigParams"))
+            form = PigScriptForm(args, instance=instance)
             form.save()
         else:
             instance = PigScript(**form.cleaned_data)
@@ -102,6 +105,7 @@ def delete(request, obj_id):
 def script_clone(request, obj_id):
     script = get_object_or_404(PigScript, pk=obj_id)
     request.session['autosave'] = {
+        "arguments": script.arguments,
         "pig_script": script.pig_script,
         "python_script": script.python_script,
         "title": script.title + "(copy)"
@@ -151,7 +155,7 @@ def start_job(request):
         pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
     pig_script = process_pig_script(pig_script, request)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
-    arg = ["-useHCatalog"]
+    args = filter(bool, request.POST.getlist("pigParams"))
     job_type = Job.EXECUTE
     execute = None
     if request.POST.get("explain"):
@@ -159,13 +163,13 @@ def start_job(request):
         job_type = Job.EXPLAINE
         script_file = None
     if request.POST.get("syntax_check"):
-        arg.append("-check")
+        args.append("-check")
         job_type = Job.SYNTAX_CHECK
     callback = request.build_absolute_uri("/pig/notify/$jobId/")
     LOG.debug("User %s started pig job via webhcat: curl -s -d file=%s -d statusdir=%s -d callback=%s %s" % (
-        request.user.username, script_file, statusdir, callback, "".join(["-d arg=%s " % a for a in arg])
+        request.user.username, script_file, statusdir, callback, "".join(["-d arg=%s " % a for a in args])
     ))
-    job = t.pig_query(pig_file=script_file, execute=execute, statusdir=statusdir, callback=callback, arg=arg)
+    job = t.pig_query(pig_file=script_file, execute=execute, statusdir=statusdir, callback=callback, arg=args)
 
     if request.POST.get("script_id"):
         script = PigScript.objects.get(pk=request.POST['script_id'])
@@ -173,12 +177,13 @@ def start_job(request):
         script = PigScript(user=request.user, saved=False, title=request.POST['title'])
     script.pig_script = request.POST['pig_script']
     script.python_script = request.POST['python_script']
+    script.arguments = "\t".join(args)
     script.save()
     Job.objects.create(job_id=job['id'],
                        statusdir=statusdir,
                        script=script,
                        job_type=job_type,
-                       email_notification=bool(request.POST['email']))
+                       email_notification=bool(request.POST.get('email')))
     return HttpResponse(
         json.dumps(
             {
@@ -311,7 +316,8 @@ def autosave_scripts(request):
     request.session['autosave'] = {
         "pig_script": request.POST['pig_script'],
         "python_script": request.POST.get('python_script'),
-        "title": request.POST.get("title")
+        "title": request.POST.get("title"),
+        "arguments": "\t".join(request.POST.getlist("pigParams"))
     }
     return HttpResponse(json.dumps("Done"))
 
