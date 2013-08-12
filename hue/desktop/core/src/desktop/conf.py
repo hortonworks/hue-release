@@ -441,10 +441,10 @@ DJANGO_EMAIL_BACKEND = Config(
 def decrypt_values():
   from lockfile import FileLock
   from desktop.lib.obfuscator import Obfuscator
-  lock = FileLock("/tmp/ENCR.lock")
+  lock = FileLock(os.path.join(KREDENTIALS_DIR.get(), "ENCR"))
   lock.acquire()
   OBFUSCATOR = Obfuscator()
-  ENCRYPTED_VALUE_PATTERN = re.compile("\$\s{ALIAS=(\w+)}")
+  ENCRYPTED_VALUE_PATTERN = re.compile("\$\s?{ALIAS=(\w+)}")
   PASSWORD_VALUES = [DATABASE.PASSWORD, SMTP.PASSWORD, LDAP.BIND_PASSWORD]
   for val in PASSWORD_VALUES:
     if not val.get():
