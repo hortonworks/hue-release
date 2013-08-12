@@ -74,23 +74,35 @@ def index(request, obj_id=None):
 
 
 #Making normal path to our *.jar files
-udf_template = re.compile(r"register\s+(\S+\.jar)", re.I|re.M)
+udf_template = re.compile(r"register\s+(\S+\.jar)", re.I | re.M)
+pythonudf_template = re.compile(r"register\s+[\'\"](\S+\.py)[\'\"]\s+using\s+jython\s+as\s+(\S+);", re.I | re.M)
 parameters_template = re.compile(r"%(\w+)%")
-macro_template = re.compile(r"import\s+[\"\'](/\S+\.(?:macro|pig))[\"\']\s*;?", re.I|re.M)
-def process_pig_script(pig_src, request):
+macro_template = re.compile(r"import\s+[\"\'](/\S+\.(?:macro|pig))[\"\']\s*;?", re.I | re.M)
+
+
+def process_pig_script(pig_src, request, statusdir):
+    python_udf_path = request.fs.join(statusdir, "pythonudf.py")
+
     #1) Replace parameters with their values
     def get_param(matchobj):
         return request.POST.get("%" + matchobj.group(1) + "%")
 
     def get_file_path(matchobj):
-        return "REGISTER " + request.fs.fs_defaultfs + request.fs.join(UDF_PATH + "/" + matchobj.group(1))
+        return "REGISTER " + request.fs.get_hdfs_path(request.fs.join(UDF_PATH, matchobj.group(1)))
 
     def get_macro_path(matchobj):
-        return "IMPORT '" + request.fs.fs_defaultfs + matchobj.group(1) +"';"
+        return "IMPORT '" + request.fs.get_hdfs_path(matchobj.group(1)) + "';"
+
+    def get_pythonudf_path(matchobj):
+        return "REGISTER '%s' USING jython AS %s;" % (request.fs.get_hdfs_path(python_udf_path), matchobj.group(2))
 
     pig_src = re.sub(parameters_template, get_param, pig_src)
     pig_src = re.sub(udf_template, get_file_path, pig_src)
     pig_src = re.sub(macro_template, get_macro_path, pig_src)
+
+    if pythonudf_template.match(pig_src) and request.POST.get("python_script"):
+        _do_newfile_save(request.fs, python_udf_path, request.POST["python_script"], "utf-8")
+        pig_src = re.sub(pythonudf_template, get_pythonudf_path, pig_src)
     return pig_src
 
 
@@ -137,13 +149,6 @@ def udf_delete(request, obj_id):
     return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
 
 
-python_template = re.compile(r"(\w+)\.py")
-def augmate_python_path(python_script, pig_script):
-    with open('/tmp/python_udf.py', 'w') as f:
-        f.write(python_script)
-    return re.sub(python_template, '/tmp/python_udf.py', pig_script)
-
-
 def start_job(request):
     if "autosave" in request.session:
         del request.session['autosave']
@@ -151,9 +156,7 @@ def start_job(request):
     statusdir = "/tmp/.pigjobs/%s/%s_%s" % (request.user.username, request.POST['title'].lower().replace(" ", "_"),  datetime.now().strftime("%s"))
     script_file = statusdir + "/script.pig"
     pig_script = request.POST['pig_script']
-    if request.POST.get("python_script"):
-        pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
-    pig_script = process_pig_script(pig_script, request)
+    pig_script = process_pig_script(pig_script, request, statusdir)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
     args = filter(bool, request.POST.getlist("pigParams"))
     job_type = Job.EXECUTE
