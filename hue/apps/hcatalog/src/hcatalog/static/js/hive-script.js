@@ -31,8 +31,7 @@ function listdir(_context){
 }
 
 function getTables(){
-  $.get("/tables/json", function(data){
-  //$.get("tables.php", function(data){
+  $.get("/hcatalog/tables/json/default", function(data){
       if(keywordsT.length<1){
       for (var i = 0; i < data.length; i++){
               keywordsT.push(data[i]);
