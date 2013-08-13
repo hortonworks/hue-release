@@ -315,6 +315,8 @@ var prefilledArgs = [\
 % for arg in result["arguments"].split("\t"):
 '${arg}',\
 % endfor
+% elif 'id' not in result:
+'-useHCatalog',\
 % endif
 ];
 
