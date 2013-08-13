@@ -53,11 +53,15 @@ class Templeton(object):
             except AttributeError:
                 raise error
 
-    def delete(self, url, data=None):
+    def delete(self, url, params=None, data=None):
         """
         Make DELETE query to templeton url.
         """
-        params = {"user.name": self.user, "doAs": self.doAs}
+        if params is not None:
+            params["user.name"] = self.user
+            params["doAs"] = self.doAs
+        else:
+            params = {"user.name": self.user, "doAs": self.doAs}
         response = self.client.execute("DELETE", url, params=params, data=data)
         return json.loads(response.read())
 
