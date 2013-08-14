@@ -1,6 +1,19 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+##########################################################
+# to bring machine up do $ vagrant up <machine name>
+# 
+# Available <Machine name>s:
+#  - default: Unsecure Sandbox
+#  - secure : Secure Sandbox
+#  - test   : Lightweight installation
+#             for running unittests [uses local repo]
+#  - qa     : full sandbox with preloaded TestData
+# 
+#  local repo now at http://10.2.2.239:8142
+##########################################################
+
 Vagrant.configure("2") do |config|
   config.vm.box = "sandbox-comanche"
   config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-comanche.box"
@@ -27,13 +40,13 @@ Vagrant.configure("2") do |config|
   end
 
 
-  config.vm.define :dev do |subconf|
+  config.vm.define :qa do |subconf|
     subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
       puppet.manifests_path = "manifests"
-      puppet.manifest_file  = "sandbox_dev.pp"
+      puppet.manifest_file  = "sandbox_qa.pp"
     end
   end
-
+  
   config.vm.define :test do |subconf|
     subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
       puppet.manifests_path = "manifests"
@@ -63,7 +76,7 @@ Vagrant.configure("2") do |config|
   end
 
 
-  ['default', 'dev', 'secure'].each do |vm|
+  ['default', 'qa', 'secure'].each do |vm|
       config.vm.define vm do |subconf|
         subconf.vm.network :forwarded_port, guest: 25, host: 42025, host_ip: "127.0.0.1", auto_correct: false
         subconf.vm.network :forwarded_port, guest: 68, host: 42068, host_ip: "127.0.0.1", auto_correct: false

@@ -134,10 +134,20 @@ class groups_fix {
       }
 }
 
+class java_home {
+    file { "/etc/bashrc": ensure => present, }
+
+    line { java_home:
+        file => "/etc/bashrc",
+        line => "export JAVA_HOME=/usr/jdk/jdk1.6.0_31/",
+    }
+}
+
 class sandbox {
     include sandbox_rpm
     include hdfs_prepare
     include groups_fix
+    include java_home
 
     file {"/usr/lib/hive/lib/hcatalog-core.jar":
         ensure => link,
@@ -187,5 +197,6 @@ class sandbox {
     }
 
 }
+
 
 include sandbox

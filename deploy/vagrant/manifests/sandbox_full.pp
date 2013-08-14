@@ -67,17 +67,7 @@ class tutorials {
     }
 }
 
-class java_home {
-    file { "/etc/bashrc": ensure => present, }
-
-    line { java_home:
-        file => "/etc/bashrc",
-        line => "export JAVA_HOME=/usr/jdk/jdk1.6.0_31/",
-    }
-}
-
 class sandbox_customize inherits sandbox {
-    include java_home
     include tutorials
 
     service { "hue":
