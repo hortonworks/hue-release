@@ -62,35 +62,15 @@ function autosave(){
   return true;
 }
 
-function listdir(_context){
-  // Context - Full path, that user have typed. e.g. /tmp/dir1/
-  var contentList=[];
-  _context=_context.replace(/'/g, "" ).replace(/"/g, "" );
-  _context=_context.split(" ");
-  _context=_context[0];
 
-
+function getDatabases(){
   $.ajax({
-    url: "/hcatalog/listdir" + _context,
+    url: "/hcatalog/databases/json",
     type: "GET",
     dataType: "json",
     cache: false,
-    async: false,
-    success: function(data) {
-        for (var i = 0; i < data.length; i++) {
-            contentList.push(data[i]);
-        }
-
-    },
-    error: function() {
-    	contentList.length = 0;
-    }
-  });
-  return contentList;
-}
-
-function getDatabases(){
-  $.get("/hcatalog/databases/json" , function(data){
+    async: true,
+    success: function(data){
     for (var db in data){
       pigKeywordsD.push(db);
       db_list[db]= {};
@@ -100,7 +80,21 @@ function getDatabases(){
         $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + db + "." + data[db][i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
       };
     }
-  },"json");
+    console.log('DB LIST LOADED')
+  }
+  });
+  /*$.get("/hcatalog/databases/json" , function(data){
+    for (var db in data){
+      pigKeywordsD.push(db);
+      db_list[db]= {};
+      for (var i = data[db].length - 1; i >= 0; i--) {
+        pigKeywordsT.push(data[db][i]);
+        db_list[db][data[db][i]] = {};
+        $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + db + "." + data[db][i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
+      };
+    }
+    console.log('DB LIST LOADED')
+  },"json");*/
 }
 
 function getTables(database){
@@ -158,20 +152,19 @@ function call_popup_var_edit(){
     }
   }, 100);
 
-if(!pig_editor.getValue())
-{
-    $(".empty-codemirror-textarea-error").remove();
-    $(".CodeMirror").append("<div class='empty-codemirror-textarea-error'>This field is required.</div>");
-    $(".empty-codemirror-textarea-error").css({
-        "padding":"15px 0px",
-        "color":"red",
-        "font-size":"14px",
-        "font-weight":"bold"
-    });
-    setTimeout(function(){pig_editor.focus();}, 50);
-    return d.promise();
-}
-
+  if(!pig_editor.getValue())
+  {
+      $(".empty-codemirror-textarea-error").remove();
+      $(".CodeMirror").append("<div class='empty-codemirror-textarea-error'>This field is required.</div>");
+      $(".empty-codemirror-textarea-error").css({
+          "padding":"15px 0px",
+          "color":"red",
+          "font-size":"14px",
+          "font-weight":"bold"
+      });
+      setTimeout(function(){pig_editor.focus();}, 50);
+      return d.promise();
+  }
 
   var html="";
   var editorContent=pig_editor.getValue();
@@ -223,6 +216,110 @@ $("#show-modal-for-var").on('hide', function() {
   varSaveParamTrig=0;
 });
 
+/*function listdir(_context){
+  // Context - Full path, that user have typed. e.g. /tmp/dir1/
+  var contentList = [];
+  CodeMirror.listDir = [];
+  _context=_context.replace(/'/g, "" ).replace(/"/g, "" );
+  _context=_context.split(" ");
+  _context=_context[0];
+
+
+  $.ajax({
+    url: "/filebrowser/view" + _context + "?format=json",
+    type: "GET",
+    dataType: "json",
+    cache: false,
+    async: false,
+    success: function(data) {
+        //for (var i = 0; i < data.length; i++) {
+        //    contentList.push(data[i]);
+        //}
+        if (data.error) {
+          $.jHueNotify.error(data.error_message);
+          contentList.length = 0;
+          CodeMirror.listDir.length = 0;
+          return false;
+        };
+        CodeMirror.isDir = true;
+        $(data.files).each(function (i, item) {
+          if (item.name != "") {
+            CodeMirror.listDir.push(item.name);
+            contentList.push(item.name);
+          };
+        });
+
+
+    },
+    error: function(data) {
+      contentList.length = 0;
+    }
+  });
+  return contentList;
+}*/
+
+CodeMirror.commands.autocomplete = function (cm) {
+  $(document.body).on("contextmenu", function (e) {
+    e.preventDefault(); // prevents native menu on FF for Mac from being shown
+  });
+  var curText=cm.getTokenAt(cm.getCursor()).string;
+  var startKeys=curText.substr(0,2);
+  var lastKey=cm.getLine(cm.getCursor().line).substr(cm.getCursor().ch-1,1);
+  var prevKey=cm.getLine(cm.getCursor().line).substr(cm.getCursor().ch-2,1);
+  if ((startKeys== "'/" || startKeys== '"/')) {
+    CodeMirror.isDir = true;
+    console.log(lastKey)
+    if (lastKey=='/') {
+      showHdfsHint(cm, curText);
+    } else {
+      showHdfsHint(cm, curText.substring(0,curText.lastIndexOf('/')+1));
+    }
+  } else {
+    CodeMirror.isDir = false;
+    CodeMirror.showHint(cm, CodeMirror.pigHint);
+  }
+
+}
+
+function showHdfsHint(codeMirror, path) {
+      //prepare tmp here
+      //----
+      CodeMirror.listDir = [];
+      path=path.replace(/'/g, "" ).replace(/"/g, "" );
+      path=path.split(" ");
+      path="/filebrowser/view" + path[0] + "?format=json";
+
+      //----
+      console.log('---fb path---')
+      console.log(path)
+
+      $.getJSON(path, function (data) {
+        CodeMirror.listDir = [];
+        if (data.error != null) {
+          $.jHueNotify.error(data.error_message);
+          CodeMirror.listDir.length = 0;
+        }
+        else {
+          $(data.files).each(function (cnt, item) {
+            itm_name = (item.stats.path.substr(item.stats.path.length-2,2) != '..') ? item.name:'..';
+            if (itm_name != "") {
+              var _ico = "icon-file-alt";
+              if (item.type == "dir") {
+                _ico = "icon-folder-close";
+              }
+              CodeMirror.listDir.push('<i class="' + _ico + '"></i> ' + itm_name);
+            }
+          });
+          //CodeMirror.isDir = true;
+          //CodeMirror.isHCatHint = showHCatHint;
+          window.setTimeout(function () {
+            CodeMirror.showHint(codeMirror, CodeMirror.pigHint);
+          }, 100);  // timeout for IE8
+        }
+      });
+
+    }
+
 var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
   lineNumbers: true,
   matchBrackets: true,
@@ -232,7 +329,8 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     pig_editor.matchHighlight("CodeMirror-matchhighlight");
   },
   extraKeys: {
-    "Ctrl-Space": function(cm) { CodeMirror.simpleHint(cm, CodeMirror.pigHint);  }
+    //"Ctrl-Space": function(cm) { CodeMirror.showHint(cm, CodeMirror.pigHint);  }
+    "Ctrl-Space": "autocomplete",
   },
   onKeyEvent: function(cm,key){
     var lineNumber=cm.getCursor().line;
@@ -245,8 +343,45 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
       pig_editor.setOption("keyMap", "basic");
     }
 
-  },
-  onChange : function (from, change){
+    // filter keyup events
+    if (key.type!="keyup") return;
+
+    $(".empty-codemirror-textarea-error").remove();
+    
+    // get current string
+    var curText=cm.getTokenAt(cm.getCursor()).string;
+    console.log(curText)
+    console.log(CodeMirror.isDir)
+
+    var startKeys=curText.substr(0,2);
+    var lastKey=cm.getLine(cm.getCursor().line).substr(cm.getCursor().ch-1,1);
+    var prevKey=cm.getLine(cm.getCursor().line).substr(cm.getCursor().ch-2,1);
+
+    var _line = cm.getLine(cm.getCursor().line);
+    var _partial = _line.substring(0, cm.getCursor().ch);
+
+    // console.log(_partial.indexOf("'"))
+    // console.log(_partial.lastIndexOf("'"))
+    //if (_partial.indexOf("'") > -1 && _partial.indexOf("'") == _partial.lastIndexOf("'")) {
+
+
+        if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey))) {
+          console.log('not dir')
+          CodeMirror.isDir = false;
+          //CodeMirror.showHint(cm, CodeMirror.pigHint);
+        } else if ((startKeys== "'/" || startKeys== '"/')) {
+          console.log('dir')
+          CodeMirror.isDir = true;
+          if (key.keyCode=="191") showHdfsHint(cm, curText);
+        } 
+      //}
+    //} 
+  }
+});
+
+pig_editor.on('change',function (from, change){
+
+    return false;
 
     $(".empty-codemirror-textarea-error").remove();
 
@@ -256,7 +391,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     var lastKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-1,1);
     var prevKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,1);
 
-    if((startKeys== "'/" || startKeys== '"/'))
+    /*if((startKeys== "'/" || startKeys== '"/'))
     {
       dirList = [];
       if(lastKey=='/' && tmpDirList.path != curText)
@@ -274,7 +409,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
           for (var i = 0; i < tmpDirList.list.length; i++)
           {
             if(0 == tmpDirList.list[i].indexOf(complPart,0))
-            	dirList.push(tmpDirList.list[i]);
+              dirList.push(tmpDirList.list[i]);
           }
       }
       if(dirList.length<2 && dirList.length>0)
@@ -289,17 +424,22 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
       };
 
       if(dirList.length>0 && dirList[0].trim()!="")
-        CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr );
+        //CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr );
+        CodeMirror.showHint(from, CodeMirror.pigHint);
 
     }
-    else if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey)))
+    else*/ if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey)))
     {
-      CodeMirror.simpleHint(from, CodeMirror.pigHint);
+      console.log('(prevKey== \"\'\" || prevKey== \'\"\')&&(/\w/.test(lastKey))')
+      //CodeMirror.simpleHint(from, CodeMirror.pigHint);
     }
     else if(lastKey == "." )
     {
       if ($.isEmptyObject(db_list)) 
         return false;
+
+      console.log('lastKey == "."')
+      return false;
 
       var tline=from.getLine(from.getCursor().line).substr(0,from.getCursor().ch-1);
       var targetT=tline.match(/\w*$/);
@@ -359,9 +499,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
 
     autosave();
 
-  }
-});
-
+  });
 
 
 
@@ -379,10 +517,15 @@ var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code
 
 });
 
-
-
-
-
+$('.script_label').on('click',function(e){
+  if (e.target.tagName.toLowerCase() == 'i'){
+    return false;
+  } else if ($(this).attr('for')=="id_pig_script") {
+    $(pig_editor.getWrapperElement()).toggle();
+  } else if ($(this).attr('for')=="python_code") {
+    $(python_editor.getWrapperElement()).toggle();
+  }
+})
 
 function findPosition(curLine){
   var pos= curLine.indexOf("%");
@@ -434,7 +577,6 @@ function paginator(lines_per_page){
   }
 
 };
-
 
 $(document).ready(function(){
 

@@ -738,6 +738,8 @@ def view_results(request, id, first_row=0):
   # Handle errors
   error = fetch_error or results is None or expired
 
+  LOG.debug(results.columns)
+
   context = {
     'error': error,
     'error_message': error_message,
