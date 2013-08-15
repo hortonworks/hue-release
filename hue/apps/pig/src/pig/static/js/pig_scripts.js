@@ -1,5 +1,5 @@
-var pigKeywordsT=[];
-var pigKeywordsD=[];
+//var pigKeywordsT=[];
+//var pigKeywordsD=[];
 var dollarSaveParamTrig = 0;
 var varSaveParamTrig = 0;
 var submitFormPopup=false;
@@ -72,10 +72,10 @@ function getDatabases(){
     async: true,
     success: function(data){
     for (var db in data){
-      pigKeywordsD.push(db);
+      CodeMirror.kwset.db = CodeMirror.kwset.db.concat(db); // pigKeywordsD.push(db);
       db_list[db]= {};
       for (var i = data[db].length - 1; i >= 0; i--) {
-        pigKeywordsT.push(data[db][i]);
+        CodeMirror.kwset.tables = CodeMirror.kwset.tables.concat(data[db][i]);// pigKeywordsT.push(data[db][i]);
         db_list[db][data[db][i]] = {};
         $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + db + "." + data[db][i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
       };
@@ -100,9 +100,9 @@ function getDatabases(){
 function getTables(database){
   var database = database || 'default';
   $.get("/hcatalog/tables/json/" + database, function(data){
-      if(pigKeywordsT.length<1){
+      if(CodeMirror.kwset.tables.length<1){
         for (var i = 0; i < data.length; i++) {
-          pigKeywordsT.push(data[i]);
+          CodeMirror.kwset.tables = CodeMirror.kwset.tables.concat(data[i]); //pigKeywordsT.push(data[i]);
           db_list[database][data[i]]={};
           $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + database + "." + data[i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
         }
@@ -128,7 +128,8 @@ function getTableFields(table, target, database, callback){
         target.list.push("");
 
       if(target.list.length>0 && target.list[0].name !="")
-        CodeMirror.simpleHint(pig_editor, CodeMirror.pigHint, "", target , true );
+        //CodeMirror.simpleHint(pig_editor, CodeMirror.pigHint, "", target , true );
+        CodeMirror.showHint(codeMirror, CodeMirror.pigTableHint);
 
     }else{
       delete db_list[database][table];
@@ -365,10 +366,10 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     //if (_partial.indexOf("'") > -1 && _partial.indexOf("'") == _partial.lastIndexOf("'")) {
 
 
-        if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey))) {
-          console.log('not dir')
+        if(lastKey == "." ) {
+          console.log('tbl')
           CodeMirror.isDir = false;
-          //CodeMirror.showHint(cm, CodeMirror.pigHint);
+          CodeMirror.showHint(cm);
         } else if ((startKeys== "'/" || startKeys== '"/')) {
           console.log('dir')
           CodeMirror.isDir = true;
@@ -381,7 +382,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
 
 pig_editor.on('change',function (from, change){
 
-    return false;
+    //return false;
 
     $(".empty-codemirror-textarea-error").remove();
 
@@ -439,7 +440,7 @@ pig_editor.on('change',function (from, change){
         return false;
 
       console.log('lastKey == "."')
-      return false;
+      //return false;
 
       var tline=from.getLine(from.getCursor().line).substr(0,from.getCursor().ch-1);
       var targetT=tline.match(/\w*$/);
@@ -493,7 +494,8 @@ pig_editor.on('change',function (from, change){
       if(fields_hint.length<2 && fields_hint.length>0)
         fields_hint.push("");
       if(fields_hint.length>0 && fields_hint[0].name !=""){
-        CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr , true );
+        //CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr , true );
+        CodeMirror.showHint(from, CodeMirror.pigTableHint);
       }
     }
 
