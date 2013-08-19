@@ -15,17 +15,17 @@
 ##########################################################
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "sandbox-comanche"
-  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-comanche.box"
+  config.vm.box = "sandbox-hdp-2.0.5"
+  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.5.box"
 
   config.vm.hostname = "sandbox"
 
   config.vm.provider :virtualbox do |vb|
     vb.gui = true
   
-    vb.customize ["modifyvm", :id, "--memory", 3048] #For dev purpose
+    vb.customize ["modifyvm", :id, "--memory", 4096]
     vb.customize ["modifyvm", :id, "--rtcuseutc", "on"]
-    vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 1.3", "--groups", "/HortonWorks"]
+    vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox HDP2 Beta", "--groups", "/HortonWorks"]
 
     vb.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
     vb.customize ["modifyvm", :id, "--nic2", "none"]
@@ -61,8 +61,8 @@ Vagrant.configure("2") do |config|
 
 
   config.vm.define :secure do |subconf|
-    config.vm.box = "sandbox-comanche-secure"
-    config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-comanche-secure.box"
+    config.vm.box = "sandbox-hdp-2.0.5-secure"
+    config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.5-secure.box"
 
 
     subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
@@ -71,7 +71,7 @@ Vagrant.configure("2") do |config|
     end
 
     subconf.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 1.3 Secure", "--groups", "/HortonWorks"]
+      vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox HDP2 Beta  Secure", "--groups", "/HortonWorks"]
     end
   end
 
