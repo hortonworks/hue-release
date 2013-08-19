@@ -60,23 +60,23 @@ Vagrant.configure("2") do |config|
   end
 
 
-  config.vm.define :secure do |subconf|
-    config.vm.box = "sandbox-hdp-2.0.5-secure"
-    config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.5-secure.box"
+  # config.vm.define :secure do |subconf|
+  #   config.vm.box = "sandbox-hdp-2.0.5-secure"
+  #   config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.5-secure.box"
 
 
-    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
-      puppet.manifests_path = "manifests"
-      puppet.manifest_file  = "sandbox_secure.pp"
-    end
+  #   subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
+  #     puppet.manifests_path = "manifests"
+  #     puppet.manifest_file  = "sandbox_secure.pp"
+  #   end
 
-    subconf.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox HDP2 Beta  Secure", "--groups", "/HortonWorks"]
-    end
-  end
+  #   subconf.vm.provider :virtualbox do |vb|
+  #     vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox HDP2 Beta  Secure", "--groups", "/HortonWorks"]
+  #   end
+  # end
 
 
-  ['default', 'qa', 'secure'].each do |vm|
+  ['default', 'qa'].each do |vm|
       config.vm.define vm do |subconf|
         subconf.vm.network :forwarded_port, guest: 25, host: 42025, host_ip: "127.0.0.1", auto_correct: false
         subconf.vm.network :forwarded_port, guest: 68, host: 42068, host_ip: "127.0.0.1", auto_correct: false
