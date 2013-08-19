@@ -123,14 +123,19 @@ class hdfs_prepare_secure {
 
       file { 'hue.ini':
         path    => "/etc/hue/conf/hue.ini",
-        content => template("/vagrant/files/hue.ini"),
+        content => template("/vagrant/files/secure/hue.ini"),
         require => Package['hue-sandbox'],
+      }
+
+      file { 'webhcat-site.xml':
+        path    => "/etc/hcatalog/conf/webhcat-site.xml",
+        content => template("/vagrant/files/secure/webhcat-site.xml"),
       }
 
       
       file { 'webhcat-patch.jar':
         path    => "/usr/lib/hcatalog/share/webhcat/svr/webhcat-fix.jar",
-        content => file("/vagrant/files/webhcat.jar"),
+        content => file("/vagrant/files/secure/webhcat.jar"),
         require => Exec["hdfs_prepare_secure.sh"]
 
       }
