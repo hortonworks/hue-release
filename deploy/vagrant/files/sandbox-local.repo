@@ -1,6 +1,6 @@
 [sandbox]
 name=Sandbox repo
-baseurl=http://10.2.2.239:8142/sandbox/Comanche/
+baseurl=http://10.2.2.239:8142/sandbox/HDP2Beta/
 path=/
 enabled=1
 gpgcheck=0
@@ -9,7 +9,7 @@ gpgcheck=0
 [hue-bigtop]
 # dev repository
 name=Hue repository
-baseurl=http://10.2.2.239:8142/bigtop/centos6-Comanche/
+baseurl=http://10.2.2.239:8142/bigtop/centos6-HDP2Beta/
 path=/
 enabled=1
 gpgcheck=0
