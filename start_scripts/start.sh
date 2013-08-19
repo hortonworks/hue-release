@@ -7,28 +7,20 @@ echo "Starting Postgresql"
 /etc/init.d/postgresql start;sleep 5
 
 echo "Start name node"
-su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode";sleep 5
+su - hdfs -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode";sleep 5
 tail -$line  /var/log/hadoop/hdfs/hadoop-hdfs-namenode-*.log
 
 echo "Start data node"
-su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode";sleep 5
+su - hdfs -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode";sleep 5
 tail -$line  /var/log/hadoop/hdfs/hadoop-hdfs-datanode-*.log
 
 echo "Start secondary name node"
-su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode";sleep 5
+su - hdfs -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode";sleep 5
 tail -$line  /var/log/hadoop/hdfs/hadoop-hdfs-secondarynamenode-*.log
 
-echo "Start job tracker"
-su - mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start jobtracker; sleep 25"
-tail -$line  /var/log/hadoop/mapred/hadoop-mapred-jobtracker-*.log
-
 echo "Start history server"
-su - mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start historyserver";sleep 5
-tail -$line  /var/log/hadoop/mapred/hadoop-mapred-historyserver-*.log
-
-echo "Start task trackers"
-su mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start tasktracker";sleep 5
-tail -$line  /var/log/hadoop/mapred/hadoop-mapred-tasktracker-*.log
+su - mapred -c  'export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-mapreduce/sbin/mr-jobhistory-daemon.sh --config /etc/hadoop/conf start historyserver'
+tail -$line  /var/log/hadoop-mapreduce/mapred/mapred-mapred-historyserver-sandbox.out
 
 echo "Start zookeeper nodes"
 su - zookeeper -c  'source /etc/zookeeper/conf/zookeeper-env.sh ; /bin/env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/lib/zookeeper/bin/zkServer.sh start'
@@ -59,6 +51,14 @@ tail -$line  /var/log/webhcat/webhcat.log
 echo "Start Oozie"
 su - oozie -c "cd /var/log/oozie; /usr/lib/oozie/bin/oozie-start.sh"
 tail -$line  /var/log/oozie/oozie.log
+
+
+# YARN
+su - yarn -c  'export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager'
+su - yarn -c  'export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager'
+su - mapred -c  'export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-mapreduce/sbin/mr-jobhistory-daemon.sh --config /etc/hadoop/conf start historyserver'
+
+
 
 # echo "Starting Ganglia"
 # /etc/init.d/gmetad stop
