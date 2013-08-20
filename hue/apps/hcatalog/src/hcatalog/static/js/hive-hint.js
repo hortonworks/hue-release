@@ -34,6 +34,9 @@
       token.className="hive-word";
     }
 
+    if (token.string.indexOf("/")> -1) {
+      token.string = token.string.substring(token.string.lastIndexOf("/") + 1);
+    };
 
 
     var tprop = token;
@@ -59,15 +62,19 @@
       to: {line: cur.line, ch: token.end}};
   }
 
-  CodeMirror.hiveHint = function(editor) {
+  CodeMirror.registerHelper("hint", "hive", function(editor) {
     return scriptHint(editor, keywordsU, function (e, cur) {return e.getTokenAt(cur);});
-  };
+  });
 
   function toTitleCase(str) {
     return str.replace(/(?:^|\s)\w/g, function(match) {
       return match.toUpperCase();
     });
   }
+
+  CodeMirror.listDir = [];
+  CodeMirror.isHCat = false;
+  CodeMirror.isDir = false;
 
   var keywords = "CREATE\tDATABASE\tSCHEMA\tTABLE\tEXTERNAL\tIF\tNOT\tEXISTS\tCOMMENT\tLOCATION\t" 
 	  + "WITH\tDBPROPERTIES\tDROP\tRESTRICT\tCASCADE\tPARTITIONED BY\tCLUSTERED BY\tSORTED BY\t" 
@@ -100,21 +107,38 @@
   function getCompletions(token, context) {
     var found = [], start = token.string;
     function maybeAdd(str) {
-      if (str.indexOf(start) == 0 && !arrayContains(found, str)) found.push(str);
+      var stripped = strip(str).replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');
+      if (stripped.indexOf(start) == 0 && !arrayContains(found, str)) found.push(str);
+    }
+
+    function strip(html){
+      if (jQuery) {
+        return $("<div>").html(html).text();
+      }
+      else {
+        var tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText;
+      }
     }
 
     function gatherCompletions(obj) {
-      if(obj == ":") {
-        forEach(typesL, maybeAdd);
-      }
-      else {
-        forEach(builtinsU, maybeAdd);
-        forEach(builtinsL, maybeAdd);
-        forEach(typesU, maybeAdd);
-        forEach(typesL, maybeAdd);
-        forEach(keywordsU, maybeAdd);
-        forEach(keywordsL, maybeAdd);
-        forEach(keywordsT, maybeAdd);
+      if (CodeMirror.isDir == true) {
+        forEach(CodeMirror.listDir, maybeAdd);
+      } else{
+
+        if(obj == ":") {
+          forEach(typesL, maybeAdd);
+        }
+        else {
+          forEach(builtinsU, maybeAdd);
+          forEach(builtinsL, maybeAdd);
+          forEach(typesU, maybeAdd);
+          forEach(typesL, maybeAdd);
+          forEach(keywordsU, maybeAdd);
+          forEach(keywordsL, maybeAdd);
+          forEach(keywordsT, maybeAdd);
+        }
       }
     }
 
