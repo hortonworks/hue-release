@@ -137,7 +137,7 @@ UDF_PATH = conf.UDF_PATH.get()
             <input type="hidden" id="operation_type" />
             <div id="pigArguments">
               <div class="input-prepend input-append">
-                <input type="text" name="tags" placeholder="e.g. -useHCatalog" class="pigArgument span2"/><span class="add-on"><i class="icon-arrow-left"></i> pig arguments</span>
+                <input type="text" name placeholder="e.g. -useHCatalog" class="pigArgument span2"/><span class="add-on"><i class="icon-arrow-left"></i> pig arguments</span>
               </div>
             </div>
 	          <br>
@@ -148,10 +148,14 @@ UDF_PATH = conf.UDF_PATH.get()
                    disabled="disabled"
                    % endif
                    />
-	            <input class="btn primary action_btn" type="button" id="start_job" name="submit_action"value="Execute" />
-              <input class="btn primary " type="button"id="kill_job"  value="Kill job" style="display:none" />
-	            <input class="btn primary action_btn" type="button"id="explain" name="submit_action" value="Explain" />
-	            <input class="btn primary action_btn" name="submit_action"type="button" value="Syntax check" id="syntax_check" />
+              <%
+                runningJob = result.get("job_id") and result.get("JOB_SUBMITED")
+                hideaction = 'display:none;'
+              %>
+	            <input class="btn primary action_btn" type="button" id="start_job" name="submit_action" value="Execute" style="${ hideaction if runningJob else ''}"/>
+              <input class="btn primary " type="button"id="kill_job"  value="Kill job" style="${ hideaction if not runningJob else ''}" />
+	            <input class="btn primary action_btn" type="button"id="explain" name="submit_action" value="Explain" style="${ hideaction if runningJob else ''}"/>
+	            <input class="btn primary action_btn" name="submit_action"type="button" value="Syntax check" id="syntax_check" style="${ hideaction if runningJob else ''}"/>
 	          </div>
 	        </form>
           <input type="hidden" id="fakeArgs">
