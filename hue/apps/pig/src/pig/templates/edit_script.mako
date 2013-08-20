@@ -139,7 +139,7 @@ UDF_PATH = conf.UDF_PATH.get()
             <input type="hidden" id="operation_type" />
             <div id="pigArguments">
               <div class="input-prepend input-append">
-                <input type="text" name="tags" placeholder="e.g. -useHCatalog" class="pigArgument span2"/><span class="add-on"><i class="icon-arrow-left"></i> pig arguments</span>
+                <input type="text" name placeholder="e.g. -useHCatalog" class="pigArgument span2"/><span class="add-on"><i class="icon-arrow-left"></i> pig arguments</span>
               </div>
             </div>
 	          <br>
@@ -195,7 +195,6 @@ UDF_PATH = conf.UDF_PATH.get()
 </div>
 
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
-<link href="/pig/static/css/monokai.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
 <link href="/pig/static/css/show-hint.css" rel="stylesheet">
 <link href="/pig/static/css/bootstrap-fileupload.min.css" rel="stylesheet">
