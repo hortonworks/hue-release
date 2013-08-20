@@ -16,8 +16,13 @@ class splash_opts {
         content => template("/vagrant/files/splash/bashrc"),
     }
 
+    package { 'epel-release':
+        ensure => present,
+    }
+
     package { 'python-pip':
         ensure => present,
+        require => Package["epel-release"],
     }
 
     exec { 'python-sh':
