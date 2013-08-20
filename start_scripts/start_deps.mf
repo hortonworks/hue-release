@@ -119,13 +119,13 @@ mysql:
 		/etc/init.d/mysqld start,\
 		true)
 
-hive: postgresql mysql
+hive: HDFS postgresql mysql
 	$(call colorized,\
 		hive server, \
 		su -l hive -c "env HADOOP_HOME=/usr nohup hive --service metastore > /var/log/hive/hive.out 2> /var/log/hive/hive.log &", true,\
 		/var/log/hive/hive.log)
 
-hive2: hive
+hive2: HDFS hive
 	$(call colorized,\
 		Hiveserver2, \
 		su -l hive -c "nohup /usr/lib/hive/bin/hiveserver2 -hiveconf hive.metastore.uris=\" \" > /var/log/hive/hive-server2.log 2>/var/log/hive/hive-server2.log &",true,\
