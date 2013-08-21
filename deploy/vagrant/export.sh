@@ -1,11 +1,26 @@
-#set -x
+set -x
 set -e
+
+platform='unknown'
+unamestr=`uname`
+if [[ "$unamestr" == 'Linux' ]]; then
+   platform='linux'
+elif [[ "$unamestr" == 'FreeBSD' ]]; then
+   platform='freebsd'
+fi
+
+[ -z $1 ] && MACHINE_VERSION=default || MACHINE_VERSION="$1"
 
 # VBox
 #vagrant up
-MACHINE="$(VBoxManage list vms | grep `cat .vagrant/machines/default/virtualbox/id` | sed -r 's/\"(.*)\".*/\1/g')"
-vagrant ssh -c "echo 'vbox' | sudo tee /virtualization"
-vagrant halt
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	MACHINE="$(VBoxManage list vms | grep `cat .vagrant/machines/$MACHINE_VERSION/virtualbox/id` | sed -E 's/\"(.*)\".*/\1/g')"
+else
+	MACHINE="$(VBoxManage list vms | grep `cat .vagrant/machines/$MACHINE_VERSION/virtualbox/id` | sed -r 's/\"(.*)\".*/\1/g')"
+fi
+
+vagrant ssh $MACHINE_VERSION -c "echo 'vbox' | sudo tee /virtualization"
+vagrant halt $MACHINE_VERSION
 VBoxManage sharedfolder remove "$MACHINE" --name '/vagrant'
 VBoxManage sharedfolder remove "$MACHINE" --name '/tmp/vagrant-puppet/manifests'
 echo $MACHINE
@@ -14,20 +29,24 @@ VBoxManage export "$MACHINE" --output "Hortonworks-Sandbox-1.3-VirtualBox".ova \
     --vsys 0 --vendor "HortonWorks" --version "1.3" --product "Sandbox"
 
 # VMware
-vagrant up --no-provision
-vagrant ssh -c "sudo /opt/VBoxGuestAdditions-*/uninstall.sh"
-vagrant ssh -c "echo 'vmware' | sudo tee /virtualization"
-vagrant halt
+vagrant up $MACHINE_VERSION --no-provision
+vagrant ssh $MACHINE_VERSION -c "sudo /opt/VBoxGuestAdditions-*/uninstall.sh"
+vagrant ssh $MACHINE_VERSION -c "echo 'vmware' | sudo tee /virtualization"
+vagrant halt $MACHINE_VERSION
 
-HDDFILE="$(VBoxManage list hdds | grep -e "$MACHINE/" | sed -r "s/.*:[^/]*(.*)/\1/g")"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	HDDFILE="$(VBoxManage list hdds | grep -e "$MACHINE/" | sed -E "s/.*:[^/]*(.*)/\1/g")"
+else
+	HDDFILE="$(VBoxManage list hdds | grep -e "$MACHINE/" | sed -r "s/.*:[^/]*(.*)/\1/g")"
+fi
 cp "$HDDFILE" ./vmware/sandbox.vmdk
 ovftool "./vmware/Hortonworks Sandbox 1.3.vmx" "./Hortonworks-Sandbox-1.3-VMware.ova"
 
 # Hyper-V
-vagrant up --no-provision
-vagrant ssh -c 'sudo sed -i /boot/grub/menu.lst -r -e "s/(kernel .*)$/\1 noapic/g"'
-vagrant ssh -c "echo 'hyper-v' | sudo tee /virtualization"
-vagrant halt
+vagrant up $MACHINE_VERSION --no-provision
+vagrant ssh $MACHINE_VERSION -c 'sudo sed -i /boot/grub/menu.lst -r -e "s/(kernel .*)$/\1 noapic/g"'
+vagrant ssh $MACHINE_VERSION -c "echo 'hyper-v' | sudo tee /virtualization"
+vagrant halt $MACHINE_VERSION
 VBoxManage clonehd "$HDDFILE" ./hyper-v/sandbox.vhd --format vhd
 
 exit 0
