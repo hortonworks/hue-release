@@ -44,6 +44,8 @@
       else this.cm.replaceRange(getText(completion), data.from, data.to);
       this.close();*/
 
+      if (this.options.pickoff) return this.close();
+
       var _insertion = strip(data.list[i]).replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');
       if (CodeMirror.isDir){
         var _curRange = this.cm.getRange(data.from, data.to);
@@ -55,7 +57,6 @@
             _insertion = "'" + _insertion;
           }
         }
-        /*CodeMirror.isDir = false;*/
       }
       this.cm.replaceRange(_insertion, data.from, data.to);
       if (CodeMirror.onAutocomplete !== "undefined" && CodeMirror.onAutocomplete != null) {
@@ -75,7 +76,7 @@
 
     showWidget: function(data) {
       this.widget = new Widget(this, data);
-      CodeMirror.signal(data, "shown");
+      CodeMirror.signal(data, "shown", this);
 
       var debounce = null, completion = this, finished;
       var closeOn = this.options.closeCharacters || /[\s()\[\]{};:>,]/;
