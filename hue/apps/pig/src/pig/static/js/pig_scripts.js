@@ -211,12 +211,20 @@ function hCatHint (cm, showHint) {
           dirArr.list.push("");
 
         if(dirArr.list.length>0 && dirArr.list[0].name !="")
-          showHint(dirArr);
+          showHint(unpickable(dirArr));
       }else{
         delete db_list[database][table];
       }
 
     },"json");
+  }
+  
+  //add handler to data to unable pick it
+  function unpickable(data) {
+    CodeMirror.on(data,'shown',function(widget){
+      widget.options.pickoff = true;
+    });
+    return data;
   }
   // prepare token object
   var cur = cm.getCursor();
@@ -258,8 +266,10 @@ function hCatHint (cm, showHint) {
       if (targetLast in db_list[targetPrev]) {
         if (typeof (db_list[targetPrev].columns) !== "undefined") {
           $.each(db_list[targetPrev].columns, function(e){
-            if(this.name != "" )
+            if(this.name != "" ){
               fields_hint.push(this.name + ":" + this.type);
+              unpickable(dirArr);
+            }
           })
         }else{
           return getTableFields(targetLast, targetPrev);
@@ -277,8 +287,10 @@ function hCatHint (cm, showHint) {
           if (tablenameD == targetLast) {
             if (typeof (db_list.default[tablenameD].columns) !== "undefined") {
               $.each(db_list.default[tablenameD].columns, function(e){
-                if(this.name != "" )
+                if(this.name != "" ){
                   fields_hint.push(this.name + ":" + this.type);
+                  unpickable(dirArr);
+                }
               })
             } else {
               return getTableFields(targetLast);
@@ -335,7 +347,7 @@ CodeMirror.commands.autocomplete = function (cm) {
   } else if (curText.lastIndexOf("'")==0 || (curText.lastIndexOf("'")== curText.length-1 && cm.getTokenAt(cm.getCursor()).end!=cm.getCursor().ch)) {
     CodeMirror.isDir = false;
     CodeMirror.isHCat = true;
-    CodeMirror.showHint(cm, CodeMirror.hint.hCatalog, {'async':true });
+    CodeMirror.showHint(cm, CodeMirror.hint.hCatalog, {'async':true});
   } else {
     CodeMirror.isDir = false;
     CodeMirror.isHCat = false;
