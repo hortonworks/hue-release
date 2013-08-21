@@ -15,8 +15,8 @@
 ##########################################################
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "sandbox-hdp-2.0.5"
-  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.5.box"
+  config.vm.box = "sandbox-hdp-2.0.5-rc-1"
+  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.5-rc-1.box"
 
   config.vm.hostname = "sandbox"
 
