@@ -267,6 +267,7 @@ label.error {
 <script src="/pig/static/js/simple-hint.js"></script>
 <script src="/pig/static/js/show-hint.js"></script>
 <script src="/pig/static/js/pig-hint.js"></script>
+<script src="/pig/static/js/hcat-helper.js"></script>
 <script src="/pig/static/js/jquery.pagination.js"></script>
 <script src="/pig/static/js/searchcursor.js"></script>
 <script src="/pig/static/js/match-highlighter.js"></script>

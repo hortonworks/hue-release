@@ -391,6 +391,7 @@ ${layout.menubar(section='query')}
 <script src="/pig/static/js/show-hint.js"></script>
 <script src="/hcatalog/static/js/hive.js"></script>
 <script src="/hcatalog/static/js/hive-hint.js"></script>
+<script src="/pig/static/js/hcat-helper.js"></script>
 <script src="/hcatalog/static/js/hive-script.js"></script>
 
 
