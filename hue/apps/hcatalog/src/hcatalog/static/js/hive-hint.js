@@ -138,6 +138,7 @@
           forEach(keywordsU, maybeAdd);
           forEach(keywordsL, maybeAdd);
           forEach(keywordsT, maybeAdd);
+          forEach(keywordsD, maybeAdd);
         }
       }
     }

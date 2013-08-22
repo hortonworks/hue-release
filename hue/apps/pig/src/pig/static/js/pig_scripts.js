@@ -201,8 +201,7 @@ function showHdfsHint(codeMirror, path_) {
     if (data.error != null) {
       $.jHueNotify.error(data.error);
       CodeMirror.listDir.length = 0;
-    }
-    else {
+    } else {
       $(data.files).each(function (cnt, item) {
         itm_name = item.name;
         if (itm_name != ".") {
@@ -265,8 +264,6 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
       CodeMirror.isDir = false;
       CodeMirror.isHCat = true;
       CodeMirror.showHint(cm, CodeMirror.hint.hCatalog, {'async':true });
-    } else if (key.keyCode > "47" && key.keyCode < "91"){
-      CodeMirror.showHint(cm);
     }
   }
 });
