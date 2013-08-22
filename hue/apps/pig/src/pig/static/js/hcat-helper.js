@@ -65,8 +65,8 @@
     }
     // prepare token object
     var cur = cm.getCursor();
-    var token = cm.getTokenAt(cm.getCursor());
-    var curText=cm.getTokenAt(cm.getCursor()).string;
+    var token = cm.getTokenAt(cur);
+    var curText = token.string;
 
     if (token.string[0]=="'"||token.string[0]=='"') {
 

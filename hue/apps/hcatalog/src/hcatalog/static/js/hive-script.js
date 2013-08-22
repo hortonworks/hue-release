@@ -1,4 +1,5 @@
 var keywordsT=[];
+var keywordsD=[];
 var submitFormPopup=false;
 CodeMirror.db_list = {};
 
@@ -6,8 +7,11 @@ function getDatabases(){
   $.get("/hcatalog/databases/json" , function(data){
     for (var db in data){
       CodeMirror.db_list[db]= {};
+      keywordsD.push('<i class="icon-hdd"></i> ' + db);
       for (var i = data[db].length - 1; i >= 0; i--) {
         CodeMirror.db_list[db][data[db][i]] = {};
+        if (db=="default")
+          keywordsT.push('<i class="icon-list-alt"></i> ' + data[db][i]);
       };
     }
   },"json");
