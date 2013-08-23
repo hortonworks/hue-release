@@ -13,7 +13,7 @@ function ping_job(job_id){
         if (data.exitValue !== null)
         {
           if (data.status.failureInfo != 'NA')
-            $("#failure_info").html(data.status.failureInfo);
+            $("#failure_info").removeClass('hide').html(data.status.failureInfo);
 	  	percent += 0.5;
 		$(".bar").css("width", percent+"%");
 	        globalTimer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
@@ -311,15 +311,14 @@ function paginator(lines_per_page){
     return;
   }
 
-  $("#job_info_outer").append("<div class='pagination_controls'></div>");
+  $("#job_info_outer").removeClass('hide')
+    .append("<div class='pagination_controls'></div>")
+    .css({"padding-bottom" : "30px"});
   $(".pagination_controls").pagination(lines.length, {
     items_per_page:lines_per_page,
     callback:handlePaginationClick
   });
 
-  $("#job_info_outer").css({
-    "padding-bottom" : "30px"
-  })
 
   function handlePaginationClick(new_page_index, pagination_container) {
     //debugger;
@@ -346,15 +345,15 @@ $(document).ready(function(){
 
   paginator(30);
 
-  getTables();
+  getDatabases();
 
   $(".email").change(
-      function(){
-      if($(this).attr('checked') == 'checked')
-      {$('.intoemail').attr('value', 'checked')}
-      else
-      {$('.intoemail').attr('value', 'no checked')};
-    });
+    function(){
+    if($(this).attr('checked') == 'checked')
+    {$('.intoemail').attr('value', 'checked')}
+    else
+    {$('.intoemail').attr('value', 'no checked')};
+  });
 
   var uploader = new qq.FileUploader({
           //debug: true,
@@ -435,4 +434,6 @@ $(document).ready(function(){
     python_editor.save();
     return true;
   });
+
+    
 });

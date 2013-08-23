@@ -1,0 +1,39 @@
+.chart_type_selectors
+{
+	width:865px;
+	/*height:150px;*/
+	position:relative;
+    margin-left: 5px;
+	
+}
+.chart_type_wrap
+{
+	position:relative;
+	left:30px;
+	display:inline-block;
+	vertical-align:top;
+	min-width:140px;
+}
+.CodeMirror {
+        float: left;
+        width: 0%;
+        border: 2px solid #3EA211;
+        margin-left: 5px;
+		height:200px;
+      }
+      iframe {
+        width: 95%;
+        float: left;
+        height: 600px;
+        border: 2px solid #3EA211;
+        margin-top: 5px;
+        margin-left: 5px;
+      }
+select.pielimits
+{
+	width:55px!important;
+}
+.pielimits2
+{
+	margin-left:16px;
+}

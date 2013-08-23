@@ -19,7 +19,6 @@
 
 from desktop.lib.conf import Config
 
-
 TEMPLETON_URL = Config(
     key="templeton_url",
     help="URL of Templeton(WebHcat) server",
@@ -37,17 +36,18 @@ SECURITY_ENABLED = Config(
 
 
 def config_validator():
-  """
-  config_validator() -> [ (config_variable, error_message) ]
+    """
+    config_validator() -> [ (config_variable, error_message) ]
 
-  Called by core check_config() view.
-  """
-  from pig.templeton import Templeton
-  t = Templeton()
-  try:
-  	t.get("status")
-  except Exception, error:
-    return [ (TEMPLETON_URL, "%s" % (error.message)) ]
-  else:
-  	return []
+    Called by core check_config() view.
+    """
+    from pig.templeton import Templeton
+
+    t = Templeton()
+    try:
+        t.get("status")
+    except Exception, error:
+        return [(TEMPLETON_URL, "%s" % (error.message))]
+    else:
+        return []
 

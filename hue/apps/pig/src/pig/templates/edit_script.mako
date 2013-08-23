@@ -54,16 +54,15 @@ UDF_PATH = conf.UDF_PATH.get()
     <div class="span3" style="float: left;">
       <div class="well sidebar-nav">
         ${my_scripts.my_scripts(result['scripts'])}
-
-        <h2>Settings</h2>
+        <h5 >Settings</h5>
           <ul class="nav nav-list">
-            <li>Email notification:</li>
             <li>
-              <input class="email" type="checkbox"
+              <label class="checkbox ">
+                <input class="email" type="checkbox"
                    % if result.get("email_notification"):
                    checked="checked"
                    % endif
-                   />
+                   />Email notification</label>
             </li>
             <li  class="nav-header">
               <div class="accordion" id="accordion3" >
@@ -73,22 +72,19 @@ UDF_PATH = conf.UDF_PATH.get()
                       User-defined Functions <i class="icon-chevron-down"></i>
                     </a>
                   </div>
-                  <div id="collapseOne2" class="accordion-body in collapse"
-                       style="height: auto; text-transform:none;">
+                  <div id="collapseOne2" class="accordion-body collapse" style="text-transform:none;">
                     <div class="accordion-inner">
                        ${my_scripts.udfs(result['udfs'])}
                     </div>
                   </div>
                 </div>
-
               </div>
-
             </li>
             <li>
               <form id="udfs_form" enctype="multipart/form-data"
                   action="${url('pig.views.udf_create')}"
-                  method="post" data-destination="${UDF_PATH}"> ${ csrf_token_field | n } 
-                  <div id="udf_file_upload"><i class="icon-upload icon-white"></i> Upload UDF jar</div>                
+                  method="post" data-destination="${UDF_PATH}"> ${ csrf_token_field | n }
+                  <div id="udf_file_upload"><i class="icon-upload icon-white"></i> Upload UDF jar</div>
               </form>
             </li>
           </ul>
@@ -97,34 +93,33 @@ UDF_PATH = conf.UDF_PATH.get()
     <div class="span9" style="float: left; width: 70%;">
       <div class="clearfix">
         <div class="input">
-            <form action="${url("root_pig")}" method="post" id="pig_script_form"> ${ csrf_token_field | n } 
+          <form  action="${url("root_pig")}" method="post" id="pig_script_form"> ${ csrf_token_field | n }
             <input type="hidden" name="script_id"  value="${result.get('id','')}" >
-            <label for="id_title">Title:</label>
             <div class="control-group">
+              <div class="input-prepend">
+                <div class="controls">
+                <label class="control-label add-on" for="id_title">Title:</label>
+                  <input class="span2" id="id_title" type="text" name="title"
+                          required="required" maxlength="200" value="${result.get('title',"")}">
+                </div>
+              </div>
+            </div>
 
-              <div class="controls">
-                <input id="id_title" type="text" name="title" required="required"
-                       maxlength="200" value="${result.get('title',"")}">
-              </div>
-            </div>            
-           
-            <%include file="pig_helper.html" />
-            
-            <label for="id_pig_script" >Pig script:
-              <div >
-              <a href="javascript:void(0);" class="alert-success" ><i class="icon-question-sign" id="help"></i></a>
-              
-              <div id="help-content" class="hide">
-                <ul>
-                  <li class="text-success">Press ctrl+space for autocompletion</li>
-                  <li class="text-success">To see table fields helper type table_name + "." (e.g. sample_07.)</li>
-                </ul>
-              </div>
-              
-            </div>  
+            <label class="script_label" for="id_pig_script" >
+              <span>Pig script:</span>
+              <span>
+                <a href="javascript:void(0);" ><i class="icon-question-sign" id="help"></i></a>
+                <div id="help-content" class="hide">
+                  <ul>
+                    <li class="text-success">Press ctrl+space for autocompletion</li>
+                    <li class="text-success">To see table fields helper type table_name + "." (e.g. sample_07.)</li>
+                  </ul>
+                </div>
+              </span>
             </label>
-            
-            
+            <div class="pig_helper_wrap">
+              <%include file="pig_helper.html" />
+            </div>
             <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
             % if result.get("python_script"):
             <div id="python_textarea">
@@ -167,44 +162,34 @@ UDF_PATH = conf.UDF_PATH.get()
 	        </form>
           <input type="hidden" id="fakeArgs">
         </div>
-
-        <a class="btn-success btn-mini"
-           % if 'stdout' in result and 'job_id' in result:
-           href="${url("download_job_result", job_id=result['job_id'])}"
-           % else:
-           style="display:none;"
-           % endif
-           id="download_job_result">
+        <div class="div_conteiner">
+          ## result section
+          <a class="btn-success btn-mini"
+            % if 'stdout' in result and 'job_id' in result:
+            href="${url("download_job_result", job_id=result['job_id'])}"
+            % else:
+            style="display:none;"
+            % endif
+            id="download_job_result">
           <i class="icon-download-alt"></i></a>
+          <div class="alert alert-success ${'hide' if 'stdout' not in result else ''}" id="job_info_outer">
+            <pre id="job_info">${result['stdout'] if 'stdout' in result else ''|h}</pre>
+          </div>
+          
+          ## alert section
+          <div class="alert alert-error hide" id="failure_info"></div>
 
-
-        <div class="alert alert-success" id="job_info_outer">
-          <pre id="job_info">
-          % if 'stdout' in result:
-${result['stdout']|h}
-          % endif
-          </pre>
-        </div>
-
-        <div class="alert alert-error" id="failure_info">
-        </div>
-
-        <div class="accordion alert alert-warning" id="accordion2">
-          <div class="accordion-group">
-            <div class="accordion-heading">
-              <a class="accordion-toggle" data-toggle="collapse" id="job_logs"
-          data-parent="#accordion2" href="#collapseOne">
-                % if 'error' in result:
-                Logs...
-                % endif
-              </a>
-            </div>
-            <div id="collapseOne" class="accordion-body collapse in">
-              <pre class="accordion-inner" id="log_info">
-                % if 'error' in result:
-${result['error']}
-                % endif
-              </pre>
+          ## log section
+          <div class="accordion alert alert-warning ${'hide' if 'stdout' not in result else ''}" id="accordion2">
+            <div class="accordion-group">
+              <div class="accordion-heading">
+                <a class="accordion-toggle" data-toggle="collapse" id="job_logs" data-parent="#accordion2" href="#collapseOne">
+                  ${'Logs...' if 'stdout' in result else ''}
+                </a>
+              </div>
+              <div id="collapseOne" class="accordion-body collapse">
+                  <pre class="accordion-inner" id="log_info">${result['error'] if 'stdout' in result else ''}</pre>
+              </div>
             </div>
           </div>
         </div>
@@ -212,14 +197,17 @@ ${result['error']}
     </div>
   </div>
 </div>
-</div>
+
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
 <link href="/pig/static/css/show-hint.css" rel="stylesheet">
 <link href="/pig/static/css/bootstrap-fileupload.min.css" rel="stylesheet">
+<link href="/pig/static/css/bootstrap-tagmanager.css" rel="stylesheet">
+
 <style type="text/css" media="screen">
-  .CodeMirror-focused span.CodeMirror-matchhighlight {
-background:  #e7e4ff; !important; }
+.CodeMirror-focused span.CodeMirror-matchhighlight {
+  background:  #e7e4ff; !important; 
+}
 label.valid {
   width: 24px;
   height: 24px;
@@ -260,8 +248,22 @@ label.error {
 }
 #pigArguments > div {
 
-
+  white-space: normal;
+}
+.pigArg{
+  vertical-align: top;
+}
+.popover i {
+  float: right;
+  cursor: pointer;
+  opacity: 0.4;
+}
+.pig_helper_wrap{
+  display: inline-block;
+  margin-bottom: 3px;
+}
 </style>
+
 <script type="text/javascript" src="/pig/static/js/jquery.validate.min.js"></script>
 <script src="/pig/static/js/codemirror.js"></script>
 <script src="/pig/static/js/pig.js"></script>
@@ -276,6 +278,7 @@ label.error {
 <script src="/pig/static/js/emacs.js"></script>
 <script src="/pig/static/js/pig_scripts.js"></script>
 <script src="/pig/static/js/bootstrap-fileupload.min.js"></script>
+<script src="/pig/static/js/bootstrap-tagmanager.js"></script>
 <script type="text/javascript">
 var percent = 0;
 var globalTimer = null;
@@ -300,8 +303,10 @@ function get_job_result(job_id)
                                        job_id + "/");
         //var stdout = escape(data.stdout).replace(/\n/g, "<br>");
         //stdout = stdout.replace(/\s/g, "&nbsp;");
+        $('#accordion2').removeClass('hide');
         $("#job_logs").text("Logs...");
         $("#log_info").text(data.error);
+        $("#job_info_outer").removeClass('hide');
         $("#job_info").text($('<div/>').text(data.stdout).html());
         paginator(30);
         percent = 100;
@@ -315,71 +320,100 @@ function get_job_result(job_id)
 
 
 $(document).ready(function(){
-$("#help").popover({'title': "${'Did you know?'}", 'content': $("#help-content").html(), 'html': true, delay: { hide: 500 }});
-% if result.get("job_id") and result.get("JOB_SUBMITED"):
-percent = 10;
-ping_job("${result['job_id']}");
+
+var prefilledArgs = [\
+% if result.get("arguments"):
+% for arg in result["arguments"].split("\t"):
+'${arg}',\
+% endfor
+% elif 'id' not in result:
+'-useHCatalog',\
 % endif
+];
 
-$("#pig_script_form").validate({
-  rules:{
-  title:{
-  required: true,
-  % if not result.get("id"):
-  remote: "${url("check_script_title")}"
+  $("#help").popover({
+    'title': "${'Did you know?'}" +'<i class="icon-remove"></i>',
+    'content': $("#help-content").html(),
+    'html': true,
+    delay: { hide: 500 },
+    placement: 'bottom'
+  });
+
+  $(document).on('click','.popover i',function () {
+    $("#help").popover('hide');
+  })
+
+  % if result.get("job_id") and result.get("JOB_SUBMITED"):
+  percent = 10;
+  ping_job("${result['job_id']}");
   % endif
-},
-pig_script: "required",
-},
-messages: {
-title:{
-remote: "Script title already exists"
-}},
-highlight: function(label) {
-    $(label).closest('.control-group').addClass('error');
-  },
-success: function(label) {
-    label
-      .text('OK!').addClass('valid')
-      .closest('.control-group').addClass('success');
-  }
-});
 
+  $(".pigArgument").tagsManager({
+    prefilled: prefilledArgs,
+    separateHiddenName: 'pigParams',
+    hiddenTagListId:'fakeArgs',
+    tagClass: 'pigArg',
+    delimiters:[9,13],
+    tagCloseIcon:'<i class="icon-remove-circle"></i>',
+    onAdd: function  () {
+      $("#save_button").removeAttr("disabled");
+    }
+  });
 
-    $(".collapse").collapse();
+  $("#pig_script_form").validate({
+    rules:{
+      title:{
+      required: true,
+      % if not result.get("id"):
+      remote: "${url("check_script_title")}"
+      % endif
+      },
+      pig_script: "required",
+    },
+    messages: {
+      title:{
+      remote: "Script title already exists"
+      }
+    },
+    highlight: function(label) {
+        $(label).closest('.control-group').removeClass('success').addClass('error');
+    },
+    success: function(label) {
+        label.text('OK!').addClass('valid')
+          .closest('.control-group').removeClass('error').addClass('success');
+    }
+  });
+  
+  $(".action_btn").live("click", function(e){
+    $("#operation_type").attr("name", $(this).attr("id"));
+    $("#operation_type").val(1);
 
-
-
-    $(".action_btn").live("click", function(e){
-$("#operation_type").attr("name", $(this).attr("id"));
-$("#operation_type").val(1);
-call_popup_var_edit($(this)).done(function() {
-        $("#job_info_outer").html('<pre id="job_info"></pre>');
-        $(".bar").attr("class", "bar");
-        if (!$("#pig_script_form").valid()) return false;
-        $(".action_btn").hide();
-        percent = 0;
-        $(".bar").css("width", percent+"%");
-        pig_editor.save();
-        python_editor.save()
-        $.ajax({
-            url: "${url("start_job")}",
-            dataType: "json",
-            type: "POST",
-            data: $("#pig_script_form").serialize(),
-            success: function(data){
-                $("#kill_job").show();
-                $("#job_info_outer").prepend(data.text);
-                job_id = data.job_id;
-                ping_job(job_id);
-            },
-            error: function (xhr, ajaxOptions, thrownError) {
-                $("#failure_info").html(xhr.responseText);
-            }
-        });
-       });
-
+    call_popup_var_edit($(this)).done(function() {
+      $("#job_info_outer").removeClass('hide').html('<pre id="job_info"></pre>');
+      $(".bar").attr("class", "bar");
+      if (!$("#pig_script_form").valid()) return false;
+      $(".action_btn").hide();
+      percent = 0;
+      $(".bar").css("width", percent+"%");
+      pig_editor.save();
+      python_editor.save();
+      $.ajax({
+          url: "${url("start_job")}",
+          dataType: "json",
+          type: "POST",
+          data: $("#pig_script_form").serialize(),
+          success: function(data){
+              $("#kill_job").show();
+              $("#job_info_outer").removeClass('hide').prepend(data.text);
+              job_id = data.job_id;
+              ping_job(job_id);
+          },
+          error: function (xhr, ajaxOptions, thrownError) {
+              $("#failure_info").removeClass('hide').html(xhr.responseText);
+          }
+      });
     });
+  });
 });
 
 </script>

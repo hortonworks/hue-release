@@ -9,8 +9,9 @@ from hcatalog.conf import TEMPLETON_URL, SECURITY_ENABLED
 
 class Templeton(object):
 
-    def __init__(self, user="hdfs"):
+    def __init__(self, user="hue"):
         self.user = SERVER_USER.get()
+        self.doAs = user
         self.client = http_client.HttpClient(TEMPLETON_URL.get())
         if SECURITY_ENABLED.get():
             self.client = self.client.set_kerberos_auth()
@@ -24,6 +25,7 @@ class Templeton(object):
         else:
             data = {"user.name": self.user}
 
+        data['doAs'] = self.doAs
         response = self.client.execute("GET", url, params=data)
         return json.loads(response.read())
 
@@ -31,13 +33,10 @@ class Templeton(object):
         """
         Make POST query to templeton url.
         """
-        if data is not None:
-            data['user.name'] = self.user
-        else:
-            data = {"user.name": self.user}
+        params = {"user.name": self.user, "doAs": self.doAs}
         data = urllib.urlencode([(k, v) for k, vs in data.iteritems()
                                  for v in isinstance(vs, list) and vs or [vs]])
-        response = self.client.execute("POST", url, data=data)
+        response = self.client.execute("POST", url, params=params, data=data)
         return json.loads(response.read())
 
     def put(self, url, data=None):
@@ -45,7 +44,8 @@ class Templeton(object):
         Make PUT query to templeton url.
         """
         try:
-            response = self.client.execute("PUT", url, params={"user.name": self.user}, data=data, headers={'Content-Type': 'application/json'})
+            params = {"user.name": self.user, "doAs": self.doAs}
+            response = self.client.execute("PUT", url, params=params, data=data, headers={'Content-Type': 'application/json'})
             return json.loads(response.read())
         except http_client.RestException, error:
             try:
@@ -57,14 +57,11 @@ class Templeton(object):
         """
         Make DELETE query to templeton url.
         """
-        if data is not None:
-            data['user.name'] = self.user
-        else:
-            data = {"user.name": self.user}
         if params is not None:
-            params['user.name'] = self.user
+            params["user.name"] = self.user
+            params["doAs"] = self.doAs
         else:
-            params = {"user.name": self.user}
+            params = {"user.name": self.user, "doAs": self.doAs}
         response = self.client.execute("DELETE", url, params=params, data=data)
         return json.loads(response.read())
 

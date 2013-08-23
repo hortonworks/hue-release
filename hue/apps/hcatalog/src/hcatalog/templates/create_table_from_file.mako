@@ -361,10 +361,6 @@ ${layout.menubar(section='tables')}
         white-space: nowrap;
     }
 
-    #div-file-selector .controls {
-        width: 80%;
-    }
-
 </style>
 
 </div>
@@ -596,7 +592,7 @@ $(document).ready(function () {
                 showMainError("${error}");
         % endif
 
-        $.post("${url(app_name + ':get_tables')}", function (data) {
+        $.post("${url(app_name + ':list_tables_json')}", function (data) {
             tableList = data;
         }, "json");
     }

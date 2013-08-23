@@ -41,7 +41,7 @@ from beeswax.models import SavedQuery, QueryHistory, make_query_context
 from beeswax.design import HQLdesign
 from beeswaxd.ttypes import BeeswaxException
 from beeswax.server import dbms
-from beeswax.server.dbms import expand_exception, get_query_server_config
+from beeswax.server.dbms import expand_exception, get_query_server_config, NoSuchObjectException
 
 import logging
 
@@ -129,9 +129,15 @@ def create_database(request):
 
 
 def describe_table_json(request, database, table):
-    db = dbms.get(request.user)
-    table = db.get_table(database, table)
-    return HttpResponse(json.dumps({"columns": [{"type": col.type, "name": col.name} for col in table.cols]}))
+    try:
+        db = dbms.get(request.user)
+        table = db.get_table(database, table)
+        result = {"columns": [{"type": col.type, "name": col.name} for col in table.cols]}
+    except NoSuchObjectException, e:
+        result = {"status": "failure", 'failureInfo' : unicode(table+' table not found')}
+    except Exception, e:
+        result = {"status": "failure", 'failureInfo': unicode(e)}
+    return HttpResponse(json.dumps(result))
 
 
 def describe_table(request, database, table):
@@ -287,8 +293,9 @@ def pig_view(request, database=None, table=None):
         raise Http404
     request.session['autosave'] = {
         "pig_script": 'A = LOAD \'%s.%s\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;' % (
-        database if database else "default", table),
-        'title': '%s' % table
+            database if database else "default", table),
+        'title': '%s' % table,
+        'arguments': "-useHCatalog"
     }
     return pig_view_for_hcat(request)
 
@@ -641,9 +648,12 @@ def view_results(request, id, first_row=0):
     return render('watch_results.mako', request, context)
 
 
-def get_tables(request):
+def list_tables_json(request, database=None):
     """Returns a table list"""
-    tables = _get_table_list(request)
+    try:
+        tables = _get_table_list(request, database)
+    except Exception, e:
+        tables = {"status": {"failureInfo": unicode(e)}}
     return HttpResponse(json.dumps(tables))
 
 

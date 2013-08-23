@@ -25,7 +25,6 @@ from django.http import HttpResponse, Http404
 from django.utils.html import mark_safe
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
-
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_util import login_notrequired, render, get_desktop_uri_prefix
 from filebrowser.views import _do_newfile_save, _file_reader, _upload_file
@@ -49,11 +48,14 @@ def index(request, obj_id=None):
             raise PopupException(
                 "".join(["%s: %s" % (field, error) for field, error in form.errors.iteritems()])
             )
+        form.cleaned_data["arguments"] = "\t".join(request.POST.getlist("pigParams"))
         if "autosave" in request.session:
             del request.session['autosave']
         if request.POST.get("script_id"):
             instance = PigScript.objects.get(pk=request.POST['script_id'])
-            form = PigScriptForm(request.POST, instance=instance)
+            args = request.POST.copy()
+            args["arguments"] = "\t".join(request.POST.getlist("pigParams"))
+            form = PigScriptForm(args, instance=instance)
             form.save()
         else:
             instance = PigScript(**form.cleaned_data)
@@ -72,23 +74,35 @@ def index(request, obj_id=None):
 
 
 #Making normal path to our *.jar files
-udf_template = re.compile(r"register\s+(\S+\.jar)", re.I|re.M)
+udf_template = re.compile(r"register\s+(\S+\.jar)", re.I | re.M)
+pythonudf_template = re.compile(r"register\s+[\'\"](\S+\.py)[\'\"]\s+using\s+jython\s+as\s+(\S+);", re.I | re.M)
 parameters_template = re.compile(r"%(\w+)%")
-macro_template = re.compile(r"import\s+[\"\'](/\S+\.(?:macro|pig))[\"\']\s*;?", re.I|re.M)
-def process_pig_script(pig_src, request):
+macro_template = re.compile(r"import\s+[\"\'](/\S+\.(?:macro|pig))[\"\']\s*;?", re.I | re.M)
+
+
+def process_pig_script(pig_src, request, statusdir):
+    python_udf_path = request.fs.join(statusdir, "pythonudf.py")
+
     #1) Replace parameters with their values
     def get_param(matchobj):
         return request.POST.get("%" + matchobj.group(1) + "%")
 
     def get_file_path(matchobj):
-        return "REGISTER " + request.fs.fs_defaultfs + request.fs.join(UDF_PATH + "/" + matchobj.group(1))
+        return "REGISTER " + request.fs.get_hdfs_path(request.fs.join(UDF_PATH, matchobj.group(1)))
 
     def get_macro_path(matchobj):
-        return "IMPORT '" + request.fs.fs_defaultfs + matchobj.group(1) +"';"
+        return "IMPORT '" + request.fs.get_hdfs_path(matchobj.group(1)) + "';"
+
+    def get_pythonudf_path(matchobj):
+        return "REGISTER '%s' USING jython AS %s;" % (request.fs.get_hdfs_path(python_udf_path), matchobj.group(2))
 
     pig_src = re.sub(parameters_template, get_param, pig_src)
     pig_src = re.sub(udf_template, get_file_path, pig_src)
     pig_src = re.sub(macro_template, get_macro_path, pig_src)
+
+    if pythonudf_template.match(pig_src) and request.POST.get("python_script"):
+        _do_newfile_save(request.fs, python_udf_path, request.POST["python_script"], "utf-8")
+        pig_src = re.sub(pythonudf_template, get_pythonudf_path, pig_src)
     return pig_src
 
 
@@ -103,6 +117,7 @@ def delete(request, obj_id):
 def script_clone(request, obj_id):
     script = get_object_or_404(PigScript, pk=obj_id)
     request.session['autosave'] = {
+        "arguments": script.arguments,
         "pig_script": script.pig_script,
         "python_script": script.python_script,
         "title": script.title + "(copy)"
@@ -134,13 +149,6 @@ def udf_delete(request, obj_id):
     return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
 
 
-python_template = re.compile(r"(\w+)\.py")
-def augmate_python_path(python_script, pig_script):
-    with open('/tmp/python_udf.py', 'w') as f:
-        f.write(python_script)
-    return re.sub(python_template, '/tmp/python_udf.py', pig_script)
-
-
 def start_job(request):
     if "autosave" in request.session:
         del request.session['autosave']
@@ -148,11 +156,9 @@ def start_job(request):
     statusdir = "/tmp/.pigjobs/%s/%s_%s" % (request.user.username, request.POST['title'].lower().replace(" ", "_"),  datetime.now().strftime("%s"))
     script_file = statusdir + "/script.pig"
     pig_script = request.POST['pig_script']
-    if request.POST.get("python_script"):
-        pig_script = augmate_python_path(request.POST.get("python_script"), pig_script)
-    pig_script = process_pig_script(pig_script, request)
+    pig_script = process_pig_script(pig_script, request, statusdir)
     _do_newfile_save(request.fs, script_file, pig_script, "utf-8")
-    arg = ["-useHCatalog"]
+    args = filter(bool, request.POST.getlist("pigParams"))
     job_type = Job.EXECUTE
     execute = None
     if request.POST.get("explain"):
@@ -160,11 +166,13 @@ def start_job(request):
         job_type = Job.EXPLAINE
         script_file = None
     if request.POST.get("syntax_check"):
-        arg.append("-check")
+        args.append("-check")
         job_type = Job.SYNTAX_CHECK
     callback = request.build_absolute_uri("/pig/notify/$jobId/")
-    LOG.debug("User %s started pig job via webhcat: curl -s -d file=%s -d statusdir=%s -d callback=%s -d arg=%s" % (request.user.username, script_file, statusdir, callback, arg))
-    job = t.pig_query(pig_file=script_file, execute=execute, statusdir=statusdir, callback=callback, arg=arg)
+    LOG.debug("User %s started pig job via webhcat: curl -s -d file=%s -d statusdir=%s -d callback=%s %s" % (
+        request.user.username, script_file, statusdir, callback, "".join(["-d arg=%s " % a for a in args])
+    ))
+    job = t.pig_query(pig_file=script_file, execute=execute, statusdir=statusdir, callback=callback, arg=args)
 
     if request.POST.get("script_id"):
         script = PigScript.objects.get(pk=request.POST['script_id'])
@@ -172,12 +180,13 @@ def start_job(request):
         script = PigScript(user=request.user, saved=False, title=request.POST['title'])
     script.pig_script = request.POST['pig_script']
     script.python_script = request.POST['python_script']
+    script.arguments = "\t".join(args)
     script.save()
     Job.objects.create(job_id=job['id'],
                        statusdir=statusdir,
                        script=script,
                        job_type=job_type,
-                       email_notification=bool(request.POST['email']))
+                       email_notification=bool(request.POST.get('email')))
     return HttpResponse(
         json.dumps(
             {
@@ -214,9 +223,9 @@ def _job_result(request, job):
         stderr_file = statusdir + "/stderr"
         stdout_file = statusdir + "/stdout"
         exit_code_file = statusdir + "/exit"
-        error = request.fs.do_as_user(request.fs.DEFAULT_USER, request.fs.read, stderr_file, 0, request.fs.stats(stderr_file).size)
-        stdout = request.fs.do_as_user(request.fs.DEFAULT_USER, request.fs.read, stdout_file, 0, request.fs.stats(stdout_file).size)
-        exit_code = request.fs.do_as_user(request.fs.DEFAULT_USER, request.fs.read, exit_code_file, 0, request.fs.stats(exit_code_file).size)
+        error = request.fs.read(stderr_file, 0, request.fs.stats(stderr_file).size)
+        stdout = request.fs.read(stdout_file, 0, request.fs.stats(stdout_file).size)
+        exit_code = request.fs.read(exit_code_file, 0, request.fs.stats(exit_code_file).size)
         result['error'] = mark_safe(error)
         result['stdout'] = mark_safe(stdout)
         result['exit'] = mark_safe(exit_code)
@@ -310,7 +319,8 @@ def autosave_scripts(request):
     request.session['autosave'] = {
         "pig_script": request.POST['pig_script'],
         "python_script": request.POST.get('python_script'),
-        "title": request.POST.get("title")
+        "title": request.POST.get("title"),
+        "arguments": "\t".join(request.POST.getlist("pigParams"))
     }
     return HttpResponse(json.dumps("Done"))
 
