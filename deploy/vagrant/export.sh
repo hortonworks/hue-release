@@ -25,8 +25,8 @@ VBoxManage sharedfolder remove "$MACHINE" --name '/vagrant'
 VBoxManage sharedfolder remove "$MACHINE" --name '/tmp/vagrant-puppet/manifests'
 echo $MACHINE
 VBoxManage modifyvm "$MACHINE" --memory 2048 --cpus 2
-VBoxManage export "$MACHINE" --output "Hortonworks-Sandbox-1.3-VirtualBox".ova \
-    --vsys 0 --vendor "HortonWorks" --version "1.3" --product "Sandbox"
+VBoxManage export "$MACHINE" --output "Hortonworks-Sandbox-2.0Beta-VirtualBox".ova \
+    --vsys 0 --vendor "HortonWorks" --version "2.0 Beta" --product "Sandbox"
 
 # VMware
 vagrant up $MACHINE_VERSION --no-provision
@@ -40,7 +40,7 @@ else
 	HDDFILE="$(VBoxManage list hdds | grep -e "$MACHINE/" | sed -r "s/.*:[^/]*(.*)/\1/g")"
 fi
 cp "$HDDFILE" ./vmware/sandbox.vmdk
-ovftool "./vmware/Hortonworks Sandbox 1.3.vmx" "./Hortonworks-Sandbox-1.3-VMware.ova"
+ovftool "./vmware/Hortonworks Sandbox 2.0.vmx" "./Hortonworks-Sandbox-2.0-Beta-VMware.ova"
 
 # Hyper-V
 vagrant up $MACHINE_VERSION --no-provision
