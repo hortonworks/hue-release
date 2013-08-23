@@ -69,7 +69,8 @@ def _get_components():
           continue
         component, version = l
         if component == "HUE_VERSION":
-          HUE_VERSION = version
+          HUE_VERSION, buildnumber = version.split(":")
+          components.append(('Hue', version))
         else:
           components.append((component, version))
   except Exception:
