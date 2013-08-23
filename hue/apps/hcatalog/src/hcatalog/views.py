@@ -647,6 +647,16 @@ def get_tables(request):
     return HttpResponse(json.dumps(tables))
 
 
+def list_databases_json(request):
+    tree = {}
+    db = dbms.get(request.user)
+    databases = db.get_databases()
+    for database in databases:
+        tables = _get_table_list(request, database)
+        tree[database] = tables
+    return HttpResponse(json.dumps(tree))
+
+
 def _get_table_list(request, database=None):
     """Returns a table list"""
     database = _get_last_database(request, database)

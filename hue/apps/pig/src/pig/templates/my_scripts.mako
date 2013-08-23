@@ -1,6 +1,11 @@
 <%def name="my_scripts(pig_scripts)">
-<h2>My scripts</h2>
-<div style="height: 290px; overflow-y: scroll;">
+  <h4 class="pull-left">My scripts </h4>
+<div class="nav-header script_list_header">
+  <a  class="pull-right new_script" data-placement="right" rel="tooltip" title="New script"
+      href="${url('root_pig')}?new=true"> <i class="icon-plus-sign"></i> New script</a>
+</div>
+
+<div class="script_list">
   <ul class="nav nav-list">
     % for v in pig_scripts:
     <li id="copy" >
@@ -13,8 +18,8 @@
   	<img src="/pig/static/art/clone.png" alt="Clone" title="Clone script" height="14" width="14">
         </a>
         <a href="${url('pig.views.index', obj_id=v.id)}">
-	  % if v.title: 
-	  ${v.title}
+          % if v.title:
+          ${v.title}
           % else:
           no title
           % endif

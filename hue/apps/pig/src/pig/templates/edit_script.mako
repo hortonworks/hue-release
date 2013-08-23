@@ -127,13 +127,14 @@ UDF_PATH = conf.UDF_PATH.get()
             
             <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
             % if result.get("python_script"):
-            <label>Python UDF</label>
-                 <textarea id="python_code" name="python_script"
-                           rows="4" >${result['python_script']}</textarea>
+            <div id="python_textarea">
+              <label class="script_label" for="python_code">Python UDF:</label>
+              <textarea id="python_code" name="python_script" rows="4" >${result['python_script']}</textarea>
+            </div>
             % else:
-            <div style="display:none;" id="python_textarea">
-                 <label>Python UDF</label>
-                 <textarea id="python_code" name="python_script"></textarea>
+            <div id="python_textarea"style="display:none;" >
+              <label class="script_label" for="python_code">Python UDF:</label>
+              <textarea id="python_code" name="python_script"></textarea>
             </div>
             % endif
 	<input type="hidden" name="email" class='intoemail' />
@@ -207,7 +208,9 @@ ${result['error']}
 </div>
 </div>
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
+<link href="/pig/static/css/monokai.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
+<link href="/pig/static/css/show-hint.css" rel="stylesheet">
 <link href="/pig/static/css/bootstrap-fileupload.min.css" rel="stylesheet">
 <style type="text/css" media="screen">
   .CodeMirror-focused span.CodeMirror-matchhighlight {
@@ -226,10 +229,31 @@ label.error {
   margin-top: 2px;
 }
 .pagination_controls a, .pagination_controls span {
-          display: block;
-          float: left;
-          padding: 3px ;
-      }
+  display: block;
+  float: left;
+  padding: 3px ;
+}
+.progress {
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
+}
+.script_label {
+  display: inline-block;
+  background-color: #eee;
+  padding: 5px;
+  margin-bottom: 0;
+  vertical-align: bottom;
+  cursor: pointer;
+  width: 85px;
+}
+.CodeMirror {
+  border: 2px solid #eee;
+}
+#pigArguments .help-inline {
+  margin-right: 5px;
+}
+#pigArguments > div {
 
 
 </style>
@@ -238,6 +262,7 @@ label.error {
 <script src="/pig/static/js/pig.js"></script>
 <script src="/pig/static/js/python.js"></script>
 <script src="/pig/static/js/simple-hint.js"></script>
+<script src="/pig/static/js/show-hint.js"></script>
 <script src="/pig/static/js/pig-hint.js"></script>
 <script src="/pig/static/js/jquery.pagination.js"></script>
 <script src="/pig/static/js/searchcursor.js"></script>

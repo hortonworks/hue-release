@@ -34,12 +34,16 @@
       token.className="pig-word";
     }
 
+    if (token.string.indexOf("/")> -1) {
+      token.string = token.string.substring(token.string.lastIndexOf("/") + 1);
+    };
+
 
 
     var tprop = token;
     // If it's not a 'word-style' token, ignore the token.
 
-    if (!/^[\w$_]*$/.test(token.string)) {
+    if (!/^[\.,\w$_-]*$/.test(token.string)) {
       token = tprop = {start: cur.ch, end: cur.ch, string: "", state: token.state,
         className: token.string == ":" ? "pig-type" : null};
     }
@@ -68,6 +72,9 @@
       return match.toUpperCase();
     });
   }
+
+  CodeMirror.listDir = [];
+  CodeMirror.isDir = false;
 
   var pigKeywords = "VOID IMPORT RETURNS DEFINE LOAD FILTER FOREACH ORDER CUBE DISTINCT COGROUP "
       + "JOIN CROSS UNION SPLIT INTO IF OTHERWISE ALL AS BY USING INNER OUTER ONSCHEMA PARALLEL "
@@ -104,22 +111,39 @@
   function getCompletions(token, context) {
     var found = [], start = token.string;
     function maybeAdd(str) {
-      if (str.indexOf(start) == 0 && !arrayContains(found, str)) found.push(str);
+      var stripped = strip(str).replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');
+      if (stripped.indexOf(start) == 0 && !arrayContains(found, str)) found.push(str);
+    }
+
+    function strip(html){
+      if (jQuery) {
+        return $("<div>").html(html).text();
+      }
+      else {
+        var tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText;
+      }
     }
 
     function gatherCompletions(obj) {
-      if(obj == ":") {
-        forEach(pigTypesL, maybeAdd);
-      }
-      else {
-        forEach(pigBuiltinsU, maybeAdd);
-        forEach(pigBuiltinsL, maybeAdd);
-        forEach(pigBuiltinsC, maybeAdd);
-        forEach(pigTypesU, maybeAdd);
-        forEach(pigTypesL, maybeAdd);
-        forEach(pigKeywordsU, maybeAdd);
-        forEach(pigKeywordsL, maybeAdd);
-        forEach(pigKeywordsT, maybeAdd);
+      if (CodeMirror.isDir == true) {
+        forEach(CodeMirror.listDir, maybeAdd);
+      } else{
+        if(obj == ":") {
+          forEach(pigTypesL, maybeAdd);
+        }
+        else {
+          forEach(pigBuiltinsU, maybeAdd);
+          forEach(pigBuiltinsL, maybeAdd);
+          forEach(pigBuiltinsC, maybeAdd);
+          forEach(pigTypesU, maybeAdd);
+          forEach(pigTypesL, maybeAdd);
+          forEach(pigKeywordsU, maybeAdd);
+          forEach(pigKeywordsL, maybeAdd);
+          forEach(pigKeywordsT, maybeAdd);
+          forEach(pigKeywordsD, maybeAdd);
+        }
       }
     }
 
@@ -137,6 +161,7 @@
         base = base[context.pop().string];
       if (base != null) gatherCompletions(base);
     }
+    console.log(found)
     return found;
   }
 })();
