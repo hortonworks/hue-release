@@ -1,5 +1,3 @@
-//var pigKeywordsT=[];
-//var pigKeywordsD=[];
 var dollarSaveParamTrig = 0;
 var varSaveParamTrig = 0;
 var submitFormPopup=false;
@@ -33,7 +31,7 @@ function ping_job(job_id){
           percent += 1;
           $(".bar").css("width", percent+"%");
         }
-        globalTimer = window.setTimeout("ping_job('"+job_id+"');", 2000);
+        globalTimer = window.setTimeout("ping_job('"+job_id+"');", 200);
       }, "json");
 
     $("#kill_job").unbind('click');
@@ -48,95 +46,6 @@ function ping_job(job_id){
             $("#job_info").append("<br>"+data.text);
         }, "json");
     });
-
-
-}
-
-
-function autosave(){
-  $("#save_button").removeAttr("disabled");
-  pig_editor.save();
-  python_editor.save()
-  $.post("/pig/autosave_scripts/", $("#pig_script_form").serialize());
-  return true;
-}
-
-
-function getDatabases(){
-  $.ajax({
-    url: "/hcatalog/databases/json",
-    type: "GET",
-    dataType: "json",
-    cache: false,
-    async: true,
-    success: function(data){
-    for (var db in data){
-      CodeMirror.kwset.db = CodeMirror.kwset.db.concat(db); // pigKeywordsD.push(db);
-      db_list[db]= {};
-      for (var i = data[db].length - 1; i >= 0; i--) {
-        CodeMirror.kwset.tables = CodeMirror.kwset.tables.concat(data[db][i]);// pigKeywordsT.push(data[db][i]);
-        db_list[db][data[db][i]] = {};
-        $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + db + "." + data[db][i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
-      };
-    }
-    console.log('DB LIST LOADED')
-  }
-  });
-  /*$.get("/hcatalog/databases/json" , function(data){
-    for (var db in data){
-      pigKeywordsD.push(db);
-      db_list[db]= {};
-      for (var i = data[db].length - 1; i >= 0; i--) {
-        pigKeywordsT.push(data[db][i]);
-        db_list[db][data[db][i]] = {};
-        $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + db + "." + data[db][i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
-      };
-    }
-    console.log('DB LIST LOADED')
-  },"json");*/
-}
-
-function getTables(database){
-  var database = database || 'default';
-  $.get("/hcatalog/tables/json/" + database, function(data){
-      if(CodeMirror.kwset.tables.length<1){
-        for (var i = 0; i < data.length; i++) {
-          CodeMirror.kwset.tables = CodeMirror.kwset.tables.concat(data[i]); //pigKeywordsT.push(data[i]);
-          db_list[database][data[i]]={};
-          $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + database + "." + data[i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
-        }
-      }
-
-  },"json");
-}
-
-function getTableFields(table,target){
-
-  $.get("/hcatalog/table/default/"+table+"/json/", function(data){
-    //$.get("table_f.php?con=" + table, function(data){
-
-    if(typeof (data) !=="undefined" && data.hasOwnProperty("columns") && data.columns.length>0)
-    {
-      table_fields[table]=data;
-
-      $.each(data.columns, function(e){
-        if(this.name != "" )
-          target.list.push(this.name + ":" + this.type);
-      })
-
-      if(target.list.length<2 && target.list.length>0)
-        target.list.push("");
-
-      if(target.list.length>0 && target.list[0].name !="")
-        //CodeMirror.simpleHint(pig_editor, CodeMirror.pigHint, "", target , true );
-        CodeMirror.showHint(codeMirror, CodeMirror.pigTableHint);
-
-    }else{
-      delete table_fields[table];
-    }
-
-  },"json");
-
 }
 
 function call_popup_var_edit(){
@@ -183,6 +92,14 @@ function call_popup_var_edit(){
   return d.promise();
 }
 
+function autosave(){
+  $("#save_button").removeAttr("disabled");
+  pig_editor.save();
+  python_editor.save()
+  $.post("/pig/autosave_scripts/", $("#pig_script_form").serialize());
+  return true;
+}
+
 $("#show-modal-for-var").on('hide', function() {
   if(varSaveParamTrig==1){
     var out_html="";
@@ -199,7 +116,7 @@ $("#show-modal-for-var").on('hide', function() {
       $("#pig_script_form").append( out_html );
       $(".modal-for-var-input-warp").html( "" );
       submitFormPopup=true;
-    }else{
+    } else {
       varSaveParamTrig=0;
       $(".modal-for-var-input-warp > input").each(function(){
         if($(this).val().trim()=="")
@@ -209,7 +126,7 @@ $("#show-modal-for-var").on('hide', function() {
       submitFormPopup=false;
       return false;
     }
-  }else{
+  } else {
     $(".var-input-for-form-submit").remove();
     $(".modal-for-var-input-warp").html( "" );
     submitFormPopup=false;
@@ -217,47 +134,187 @@ $("#show-modal-for-var").on('hide', function() {
   varSaveParamTrig=0;
 });
 
-/*function listdir(_context){
-  // Context - Full path, that user have typed. e.g. /tmp/dir1/
-  var contentList = [];
-  CodeMirror.listDir = [];
-  _context=_context.replace(/'/g, "" ).replace(/"/g, "" );
-  _context=_context.split(" ");
-  _context=_context[0];
-
-
-  $.ajax({
-    url: "/filebrowser/view" + _context + "?format=json",
-    type: "GET",
-    dataType: "json",
-    cache: false,
-    async: false,
-    success: function(data) {
-        //for (var i = 0; i < data.length; i++) {
-        //    contentList.push(data[i]);
-        //}
-        if (data.error) {
-          $.jHueNotify.error(data.error_message);
-          contentList.length = 0;
-          CodeMirror.listDir.length = 0;
-          return false;
-        };
-        CodeMirror.isDir = true;
-        $(data.files).each(function (i, item) {
-          if (item.name != "") {
-            CodeMirror.listDir.push(item.name);
-            contentList.push(item.name);
-          };
-        });
-
-
-    },
-    error: function(data) {
-      contentList.length = 0;
+function getDatabases(){
+  $.get("/hcatalog/databases/json" , function(data){
+    for (var db in data){
+      CodeMirror.kwset.db.push('<i class="icon-hdd"></i> ' + db)
+      db_list[db]= {};
+      for (var i = data[db].length - 1; i >= 0; i--) {
+        db_list[db][data[db][i]] = {};
+        CodeMirror.kwset.tables.push('<i class="icon-list-alt"></i> ' + data[db][i])
+        $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + db + "." + data[db][i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
+      };
     }
-  });
-  return contentList;
-}*/
+  },"json");
+}
+
+function getTables(database){
+  var database = database || 'default';
+  $.get("/hcatalog/tables/json/" + database, function(data){
+      if(CodeMirror.kwset.tables.length<1){
+        for (var i = 0; i < data.length; i++) {
+          CodeMirror.kwset.tables = CodeMirror.kwset.tables.concat(data[i]); //pigKeywordsT.push(data[i]);
+          db_list[database][data[i]]={};
+          $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + database + "." + data[i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
+        }
+      }
+
+  },"json");
+}
+
+
+function hCatHint (cm, showHint) {
+
+  function maybeAdd(str) {
+      var stripped = strip(str).replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');
+      if (stripped.indexOf(token.string) == 0 && !arrayContains(fields_hint, str)) fields_hint.push(str);
+    }
+  
+  function strip(html){
+    if (jQuery) {
+      return $("<div>").html(html).text();
+    }
+    else {
+      var tmp = document.createElement("DIV");
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText;
+    }
+  }
+
+  function arrayContains(arr, item) {
+    if (!Array.prototype.indexOf) {
+      var i = arr.length;
+      while (i--) {
+        if (arr[i] === item) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return arr.indexOf(item) != -1;
+  }
+
+  function getTableFields(table, database){
+    var database = database || 'default';
+    $.get("/hcatalog/table/"+database+"/"+table+"/json/", function(data){
+
+      if(typeof (data) !=="undefined" && data.hasOwnProperty("columns") && data.columns.length>0)
+      {
+        db_list[database][table]=data;
+
+        $.each(data.columns, function(e){
+          if(this.name != "" )
+            dirArr.list.push(this.name + ":" + this.type);
+        })
+
+        if(dirArr.list.length<2 && dirArr.list.length>0)
+          dirArr.list.push("");
+
+        if(dirArr.list.length>0 && dirArr.list[0].name !="")
+          showHint(dirArr);
+      }else{
+        delete db_list[database][table];
+      }
+
+    },"json");
+  }
+  // prepare token object
+  var cur = cm.getCursor();
+  var token = cm.getTokenAt(cm.getCursor());
+  var curText=cm.getTokenAt(cm.getCursor()).string;
+
+  if (token.string[0]=="'"||token.string[0]=='"') {
+
+    token.start=token.start+1;
+    token.string=token.string.replace("'", "" ).replace('"', "" );
+
+    if (token.string.lastIndexOf("'")>-1||token.string.indexOf('"')>0){
+      token.string=token.string.replace(/'/g, "" ).replace(/"/g, "" );
+      token.end=token.end-1;
+    }
+
+    if (token.string.lastIndexOf(".")>0) {
+      token.start=token.start +token.string.lastIndexOf(".")+1 ;
+      token.string=token.string.substr(token.string.lastIndexOf(".")+1);
+    };
+
+    token.className="pig-word";
+  }
+
+  var lastKey=cm.getLine(cm.getCursor().line).substr(cm.getCursor().ch-1,1);
+  var targetLast = curText.match(/(\w*)+(\.?)+(\'?)$/)[1];
+  var prevMatch = curText.match(/(\w*)(\.)(\w*)/);
+  var targetPrev = (prevMatch && prevMatch[3].length>0)?prevMatch[1]:undefined;
+  
+  var fields_hint = [];
+
+
+  var dirArr = {list: fields_hint,
+                from: CodeMirror.Pos(cur.line, token.start),
+                to: CodeMirror.Pos(cur.line, token.end)};
+
+  if (targetPrev) {
+    if (lastKey=='.') {
+      if (targetLast in db_list[targetPrev]) {
+        if (typeof (db_list[targetPrev].columns) !== "undefined") {
+          $.each(db_list[targetPrev].columns, function(e){
+            if(this.name != "" )
+              fields_hint.push(this.name + ":" + this.type);
+          })
+        }else{
+          return getTableFields(targetLast, targetPrev);
+        }
+      }
+    } else {
+      for (var table in db_list[targetPrev]) {
+        maybeAdd('<i class="icon-list-alt"></i> ' + table);
+      };
+    }
+  } else if (targetLast) {
+    if (lastKey=='.') {
+      if (targetLast in db_list.default) {
+        for (var tablenameD in db_list.default){
+          if (tablenameD == targetLast) {
+            if (typeof (db_list.default[tablenameD].columns) !== "undefined") {
+              $.each(db_list.default[tablenameD].columns, function(e){
+                if(this.name != "" )
+                  fields_hint.push(this.name + ":" + this.type);
+              })
+            } else {
+              return getTableFields(targetLast);
+            }
+          }
+        }
+      }
+      for (var table in db_list[targetLast]) {
+        maybeAdd('<i class="icon-list-alt"></i> ' + table);
+      };
+    } else {
+      for (var dbName in db_list){
+        maybeAdd('<i class="icon-hdd"></i> ' + dbName);
+      }
+      for (var table in db_list.default) {
+        maybeAdd('<i class="icon-list-alt"></i> ' + table);
+      }
+    }
+  }else{
+    for (var dbName in db_list){
+      maybeAdd('<i class="icon-hdd"></i> ' + dbName);
+    }
+    for (var table in db_list.default) {
+      maybeAdd('<i class="icon-list-alt"></i> ' + table);
+    }
+  }
+
+  if(fields_hint.length<2 && fields_hint.length>0)
+        fields_hint.push(" ");
+  if(fields_hint.length>0 && fields_hint[0].name !=""){
+    return showHint(dirArr);
+  }
+      
+}
+
+CodeMirror.registerHelper("hint", "hCatalog", hCatHint);
 
 CodeMirror.commands.autocomplete = function (cm) {
   $(document.body).on("contextmenu", function (e) {
@@ -269,57 +326,51 @@ CodeMirror.commands.autocomplete = function (cm) {
   var prevKey=cm.getLine(cm.getCursor().line).substr(cm.getCursor().ch-2,1);
   if ((startKeys== "'/" || startKeys== '"/')) {
     CodeMirror.isDir = true;
-    console.log(lastKey)
+    CodeMirror.isHCat = false;
     if (lastKey=='/') {
       showHdfsHint(cm, curText);
     } else {
       showHdfsHint(cm, curText.substring(0,curText.lastIndexOf('/')+1));
     }
+  } else if (curText.lastIndexOf("'")==0 || (curText.lastIndexOf("'")== curText.length-1 && cm.getTokenAt(cm.getCursor()).end!=cm.getCursor().ch)) {
+    CodeMirror.isDir = false;
+    CodeMirror.isHCat = true;
+    CodeMirror.showHint(cm, CodeMirror.hint.hCatalog, {'async':true });
   } else {
     CodeMirror.isDir = false;
-    CodeMirror.showHint(cm, CodeMirror.pigHint);
+    CodeMirror.isHCat = false;
+    CodeMirror.showHint(cm);
   }
-
 }
 
-function showHdfsHint(codeMirror, path) {
-      //prepare tmp here
-      //----
-      CodeMirror.listDir = [];
-      path=path.replace(/'/g, "" ).replace(/"/g, "" );
+function showHdfsHint(codeMirror, path_) {
+  CodeMirror.listDir = [];
+  var path=path_.replace(/'/g, "" ).replace(/"/g, "" );
       path=path.split(" ");
-      path="/filebrowser/view" + path[0] + "?format=json";
-
-      //----
-      console.log('---fb path---')
-      console.log(path)
-
-      $.getJSON(path, function (data) {
-        CodeMirror.listDir = [];
-        if (data.error != null) {
-          $.jHueNotify.error(data.error_message);
-          CodeMirror.listDir.length = 0;
-        }
-        else {
-          $(data.files).each(function (cnt, item) {
-            itm_name = (item.stats.path.substr(item.stats.path.length-2,2) != '..') ? item.name:'..';
-            if (itm_name != "") {
-              var _ico = "icon-file-alt";
-              if (item.type == "dir") {
-                _ico = "icon-folder-close";
-              }
-              CodeMirror.listDir.push('<i class="' + _ico + '"></i> ' + itm_name);
-            }
-          });
-          //CodeMirror.isDir = true;
-          //CodeMirror.isHCatHint = showHCatHint;
-          window.setTimeout(function () {
-            CodeMirror.showHint(codeMirror, CodeMirror.pigHint);
-          }, 100);  // timeout for IE8
+      path="/filebrowser/view" + path[0];
+  $.post(path, null,function (data) {
+    CodeMirror.listDir = [];
+    if (data.error != null) {
+      $.jHueNotify.error(data.error);
+      CodeMirror.listDir.length = 0;
+    }
+    else {
+      $(data.files).each(function (cnt, item) {
+        itm_name = item.name;
+        if (itm_name != ".") {
+          var _ico = "icon-file";
+          if (item.type == "dir") {
+            _ico = "icon-folder-close";
+          }
+          CodeMirror.listDir.push('<i class="' + _ico + '"></i> ' + itm_name);
         }
       });
-
+      window.setTimeout(function () {
+        CodeMirror.showHint(codeMirror);
+      }, 100);  // timeout for IE8
     }
+  },'json');
+}
 
 var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"), {
   lineNumbers: true,
@@ -330,7 +381,6 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     pig_editor.matchHighlight("CodeMirror-matchhighlight");
   },
   extraKeys: {
-    //"Ctrl-Space": function(cm) { CodeMirror.showHint(cm, CodeMirror.pigHint);  }
     "Ctrl-Space": "autocomplete",
   },
   onKeyEvent: function(cm,key){
@@ -351,8 +401,6 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     
     // get current string
     var curText=cm.getTokenAt(cm.getCursor()).string;
-    console.log(curText)
-    console.log(CodeMirror.isDir)
 
     var startKeys=curText.substr(0,2);
     var lastKey=cm.getLine(cm.getCursor().line).substr(cm.getCursor().ch-1,1);
@@ -361,132 +409,20 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     var _line = cm.getLine(cm.getCursor().line);
     var _partial = _line.substring(0, cm.getCursor().ch);
 
-    // console.log(_partial.indexOf("'"))
-    // console.log(_partial.lastIndexOf("'"))
-    //if (_partial.indexOf("'") > -1 && _partial.indexOf("'") == _partial.lastIndexOf("'")) {
-
-
-        if(lastKey == "." ) {
-          console.log('tbl')
-          CodeMirror.isDir = false;
-          CodeMirror.showHint(cm);
-        } else if ((startKeys== "'/" || startKeys== '"/')) {
-          console.log('dir')
-          CodeMirror.isDir = true;
-          if (key.keyCode=="191") showHdfsHint(cm, curText);
-        } 
-      //}
-    //} 
+    if (key.keyCode=="191" && (startKeys== "'/" || startKeys== '"/')) {
+      CodeMirror.isDir = true;
+      CodeMirror.isHCat = false;
+      showHdfsHint(cm, curText);
+    } 
+    if ((key.keyCode == "222" && /\s/.test(prevKey)) || (key.keyCode == "190" && /\w/.test(prevKey))) {
+      CodeMirror.isDir = false;
+      CodeMirror.isHCat = true;
+      CodeMirror.showHint(cm, CodeMirror.hint.hCatalog, {'async':true });
+    }
   }
 });
 
-pig_editor.on('change',function (from, change){
-
-    //return false;
-
-    $(".empty-codemirror-textarea-error").remove();
-
-    var curText=from.getTokenAt(from.getCursor()).string;
-
-    var startKeys=curText.substr(0,2);
-    var lastKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-1,1);
-    var prevKey=from.getLine(from.getCursor().line).substr(from.getCursor().ch-2,1);
-
-    /*if((startKeys== "'/" || startKeys== '"/'))
-    {
-      dirList = [];
-      if(lastKey=='/' && tmpDirList.path != curText)
-      {
-        tmpDirList.list=listdir(curText);
-        tmpDirList.path=curText;
-      }
-      var lastSlashIdx = from.getLine(from.getCursor().line).lastIndexOf("/");
-      var complPart = from.getLine(from.getCursor().line).substr(lastSlashIdx+1,from.getCursor().ch-lastSlashIdx);
-      if(complPart=="") {
-        dirList=tmpDirList.list;
-      }
-      else
-      {
-          for (var i = 0; i < tmpDirList.list.length; i++)
-          {
-            if(0 == tmpDirList.list[i].indexOf(complPart,0))
-              dirList.push(tmpDirList.list[i]);
-          }
-      }
-      if(dirList.length<2 && dirList.length>0)
-        dirList.push("");
-
-      change.from.ch=from.getCursor().ch;
-
-      var dirArr={
-        from: { line:from.getCursor().line, ch:lastSlashIdx+1},
-        list:dirList,
-        to: { line:from.getCursor().line, ch:from.getCursor().ch}
-      };
-
-      if(dirList.length>0 && dirList[0].trim()!="")
-        //CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr );
-        CodeMirror.showHint(from, CodeMirror.pigHint);
-
-    }
-    else*/ if((prevKey== "'" || prevKey== '"')&&(/\w/.test(lastKey)))
-    {
-      console.log('(prevKey== \"\'\" || prevKey== \'\"\')&&(/\w/.test(lastKey))')
-      //CodeMirror.simpleHint(from, CodeMirror.pigHint);
-    }
-    else if(lastKey == "." )
-    {
-      var table_name=from.getLine(from.getCursor().line).substr(0,from.getCursor().ch-1);
-      table_name=table_name.match(/\w*$/);
-      if(table_name!="")
-      {
-        var fields_hint=[];
-
-      console.log('lastKey == "."')
-      //return false;
-
-      var tline=from.getLine(from.getCursor().line).substr(0,from.getCursor().ch-1);
-      var targetT=tline.match(/\w*$/);
-      var targetD = (tline.match(/(\w*)+(\.)+(\w*)$/))?tline.match(/(\w*)+(\.)+(\w*)$/)[1]:undefined;
-      var fields_hint=[];
-
-        var dirArr={
-          from: change.from,
-          list:fields_hint,
-          to: change.from
-        };
-
-        $.each(table_fields, function(e){
-          if(e == table_name)
-          {
-            if(typeof (this.columns) !== "undefined")
-            {
-              $.each(this.columns, function(e){
-                if(this.name != "" )
-                  fields_hint.push(this.name + ":" + this.type);
-              })
-            }else{
-              getTableFields(e, dirArr);
-            }
-          }
-        })
-
-        if(fields_hint.length<2 && fields_hint.length>0)
-          fields_hint.push("");
-
-      if(fields_hint.length<2 && fields_hint.length>0)
-        fields_hint.push("");
-      if(fields_hint.length>0 && fields_hint[0].name !=""){
-        //CodeMirror.simpleHint(from, CodeMirror.pigHint, "", dirArr , true );
-        CodeMirror.showHint(from, CodeMirror.pigTableHint);
-      }
-    }
-
-    autosave();
-
-  });
-
-
+pig_editor.on('change',function (){autosave();});
 
 var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code"), {
   mode: {name: "python",
@@ -499,7 +435,6 @@ var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code
   matchBrackets: true,
   onChange: autosave,
   mode: "text/x-python"
-
 });
 
 $('.script_label').on('click',function(e){
@@ -522,11 +457,9 @@ function findPosition(curLine){
   return posArr;
 }
 
-
-
 function paginator(lines_per_page){
 
-   var lines = $("#job_info").text().split("\n");
+  var lines = $("#job_info").text().split("\n");
   if(lines.length < lines_per_page)
   {
     return;
@@ -543,7 +476,6 @@ function paginator(lines_per_page){
   })
 
   function handlePaginationClick(new_page_index, pagination_container) {
-    //console.log(new_page_index,pagination_container)
     //debugger;
     // This selects 20 elements from a content array
     var i=new_page_index*lines_per_page;
@@ -604,14 +536,14 @@ $(document).ready(function(){
   });
 
 
-$(".udf_register").click(function() {
-    pig_editor.setValue('REGISTER ' + $(this).attr('value') + '\n'+ pig_editor.getValue());
-
-});
-
-$("#save_button").live("click", function(){
- if(percent > 0 && percent < 100) return confirm("Job is running. Are you sure, you want to switch to edit mode?");
-});
+  $(".udf_register").click(function() {
+      pig_editor.setValue('REGISTER ' + $(this).attr('value') + '\n'+ pig_editor.getValue());
+  
+  });
+  
+  $("#save_button").live("click", function(){
+   if(percent > 0 && percent < 100) return confirm("Job is running. Are you sure, you want to switch to edit mode?");
+  });
 
 
   $("#save-param-modal-for-dollar").click(function(){

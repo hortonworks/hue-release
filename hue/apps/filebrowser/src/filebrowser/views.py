@@ -142,9 +142,6 @@ def view(request, path):
         if request.fs.isdir(request.fs.trash_path):
             return format_preserving_redirect(request, urlresolvers.reverse(view, kwargs=dict(path=request.fs.trash_path)))
 
-    if 'format' in request.GET:
-        return HttpResponse(json.dumps(listdir(request, path, None)), content_type="application/json") 
-
     try:
         stats = request.fs.stats(path)
         if stats.isDir:
@@ -348,14 +345,7 @@ def listdir(request, path, chooser):
 
     TODO: Remove?
     """
-    tojson = 'format' in request.GET and request.GET.get('format') == 'json'
-
     if not request.fs.isdir(path):  
-        if tojson:
-            return {
-                'error':True,
-                'error_message':_("Not directory: %(path)s") % {'path': path}}
-        else:
             raise PopupException(_("Not directory: %(path)s") % {'path': path})
 
     file_filter = request.REQUEST.get('file_filter', 'any')
@@ -396,9 +386,6 @@ def listdir(request, path, chooser):
         stats.insert(0, parent_stat)
 
     data['files'] = [_massage_stats(request, stat) for stat in stats]
-
-    if tojson:
-        return data
 
     if chooser:
         return render('chooser.mako', request, data)

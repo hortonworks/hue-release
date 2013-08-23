@@ -137,29 +137,31 @@ UDF_PATH = conf.UDF_PATH.get()
               <textarea id="python_code" name="python_script"></textarea>
             </div>
             % endif
-	<input type="hidden" name="email" class='intoemail' />
-        <input type="hidden" id="operation_type" />
-	<br><div class="actions">
-	  <input class="btn primary" type="submit" name="submit_action" id="save_button"
-                 value="Save"
-                 % if result.get("id"):
-                 disabled="disabled"
-                 % endif
-                 />
-	  <input class="btn primary action_btn" type="button" id="start_job" name="submit_action"
-	  value="Execute" />
-          <input class="btn primary " type="button"
-                 id="kill_job"  value="Kill job" style="display:none" />
-	  <input class="btn primary action_btn" type="button"
-                 id="explain" name="submit_action" value="Explain" />
-	  <input class="btn primary action_btn" name="submit_action"
-                 type="button" value="Syntax check" id="syntax_check" />
-	</div>
-	</form>
-      </div>
-      <div class="div_conteiner">
-        <div class="progress progress-striped active">
-          <div class="bar" style="width: 0%;"></div>
+            <div class="progress progress-striped active">
+            <div class="bar" style="width: 0%;"></div>
+          </div>
+	          <input type="hidden" name="email" class='intoemail' />
+            <input type="hidden" id="operation_type" />
+            <div id="pigArguments">
+              <div class="input-prepend input-append">
+                <input type="text" name placeholder="e.g. -useHCatalog" class="pigArgument span2"/><span class="add-on"><i class="icon-arrow-left"></i> pig arguments</span>
+              </div>
+            </div>
+	          <br>
+            <div class="actions">
+	            <input class="btn primary" type="submit" name="submit_action" id="save_button"
+                   value="Save"
+                   % if result.get("id"):
+                   disabled="disabled"
+                   % endif
+                   />
+	            <input class="btn primary action_btn" type="button" id="start_job" name="submit_action"value="Execute" />
+              <input class="btn primary " type="button"id="kill_job"  value="Kill job" style="display:none" />
+	            <input class="btn primary action_btn" type="button"id="explain" name="submit_action" value="Explain" />
+	            <input class="btn primary action_btn" name="submit_action"type="button" value="Syntax check" id="syntax_check" />
+	          </div>
+	        </form>
+          <input type="hidden" id="fakeArgs">
         </div>
 
         <a class="btn-success btn-mini"
@@ -208,7 +210,6 @@ ${result['error']}
 </div>
 </div>
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
-<link href="/pig/static/css/monokai.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
 <link href="/pig/static/css/show-hint.css" rel="stylesheet">
 <link href="/pig/static/css/bootstrap-fileupload.min.css" rel="stylesheet">

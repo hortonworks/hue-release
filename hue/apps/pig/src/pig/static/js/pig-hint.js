@@ -38,17 +38,11 @@
       token.string = token.string.substring(token.string.lastIndexOf("/") + 1);
     };
 
-    if (token.string==".") {
-      token = tprop = {start: cur.ch, end: cur.ch, string: "", state: token.state,
-        className: token.string = "pig-table"};
-    };
-
-
 
     var tprop = token;
     // If it's not a 'word-style' token, ignore the token.
 
-    if (!/^[,\w$_-]*$/.test(token.string)) {
+    if (!/^[.,\w$_-]*$/.test(token.string)) {
       token = tprop = {start: cur.ch, end: cur.ch, string: "", state: token.state,
         className: token.string == ":" ? "pig-type" : null};
     }
@@ -56,7 +50,7 @@
     if (!context) var context = [];
     context.push(tprop);
 
-    var completionList = getCompletions(token, context,kwset);
+    var completionList = getCompletions(token, context, kwset);
     completionList = completionList.sort();
     //prevent autocomplete for last word, instead show dropdown with one word
     if(completionList.length == 1) {
@@ -64,18 +58,9 @@
     }
 
     return {list: completionList,
-      from: {line: cur.line, ch: token.start},
-      to: {line: cur.line, ch: token.end}};
+            from: CodeMirror.Pos(cur.line, token.start),
+            to: CodeMirror.Pos(cur.line, token.end)};
   }
-
-  CodeMirror.pigHint = function(editor) {
-    return scriptHint(editor, pigKeywordsU, function (e, cur) {return e.getTokenAt(cur);});
-  };
-
-  CodeMirror.pigTableHint = function(editor) {
-    return scriptHint(editor, pigKeywordsU, function (e, cur) {return e.getTokenAt(cur);},'tables');
-  };      
-  
 
   function toTitleCase(str) {
     return str.replace(/(?:^|\s)\w/g, function(match) {
@@ -83,7 +68,13 @@
     });
   }
 
+  CodeMirror.registerHelper("hint", "pig", function(editor) {
+    return scriptHint(editor, pigKeywordsU, function (e, cur) {return e.getTokenAt(cur);});
+  });
+
   CodeMirror.listDir = [];
+  CodeMirror.curHCat = [];
+  CodeMirror.isHCat = false;
   CodeMirror.isDir = false;
 
   CodeMirror.kwset = {
@@ -161,15 +152,6 @@
           for (var i = keywords.length - 1; i >= 0; i--) {
             forEach(CodeMirror.kwset[keywords[i]], maybeAdd);
           };
-          //console.log(CodeMirror.kwset)
-          /*forEach(pigBuiltinsL, maybeAdd);
-          forEach(pigBuiltinsC, maybeAdd);
-          forEach(pigTypesU, maybeAdd);
-          forEach(pigTypesL, maybeAdd);
-          forEach(pigKeywordsU, maybeAdd);
-          forEach(pigKeywordsL, maybeAdd);
-          forEach(pigKeywordsT, maybeAdd);
-          forEach(pigKeywordsD, maybeAdd);*/
         }
       }
     }
@@ -195,7 +177,6 @@
         base = base[context.pop().string];
       if (base != null) gatherCompletions(base);
     }
-    console.log(found)
     return found;
   }
 })();
