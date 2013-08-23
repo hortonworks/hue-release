@@ -73,7 +73,6 @@
   });
 
   CodeMirror.listDir = [];
-  CodeMirror.curHCat = [];
   CodeMirror.isHCat = false;
   CodeMirror.isDir = false;
 

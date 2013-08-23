@@ -301,6 +301,7 @@ ${layout.menubar(section='query')}
 </div>
 
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
+<link href="/pig/static/css/show-hint.css" rel="stylesheet">
 
 <style>
   h1 {
@@ -387,6 +388,7 @@ ${layout.menubar(section='query')}
 <script src="/static/ext/js/jquery/plugins/jquery.cookie.js"></script>
 <script src="/pig/static/js/codemirror.js"></script>
 <script src="/pig/static/js/simple-hint.js"></script>
+<script src="/pig/static/js/show-hint.js"></script>
 <script src="/hcatalog/static/js/hive.js"></script>
 <script src="/hcatalog/static/js/hive-hint.js"></script>
 <script src="/hcatalog/static/js/hive-script.js"></script>
