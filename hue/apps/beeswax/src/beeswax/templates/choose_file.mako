@@ -38,7 +38,11 @@ ${layout.menubar(section='tables')}
             </div>
         </div>
         <div class="span9">
-            <ul class="nav nav-pills">
+          <div class="card" style="margin-top: 0">
+            <h1 class="card-heading simple">${_('Create a new table from a file')}</h1>
+            <div class="card-body">
+              <p>
+                <ul class="nav nav-pills">
                 <li class="active"><a href="${ url(app_name + ':import_wizard', database=database) }">${_('Step 1: Choose File')}</a></li>
                 <li><a id="step2" href="#">${_('Step 2: Choose Delimiter')}</a></li>
                 <li><a href="#">${_('Step 3: Define Columns')}</a></li>
@@ -52,7 +56,7 @@ ${layout.menubar(section='tables')}
                             ${comps.field(file_form["name"], placeholder=_('table_name'), show_errors=False)}
                             <span  class="help-inline">${unicode(file_form["name"].errors) | n}</span>
                         <span class="help-block">
-                            ${_('Name of the new table. Table names must be globally unique. Table names tend to correspond as well to the directory where the data will be stored.')}
+                            ${_('Name of the new table. Table names must be globally unique. Table names tend to correspond to the directory where the data will be stored.')}
                         </span>
                         </div>
                     </div>
@@ -66,7 +70,7 @@ ${layout.menubar(section='tables')}
                             )}
                             <span  class="help-inline">${unicode(file_form["comment"].errors) | n}</span>
                         <span class="help-block">
-                        ${_("Use a table comment to describe your table.  For example, you might note the data's provenance and any caveats users need to know.")}
+                        ${_("Use a table comment to describe the table.  For example, note the data's provenance and any caveats users need to know.")}
                         </span>
                         </div>
                     </div>
@@ -81,7 +85,7 @@ ${layout.menubar(section='tables')}
                             )}
                             <span  class="help-inline">${unicode(file_form["path"].errors) | n}</span>
                         <span class="help-block">
-                        ${_('The HDFS path to the file that you would like to base this new table definition on. It can be compressed (gzip) or not.')}
+                        ${_('The HDFS path to the file on which to base this new table definition. It can be compressed (gzip) or not.')}
                         </span>
                         </div>
                     </div>
@@ -90,18 +94,21 @@ ${layout.menubar(section='tables')}
                         <div class="controls">
                             ${comps.field(file_form["do_import"], render_default=True)}
                             <span class="help-block">
-                        ${_('Check this box if you want to import the data in this file after creating the table definition. Leave it unchecked if you want to define an empty table.')}
+                        ${_('Check this box to import the data in this file after creating the table definition. Leave it unchecked to define an empty table.')}
                         <div id="fileWillBeMoved" class="alert">
-                            <strong>${_('Warning!')}</strong> ${_('The selected file is going to be moved during the import.')}
+                            <strong>${_('Warning:')}</strong> ${_('The selected file is going to be moved during the import.')}
                         </div>
                         </span>
                         </div>
                     </div>
                 </fieldset>
-                <div class="form-actions">
+                <div class="form-actions" style="padding-left: 10px">
                     <input type="submit" class="btn btn-primary" name="submit_file" value="${_('Next')}" />
                 </div>
             </form>
+              </p>
+            </div>
+          </div>
         </div>
     </div>
 </div>
@@ -121,7 +128,7 @@ ${layout.menubar(section='tables')}
 </div>
 
 
-<style>
+<style type="text/css">
     #filechooser {
         min-height: 100px;
         overflow-y: scroll;

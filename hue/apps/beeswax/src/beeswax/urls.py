@@ -34,14 +34,19 @@ urlpatterns = patterns('beeswax.views',
   url(r'^execute_parameterized/(?P<design_id>\d+)$', 'execute_parameterized_query', name='execute_parameterized_query'),
   url(r'^watch/(?P<id>\d+)$', 'watch_query', name='watch_query'),
   url(r'^watch/json/(?P<id>\d+)$', 'watch_query_refresh_json', name='watch_query_refresh_json'),
+  url(r'^cancel_operation/(?P<query_id>\d+)?$', 'cancel_operation', name='cancel_operation'),
+  url(r'^close_operation/(?P<query_id>\d+)?$', 'close_operation', name='close_operation'),
   url(r'^results/(?P<id>\d+)/(?P<first_row>\d+)$', 'view_results', name='view_results'),
   url(r'^download/(?P<id>\d+)/(?P<format>\w+)$', 'download', name='download'),
   url(r'^visualize/(?P<id>\d+)/(?P<cut>\d+)?$', 'visualize', name='visualize'),
   url(r'^save_results/(?P<id>\d+)$', 'save_results', name='save_results'),
+  url(r'^save_design_properties$', 'save_design_properties', name='save_design_properties'), # Ajax
 
   url(r'^my_queries$', 'my_queries', name='my_queries'),
   url(r'^list_designs$', 'list_designs', name='list_designs'),
+  url(r'^list_trashed_designs$', 'list_trashed_designs', name='list_trashed_designs'),
   url(r'^delete_designs$', 'delete_design', name='delete_design'),
+  url(r'^restore_designs$', 'restore_design', name='restore_design'),
   url(r'^clone_design/(?P<design_id>\d+)$', 'clone_design', name='clone_design'),
   url(r'^query_history$', 'list_query_history', name='list_query_history'),
 
@@ -51,14 +56,15 @@ urlpatterns = patterns('beeswax.views',
 )
 
 urlpatterns += patterns(
-  'beeswax.create_table',
+  'beeswax.create_database',
 
-  url(r'^create/create_table/(?P<database>\w+)?$', 'create_table', name='create_table'),
-  url(r'^create/import_wizard/(?P<database>\w+)?$', 'import_wizard', name='import_wizard'),
-  url(r'^create/auto_load/(?P<database>\w+)$', 'load_after_create', name='load_after_create'),
+  url(r'^create/database$', 'create_database', name='create_database'),
 )
 
 urlpatterns += patterns(
-    'beeswax.create_database',
-    url(r'^create/database$', 'create_database', name='create_database'),
+  'beeswax.create_table',
+
+  url(r'^create/create_table/(?P<database>\w+)$', 'create_table', name='create_table'),
+  url(r'^create/import_wizard/(?P<database>\w+)$', 'import_wizard', name='import_wizard'),
+  url(r'^create/auto_load/(?P<database>\w+)$', 'load_after_create', name='load_after_create'),
 )

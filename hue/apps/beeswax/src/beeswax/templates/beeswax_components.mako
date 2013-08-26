@@ -18,6 +18,14 @@
   from django.utils.translation import ugettext as _
 %>
 
+<%def name="getEllipsifiedCell(val, placement='bottom', klass='')">
+  % if len(val) > 25:
+    <td class="${ klass }" rel="tooltip" title="${ val[:300] }" data-placement="${ placement }" >${ (val[:25]) }&hellip;</td>
+  % else:
+    <td class="${ klass }">${ val }</td>
+  % endif
+</%def>
+
 <%def name="fieldName(field)">
 </%def>
 
@@ -175,9 +183,9 @@ ${field.label_tag() | n}
 
 <%def name="pageref(num)">
   % if hasattr(filter_params, "urlencode"):
-    href="?page=${num}&${filter_params.urlencode()}"
+    href="?q-page=${num}&${filter_params.urlencode()}"
   % else:
-    href="?page=${num}&${filter_params}"
+    href="?q-page=${num}&${filter_params}"
   % endif
 </%def>
 <%def name="prevpage(page)">

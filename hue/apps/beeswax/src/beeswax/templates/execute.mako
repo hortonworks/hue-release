@@ -28,19 +28,19 @@
             <p><strong>${_('Your query has the following error(s):')}</strong></p>
             <p class="queryErrorMessage">${error_message}</p>
             % if log:
-                <small>${_('click the')} <b>${_('Error Log')}</b> ${_('tab below for details')}</small>
+                <small>${_('click the')} <b>${_('Error Log')}</b> ${_('tab above for details')}</small>
             % endif
         </div>
     % endif
 
-    <textarea class="span9" rows="35" placeholder="${_('Example: SELECT * FROM tablename')}" name="${form.query["query"].html_name}" id="queryField">${extract_field_data(form.query["query"]) or ''}</textarea>
+    <textarea class="hide" tabindex="1" name="${form.query["query"].html_name}" id="queryField">${extract_field_data(form.query["query"]) or ''}</textarea>
 
     <div id="validationResults">
     % if len(form.query["query"].errors):
         ${ unicode(form.query["query"].errors) | n,unicode }
      % endif
     </div>
-    <br>
+
     <div class="actions">
         <a id="executeQuery" class="btn btn-primary" tabindex="0">${_('Execute')}</a>
         % if design and not design.is_auto and design.name:
@@ -556,6 +556,5 @@ ${layout.menubar(section='query')}
         }
     });
 </script>
-
 
 ${ commonfooter(messages) | n,unicode }

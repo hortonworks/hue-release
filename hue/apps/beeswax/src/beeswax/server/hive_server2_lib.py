@@ -19,6 +19,7 @@ import logging
 import re
 import thrift
 
+from desktop.conf import KERBEROS
 from desktop.lib import thrift_util
 from hadoop import cluster
 
@@ -26,7 +27,8 @@ from TCLIService import TCLIService
 from TCLIService.ttypes import TOpenSessionReq, TGetTablesReq, TFetchResultsReq,\
   TStatusCode, TGetResultSetMetadataReq, TGetColumnsReq, TType,\
   TExecuteStatementReq, TGetOperationStatusReq, TFetchOrientation,\
-  TCloseSessionReq, TGetSchemasReq, TGetLogReq, TCancelOperationReq
+  TCloseSessionReq, TGetSchemasReq, TGetLogReq, TCancelOperationReq,\
+  TCloseOperationReq
 
 from beeswax import conf
 from beeswax import hive_site
@@ -256,8 +258,11 @@ class HiveServerClient:
     self.query_server = query_server
     self.user = user
 
-    use_sasl, mechanism, kerberos_principal_short_name = HiveServerClient.get_security(query_server)
+    use_sasl, mechanism, kerberos_principal_short_name, impersonation_enabled = HiveServerClient.get_security(query_server)
+    LOG.info('use_sasl=%s, mechanism=%s, kerberos_principal_short_name=%s, impersonation_enabled=%s' % (
+             use_sasl, mechanism, kerberos_principal_short_name, impersonation_enabled))
 
+    self.impersonation_enabled = impersonation_enabled
     self._client = thrift_util.get_client(TCLIService.Client,
                                           query_server['server_host'],
                                           query_server['server_port'],
@@ -266,17 +271,19 @@ class HiveServerClient:
                                           use_sasl=use_sasl,
                                           mechanism=mechanism,
                                           username=user.username,
-                                          timeout_seconds=conf.BEESWAX_SERVER_CONN_TIMEOUT.get())
+                                          timeout_seconds=conf.SERVER_CONN_TIMEOUT.get())
 
 
   @classmethod
   def get_security(cls, query_server):
     principal = query_server['principal']
+    impersonation_enabled = False
 
     if query_server['server_name'] == 'impala':
       cluster_conf = cluster.get_cluster_conf_for_job_submission()
       use_sasl = cluster_conf is not None and cluster_conf.SECURITY_ENABLED.get()
       mechanism = HiveServerClient.HS2_MECHANISMS['KERBEROS']
+      impersonation_enabled = query_server['impersonation_enabled']
     else:
       hive_mechanism = hive_site.get_hiveserver2_authentication()
       if hive_mechanism not in HiveServerClient.HS2_MECHANISMS:
@@ -285,17 +292,27 @@ class HiveServerClient:
       mechanism = 'NOSASL'
       if use_sasl:
         mechanism = HiveServerClient.HS2_MECHANISMS[hive_mechanism]
+      impersonation_enabled = hive_site.hiveserver2_impersonation_enabled()
 
     if principal:
       kerberos_principal_short_name = principal.split('/', 1)[0]
     else:
       kerberos_principal_short_name = None
 
-    return use_sasl, mechanism, kerberos_principal_short_name
+    return use_sasl, mechanism, kerberos_principal_short_name, impersonation_enabled
 
 
   def open_session(self, user):
-    req = TOpenSessionReq(username=user.username, configuration={})
+    if self.impersonation_enabled:
+      kerberos_principal_short_name = KERBEROS.HUE_PRINCIPAL.get().split('/', 1)[0]
+      if self.query_server['server_name'] == 'impala':
+        kwargs = {'username': kerberos_principal_short_name, 'configuration': {'impala.proxy.user': user.username}}
+      else:
+        kwargs = {'username': kerberos_principal_short_name, 'configuration': {'hive.server2.proxy.user': user.username}}
+    else:
+      kwargs = {'username': user.username, 'configuration': {}}
+
+    req = TOpenSessionReq(**kwargs)
     res = self._client.OpenSession(req)
 
     sessionId = res.sessionHandle.sessionId
@@ -354,11 +371,7 @@ class HiveServerClient:
 
     results, schema = self.fetch_result(res.operationHandle)
 
-    if self.query_server['server_name'] == 'impala':
-      col = 'TABLE_SCHEM'
-    else:
-      col = 'TABLE_SCHEMA'
-
+    col = 'TABLE_SCHEM'
     return HiveServerTRowSet(results.results, schema.schema).cols((col,))
 
 
@@ -377,10 +390,6 @@ class HiveServerClient:
 
     table_results, table_schema = self.fetch_result(res.operationHandle)
 
-    # Using 'SELECT * from table' does not show column comments in the metadata
-    if self.query_server['server_name'] == 'beeswax':
-      self.execute_statement(statement='SET hive.server2.blocking.query=true')
-
     desc_results, desc_schema = self.execute_statement('DESCRIBE EXTENDED %s' % table_name)
     return HiveServerTable(table_results.results, table_schema.schema, desc_results.results, desc_schema.schema)
 
@@ -391,41 +400,34 @@ class HiveServerClient:
 
 
   def execute_query_statement(self, statement, max_rows=100, configuration={}):
-    # Only execute_async_query() supports configuration
-    if self.query_server['server_name'] == 'beeswax':
-      self.execute_statement(statement='SET hive.server2.blocking.query=true')
-
     results, schema = self.execute_statement(statement=statement, max_rows=max_rows, configuration=configuration)
     return HiveServerDataTable(results, schema)
 
 
   def execute_async_query(self, query, statement=0):
-    # Set configuration manually until Hive Server 2 supports confOverlay
-    # This will leak the config in the session
     if statement == 0:
+      # Impala just has settings currently
       if self.query_server['server_name'] == 'beeswax':
-        self.execute_statement(statement='SET hive.server2.blocking.query=true')
-        for resource in query.get_configuration():
+        for resource in query.get_configuration_statements():
           self.execute_statement(resource.strip())
 
-    if self.query_server['server_name'] == 'beeswax':
-      self.execute_statement(statement='SET hive.server2.blocking.query=false')
-
     configuration = self._get_query_configuration(query)
+    if self.query_server['server_name'] == 'beeswax':
+      configuration.update({'hive.server2.blocking.query': 'false'})
 
     query_statement =  query.get_query_statement(statement)
     return self.execute_async_statement(statement=query_statement, confOverlay=configuration)
 
 
   def execute_statement(self, statement, max_rows=100, configuration={}):
-    req = TExecuteStatementReq(statement=statement, confOverlay=configuration)
+    req = TExecuteStatementReq(statement=statement.encode('utf-8'), confOverlay=configuration)
     res = self.call(self._client.ExecuteStatement, req)
 
     return self.fetch_result(res.operationHandle, max_rows=max_rows)
 
 
   def execute_async_statement(self, statement, confOverlay):
-    req = TExecuteStatementReq(statement=statement, confOverlay=confOverlay)
+    req = TExecuteStatementReq(statement=statement.encode('utf-8'), confOverlay=confOverlay)
     res = self.call(self._client.ExecuteStatement, req)
 
     return HiveServerQueryHandle(secret=res.operationHandle.operationId.secret,
@@ -443,6 +445,11 @@ class HiveServerClient:
 
   def cancel_operation(self, operation_handle):
     req = TCancelOperationReq(operationHandle=operation_handle)
+    return self.call(self._client.CancelOperation, req)
+
+
+  def close_operation(self, operation_handle):
+    req = TCloseOperationReq(operationHandle=operation_handle)
     return self.call(self._client.CancelOperation, req)
 
 
@@ -486,8 +493,6 @@ class HiveServerClient:
 
   def get_partitions(self, database, table_name, max_parts):
     table = self.get_table(database, table_name)
-    if self.query_server['server_name'] == 'beeswax':
-      self.execute_statement(statement='SET hive.server2.blocking.query=true')
 
     partitionTable = self.execute_query_statement('SHOW PARTITIONS %s' % table_name) # DB prefix not supported
     return [PartitionValueCompatible(partition, table) for partition in partitionTable.rows()][-max_parts:]
@@ -609,11 +614,12 @@ class HiveServerClientCompatible:
     return self._client.cancel_operation(operationHandle)
 
 
+  def close_operation(self, handle):
+    operationHandle = handle.get_rpc_handle()
+    return self._client.close_operation(operationHandle)
+
+
   def dump_config(self):
-    return 'Does not exist in HS2'
-
-
-  def echo(self, msg):
     return 'Does not exist in HS2'
 
 
@@ -623,10 +629,7 @@ class HiveServerClientCompatible:
 
 
   def get_databases(self):
-    if self.query_server['server_name'] == 'impala':
-      col = 'TABLE_SCHEM'
-    else:
-      col = 'TABLE_SCHEMA'
+    col = 'TABLE_SCHEM'
     return [table[col] for table in self._client.get_databases()]
 
 
@@ -655,6 +658,10 @@ class HiveServerClientCompatible:
 
 
   def alter_table(self, dbname, tbl_name, new_tbl): raise NotImplementedError()
+
+
+  def open_session(self, user):
+    return self._client.open_session(user)
 
 
   def add_partition(self, new_part): raise NotImplementedError()
