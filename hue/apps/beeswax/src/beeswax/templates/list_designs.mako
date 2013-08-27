@@ -29,22 +29,41 @@ ${ commonheader(_('Saved Queries'), app_name, user, '100px') | n,unicode }
 ${layout.menubar(section='saved queries')}
 
 <div class="container-fluid">
-  <h1>${_('Saved Queries')}</h1>
+  <div class="card">
+    <h1 class="card-heading simple">${_('Saved Queries')}</h1>
 
-  <%actionbar:render>
-    <%def name="actions()">
-      <button id="editBtn" class="btn toolbarBtn" title="${_('Edit the selected query')}" disabled="disabled"><i class="icon-edit"></i> ${_('Edit')}</button>
-      <button id="cloneBtn" class="btn toolbarBtn" title="${_('Clone the selected query')}" disabled="disabled"><i class="icon-retweet"></i> ${_('Clone')}</button>
-      <button id="historyBtn" class="btn toolbarBtn" title="${_('View the usage history of the selected query')}" disabled="disabled"><i class="icon-tasks"></i> ${_('Usage history')}</button>
-      <button id="deleteBtn" class="btn toolbarBtn" title="${_('Delete the selected queries')}" disabled="disabled"><i class="icon-trash"></i>  ${_('Delete')}</button>
-    </%def>
+    <%actionbar:render>
+      <%def name="search()">
+        <input id="filterInput" type="text" class="input-xlarge search-query" placeholder="${_('Search for query')}">
+      </%def>
 
-    <%def name="creation()">
-      <a class="btn" href="${ url(app_name + ':execute_query') }"><i class="icon-plus-sign"></i> ${_('Create New Query')}</a>
-    </%def>
-  </%actionbar:render>
+      <%def name="actions()">
+        <div class="btn-toolbar" style="display: inline; vertical-align: middle">
+          <button id="editBtn" class="btn toolbarBtn" title="${_('Edit the selected query')}" disabled="disabled"><i class="icon-edit"></i> ${_('Edit')}</button>
+          <button id="cloneBtn" class="btn toolbarBtn" title="${_('Copy the selected query')}" disabled="disabled"><i class="icon-copy"></i> ${_('Copy')}</button>
+          <button id="historyBtn" class="btn toolbarBtn" title="${_('View the usage history of the selected query')}" disabled="disabled"><i class="icon-tasks"></i> ${_('Usage history')}</button>
 
-  <table class="table table-striped table-condensed datatables">
+          <div id="delete-dropdown" class="btn-group" style="vertical-align: middle">
+            <button id="trashQueryBtn" class="btn toolbarBtn" disabled="disabled"><i class="icon-remove"></i> ${_('Move to trash')}</button>
+            <button id="trashQueryCaretBtn" class="btn toolbarBtn dropdown-toggle" data-toggle="dropdown" disabled="disabled">
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a href="#" id="deleteQueryBtn" title="${_('Delete forever')}"><i class="icon-bolt"></i> ${_('Delete forever')}</a></li>
+            </ul>
+          </div>
+        </div>
+      </%def>
+
+      <%def name="creation()">
+        <div class="btn-toolbar" style="display: inline; vertical-align: middle">
+          <a class="btn" href="${ url(app_name + ':list_trashed_designs') }" title="${_('Go to the trash')}"><i class="icon-trash"></i> ${_('View trash')}</a>
+          <a class="btn" href="${ url(app_name + ':execute_query') }" title="${_('Create new query')}"><i class="icon-plus-sign"></i> ${_('New query')}</a>
+        </div>
+      </%def>
+    </%actionbar:render>
+
+    <table class="table table-condensed datatables">
     <thead>
       <tr>
         <th width="1%"><div class="hueCheckbox selectAll" data-selectables="savedCheck"></div></th>
@@ -56,9 +75,6 @@ ${layout.menubar(section='saved queries')}
       </tr>
     </thead>
     <tbody>
-      <%!
-        from beeswax import models
-      %>
       % for design in page.object_list:
         <%
           may_edit = user == design.owner
@@ -69,7 +85,7 @@ ${layout.menubar(section='saved queries')}
             % if may_edit:
               data-edit-url="${ url(app_name + ':execute_query', design_id=design.id) }"
               data-delete-name="${ design.id }"
-              data-history-url="${ url(app_name + ':list_query_history') }?design_id=${design.id}"
+              data-history-url="${ url(app_name + ':list_query_history') }?q-design_id=${design.id}"
             % endif
             data-clone-url="${ url(app_name + ':clone_design', design_id=design.id) }" data-row-selector-exclude="true"></div>
         </td>
@@ -77,28 +93,31 @@ ${layout.menubar(section='saved queries')}
         % if may_edit:
           <a href="${ url(app_name + ':execute_query', design_id=design.id) }" data-row-selector="true">${design.name}</a>
         % else:
-          ${design.name}
+          ${ design.name }
         % endif
         </td>
         <td>
         % if design.desc:
-          ${design.desc}
+          ${ design.desc }
         % endif
         </td>
-        <td>${design.owner.username}</td>
-        <td>
-          ${_('Query')}
-        </td>
+        <td>${ design.owner.username }</td>
         <td data-sort-value="${time.mktime(design.mtime.timetuple())}">${ timesince(design.mtime) } ${_('ago')}</td>
       </tr>
       % endfor
     </tbody>
   </table>
-  ${comps.pagination(page)}
+    <div class="card-body">
+      <p>
+        ${comps.pagination(page)}
+      </p>
+    </div>
+  </div>
 </div>
 
 <div id="deleteQuery" class="modal hide fade">
-  <form id="deleteQueryForm" action="${ url(app_name + ':delete_design') }" method="POST"> ${ csrf_token_field | n } 
+  <form id="deleteQueryForm" action="${ url(app_name + ':delete_design') }" method="POST">
+    <input type="hidden" name="skipTrash" id="skipTrash" value="false"/>
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
       <h3 id="deleteQueryMessage">${_('Confirm action')}</h3>
@@ -113,7 +132,7 @@ ${layout.menubar(section='saved queries')}
   </form>
 </div>
 
-<script src="/static/ext/js/knockout-2.1.0.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/ext/js/knockout-min.js" type="text/javascript" charset="utf-8"></script>
 
 <script type="text/javascript" charset="utf-8">
   $(document).ready(function () {
@@ -130,7 +149,7 @@ ${layout.menubar(section='saved queries')}
       "bLengthChange":false,
       "bInfo":false,
       "aaSorting":[
-        [1, 'asc']
+        [4, 'desc']
       ],
       "aoColumns":[
         {"bSortable":false, "sWidth":"1%" },
@@ -143,7 +162,8 @@ ${layout.menubar(section='saved queries')}
       "oLanguage":{
         "sEmptyTable":"${_('No data available')}",
         "sZeroRecords":"${_('No matching records')}",
-      }
+      },
+      "bStateSave": true
     });
 
     $("#filterInput").keyup(function () {
@@ -175,6 +195,7 @@ ${layout.menubar(section='saved queries')}
 
     function toggleActions() {
       $(".toolbarBtn").attr("disabled", "disabled");
+
       var selector = $(".hueCheckbox[checked='checked']");
       if (selector.length == 1) {
         if (selector.data("edit-url")) {
@@ -194,19 +215,30 @@ ${layout.menubar(section='saved queries')}
         }
       }
       if (selector.length >= 1) {
-        $("#deleteBtn").removeAttr("disabled");
+        $("#trashQueryBtn").removeAttr("disabled");
+        $("#trashQueryCaretBtn").removeAttr("disabled");
       }
     }
 
-    $("#deleteBtn").click(function () {
-      $.getJSON("${ url(app_name + ':delete_design') }", function(data) {
-        $("#deleteQueryMessage").text(data.title);
-      });
+    function deleteQueries() {
       viewModel.chosenSavedQueries.removeAll();
       $(".hueCheckbox[checked='checked']").each(function( index ) {
         viewModel.chosenSavedQueries.push($(this).data("delete-name"));
       });
+
       $("#deleteQuery").modal("show");
+    }
+
+    $("#trashQueryBtn").click(function () {
+      $("#skipTrash").val(false);
+      $("#deleteQueryMessage").text("${ _('Move the selected queries to the trash?') }");
+      deleteQueries();
+    });
+
+    $("#deleteQueryBtn").click(function () {
+      $("#skipTrash").val(true);
+      $("#deleteQueryMessage").text("${ _('Delete the selected queries?') }");
+      deleteQueries();
     });
 
     $("a[data-row-selector='true']").jHueRowSelector();

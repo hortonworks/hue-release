@@ -30,7 +30,7 @@ ${layout.menubar(section='databases')}
   <h1>${_('Create a new database')}</h1>
   <div class="row-fluid">
     <div class="span3">
-        <div class="well sidebar-nav">
+        <div class="sidebar-nav">
             <ul class="nav nav-list">
                 <li class="nav-header">${_('Actions')}</li>
                 <li><a href="${ url(app_name + ':create_database')}">${_('Create a new database')}</a></li>

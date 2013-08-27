@@ -41,7 +41,7 @@ ${ layout.menubar(section='history') }
     </a>
     % else:
     ## TODO (bc/nutron): Shouldn't be able to edit someone else's design. Let user clone instead.
-    <a href="${ url(app_name + ':clone_design', design_id=design.id) }" title="${_('Copy this query.')}">${_('Clone')}</a>
+    <a href="${ url(app_name + ':clone_design', design_id=design.id) }" title="${_('Copy this query.')}">${_('Copy')}</a>
     % endif
   % else:
     [ ${_('Auto generated action')} ]
@@ -51,45 +51,66 @@ ${ layout.menubar(section='history') }
 <div class="container-fluid">
     <h1>${_('History')}</h1>
     <div class="row-fluid">
-        <div class="span3">
-            <div class="well sidebar-nav">
+        <div class="span2">
+            <div class="sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Actions')}</li>
                     % if share_queries:
-                        % if filter_params.get('user') == ':all':
+                        % if filter_params.get(prefix + 'user') == ':all':
                           <%
                             my_querydict = filter_params.copy()
-                            my_querydict['user'] = request.user.username
+                            my_querydict[prefix + 'user'] = request.user.username
+                            if filter:
+                              my_querydict[prefix + 'search'] = filter
                           %>
                         <li><a href="?${my_querydict.urlencode()}">${_('Show my queries')}</a></li>
                         % else:
                           <%
                             my_querydict = filter_params.copy()
-                            my_querydict['user'] = ':all'
+                            my_querydict[prefix + 'user'] = ':all'
+                            if filter:
+                              my_querydict[prefix + 'search'] = filter
                           %>
                           <li><a href="?${my_querydict.urlencode()}">${_("Show everyone's queries")}</a></li>
                         % endif
                     % endif
 
-                     % if filter_params.get('auto_query', None):
+                     % if filter_params.get(prefix + 'auto_query', None):
                       <%
                         my_querydict = filter_params.copy()
-                        my_querydict['auto_query'] = ''
+                        my_querydict[prefix + 'auto_query'] = ''
+                        if filter:
+                          my_querydict[prefix + 'search'] = filter
                       %>
                       <li><a href="?${my_querydict.urlencode()}">${_('Show user queries')}</a></li>
                     % else:
                       <%
                         my_querydict = filter_params.copy()
-                        my_querydict['auto_query'] = 'on'
+                        my_querydict[prefix + 'auto_query'] = 'on'
+                        if filter:
+                          my_querydict[prefix + 'search'] = filter
                       %>
                       <li><a href="?${my_querydict.urlencode()}">${_('Show auto actions')}</a></li>
                     % endif
                 </ul>
             </div>
         </div>
-        <div class="span9">
+        <div class="span10">
+          <div class="card" style="margin-top: 0">
+            <h1 class="card-heading simple">${_('History')}</h1>
 
-        <table class="table table-striped table-condensed datatables">
+            <%actionbar:render>
+              <%def name="search()">
+                <input id="filter" type="text" class="input-xxlarge search-query" placeholder="${_('Search for name, query, etc.')}" value="${ filter }">
+              </%def>
+            </%actionbar:render>
+
+            <div class="card-body">
+              <p>
+
+            <img id="spinner" src="/static/art/spinner.gif" class="hide" />
+
+            <table class="table table-striped table-condensed datatables" style="padding-left: 0;">
             <thead>
               <tr>
                 <th width="10%">${_('Time')}</th>
@@ -103,23 +124,17 @@ ${ layout.menubar(section='history') }
             <tbody>
             % for query in page.object_list:
               <%
-                qcontext = None
-                try:
-                  qcontext = query.design.get_query_context()
-                except AttributeError:
-                  pass
+                qcontext = query.design.get_query_context()
               %>
               <tr class="histRow">
                 <td data-sort-value="${time.mktime(query.submission_date.timetuple())}">${query.submission_date.strftime("%x %X")}</td>
                 <td>${show_saved_query(query.design, query)}</td>
                 <td>
-                  <p>
-                    % if len(query.query) > 100:
-                      <code>${collapse_whitespace(query.query[:100])}...</code>
-                    % else:
-                      <code>${collapse_whitespace(query.query)}</code>
-                    % endif
-                  </p>
+                  % if len(query.query) > 100:
+                    <code>${collapse_whitespace(query.query[:100])}...</code>
+                  % else:
+                    <code>${collapse_whitespace(query.query)}</code>
+                  % endif
                 </td>
                 <td>${query.owner}</td>
                 <td>${models.QueryHistory.STATE[query.last_state]}</td>
@@ -134,44 +149,65 @@ ${ layout.menubar(section='history') }
             % endfor
             </tbody>
           </table>
-         ${comps.pagination(page)}
+
+                ${comps.pagination(page)}
+              </p>
+            </div>
+          </div>
         </div>
     </div>
 </div>
 
 <script type="text/javascript" charset="utf-8">
-    $(document).ready(function(){
-        $(".datatables").dataTable({
-            "bPaginate": false,
-            "bLengthChange": false,
-            "bInfo": false,
-            "bFilter": false,
-            "aoColumns": [
-                { "sSortDataType": "dom-sort-value", "sType": "numeric" },
-                null,
-                null,
-                null,
-                null,
-                { "bSortable": false }
-            ],
-            "aaSorting": [[0, 'desc']],
-            "oLanguage": {
-                "sEmptyTable":     "${_('No data available')}",
-                "sInfo":           "${_('Showing _START_ to _END_ of _TOTAL_ entries')}",
-                "sInfoEmpty":      "${_('Showing 0 to 0 of 0 entries')}",
-                "sInfoFiltered":   "${_('(filtered from _MAX_ total entries)')}",
-                "sZeroRecords":    "${_('No matching records')}",
-                "oPaginate": {
-                    "sFirst":    "${_('First')}",
-                    "sLast":     "${_('Last')}",
-                    "sNext":     "${_('Next')}",
-                    "sPrevious": "${_('Previous')}"
-                }
-            }
-        });
-
-        $("a[data-row-selector='true']").jHueRowSelector();
+  $(document).ready(function () {
+    $(".datatables").dataTable({
+      "bPaginate": false,
+      "bLengthChange": false,
+      "bInfo": false,
+      "bFilter": false,
+      "aoColumns": [
+        { "sSortDataType": "dom-sort-value", "sType": "numeric" },
+        null,
+        null,
+        null,
+        null,
+        { "bSortable": false }
+      ],
+      "aaSorting": [
+        [0, 'desc']
+      ],
+      "oLanguage": {
+        "sEmptyTable": "${_('No data available')}",
+        "sInfo": "${_('Showing _START_ to _END_ of _TOTAL_ entries')}",
+        "sInfoEmpty": "${_('Showing 0 to 0 of 0 entries')}",
+        "sInfoFiltered": "${_('(filtered from _MAX_ total entries)')}",
+        "sZeroRecords": "${_('No matching records')}",
+        "oPaginate": {
+          "sFirst": "${_('First')}",
+          "sLast": "${_('Last')}",
+          "sNext": "${_('Next')}",
+          "sPrevious": "${_('Previous')}"
+        }
+      },
+      "bStateSave": true
     });
+
+    var filterTimeout = -1;
+    $(".search-query").keyup(function () {
+      window.clearTimeout(filterTimeout);
+      filterTimeout = window.setTimeout(function () {
+        $("#spinner").show();
+        $(".datatables").hide();
+        $(".pagination").hide();
+        location.href = '?${ filter_params.get(prefix + 'user') and (prefix + 'user=' + filter_params.get(prefix + 'user') + '&') or '' }${ prefix }search='+$(".search-query").val();
+      }, 500);
+    });
+
+    var _val = $(".search-query").val();
+    $(".search-query").focus().val("").val(_val);
+
+    $("a[data-row-selector='true']").jHueRowSelector();
+  });
 </script>
 
 ${ commonfooter(messages) | n,unicode }

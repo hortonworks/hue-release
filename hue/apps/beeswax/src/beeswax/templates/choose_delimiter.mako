@@ -29,7 +29,7 @@ ${layout.menubar(section='tables')}
     <h1>${_('Create a new table from a file')}</h1>
     <div class="row-fluid">
         <div class="span3">
-            <div class="well sidebar-nav">
+            <div class="sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Actions')}</li>
                     <li><a href="${ url(app_name + ':import_wizard', database=database)}">${_('Create a new table from a file')}</a></li>
