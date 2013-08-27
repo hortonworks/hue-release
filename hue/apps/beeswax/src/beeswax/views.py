@@ -392,11 +392,11 @@ def show_tables(request, database=None):
   databases = db.get_databases()
 
   if request.method == 'POST':
-    db_form = DbForm(request.POST, databases=databases)
+    db_form = beeswax.forms.DbForm(request.POST, databases=databases)
     if db_form.is_valid():
       database = db_form.cleaned_data['database']
   else:
-    db_form = DbForm(initial={'database': database}, databases=databases)
+    db_form = beeswax.forms.DbForm(initial={'database': database}, databases=databases)
 
   tables = db.get_tables(database=database)
   examples_installed = beeswax.models.MetaInstall.get().installed_example
