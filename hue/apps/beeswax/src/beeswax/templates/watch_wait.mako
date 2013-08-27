@@ -40,7 +40,7 @@ ${layout.menubar(section='query')}
                 </div>
               </li>
             % endif
-            <div class="sidebar-nav
+            <div class="well sidebar-nav
                 % if app_name == 'impala':
                   hide
                 % endif

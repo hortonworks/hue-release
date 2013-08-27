@@ -52,7 +52,7 @@ ${ layout.menubar(section='history') }
     <h1>${_('History')}</h1>
     <div class="row-fluid">
         <div class="span2">
-            <div class="sidebar-nav">
+            <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Actions')}</li>
                     % if share_queries:

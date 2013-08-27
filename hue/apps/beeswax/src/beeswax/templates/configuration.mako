@@ -29,7 +29,7 @@ ${layout.menubar(section='configuration')}
 	  <h1 class="card-heading simple">${_('Settings')}</h1>
     <div class="card-body">
       <p>
-        <form class="form-search" method="POST">
+        <form class="form-search" method="POST"> ${ csrf_token_field | n }
           <input type="text" id="filterInput" class="input-xlarge search-query" placeholder="${_('Search for key, value, etc.')}">
           <a href="#" id="clearFilterBtn" class="btn">${_('Clear')}</a>
         </form>

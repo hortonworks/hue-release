@@ -66,7 +66,7 @@ ${layout.menubar(section='query')}
   <div id="expand"><i class="icon-chevron-right" style="color: #FFFFFF"></i></div>
     <div class="row-fluid">
         <div class="span3">
-            <div class="sidebar-nav">
+            <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <li><a id="collapse" class="btn btn-small"><i class="icon-chevron-left" rel="tooltip" title="${_('Collapse this panel')}"></i></a></li>
                     % if download_urls:

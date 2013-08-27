@@ -116,7 +116,7 @@ ${layout.menubar(section='saved queries')}
 </div>
 
 <div id="deleteQuery" class="modal hide fade">
-  <form id="deleteQueryForm" action="${ url(app_name + ':delete_design') }" method="POST">
+  <form id="deleteQueryForm" action="${ url(app_name + ':delete_design') }" method="POST"> ${ csrf_token_field | n }
     <input type="hidden" name="skipTrash" id="skipTrash" value="false"/>
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>

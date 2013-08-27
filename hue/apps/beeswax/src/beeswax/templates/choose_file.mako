@@ -29,7 +29,7 @@ ${layout.menubar(section='tables')}
     <h1>${_('Create a new table from a file')}</h1>
     <div class="row-fluid">
         <div class="span3">
-            <div class="sidebar-nav">
+            <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Actions')}</li>
                     <li><a href="${ url(app_name + ':import_wizard', database=database)}">${_('Create a new table from a file')}</a></li>
@@ -39,7 +39,6 @@ ${layout.menubar(section='tables')}
         </div>
         <div class="span9">
           <div class="card" style="margin-top: 0">
-            <h1 class="card-heading simple">${_('Create a new table from a file')}</h1>
             <div class="card-body">
               <p>
                 <ul class="nav nav-pills">
