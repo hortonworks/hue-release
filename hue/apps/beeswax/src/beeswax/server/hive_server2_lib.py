@@ -371,7 +371,7 @@ class HiveServerClient:
 
     results, schema = self.fetch_result(res.operationHandle)
 
-    col = 'TABLE_SCHEM'
+    col = 'TABLE_SCHEMA'
     return HiveServerTRowSet(results.results, schema.schema).cols((col,))
 
 
@@ -629,7 +629,7 @@ class HiveServerClientCompatible:
 
 
   def get_databases(self):
-    col = 'TABLE_SCHEM'
+    col = 'TABLE_SCHEMA'
     return [table[col] for table in self._client.get_databases()]
 
 
