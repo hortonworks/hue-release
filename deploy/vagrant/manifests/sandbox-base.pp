@@ -103,6 +103,13 @@ class sandbox_rpm {
                      
                    ],
     }
+
+    replace { "/etc/hue/conf/hue.ini":
+       file => "/etc/hue/conf/hue.ini",
+       pattern => "## x_frame_options='\"'\"'ALLOW-FROM url'\"'\"'",
+       replacement => "x_frame_options='\"'\"'ALLOWALL'\"'\"'",
+       require => Package['hue']
+    }
 }
 
 
