@@ -175,7 +175,7 @@ if(!pig_editor.getValue())
 
   var html="";
   var editorContent=pig_editor.getValue();
-  var found_var=editorContent.match(/\%\S+\%/g);
+  var found_var=editorContent.match(/\%\w+\%/g);
 
   if(found_var != null && found_var.length >0){
     found_var.map(function(elem,i){
