@@ -79,6 +79,10 @@ class sandbox_rpm {
         require => File['resolv.conf'],
     }
 
+    package { "cyrus-sasl-plain":
+        ensure => present,
+    }
+
     package { "python-lxml":
         ensure => present,
         require => File['resolv.conf'],
@@ -93,6 +97,7 @@ class sandbox_rpm {
         require => [ File['sandbox.repo'],
                      Package['libxslt'],
                      Package['python-lxml'],
+                     Package['cyrus-sasl-plain'],
                      Exec['yum-cache'],
                      Package['yum-plugin-priorities']
                      
