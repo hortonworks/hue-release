@@ -78,3 +78,12 @@ def get_run_root(*append):
   Returns the run time root directory
   """
   return __get_root(*append)
+
+
+def get_var_root(*append):
+  """
+  Returns the var/lib directory of hue
+  """
+  return os.path.join(
+              "/var", "lib", "hue",
+              *append)

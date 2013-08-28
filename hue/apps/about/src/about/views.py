@@ -58,21 +58,29 @@ def _get_tutorials_version():
   return tutorial_version
 
 
+def _read_versions(filename):
+  with open(filename) as f:
+    for line in f:
+      l = line.strip().split("=")
+      if len(l) < 2 or line.strip()[:1] == '#':
+        continue
+      component, version = l
+      if component == "HUE_VERSION":
+        HUE_VERSION, buildnumber = version.split(":")
+        components.append(('Hue', version))
+      else:
+        components.append((component, version))
+  return components
+
+
 def _get_components():
   components = []
   HUE_VERSION = "2.2.0"
   try:
-    with open(os.path.join(get_run_root(), "VERSIONS")) as f:
-      for line in f:
-        l = line.strip().split("=")
-        if len(l) < 2 or line.strip()[:1] == '#':
-          continue
-        component, version = l
-        if component == "HUE_VERSION":
-          HUE_VERSION, buildnumber = version.split(":")
-          components.append(('Hue', version))
-        else:
-          components.append((component, version))
+    components += _read_versions(os.path.join(get_run_root(), "VERSIONS"))
+    extra_versions_path = os.path.join(get_var_root(), "EXTRA_VERSIONS")
+    if os.path.exists(extra_versions_path):
+      components += _read_versions(extra_versions_path)
   except Exception:
     components = [
       ('HDP', "1.3"),

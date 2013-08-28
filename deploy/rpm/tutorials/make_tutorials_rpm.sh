@@ -25,5 +25,5 @@ cp *.spec $BB/rpm/SPECS/
 
 # === build ===
 
-rpmbuild --define "_topdir $BB/rpm" -ba $BB/rpm/SPECS/hue-tutorials.spec
+rpmbuild --define "_topdir $BB/rpm" --define "sandbox_timestamp $SANDBOX_TIMESTAMP" -ba $BB/rpm/SPECS/hue-tutorials.spec
 mv $BB/rpm/RPMS/noarch/*.rpm ./

@@ -75,6 +75,7 @@ sudo -u %{user} -s -- <<END_OF_SANDBOX
 
 echo '{"user":"hue", "pass":"1111"}' > /var/lib/hue/single_user_mode
 echo '{"user":"hue", "pass":"1111"}' > /var/lib/hue/show_credentials
+echo 'Sandbox=%{sandbox_timestamp}' > /var/lib/hue/EXTRA_VERSIONS
 
 cd %{tutorials_dir}
 echo "clonning tutorials ..."
