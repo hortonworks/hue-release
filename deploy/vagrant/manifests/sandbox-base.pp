@@ -34,12 +34,6 @@ define replace($file, $pattern, $replacement) {
 
 
 class sandbox_rpm {
-    replace { "/etc/hive/conf/hive-site.xml":
-       file => "/etc/hive/conf/hive-site.xml",
-       pattern => "jdbc:mysql:\\/\\/sandbox.hortonworks.com",
-       replacement => "jdbc:mysql:\\/\\/localhost:3306"
-    }
-
     file { '/etc/sysconfig/network-scripts/ifcfg-eth1':
         ensure => absent,
     }
@@ -93,7 +87,7 @@ class sandbox_rpm {
         command => "yum clean all --disablerepo='*' --enablerepo='sandbox' --enablerepo='hue-bigtop'",
     }
 
-    package { ['hue', 'hue-sandbox', 'hue-plugins']:
+    package { ['hue', 'hue-sandbox']:
         ensure => latest,
         require => [ File['sandbox.repo'],
                      Package['libxslt'],
@@ -156,12 +150,6 @@ class sandbox {
     include groups_fix
     include java_home
 
-    file {"/usr/lib/hive/lib/hcatalog-core.jar":
-        ensure => link,
-        target => "/usr/lib/hcatalog/share/hcatalog/hcatalog-core.jar",
-        mode => 0755,
-      }
-
     file {"/usr/lib/hue/apps/shell/src/shell/build/setuid":
         ensure => file,
         mode => 4755,
@@ -197,10 +185,20 @@ class sandbox {
 
     exec { 'start':
         command => "/etc/init.d/startup_script restart",
-        require => [   File["/usr/lib/hive/lib/hcatalog-core.jar"],
-                       Class[sandbox_rpm],
+        require => [   Class[sandbox_rpm],
                        Class[groups_fix],
+                       Exec['hostname'],
                     ],
+    }
+
+    replace { "/etc/sysconfig/network":
+       file => "/etc/sysconfig/network",
+       pattern => "HOSTNAME=sandbox",
+       replacement => "HOSTNAME=sandbox.hortonworks.com",
+    }
+
+    exec { 'hostname':
+        command => "hostname sandbox.hortonworks.com",
     }
 
 }
