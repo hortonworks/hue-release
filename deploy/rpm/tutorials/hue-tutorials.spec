@@ -75,7 +75,6 @@ sudo -u %{user} -s -- <<END_OF_SANDBOX
 
 echo '{"user":"hue", "pass":"1111"}' > /var/lib/hue/single_user_mode
 echo '{"user":"hue", "pass":"1111"}' > /var/lib/hue/show_credentials
-echo 'Sandbox=%{sandbox_timestamp}' > /var/lib/hue/EXTRA_VERSIONS
 
 cd %{tutorials_dir}
 echo "clonning tutorials ..."
@@ -157,6 +156,8 @@ Init scripts and splash
 # ln -sf %{hue_dir}/tools/start_scripts/hue /etc/init.d/hue
 # chkconfig --add hue
 # chkconfig --level 3 hue on
+
+echo 'Sandbox=%{sandbox_timestamp}' > /var/lib/hue/EXTRA_VERSIONS
 
 /etc/init.d/hue setup
 
