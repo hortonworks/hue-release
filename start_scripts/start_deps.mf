@@ -34,7 +34,7 @@ YARN: resourcemanager historyserver nodemanagers
 HBase: hbase_master hbase_regionservers
 Zookeeper: zookeeper
 Hive_Metastore: mysql hive hive2
-#Tez: tez
+Tez: # tez
 WebHCat: webhcat
 Oozie: oozie
 
