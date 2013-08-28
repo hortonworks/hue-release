@@ -282,6 +282,7 @@ ${layout.menubar(section='query')}
             <input type="hidden" value='${visualize_url}' name="visualize_csv"/>
           </div>
           <div class='nav-header chart_toobig_message hide'>${_('Can\'t show visualizations for more than 1000 rows')}</div>
+          <div class='nav-header chart_nodata_message hide'>${_('No data to visualize')}</div>
           <iframe id="preview" class="well"></iframe>
         </div>
         <!--/Visualization -->
