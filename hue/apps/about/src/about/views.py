@@ -18,7 +18,7 @@
 import logging
 import os
 from desktop.lib.django_util import render
-from desktop.lib.paths import get_run_root
+from desktop.lib.paths import get_run_root, get_var_root
 from django.http import HttpResponse
 import simplejson as json
 
@@ -59,6 +59,7 @@ def _get_tutorials_version():
 
 
 def _read_versions(filename):
+  components = []
   with open(filename) as f:
     for line in f:
       l = line.strip().split("=")
@@ -68,6 +69,8 @@ def _read_versions(filename):
       if component == "HUE_VERSION":
         HUE_VERSION, buildnumber = version.split(":")
         components.append(('Hue', version))
+      elif component == "Sandbox":
+        components.append(('Sandbox Build', version))
       else:
         components.append((component, version))
   return components
@@ -81,7 +84,7 @@ def _get_components():
     extra_versions_path = os.path.join(get_var_root(), "EXTRA_VERSIONS")
     if os.path.exists(extra_versions_path):
       components += _read_versions(extra_versions_path)
-  except Exception:
+  except ValueError:#Exception:
     components = [
       ('HDP', "1.3"),
       ('Hadoop', "1.2.0.1.3.0.0-107"),

@@ -18,7 +18,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "sandbox-hdp-2.0.5-rc5"
   config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.5-rc5.box"
 
-  config.vm.hostname = "sandbox"
+  config.vm.hostname = "sandbox.hortonworks.com"
 
   config.vm.provider :virtualbox do |vb|
     vb.gui = true
