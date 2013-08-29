@@ -5,6 +5,7 @@ USER=hue
 echo "Installing udfs"
 su - hdfs -c "hadoop dfs -mkdir /tmp/udfs"
 su - hdfs -c "hadoop dfs -chmod 777 /tmp/udfs"
+su - hdfs -c "hadoop dfs -chgrp -R hadoop /app-logs"
 su - $USER -c "hadoop dfs -put /usr/lib/hbase/lib/guava-*.jar /tmp/udfs/guava.jar"
 su - $USER -c "hadoop dfs -put /usr/lib/hbase/lib/zookeeper.jar /tmp/udfs/zookeeper.jar"
 su - $USER -c "hadoop dfs -put /usr/lib/hbase/lib/hbase-common-*.jar /tmp/udfs/"
