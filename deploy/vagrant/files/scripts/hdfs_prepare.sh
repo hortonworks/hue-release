@@ -1,15 +1,16 @@
 USER=hue
 
 [ ! -f /root/.hdfs_prepared ] && (
-su - hcat -c "hadoop dfs -copyFromLocal /usr/share/HDP-webhcat/pig.tar.gz /apps/webhcat/"
-su - hcat -c "hadoop dfs -copyFromLocal /usr/share/HDP-webhcat/hive.tar.gz /apps/webhcat/"
-su - hcat -c "hadoop dfs -copyFromLocal /usr/lib/hadoop/contrib/streaming/hadoop-streaming*.jar /apps/webhcat/"
-su - hdfs -c "hadoop fs -chown -R hcat /apps/webhcat/"
-su - hdfs -c "hadoop fs -chmod -R 777 /apps/webhcat/"
-
 
 echo "Installing udfs"
-wget -O /tmp/udfs.tar.gz http://dev2.hortonworks.com.s3.amazonaws.com/hdfs/pig/udfs.tar.gz
+su - hdfs -c "hadoop dfs -mkdir /tmp/udfs"
+su - hdfs -c "hadoop dfs -chmod 777 /tmp/udfs"
+su - $USER -c "hadoop dfs -put /usr/lib/hbase/lib/guava-*.jar /tmp/udfs/guava.jar"
+su - $USER -c "hadoop dfs -put /usr/lib/hbase/lib/zookeeper.jar /tmp/udfs/zookeeper.jar"
+su - $USER -c "hadoop dfs -put /usr/lib/hbase/lib/hbase-common-*.jar /tmp/udfs/"
+su - $USER -c "hadoop dfs -put /usr/lib/hbase/lib/hbase-client-*.jar /tmp/udfs/"
+su - $USER -c "hadoop dfs -put /usr/lib/pig/piggybank.jar /tmp/udfs/piggybank.jar"
+
 cd /tmp
 tar xvf udfs.tar.gz
 chown $USER udfs
