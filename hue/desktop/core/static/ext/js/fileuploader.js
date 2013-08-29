@@ -1049,10 +1049,10 @@ qq.extend(qq.UploadHandlerForm.prototype, {
             self._dequeue(id);
 
             delete self._inputs[id];
-            // timeout added to fix busy state in FF3.6
+            // timeout added to fix busy state in FF3.6 and IE9
             setTimeout(function(){
                 qq.remove(iframe);
-            }, 1);
+            }, 100);
         });
 
         form.submit();
