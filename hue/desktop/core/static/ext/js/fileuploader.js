@@ -613,6 +613,11 @@ qq.extend(qq.FileUploader.prototype, {
                 dropArea.style.display = 'none';
             }
         });
+        function _hide () {
+            if (dropArea.style.display == 'block') dropArea.style.display = 'none';
+        }
+        qq.attach(document, 'dragend', _hide);
+        qq.attach(document, 'mouseup', _hide);
     },
     _onSubmit: function(id, fileName){
         qq.FileUploaderBasic.prototype._onSubmit.apply(this, arguments);
