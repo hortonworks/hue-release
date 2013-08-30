@@ -140,7 +140,13 @@ class java_home {
 
     line { java_home:
         file => "/etc/bashrc",
-        line => "export JAVA_HOME=/usr/jdk/jdk1.6.0_31/",
+        line => 'export JAVA_HOME=/usr/jdk/jdk1.6.0_31/',
+    }
+
+    line { java_path:
+        file => "/etc/bashrc",
+        line => 'export PATH="${JAVA_HOME}bin:$PATH"',
+        require => Line[java_home],
     }
 }
 
