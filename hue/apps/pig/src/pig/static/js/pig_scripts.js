@@ -362,7 +362,7 @@ $(document).ready(function(){
           action: $("#udfs_form").attr("action"),
           multiple: false,
           template: '<div class="qq-uploader">'+
-                    '<div class="qq-upload-drop-area"><span></span></div>' +
+                    '<div class="qq-upload-drop-area"><span>Drop files here to upload</span></div>' +
                     '<div class="qq-upload-button"><i class="icon-upload icon-white"></i> Upload UDF Jar </div>' +
                     '<ul class="qq-upload-list"></ul>' +
                     '</div>',
@@ -372,12 +372,15 @@ $(document).ready(function(){
           },
           onComplete:function (id, fileName, response) {
             if (response.status != 0) {
-              $.jHueNotify.error("Error: " + (response['error'] ? response['error'] : " occured. Please check udf_path setting in hue.ini" ));
+              if (!response.error) $.jHueNotify.error("Error: occured. Please check udf_path setting in hue.ini" );
             } else {
                 $.jHueNotify.info("UDF was successfully uploaded");
                 setTimeout("window.location.reload(true)", 1000);
             }
           },
+          showMessage: function(msg){
+            $.jHueNotify.error("Error: " + msg);
+          }
   });
 
 
