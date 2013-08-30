@@ -49,7 +49,7 @@ class tutorials {
 
     package {'hue-tutorials':
         ensure => latest,
-        require => Package['hue-sandbox'],
+        require => Class['sandbox_rpm'],
     }
 
 /*  Disable single user mode
