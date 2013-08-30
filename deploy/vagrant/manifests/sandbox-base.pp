@@ -99,7 +99,7 @@ class sandbox_rpm {
     }
 
     file { "/etc/hue/conf/hue.ini":
-       file => "/etc/hue/conf/hue.ini",
+       path => "/etc/hue/conf/hue.ini",
        content => template("/vagrant/files/hue.ini"),
        require => Package['hue']
     }
