@@ -135,9 +135,6 @@ ${layout.menubar(section='query')}
               <li><a href="#log" data-toggle="tab">${_('Log')}</a></li>
               % if not error:
               <li><a href="#columns" data-toggle="tab">${_('Columns')}</a></li>
-                % if download_urls:
-                  <!--Visualization --><li><a href="#visualizations" data-toggle="tab">Visualizations</a></li><!--/Visualization -->
-                % endif
               % endif
             </ul>
 
@@ -197,7 +194,7 @@ ${layout.menubar(section='query')}
           <pre>${ force_unicode(log) }</pre>
         </div>
 
-        % if not error and download_urls.get("csv"):
+        % if not error:
         <div class="tab-pane" id="columns">
           <table class="table table-striped table-condensed" cellpadding="0" cellspacing="0">
             <thead>
@@ -210,89 +207,11 @@ ${layout.menubar(section='query')}
             </tbody>
           </table>
         </div>
-        % if columns:
-        <!--- Visualization -->
-        <link href="/pig/static/css/codemirror.css" rel="stylesheet">
-        <link href="/beeswax/static/css/visualization.css" rel="stylesheet">
-        <script src="/pig/static/js/codemirror.js"></script>
-        <script src="/beeswax/static/js/visualization.js"></script>
-        <script src="/beeswax/static/js/htmlmixed.js"></script>
-        <script src="/beeswax/static/js/xml.js"></script>
-        <script src="/beeswax/static/js/css.js"></script>
-        <script src="/beeswax/static/js/javascript.js"></script>
-        <script src="/beeswax/static/js/lib/jquery.csv-0.71.min.js"></script>
-        <div class="tab-pane" id="visualizations">
-              <!--<textarea id="vis_code" name="code">
-                <script>
-                var settings = {
-                  csv:"${download_urls["csv"]}",
-                  xAxis:"${columns[0]}",
-                  yAxis:[
-                    % for col in columns[1:]:
-                    "${col}",
-                    % endfor
-                    ],
-                  minY:null,
-                  maxY:null
-                }
-                </script>
-              </textarea>-->
-          <div class='chart_type_selectors'>
-            <div class='chart_type_wrap x_axis'>
-              <div class="nav-header">x Axis:</div>
-              <select name="xAxis" id="xAxis">
-                % for col in columns:
-                <option value='"${col}"'>${col}</option>
-                % endfor
-              </select>
-            </div>
-            <div class='chart_type_wrap y_axis' >
-              yAxis:<br/>
-              <input type="checkbox" name="yAxis" value="${columns[0]}">${columns[0]}<br>
-              % for col in columns[1:]:
-              <input type="checkbox" name="yAxis" value="${col}" checked="checked" >${col}<br>
-              % endfor
-            </div>
-            <div class='chart_type_wrap chart_type'>
-              <div class="nav-header">chart type:</div>
-              <input type="radio" name="type" value="area"        id="area"  checked="checked"/><label for="area">area</label>
-              <input type="radio" name="type" value="bar"         id="bar"                    /><label for="bar">bar</label>
-              <input type="radio" name="type" value="line"        id="line"                   /><label for="line">line</label>
-              <input type="radio" name="type" value="scatterplot" id="scatterplot"            /><label for="scatterplot">scatter</label>
-              <input type="radio" name="type" value="pie"         id="pie"                    /><label for="pie"> pie</label>
-            </div>
-            <div class='chart_type_wrap value_type'>
-              <div class="nav-header">value type:</div>
-              <input type="radio" name="stacked" value="false"  /> <img src='/beeswax/static/css/images/charts/stack.png'> stack<br/>
-              <input type="radio" name="stacked" value="true" checked="checked" /> <img src='/beeswax/static/css/images/charts/value.png'> value<br/>
-            </div>
-            <div class='chart_type_wrap sort'>
-              <div class="nav-header">Sort:</div>
-              <select name="sort" id="graph_sort">
-                <option value=''></option>
-              </select>
-            </div>
-            <div class="chart_type_wrap direction">
-              <div class="nav-header">Direction:</div>
-              <input type="radio" name="direction" value="true" checked="checked" />  asc<br/>
-              <input type="radio" name="direction" value="false"  /> desc<br/>
-            </div>
-
-            <input type="hidden" value='${download_urls["csv"]}' name="csv"/>
-            <input type="hidden" value='${visualize_url}' name="visualize_csv"/>
-          </div>
-          <div class='nav-header chart_toobig_message hide'>${_('Can\'t show visualizations for more than 1000 rows')}</div>
-          <div class='nav-header chart_nodata_message hide'>${_('No data to visualize')}</div>
-          <iframe id="preview" class="well"></iframe>
-        </div>
-        <!--/Visualization -->
-        % else:
-
-         <div class="tab-pane" id="visualizations"></div>
-        % endif
         % endif
       </div>
-
+            </p>
+            </div>
+          </div>
         </div>
     </div>
 </div>

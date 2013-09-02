@@ -59,42 +59,6 @@ def index(request):
 
 
 """
-Database Views
-"""
-
-
-def databases(request):
-    db = dbms.get(request.user)
-    databases = db.get_databases()
-
-    return render("databases.mako", request, {
-        'breadcrumbs': [],
-        'databases': databases,
-        'databases_json': json.dumps(databases),
-        })
-
-
-def drop_database(request):
-    db = dbms.get(request.user)
-
-    if request.method == 'POST':
-        databases = request.POST.getlist('database_selection')
-
-        try:
-            # Can't be simpler without an important refactoring
-            design = SavedQuery.create_empty(app_name='beeswax', owner=request.user)
-            query_history = db.drop_databases(databases, design)
-            url = reverse('beeswax:watch_query', args=[query_history.id]) + '?on_success_url=' + reverse('beeswax:databases')
-            return redirect(url)
-        except Exception, ex:
-            error_message, log = dbms.expand_exception(ex, db)
-            error = _("Failed to remove %(databases)s.  Error: %(error)s") % {'databases': ','.join(databases), 'error': error_message}
-            raise PopupException(error, title=_("Beeswax Error"), detail=log)
-    else:
-        title = _("Do you really want to delete the database(s)?")
-        return render('confirm.html', request, dict(url=request.path, title=title))
-
-"""
 Design views
 """
 
@@ -262,7 +226,6 @@ def list_designs(request):
   prefix = 'q-'
   querydict_query = _copy_prefix(prefix, request.GET)
   # Manually limit up the user filter.
-  querydict_query[ prefix + 'page' ] = request.GET.get('page', 1)
   querydict_query[ prefix + 'user' ] = user
   querydict_query[ prefix + 'type' ] = app_name
   page, filter_params = _list_designs(querydict_query, DEFAULT_PAGE_SIZE, prefix)
@@ -381,139 +344,6 @@ def list_query_history(request):
   })
 
 
-"""
-Table Views
-"""
-
-def show_tables(request, database=None):
-  database = _get_last_database(request, database)
-  db = dbms.get(request.user)
-
-  databases = db.get_databases()
-
-  if request.method == 'POST':
-    db_form = beeswax.forms.DbForm(request.POST, databases=databases)
-    if db_form.is_valid():
-      database = db_form.cleaned_data['database']
-  else:
-    db_form = beeswax.forms.DbForm(initial={'database': database}, databases=databases)
-
-  tables = db.get_tables(database=database)
-  examples_installed = beeswax.models.MetaInstall.get().installed_example
-  #table_selection = TableSelection(tables=tables)
-
-  return render("show_tables.mako", request, {
-      'tables': tables,
-      'examples_installed': examples_installed,
-      'db_form': db_form,
-      'database': database,
-      'tables_json': json.dumps(tables),
-  })
-
-
-def describe_table(request, database, table):
-  db = dbms.get(request.user)
-  error_message = ''
-  table_data = ''
-
-  table = db.get_table(database, table)
-
-  try:
-    table_data = db.get_sample(database, table)
-  except Exception, ex:
-    error_message, logs = expand_exception(ex, db)
-
-  load_form = LoadDataForm(table)
-
-  return render("describe_table.mako", request, {
-      'table': table,
-      'sample': table_data and table_data.rows(),
-      'load_form': load_form,
-      'error_message': error_message,
-      'database': database,
-  })
-
-
-def drop_table(request, database=None):
-  database = _get_last_database(request, database)
-  db = dbms.get(request.user)
-
-  if request.method == 'POST':
-    tables = request.POST.getlist('table_selection')
-    tables_objects = [db.get_table(database, table) for table in tables]
-    app_name = get_app_name(request)
-    try:
-      # Can't be simpler without an important refactoring
-      design = SavedQuery.create_empty(app_name=app_name, owner=request.user)
-      query_history = db.drop_tables(database, tables_objects, design)
-      url = reverse(app_name + ':watch_query', args=[query_history.id]) + '?on_success_url=' + reverse(app_name + ':show_tables')
-      return redirect(url)
-    except Exception, ex:
-      error_message, log = expand_exception(ex, db)
-      error = _("Failed to remove %(tables)s.  Error: %(error)s") % {'tables': ','.join(tables), 'error': error_message}
-      raise PopupException(error, title=_("Beeswax Error"), detail=log)
-  else:
-    title = _("Do you really want to delete the table(s)?")
-    return render('confirm.html', request, dict(url=request.path, title=title))
-
-
-def read_table(request, database, table):
-  db = dbms.get(request.user)
-
-  table = db.get_table(database, table)
-
-  try:
-    history = db.select_star_from(database, table)
-    get = request.GET.copy()
-    get['context'] = 'table:%s:%s' % (table.name, database)
-    request.GET = get
-    return watch_query(request, history.id)
-  except Exception, e:
-    raise PopupException(_('Can read table'), detail=e)
-
-
-def load_table(request, database, table):
-  table_obj = dbms.get(request.user).get_table(database, table)
-
-  if request.method == "POST":
-    form = beeswax.forms.LoadDataForm(table_obj, request.POST)
-    if form.is_valid():
-      # TODO(philip/todd): When PathField might refer to non-HDFS,
-      # we need a pathfield.is_local function.
-      hql = "LOAD DATA INPATH"
-      hql += " '%s'" % form.cleaned_data['path']
-      if form.cleaned_data['overwrite']:
-        hql += " OVERWRITE"
-      hql += " INTO TABLE "
-      hql += "`%s.%s`" % (database, table,)
-      if form.partition_columns:
-        hql += " PARTITION ("
-        vals = []
-        for key, column_name in form.partition_columns.iteritems():
-          vals.append("%s='%s'" % (column_name, form.cleaned_data[key]))
-        hql += ", ".join(vals)
-        hql += ")"
-
-      on_success_url = reverse(get_app_name(request) + ':describe_table', kwargs={'database': database, 'table': table})
-      return confirm_query(request, hql, on_success_url)
-  else:
-    form = beeswax.forms.LoadDataForm(table_obj)
-    return render("load_table.mako", request, {'form': form, 'table': table, 'action': request.get_full_path()})
-
-
-def describe_partitions(request, database, table):
-  db = dbms.get(request.user)
-
-  table_obj = db.get_table(database, table)
-  if not table_obj.partition_keys:
-    raise PopupException(_("Table '%(table)s' is not partitioned.") % {'table': table})
-
-  partitions = db.get_partitions(database, table_obj, max_parts=None)
-
-  return render("describe_partitions.mako", request,
-                dict(table=table_obj, partitions=partitions, request=request))
-
-
 def download(request, id, format):
   assert format in common.DL_FORMATS
 
@@ -523,18 +353,6 @@ def download(request, id, format):
 
   return data_export.download(query_history.get_handle(), format, db)
 
-
-def visualize(request, id, cut=None):
-
-  query_history = authorized_get_history(request, id, must_exist=True)
-  db = dbms.get(request.user, query_history.get_query_server_config())
-  LOG.debug('Results for query %s: [ %s ]' % (query_history.server_id, query_history.query))
-
-  gen = data_export.data_generator(query_history.get_handle(), 'csv', db, cut)
-  resp = HttpResponse(gen, mimetype='application/csv')
-  resp['Content-Disposition'] = 'attachment; filename=query_result.%s' % ('csv',)
-  
-  return resp
 
 """
 Queries Views
@@ -618,6 +436,7 @@ def execute_query(request, design_id=None):
     'error_message': error_message,
     'form': form,
     'log': log,
+    'autocomplete_base_url': reverse(get_app_name(request) + ':autocomplete', kwargs={}),
     'on_success_url': on_success_url,
     'can_edit_name': design and not design.is_auto and design.name,
   })
@@ -853,7 +672,6 @@ def view_results(request, id, first_row=0):
     if downloadable:
       for format in common.DL_FORMATS:
         download_urls[format] = reverse(app_name + ':download', kwargs=dict(id=str(id), format=format))
-    visualize_url = reverse(app_name + ':visualize', kwargs=dict(id=str(id)))
 
     save_form = beeswax.forms.SaveResultsForm()
     results.start_row = first_row
@@ -866,7 +684,6 @@ def view_results(request, id, first_row=0):
       'expected_first_row': first_row,
       'columns': results.columns,
       'download_urls': download_urls,
-      'visualize_url': visualize_url,
       'save_form': save_form,
       'can_save': query_history.owner == request.user and not download,
       'next_json_set': reverse(get_app_name(request) + ':view_results', kwargs={
@@ -961,11 +778,12 @@ def confirm_query(request, query, on_success_url=None):
 
   return render('execute.mako', request, {
     'form': mform,
-    'action': reverse('beeswax' + ':execute_query'),
+    'action': reverse(get_app_name(request) + ':execute_query'),
     'error_message': None,
     'design': None,
     'on_success_url': on_success_url,
     'design': None,
+    'autocomplete_base_url': reverse(get_app_name(request) + ':autocomplete', kwargs={}),
   })
 
 
@@ -1055,6 +873,27 @@ def query_done_cb(request, server_id):
     message['message'] = msg
   return HttpResponse(message_template % message)
 
+
+def autocomplete(request, database=None, table=None):
+  app_name = get_app_name(request)
+  query_server = get_query_server_config(app_name)
+  db = dbms.get(request.user, query_server)
+  response = {}
+
+  try:
+    if database is None:
+      response['databases'] = db.get_databases()
+    elif table is None:
+      response['tables'] = db.get_tables(database=database)
+    else:
+      t = db.get_table(database, table)
+      response['columns'] = [column.name for column in t.cols]
+  except Exception, e:
+    LOG.warn('Autocomplete data fetching error %s.%s: %s' % (database, table, e))
+    response['error'] = e.message
+
+
+  return HttpResponse(json.dumps(response), mimetype="application/json")
 
 
 """
@@ -1197,6 +1036,7 @@ def _run_parameterized_query(request, design_id, explain):
         'error_message': error_message,
         'form': query_form,
         'log': log,
+        'autocomplete_base_url': reverse(get_app_name(request) + ':autocomplete', kwargs={}),
       })
   else:
     return render("parameterization.mako", request, dict(form=parameterization_form, design=design, explain=explain))
@@ -1528,14 +1368,3 @@ def _get_db_choices(request):
 WHITESPACE = re.compile("\s+", re.MULTILINE)
 def collapse_whitespace(s):
   return WHITESPACE.sub(" ", s).strip()
-
-def _get_last_database(request, database=None):
-  if database is not None:
-    LOG.debug("Getting database name from argument")
-  elif request and request.method == 'POST' and request.POST.get('database'):
-    database = request.POST.get('database')
-    LOG.debug("Getting database name from request")
-  elif request:
-    database = request.COOKIES.get('hueBeeswaxLastDatabase', 'default')
-    LOG.debug("Getting database name from cookies")
-  return database
