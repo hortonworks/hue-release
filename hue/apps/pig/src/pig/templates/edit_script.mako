@@ -206,7 +206,7 @@ UDF_PATH = conf.UDF_PATH.get()
 <link href="/pig/static/css/bootstrap-tagmanager.css" rel="stylesheet">
 
 <style type="text/css" media="screen">
-.CodeMirror-focused span.CodeMirror-matchhighlight {
+.CodeMirror-focused span.cm-CodeMirror-matchhighlight {
   background:  #e7e4ff; !important; 
 }
 label.valid {
