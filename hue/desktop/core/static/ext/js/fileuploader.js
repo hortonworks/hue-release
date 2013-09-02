@@ -613,6 +613,11 @@ qq.extend(qq.FileUploader.prototype, {
                 dropArea.style.display = 'none';
             }
         });
+        function _hide () {
+            if (dropArea.style.display == 'block') dropArea.style.display = 'none';
+        }
+        qq.attach(document, 'dragend', _hide);
+        qq.attach(document, 'mouseup', _hide);
     },
     _onSubmit: function(id, fileName){
         qq.FileUploaderBasic.prototype._onSubmit.apply(this, arguments);
@@ -1049,10 +1054,10 @@ qq.extend(qq.UploadHandlerForm.prototype, {
             self._dequeue(id);
 
             delete self._inputs[id];
-            // timeout added to fix busy state in FF3.6
+            // timeout added to fix busy state in FF3.6 and IE9
             setTimeout(function(){
                 qq.remove(iframe);
-            }, 1);
+            }, 100);
         });
 
         form.submit();
@@ -1181,7 +1186,7 @@ qq.extend(qq.UploadHandlerXhr.prototype, {
         // HUE-815: [fb] Upload button does not work in Firefox 3.6
         // see https://github.com/valums/ajax-upload/issues/91
         //if (!(file instanceof File)){
-        if (!(file instanceof File || file.__proto__.constructor.name == 'File' || file instanceof Object) ){
+        if (!(file instanceof File || file instanceof Object || file.__proto__.constructor.name == 'File') ){
             throw new Error('Passed obj in not a File (in qq.UploadHandlerXhr)');
         }
 

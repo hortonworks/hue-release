@@ -53,6 +53,12 @@ $(document).ready(function () {
 			i++;
 		});
 		var numcharts = i;
+		if (i==0) {
+			$('.chart_type_selectors').addClass('hide');
+			$('.chart_nodata_message').removeClass('hide');
+			$('#preview').hide();
+			return false;
+		}
 		preview.open();
 			var build_chart_file = '<div class="spin">Loading data...<img src="/static/art/spinner.gif" width="16" height="16"></div>\n'+
 				'<script>var c = new chart("'+xAxis+'",['+yAxis+'],'+numcharts+');</script>\n'+

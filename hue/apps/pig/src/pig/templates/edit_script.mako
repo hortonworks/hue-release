@@ -23,6 +23,7 @@ ${commonheader("Pig", "pig", user, "100px")| n,unicode}
 ${shared.menubar(section='My Scripts')}
 
 <%!
+from django.utils.translation import ugettext as _
 from pig.models import UDF
 from pig import conf
 udfs = UDF.objects.all()
@@ -44,7 +45,7 @@ UDF_PATH = conf.UDF_PATH.get()
         </div>
     </div>
     <div class="modal-footer">
-        <button id="save-values-for-var" class="btn primary">Save</button>
+        <button id="save-values-for-var" class="btn primary">${_('Save')}</button>
     </div>
 </div>
 
@@ -54,7 +55,7 @@ UDF_PATH = conf.UDF_PATH.get()
     <div class="span3" style="float: left;">
       <div class="well sidebar-nav">
         ${my_scripts.my_scripts(result['scripts'])}
-        <h5 >Settings</h5>
+        <h5 >${_('Settings')}</h5>
           <ul class="nav nav-list">
             <li>
               <label class="checkbox ">
@@ -62,14 +63,14 @@ UDF_PATH = conf.UDF_PATH.get()
                    % if result.get("email_notification"):
                    checked="checked"
                    % endif
-                   />Email notification</label>
+                   />${_('Email notification')}</label>
             </li>
             <li  class="nav-header">
               <div class="accordion" id="accordion3" >
                 <div class="accordion-group">
                   <div class="accordion-heading">
                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion3" href="#collapseOne2">
-                      User-defined Functions <i class="icon-chevron-down"></i>
+                      ${_('User-defined Functions')}<i class="icon-chevron-down"></i>
                     </a>
                   </div>
                   <div id="collapseOne2" class="accordion-body collapse" style="text-transform:none;">
@@ -84,7 +85,7 @@ UDF_PATH = conf.UDF_PATH.get()
               <form id="udfs_form" enctype="multipart/form-data"
                   action="${url('pig.views.udf_create')}"
                   method="post" data-destination="${UDF_PATH}"> ${ csrf_token_field | n }
-                  <div id="udf_file_upload"><i class="icon-upload icon-white"></i> Upload UDF jar</div>
+                  <div id="udf_file_upload"><i class="icon-upload icon-white"></i>${_('Upload UDF jar')}</div>
               </form>
             </li>
           </ul>
@@ -98,7 +99,7 @@ UDF_PATH = conf.UDF_PATH.get()
             <div class="control-group">
               <div class="input-prepend">
                 <div class="controls">
-                <label class="control-label add-on" for="id_title">Title:</label>
+                <label class="control-label add-on" for="id_title">${_('Title:')}</label>
                   <input class="span2" id="id_title" type="text" name="title"
                           required="required" maxlength="200" value="${result.get('title',"")}">
                 </div>
@@ -111,8 +112,8 @@ UDF_PATH = conf.UDF_PATH.get()
                 <a href="javascript:void(0);" ><i class="icon-question-sign" id="help"></i></a>
                 <div id="help-content" class="hide">
                   <ul>
-                    <li class="text-success">Press ctrl+space for autocompletion</li>
-                    <li class="text-success">To see table fields helper type table_name + "." (e.g. sample_07.)</li>
+                    <li class="text-success">${_('Press ctrl+space for autocompletion')}</li>
+                    <li class="text-success">${_('To see table fields helper type table_name + "." (e.g. sample_07.)')}</li>
                   </ul>
                 </div>
               </span>
@@ -123,12 +124,12 @@ UDF_PATH = conf.UDF_PATH.get()
             <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
             % if result.get("python_script"):
             <div id="python_textarea">
-              <label class="script_label" for="python_code">Python UDF:</label>
+              <label class="script_label" for="python_code">${_('Python UDF:')}</label>
               <textarea id="python_code" name="python_script" rows="4" >${result['python_script']}</textarea>
             </div>
             % else:
             <div id="python_textarea"style="display:none;" >
-              <label class="script_label" for="python_code">Python UDF:</label>
+              <label class="script_label" for="python_code">${_('Python UDF:')}</label>
               <textarea id="python_code" name="python_script"></textarea>
             </div>
             % endif
