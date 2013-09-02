@@ -39,7 +39,6 @@ from beeswax.views import (authorized_get_design, safe_get_design, save_design,
 from beeswax.forms import QueryForm, SaveResultsForm
 from beeswax.models import SavedQuery, QueryHistory, make_query_context
 from beeswax.design import HQLdesign
-from beeswaxd.ttypes import BeeswaxException
 from beeswax.server import dbms
 from beeswax.server.dbms import expand_exception, get_query_server_config, NoSuchObjectException
 
@@ -369,7 +368,7 @@ def execute_query(request, design_id=None, query_msg=''):
                         download = 'download' in request.POST
                         return execute_directly(request, query, query_server, design, on_success_url=on_success_url,
                                                 download=download)
-                except BeeswaxException as ex:
+                except Exception as ex:
                     print ex.errorCode
                     print ex.SQLState
                     error_message, log = expand_exception(ex, db)
@@ -514,7 +513,7 @@ def watch_query(request, id):
             not query_history.is_finished() and query_history.is_success() and not query_history.has_results):
         try:
             query_history = db.execute_next_statement(query_history)
-        except BeeswaxException:
+        except Exception:
             pass
 
     # Check query state
@@ -522,7 +521,6 @@ def watch_query(request, id):
     query_history.save_state(state)
 
     if query_history.is_failure():
-        # When we fetch, Beeswax server will throw us a BeeswaxException, which has the
         # log we want to display.
         return format_preserving_redirect(request, results_url, request.GET)
     elif query_history.is_finished() or (query_history.is_success() and query_history.has_results):

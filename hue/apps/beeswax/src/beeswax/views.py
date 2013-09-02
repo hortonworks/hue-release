@@ -420,7 +420,7 @@ def describe_table(request, database, table):
 
   try:
     table_data = db.get_sample(database, table)
-  except BeeswaxException, ex:
+  except Exception, ex:
     error_message, logs = expand_exception(ex, db)
 
   load_form = LoadDataForm(table)
@@ -448,7 +448,7 @@ def drop_table(request, database=None):
       query_history = db.drop_tables(database, tables_objects, design)
       url = reverse(app_name + ':watch_query', args=[query_history.id]) + '?on_success_url=' + reverse(app_name + ':show_tables')
       return redirect(url)
-    except BeeswaxException, ex:
+    except Exception, ex:
       error_message, log = expand_exception(ex, db)
       error = _("Failed to remove %(tables)s.  Error: %(error)s") % {'tables': ','.join(tables), 'error': error_message}
       raise PopupException(error, title=_("Beeswax Error"), detail=log)

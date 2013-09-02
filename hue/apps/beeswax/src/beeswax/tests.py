@@ -281,7 +281,6 @@ for x in sys.stdin:
 
   def test_sync_query_error(self):
     # We don't use synchronous queries anywhere.
-    # It used to call BeeswaxService.executeAndWait()
     raise SkipTest
     # Execute incorrect Query , verify the error code and sqlstate
     hql = """

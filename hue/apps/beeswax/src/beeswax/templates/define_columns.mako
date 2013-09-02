@@ -39,7 +39,6 @@ ${layout.menubar(section='tables')}
         </div>
         <div class="span9">
           <div class="card" style="margin-top: 0">
-            <h1 class="card-heading simple">${_('Create a new table from a file')}</h1>
             <div class="card-body">
               <p>
                 <ul class="nav nav-pills">
@@ -86,7 +85,8 @@ ${layout.menubar(section='tables')}
                                           ${unicode(form["_exists"]) | n}
                                         </td>
                                         % for row in fields_list[:n_rows]:
-                                          ${ comps.getEllipsifiedCell(row[col], "bottom", "dataSample") }
+                                          <% cur_val = row[col] if col < len(row) else "" %>
+                                          ${ comps.getEllipsifiedCell(cur_val, "bottom", "dataSample") }
                                         % endfor
                                       </tr>
                                       %endfor
