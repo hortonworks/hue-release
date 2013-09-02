@@ -19,7 +19,6 @@
 
 import logging
 import time
-import itertools
 
 from django.http import HttpResponse
 
@@ -58,7 +57,7 @@ def download(handle, format, db):
   return resp
 
 
-def data_generator(handle, formatter, db, cut=None):
+def data_generator(handle, formatter, db):
   """
   data_generator(query_model, formatter) -> generator object
 
@@ -69,37 +68,29 @@ def data_generator(handle, formatter, db, cut=None):
   """
   _DATA_WAIT_SLEEP
   is_first_row = True
-  rows_to_fetch = FETCH_ROWS if cut is None else int(cut)
-  if format == 'csv':
-    formatter = CSVformatter()
-  elif format == 'xls':
-    # We 'fool' the user by sending back CSV as XSL as it supports streaming and won't freeze Hue
-    formatter = CSVformatter()
 
   yield formatter.init_doc()
 
-  results = db.fetch(handle, start_over=is_first_row, rows=rows_to_fetch)
+  results = db.fetch(handle, start_over=is_first_row, rows=FETCH_ROWS)
 
   while results is not None:
     while not results.ready:   # For Beeswax
       time.sleep(_DATA_WAIT_SLEEP)
-      results = db.fetch(handle, start_over=is_first_row, rows=rows_to_fetch)
+      results = db.fetch(handle, start_over=is_first_row, rows=FETCH_ROWS)
 
-    results_count = sum(1 for i in results.rows())
-    step = results_count // 1000 if (results_count // 1000) > 0 else 1
     # TODO Check for concurrent reading when HS2 supports start_row
     if is_first_row:
       is_first_row = False
       yield formatter.format_header(results.cols())
 
-    for row in itertools.islice(results.rows(), 0, results_count, step):
+    for row in results.rows():
       try:
         yield formatter.format_row(row)
       except TooBigToDownloadException, ex:
         LOG.error(ex)
 
-    if results.has_more and cut is None:
-      results = db.fetch(handle, start_over=is_first_row, rows=rows_to_fetch)
+    if results.has_more:
+      results = db.fetch(handle, start_over=is_first_row, rows=FETCH_ROWS)
     else:
       results = None
 

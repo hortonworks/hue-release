@@ -36,20 +36,6 @@ class QueryForm(MultiForm):
       saveform=SaveForm)
 
 
-class DbForm(forms.Form):
-  """For 'show tables'"""
-  database = forms.ChoiceField(required=False,
-                           label='',
-                           choices=(('default', 'default'),),
-                           initial=0,
-                           widget=forms.widgets.Select(attrs={'class': 'span6'}))
-
-  def __init__(self, *args, **kwargs):
-    databases = kwargs.pop('databases')
-    super(DbForm, self).__init__(*args, **kwargs)
-    self.fields['database'].choices = ((db, db) for db in databases)
-
-
 class SaveForm(forms.Form):
   """Used for saving query design."""
   name = forms.CharField(required=False,
