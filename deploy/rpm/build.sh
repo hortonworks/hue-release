@@ -5,7 +5,7 @@ export SRC=$HOME/rpmbuild/src
 export OUT=$HOME/rpmbuild/out
 export PATH=$PATH:$SRC/apache-maven-3.0.5/bin/
 
-BRANCH=Caterpillar
+[ -z "$1" ] && BRANCH=master || BRANCH="$1"
 
 # remove all src files (except of repository)
 find $SRC -maxdepth 1 | sed "1d" | grep -v -e "sandbox-shared" -e "tutorials-env" -e "apache-maven-3.0.5" | xargs rm -rf
@@ -15,8 +15,6 @@ mkdir -p $SRC $OUT
 # uncomment this line and change git_ssh.sh file if you need 
 # to specify ssh key!
 # export GIT_SSH="`pwd`/git_ssh.sh"
-
-sudo yum -y install createrepo git rpm-build mysql-devel openldap-devel python-simplejson sqlite-devel
 
 #===== Making sources ======
 
@@ -36,9 +34,6 @@ cd $SRC
     tar zcf $SRC/start_scripts.tgz start_scripts
     tar zcf $SRC/tutorials.tgz tutorials --exclude=".git"
 )
-
-# sudo yum -y install ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi gcc gcc-c++ krb5-devel libxml2-devel libxslt-devel mysql python-devel
-sudo easy_install virtualenv
 
 mkdir -p tutorials-env && cd tutorials-env
 virtualenv .env
