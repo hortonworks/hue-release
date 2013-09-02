@@ -3,6 +3,7 @@
 %define user               hue
 %define group              hadoop
 %global __os_install_post %{nil}
+%define  debug_package %{nil}
 %define _unpackaged_files_terminate_build 1
 %define _binaries_in_noarch_packages_terminate_build   0
 
