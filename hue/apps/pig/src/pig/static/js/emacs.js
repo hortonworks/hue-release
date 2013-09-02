@@ -1,47 +1,50 @@
-// TODO number prefixes
 (function() {
-  // Really primitive kill-ring implementation.
-  var killRing = [];
-  function addToRing(str) {
-    killRing.push(str);
-    if (killRing.length > 50) killRing.shift();
+  String.prototype.regexIndexOf = function(regex, startpos) {
+    var indexOf = this.substring(startpos || 0).search(regex);
+    return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
   }
-  function getFromRing() { return killRing[killRing.length - 1] || ""; }
-  function popFromRing() { if (killRing.length > 1) killRing.pop(); return getFromRing(); }
+
+  function regFindPosition(curLine){
+    var pos= curLine.regexIndexOf(/\%\w*\%/);
+    var posArr=[];
+    while(pos > -1) {
+      posArr.push(pos);
+      pos = curLine.regexIndexOf(/\%\w*\%/,pos+1);
+    }
+    return posArr;
+  }
 
   CodeMirror.keyMap.emacs = {
-    /*"Ctrl-X": function(cm) {cm.setOption("keyMap", "emacs-Ctrl-X");},
-    "Ctrl-W": function(cm) {addToRing(cm.getSelection()); cm.replaceSelection("");},
-    "Ctrl-Alt-W": function(cm) {addToRing(cm.getSelection()); cm.replaceSelection("");},
-    "Alt-W": function(cm) {addToRing(cm.getSelection());},
-    "Ctrl-Y": function(cm) {cm.replaceSelection(getFromRing());},
-    "Alt-Y": function(cm) {cm.replaceSelection(popFromRing());},
-    "Ctrl-/": "undo", "Shift-Ctrl--": "undo", "Shift-Alt-,": "goDocStart", "Shift-Alt-.": "goDocEnd",
-    "Ctrl-S": "findNext", "Ctrl-R": "findPrev", "Ctrl-G": "clearSearch", "Shift-Alt-5": "replace",
-     "Cmd-Z": "undo", "Alt-/": "autocomplete",
-     fallthrough: ["basic", "emacsy"]
-    */
+    fallthrough: ["basic", "default"],
     "Tab": function(cm) {
-      var lineNumber=cm.getCursor().line;
-      var curLine=cm.getLine(lineNumber);
-      var posArr=findPosition(curLine);
+      var cursor = cm.getCursor();
+      var curLine = cm.getLine(cursor.line);
+      var vArr = regFindPosition(curLine);
+      var paramRanges = [];
 
-      if(posArr.length>1){
-        //cm.setCursor({line:lineNumber, ch:posArr[0]});
-        if(parseFloat(posArr[2])>parseFloat(cm.getCursor().ch)){
-          cm.setSelection({line:lineNumber, ch:posArr[2]},{line:lineNumber, ch:posArr[3]+1});
-        }else{
-          cm.setSelection({line:lineNumber, ch:posArr[0]},{line:lineNumber, ch:posArr[1]+1});
+      for (var i = 0; i < vArr.length; i++) {
+        closeparam = curLine.regexIndexOf(/\%/, vArr[i]+1);
+        paramRanges.push({s:vArr[i],e:closeparam});
+      };
 
+      if(vArr.length>1){
+        if (cursor.ch < paramRanges[0].s) {
+          CodeMirror.commands.defaultTab(cm);
+        } else {
+          var thisrange, nextrange;
+          for (var i = 0; i < paramRanges.length; i++) {
+            thisrange = paramRanges[i];
+            nextrange = paramRanges[i+1] || paramRanges[0];
+            if (cursor.ch > thisrange.s && (cursor.ch < nextrange.s || nextrange.s < thisrange.s)){
+              cm.setSelection({line:cursor.line, ch:nextrange.s},{line:cursor.line, ch:nextrange.e+1});
+            } else if (cursor.ch == thisrange.s){
+              cm.setSelection({line:cursor.line, ch:thisrange.s},{line:cursor.line, ch:thisrange.e+1});
+            }
+          }
         }
+      } else {
+        CodeMirror.commands.defaultTab(cm);
       }
-      pig_editor.setOption("keyMap", "basic");
     }
-
   };
-
- /* CodeMirror.keyMap["emacs-Ctrl-X"] = {
-    "Ctrl-S": "save", "Ctrl-W": "save", "S": "saveAll", "F": "open", "U": "undo", "K": "close",
-    auto: "emacs", nofallthrough: true
-  };*/
 })();
