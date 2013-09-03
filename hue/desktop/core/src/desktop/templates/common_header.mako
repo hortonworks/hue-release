@@ -20,18 +20,38 @@ from desktop.lib.i18n import smart_unicode
 from django.utils.translation import ugettext as _
 %>
 
+<%def name="is_selected(section, matcher)">
+  %if section == matcher:
+    class="active"
+  %endif
+</%def>
+
+<%def name="get_nice_name(apps, section)">
+  % for app in apps:
+    % if section == app.display_name:
+      - ${app.nice_name}
+    % endif
+  % endfor
+</%def>
+
+<%def name="get_title(title)">
+  % if title:
+    - ${smart_unicode(title)}
+  % endif
+</%def>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>${smart_unicode(title)}</title>
+  <title>Hue ${get_nice_name(apps, section)} ${get_title(title)}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <link href="/static/ext/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/ext/css/bootplus.css" rel="stylesheet">
   <link href="/static/ext/css/font-awesome.min.css" rel="stylesheet">
-  <link href="/static/css/hue2.css" rel="stylesheet">
+  <link href="/static/css/hue3.css" rel="stylesheet">
   <link href="/static/ext/css/fileuploader.css" rel="stylesheet">
 
   <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -60,41 +80,53 @@ from django.utils.translation import ugettext as _
 
   <script type="text/javascript" charset="utf-8">
 
-      // jHue plugins global configuration
-      jHueFileChooserGlobals = {
-        labels:{
-          BACK:"${_('Back')}",
-          SELECT_FOLDER:"${_('Select this folder')}",
-          CREATE_FOLDER:"${_('Create folder')}",
-          FOLDER_NAME:"${_('Folder name')}",
-          CANCEL:"${_('Cancel')}",
-          FILE_NOT_FOUND:"${_('The file has not been found')}",
-          UPLOAD_FILE:"${_('Upload a file')}",
-          FAILED:"${_('Failed')}"
-        }
-      };
+    // jHue plugins global configuration
+    jHueFileChooserGlobals = {
+      labels: {
+        BACK: "${_('Back')}",
+        SELECT_FOLDER: "${_('Select this folder')}",
+        CREATE_FOLDER: "${_('Create folder')}",
+        FOLDER_NAME: "${_('Folder name')}",
+        CANCEL: "${_('Cancel')}",
+        FILE_NOT_FOUND: "${_('The file has not been found')}",
+        UPLOAD_FILE: "${_('Upload a file')}",
+        FAILED: "${_('Failed')}"
+      },
+      user: "${ user.username }"
+    };
 
-      jHueTableExtenderGlobals = {
-        labels:{
-          GO_TO_COLUMN: "${_('Go to column:')}",
-          PLACEHOLDER: "${_('column name...')}"
-        }
+    jHueTableExtenderGlobals = {
+      labels: {
+        GO_TO_COLUMN: "${_('Go to column:')}",
+        PLACEHOLDER: "${_('column name...')}"
       }
+    };
+
+    jHueTourGlobals = {
+      labels: {
+        AVAILABLE_TOURS: "${_('Available tours')}",
+        NO_AVAILABLE_TOURS: "${_('None for this page.')}"
+      }
+    };
 
   </script>
 
-  <script src="/static/ext/js/jquery/jquery-1.8.1.min.js"></script>
-  <script src="/static/js/Source/jHue/jquery.filechooser.js"></script>
-  <script src="/static/js/Source/jHue/jquery.selector.js"></script>
-  <script src="/static/js/Source/jHue/jquery.alert.js"></script>
-  <script src="/static/js/Source/jHue/jquery.rowselector.js"></script>
-  <script src="/static/js/Source/jHue/jquery.notify.js"></script>
-  <script src="/static/js/Source/jHue/jquery.tablescroller.js"></script>
-  <script src="/static/js/Source/jHue/jquery.tableextender.js"></script>
+  <script src="/static/ext/js/jquery/jquery-2.0.2.min.js"></script>
+  <script src="/static/js/jquery.migration.js"></script>
+  <script src="/static/js/jquery.filechooser.js"></script>
+  <script src="/static/js/jquery.selector.js"></script>
+  <script src="/static/js/jquery.alert.js"></script>
+  <script src="/static/js/jquery.rowselector.js"></script>
+  <script src="/static/js/jquery.notify.js"></script>
+  <script src="/static/js/jquery.tablescroller.js"></script>
+  <script src="/static/js/jquery.tableextender.js"></script>
+  <script src="/static/js/jquery.scrollup.js"></script>
+  <script src="/static/js/jquery.tour.js"></script>
   <script src="/static/ext/js/jquery/plugins/jquery.cookie.js"></script>
-  <script src="/static/ext/js/jquery/plugins/jquery.simpleplaceholder.js"></script>
+  <script src="/static/ext/js/jquery/plugins/jquery.total-storage.min.js"></script>
+  <script src="/static/ext/js/jquery/plugins/jquery.placeholder.min.js"></script>
   <script src="/static/ext/js/jquery/plugins/jquery.dataTables.1.8.2.min.js"></script>
-  <script src="/static/js/Source/jHue/jquery.datatables.sorting.js"></script>
+  <script src="/static/js/jquery.datatables.sorting.js"></script>
   <script src="/static/ext/js/bootstrap.min.js"></script>
   <script src="/static/ext/js/fileuploader.js"></script>
 
@@ -103,7 +135,7 @@ from django.utils.translation import ugettext as _
       $.ajaxSetup({
         cache: false
       });
-      $("input:text[placeholder]").simplePlaceholder();
+      $("input, textarea").placeholder();
       $(".submitter").keydown(function(e){
         if (e.keyCode==13){
           $(this).closest("form").submit();
@@ -112,12 +144,12 @@ from django.utils.translation import ugettext as _
         $(this).closest("form").submit();
       });
       % if user.is_superuser:
-      $("#checkConfig").load("/debug/check_config_ajax");
+        $("#checkConfig").load("/debug/check_config_ajax");
       % endif
       $(".navbar .nav-tooltip").tooltip({
         delay:0,
+
         placement:'bottom'});
-   
     });
 
     function getCookie(name) {
@@ -145,13 +177,7 @@ from django.utils.translation import ugettext as _
 </head>
 <body>
 
-<%def name="is_selected(section, matcher)">
-  %if section == matcher:
-    class="active"
-  %endif
-</%def>
-
-<div class="navbar navbar-fixed-top">
+<div class="navbar navbar-inverse navbar-fixed-top">
     % if conf.CUSTOM.BANNER_TOP_HTML.get():
     <div id="banner-top" class="banner">
         ${conf.CUSTOM.BANNER_TOP_HTML.get()}
@@ -163,6 +189,7 @@ from django.utils.translation import ugettext as _
         title="${_('About<br>Hortonworks<br>Hue')}"
         href="/about"><img src="/static/art/hue-logo-mini-letterpress.png"/>
         </a>
+        % if user.is_authenticated():
         <div id="usernameDropdown" class="btn-group pull-right">
           <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
             <i class="icon-user"></i> ${user.username}
@@ -174,9 +201,13 @@ from django.utils.translation import ugettext as _
             <li><a href="/accounts/logout/">${_('Sign Out')}</a></li>
           </ul>
         </div>
+        % endif
 
         <div class="nav-collapse">
           <ul class="nav">
+            <li id="homeIcon" ${is_selected(section, "home")}>
+              <a class="nav-tooltip" title="${ _('Home') }" href="/home"><img src="/static/art/home.png" /></a>
+            </li>
             %for app in apps:
               %if app.icon_path:
               <li id="${app.display_name}Icon" ${is_selected(section, app.display_name)}>
