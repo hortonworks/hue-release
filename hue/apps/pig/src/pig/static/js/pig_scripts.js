@@ -224,23 +224,14 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
   matchBrackets: true,
   indentUnit: 4,
   mode: "text/x-pig",
-  onCursorActivity: function() {
-    pig_editor.matchHighlight("CodeMirror-matchhighlight");
+  highlightSelectionMatches: {
+    style: "CodeMirror-matchhighlight"
   },
   extraKeys: {
     "Ctrl-Space": "autocomplete",
   },
+  keyMap: "emacs",
   onKeyEvent: function(cm,key){
-    var lineNumber=cm.getCursor().line;
-    var curLine=cm.getLine(lineNumber);
-    var posArr=findPosition(curLine);
-
-    if(key.keyCode=="9"&&posArr.length>1){
-      pig_editor.setOption("keyMap", "emacs");
-    }else{
-      pig_editor.setOption("keyMap", "basic");
-    }
-
     // filter keyup events
     if (key.type!="keyup") return;
 
@@ -279,9 +270,10 @@ var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code
   smartIndent: true,
   tabMode: "shift",
   matchBrackets: true,
-  onChange: autosave,
   mode: "text/x-python"
 });
+
+python_editor.on('change',function (){autosave();});
 
 $('.script_label').on('click',function(e){
   if (e.target.tagName.toLowerCase() == 'i'){
@@ -292,16 +284,6 @@ $('.script_label').on('click',function(e){
     $(python_editor.getWrapperElement()).toggle();
   }
 })
-
-function findPosition(curLine){
-  var pos= curLine.indexOf("%");
-  var posArr=[];
-  while(pos > -1) {
-    posArr.push(pos);
-    pos = curLine.indexOf("%", pos+1);
-  }
-  return posArr;
-}
 
 function paginator(lines_per_page){
 
@@ -340,6 +322,16 @@ function paginator(lines_per_page){
   }
 
 };
+
+function findPosition(curLine){
+  var pos= curLine.indexOf("%");
+  var posArr=[];
+  while(pos > -1) {
+    posArr.push(pos);
+    pos = curLine.indexOf("%", pos+1);
+  }
+  return posArr;
+}
 
 $(document).ready(function(){
 
@@ -421,7 +413,7 @@ $(document).ready(function(){
     var pos = findPosition($(this).text());
 
     if(pos.length>3)
-      pig_editor.setOption("keyMap", "emacs");
+      //pig_editor.setOption("keyMap", "emacs");
 
     if(pos.length>1)
       pig_editor.setSelection({line:cursor['line'], ch:cursor['ch'] + pos[0]},
