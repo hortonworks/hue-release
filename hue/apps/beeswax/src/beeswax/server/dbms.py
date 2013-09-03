@@ -20,11 +20,12 @@ import time
 
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext as _
+from desktop.conf import KERBEROS
 
 from filebrowser.views import location_to_url
 
 from beeswaxd.ttypes import BeeswaxException
-
+from beeswax import hive_site
 from beeswax.conf import BEESWAX_SERVER_HOST, BEESWAX_SERVER_PORT,\
   BROWSE_PARTITIONED_TABLE_LIMIT, SERVER_INTERFACE
 from beeswax.design import hql_query
@@ -51,12 +52,18 @@ def get(user, query_server=None):
 
 
 def get_query_server_config(name='beeswax', requires_ddl=False):
+  if SERVER_INTERFACE.get() == 'hiveserver2':
+    kerberos_principal = hive_site.get_hiveserver2_kerberos_principal()
+  else:
+    # Beeswaxd runs as 'hue'
+    kerberos_principal = KERBEROS.HUE_PRINCIPAL.get()
   query_server = {
-        'server_name': 'beeswax',
-        'server_host': BEESWAX_SERVER_HOST.get(),
-        'server_port': BEESWAX_SERVER_PORT.get(),
-        'support_ddl': True,
-      }
+    'server_name': 'beeswax',
+    'server_host': BEESWAX_SERVER_HOST.get(),
+    'server_port': BEESWAX_SERVER_PORT.get(),
+    'support_ddl': True,
+    'principal': kerberos_principal,
+  }
   return query_server
 
 

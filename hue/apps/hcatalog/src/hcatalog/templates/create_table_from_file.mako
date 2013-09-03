@@ -361,6 +361,10 @@ ${layout.menubar(section='tables')}
         white-space: nowrap;
     }
 
+    #div-file-selector .controls {
+        width: 80%;
+    }
+
 </style>
 
 </div>

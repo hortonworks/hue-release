@@ -29,12 +29,10 @@ from enum import Enum
 
 from desktop.lib.exceptions_renderable import PopupException
 
-from beeswax.conf import SERVER_INTERFACE
 from beeswax.design import HQLdesign, hql_query
 from beeswaxd.ttypes import QueryHandle as BeeswaxdQueryHandle, QueryState
-from cli_service.ttypes import TSessionHandle, THandleIdentifier,\
+from TCLIService.ttypes import TSessionHandle, THandleIdentifier,\
   TOperationState, TOperationHandle, TOperationType
-
 
 
 LOG = logging.getLogger(__name__)
@@ -44,6 +42,7 @@ QUERY_SUBMISSION_TIMEOUT = datetime.timedelta(0, 60 * 60)               # 1 hour
 # Constants for DB fields, hue ini
 BEESWAX = 'beeswax'
 HIVE_SERVER2 = 'hiveserver2'
+QUERY_TYPES = (HQL, IMPALA) = range(2)
 
 
 class QueryHistory(models.Model):
@@ -71,6 +70,7 @@ class QueryHistory(models.Model):
   server_port = models.SmallIntegerField(help_text=_('Port of the query server.'), default=0)
   server_name = models.CharField(max_length=128, help_text=_('Name of the query server.'), default='')
   server_type = models.CharField(max_length=128, help_text=_('Type of the query server.'), default=BEESWAX, choices=SERVER_TYPE)
+  query_type = models.SmallIntegerField(help_text=_('Type of the query.'), default=HQL, choices=((HQL, 'HQL'), (IMPALA, 'IMPALA')))
 
   design = models.ForeignKey('SavedQuery', to_field='id', null=True) # Some queries (like read/create table) don't have a design
   notify = models.BooleanField(default=False)                        # Notify on completion
@@ -80,7 +80,7 @@ class QueryHistory(models.Model):
 
   @staticmethod
   def build(*args, **kwargs):
-    if SERVER_INTERFACE.get() == HIVE_SERVER2:
+    if kwargs['server_type'] == HIVE_SERVER2:
       return HiveServerQueryHistory(*args, **kwargs)
     else:
       return BeeswaxQueryHistory(*args, **kwargs)
@@ -88,7 +88,6 @@ class QueryHistory(models.Model):
   def get_full_object(self):
     if self.server_type == HiveServerQueryHistory.node_type:
       return HiveServerQueryHistory.objects.get(id=self.id)
-    # Default is Beeswax
     else:
       return BeeswaxQueryHistory.objects.get(id=self.id)
 
@@ -99,10 +98,24 @@ class QueryHistory(models.Model):
     else:
       return HiveServerQueryHistory.objects.get(id=id)
 
+  def get_type_name(self):
+    if self.query_type == 1:
+      return 'impala'
+    else:
+      return 'beeswax'
 
   def get_query_server_config(self):
-    return dict(zip(['server_name', 'server_host', 'server_port', 'server_type'],
-                    [self.server_name, self.server_host, self.server_port, self.server_type]))
+    from beeswax.server.dbms import get_query_server_config
+
+    query_server = get_query_server_config(self.get_type_name())
+    query_server.update({
+        'server_name': self.server_name,
+        'server_host': self.server_host,
+        'server_port': self.server_port,
+        'server_type': self.server_type,
+    })
+
+    return query_server
 
 
   def get_current_statement(self):
@@ -113,11 +126,13 @@ class QueryHistory(models.Model):
       return self.query
 
   def is_finished(self):
+    is_statement_finished = not self.is_running()
+
     if self.design is not None:
       design = self.design.get_design()
-      return self.is_success() and self.statement_number + 1 == design.statement_count
+      return is_statement_finished and self.statement_number + 1 == design.statement_count # Last statement
     else:
-      return self.is_success()
+      return is_statement_finished
 
   def is_running(self):
     return self.last_state in (QueryHistory.STATE.running.index, QueryHistory.STATE.submitted.index)
@@ -180,6 +195,7 @@ class HiveServerQueryHistory(QueryHistory):
 
   def save_state(self, new_state):
     self.last_state = new_state.index
+    self.save()
 
 
 class BeeswaxQueryHistory(QueryHistory):
@@ -248,10 +264,10 @@ class SavedQuery(models.Model):
   Note that this used to be called QueryDesign. Any references to 'design'
   probably mean a SavedQuery.
   """
-  DEFAULT_NEW_DESIGN_NAME = _('Unsaved')
+  DEFAULT_NEW_DESIGN_NAME = _('My saved query')
   AUTO_DESIGN_SUFFIX = _(' (new)')
-  TYPES = HQL = 0
-  TYPES_MAPPING = {'beeswax': HQL, 'hql': HQL}
+  TYPES = QUERY_TYPES
+  TYPES_MAPPING = {'beeswax': HQL, 'hql': HQL, 'impala': IMPALA}
 
   type = models.IntegerField(null=False)
   owner = models.ForeignKey(User, db_index=True)
@@ -263,6 +279,8 @@ class SavedQuery(models.Model):
   # An auto design is a place-holder for things users submit but not saved.
   # We still want to store it as a design to allow users to save them later.
   is_auto = models.BooleanField(default=False, db_index=True)
+  is_trashed = models.BooleanField(default=False, db_index=True, verbose_name=_t('Is trashed'),
+                                   help_text=_t('If this query is trashed.'))
 
   class Meta:
     ordering = ['-mtime']
@@ -329,20 +347,24 @@ class SavedQuery(models.Model):
 
 
 class SessionManager(models.Manager):
-  def get_session(self, user):
+  def get_session(self, user, application='beeswax'):
     try:
-      return self.filter(owner=user).latest("last_used")
+      return self.filter(owner=user, application=application).latest("last_used")
     except Session.DoesNotExist:
       pass
 
 
 class Session(models.Model):
+  """
+  A sessions is bound to a user and an application (e.g. Bob with the Impala application).
+  """
   owner = models.ForeignKey(User, db_index=True)
   status_code = models.PositiveSmallIntegerField()
   secret = models.TextField(max_length='100')
   guid = models.TextField(max_length='100')
   server_protocol_version = models.SmallIntegerField(default=0)
   last_used = models.DateTimeField(auto_now=True, db_index=True, verbose_name=_t('Last used'))
+  application = models.CharField(max_length=128, help_text=_t('Application we communicate with.'), default='beeswax')
 
   objects = SessionManager()
 

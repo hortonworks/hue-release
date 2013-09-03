@@ -5,7 +5,7 @@ objectClass: account
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
-userPassword: 1111
+userPassword: password
 uidNumber: 1000
 gidNumber: 1000
-homeDirectory: /
+homeDirectory: /home/hue

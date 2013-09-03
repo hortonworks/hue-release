@@ -219,7 +219,7 @@ KERBEROS = ConfigSection(
     CCACHE_PATH=Config(
       key='ccache_path',
       help=_("Path to keep Kerberos credentials cached."),
-      private=True,
+      private=False,
       type=str,
       default="/tmp/hue_krb5_ccache",
     ),

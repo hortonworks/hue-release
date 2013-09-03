@@ -345,8 +345,8 @@ def listdir(request, path, chooser):
 
     TODO: Remove?
     """
-    if not request.fs.isdir(path):  
-            raise PopupException(_("Not directory: %(path)s") % {'path': path})
+    if not request.fs.isdir(path):
+        raise PopupException(_("Not a directory: %(path)s") % {'path': path})
 
     file_filter = request.REQUEST.get('file_filter', 'any')
 
@@ -386,7 +386,6 @@ def listdir(request, path, chooser):
         stats.insert(0, parent_stat)
 
     data['files'] = [_massage_stats(request, stat) for stat in stats]
-
     if chooser:
         return render('chooser.mako', request, data)
     else:
