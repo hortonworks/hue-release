@@ -17,6 +17,10 @@
 # limitations under the License.
 #
 
+"""
+Common infrastructure for beeswax tests
+"""
+
 import atexit
 import logging
 import os
@@ -24,113 +28,126 @@ import re
 import subprocess
 import time
 
+import fb303.ttypes
 from nose.tools import assert_true, assert_false
 from django.contrib.auth.models import User
 
 from desktop.lib.django_test_util import make_logged_in_client
-from desktop.lib.paths import get_run_root
 from hadoop import pseudo_hdfs4
-from nose.plugins.skip import SkipTest
 
 import beeswax.conf
 
+from beeswax.conf import SERVER_INTERFACE
+from beeswax.models import HIVE_SERVER2
 from beeswax.server.dbms import get_query_server_config
 from beeswax.server import dbms
 
-HIVE_SERVER_TEST_PORT = 6969
+
 _INITIALIZED = False
-_SHARED_HIVE_SERVER_PROCESS = None
-_SHARED_HIVE_SERVER = None
-_SHARED_HIVE_SERVER_CLOSER = None
+_SHARED_BEESWAX_SERVER_PROCESS = None
+_SHARED_BEESWAX_SERVER = None
+_SHARED_BEESWAX_SERVER_CLOSER = None
 
-
+BEESWAXD_TEST_PORT = 6969
 LOG = logging.getLogger(__name__)
 
 
 def _start_server(cluster):
-  args = [beeswax.conf.HIVE_SERVER_BIN.get()]
+  """
+  Start beeswaxd and metastore
+  """
+  script = beeswax.conf.BEESWAX_SERVER_BIN.get()
+  args = [
+    script,
+    '--beeswax',
+    str(BEESWAXD_TEST_PORT),
+    '--metastore',
+    str(BEESWAXD_TEST_PORT + 1),
+    '--desktop-host',
+    str('127.0.0.1'),
+    '--desktop-port',
+    str('42'),           # Make up a port here. Tests don't start an actual server.
+  ]
 
   env = cluster.mr1_env.copy()
 
   env.update({
-    'HIVE_CONF_DIR': beeswax.conf.HIVE_CONF_DIR.get(),
-    'HIVE_SERVER2_THRIFT_PORT': str(HIVE_SERVER_TEST_PORT),
-    'AUX_CLASSPATH': '/usr/lib/hadoop-hdfs/hadoop-hdfs.jar:/usr/lib/hadoop/hadoop-auth.jar:/usr/lib/hadoop/hadoop-common.jar', # todo update
-    'HADOOP_CLASSPATH': '',
+    'HIVE_CONF_DIR': beeswax.conf.BEESWAX_HIVE_CONF_DIR.get(),
+    'HIVE_HOME' : beeswax.conf.BEESWAX_HIVE_HOME_DIR.get(),
   })
-
   if os.getenv("JAVA_HOME"):
     env["JAVA_HOME"] = os.getenv("JAVA_HOME")
 
   LOG.info("Executing %s, env %s, cwd %s" % (repr(args), repr(env), cluster._tmpdir))
-  return subprocess.Popen(args=args, env=env, cwd=cluster._tmpdir)#, stdin=subprocess.PIPE)
+  process = subprocess.Popen(args=args, env=env, cwd=cluster._tmpdir, stdin=subprocess.PIPE)
+  return process
+
 
 
 def get_shared_beeswax_server():
-  global _SHARED_HIVE_SERVER
-  global _SHARED_HIVE_SERVER_CLOSER
-  if _SHARED_HIVE_SERVER is None:
+  # Make it happens only once
+  global _SHARED_BEESWAX_SERVER
+  global _SHARED_BEESWAX_SERVER_CLOSER
+  if _SHARED_BEESWAX_SERVER is None:
+    # Copy hive-default.xml.template from BEESWAX_HIVE_CONF_DIR before it is set to
+    # /my/bogus/path
+    default_xml = file(beeswax.conf.BEESWAX_HIVE_CONF_DIR.get() + "/hive-default.xml.template").read()
+
+    finish = (
+      beeswax.conf.BEESWAX_SERVER_HOST.set_for_testing("localhost"),
+      beeswax.conf.BEESWAX_SERVER_PORT.set_for_testing(BEESWAXD_TEST_PORT),
+      beeswax.conf.BEESWAX_META_SERVER_HOST.set_for_testing("localhost"),
+      beeswax.conf.BEESWAX_META_SERVER_PORT.set_for_testing(BEESWAXD_TEST_PORT + 1),
+      # Use a bogus path to avoid loading the normal hive-site.xml
+      beeswax.conf.BEESWAX_HIVE_CONF_DIR.set_for_testing('/my/bogus/path')
+    )
 
     cluster = pseudo_hdfs4.shared_cluster()
 
-    HIVE_CONF = cluster._tmpdir + "/conf"
-    finish = (
-      beeswax.conf.HIVE_SERVER_HOST.set_for_testing("localhost"),
-      beeswax.conf.HIVE_SERVER_PORT.set_for_testing(HIVE_SERVER_TEST_PORT),
-      beeswax.conf.HIVE_SERVER_BIN.set_for_testing(get_run_root('ext/hive/hive') + '/bin/hiveserver2'),
-      beeswax.conf.HIVE_CONF_DIR.set_for_testing(HIVE_CONF)
-    )
+    # Copy hive-default.xml into the mini_cluster's conf dir, which happens to be
+    # in the cluster's tmpdir. This tmpdir is determined during the mini_cluster
+    # startup, during which BEESWAX_HIVE_CONF_DIR needs to be set to
+    # /my/bogus/path. Hence the step of writing to memory.
+    # hive-default.xml will get picked up by the beeswax_server during startup
+    file(cluster._tmpdir + "/conf/hive-default.xml", 'w').write(default_xml)
 
-    default_xml = """<?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    global _SHARED_BEESWAX_SERVER_PROCESS
 
-<configuration>
+    if SERVER_INTERFACE.get() == HIVE_SERVER2:
+      _SHARED_BEESWAX_SERVER_PROCESS = 1
 
-<property>
-  <name>javax.jdo.option.ConnectionURL</name>
-  <value>jdbc:derby:;databaseName=%(root)s/metastore_db;create=true</value>
-  <description>JDBC connect string for a JDBC metastore</description>
-</property>
-
-</configuration>
-""" % {'root': cluster._tmpdir}
-
-    file(HIVE_CONF + '/hive-site.xml', 'w').write(default_xml)
-
-    global _SHARED_HIVE_SERVER_PROCESS
-
-    if _SHARED_HIVE_SERVER_PROCESS is None:
+    if _SHARED_BEESWAX_SERVER_PROCESS is None:
       p = _start_server(cluster)
-      LOG.info("started")
-
-      _SHARED_HIVE_SERVER_PROCESS = p
+      _SHARED_BEESWAX_SERVER_PROCESS = p
       def kill():
-        LOG.info("Killing server (pid %d)." % p.pid)
+        LOG.info("Killing beeswax server (pid %d)." % p.pid)
         os.kill(p.pid, 9)
         p.wait()
       atexit.register(kill)
 
+      # Wait for server to come up, by repeatedly trying.
       start = time.time()
       started = False
       sleep = 0.001
-
       make_logged_in_client()
       user = User.objects.get(username='test')
-      query_server = get_query_server_config()
+      query_server = get_query_server_config(requires_ddl=True)
       db = dbms.get(user, query_server)
 
       while not started and time.time() - start < 20.0:
         try:
-          db.open_session(user)
-          started = True
-          break
-        except Exception, e:
-          LOG.info('HiveServer2 server status not started yet: %s' % e)
+          db.echo("echo")
+          if db.getStatus() == fb303.ttypes.fb_status.ALIVE:
+            started = True
+            break
           time.sleep(sleep)
           sleep *= 2
-
+        except:
+          time.sleep(sleep)
+          sleep *= 2
+          pass
       if not started:
-        raise Exception("Server took too long to come up.")
+        raise Exception("Beeswax server took too long to come up.")
 
       # Make sure /tmp is 0777
       cluster.fs.setuser(cluster.superuser)
@@ -147,16 +164,16 @@ def get_shared_beeswax_server():
         f()
       cluster.stop()
 
-    _SHARED_HIVE_SERVER, _SHARED_HIVE_SERVER_CLOSER = cluster, s
+    _SHARED_BEESWAX_SERVER, _SHARED_BEESWAX_SERVER_CLOSER = cluster, s
 
-  return _SHARED_HIVE_SERVER, _SHARED_HIVE_SERVER_CLOSER
+  return _SHARED_BEESWAX_SERVER, _SHARED_BEESWAX_SERVER_CLOSER
 
 
 REFRESH_RE = re.compile('<\s*meta\s+http-equiv="refresh"\s+content="\d*;([^"]*)"\s*/>', re.I)
 
 
 def wait_for_query_to_finish(client, response, max=30.0):
-  # logging.info(str(response.template.filename) + ": " + str(response.content))
+  logging.info(str(response.template) + ": " + str(response.content))
   start = time.time()
   sleep_time = 0.05
   # We don't check response.template == "watch_wait.mako" here,
@@ -194,7 +211,7 @@ def make_query(client, query, submission_type="Execute",
     settings = []
   if local:
     # Tests run faster if not run against the real cluster.
-    settings.append(("mapred.job.tracker", "local"))
+    settings.append( ("mapred.job.tracker", "local") )
 
   # Prepares arguments for the execute view.
   parameters = {
@@ -225,14 +242,14 @@ def make_query(client, query, submission_type="Execute",
   parameters["settings-next_form_id"] = str(len(settings))
   for i, settings_pair in enumerate(settings or []):
     key, value = settings_pair
-    parameters["settings-%d-key" % i] = str(key)
-    parameters["settings-%d-value" % i] = str(value)
+    parameters["settings-%d-key" % i] = key
+    parameters["settings-%d-value" % i] = value
     parameters["settings-%d-_exists" % i] = 'True'
   parameters["file_resources-next_form_id"] = str(len(resources or []))
   for i, resources_pair in enumerate(resources or []):
     type, path = resources_pair
-    parameters["file_resources-%d-type" % i] = str(type)
-    parameters["file_resources-%d-path" % i] = str(path)
+    parameters["file_resources-%d-type" % i] = type
+    parameters["file_resources-%d-path" % i] = path
     parameters["file_resources-%d-_exists" % i] = 'True'
 
   kwargs.setdefault('follow', True)
@@ -275,7 +292,6 @@ class BeeswaxSampleProvider(object):
   """
   @classmethod
   def setup_class(cls):
-    raise SkipTest
     cls.cluster, shutdown = get_shared_beeswax_server()
     cls.client = make_logged_in_client()
     # Weird redirection to avoid binding nonsense.

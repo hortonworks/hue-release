@@ -35,6 +35,8 @@ case "$1" in
 start)
     printf "%-50s\n" "Starting $NAME..." | tee -a $LOG
 
+    rm /var/run/hadoop-yarn/yarn/* && rm /var/run/hadoop-mapred/mapred/*
+
     echo "" > /etc/resolv.conf
     # ethtool -K eth0 tso off
     # ethtool -K eth1 tso off

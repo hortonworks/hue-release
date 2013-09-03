@@ -1,6 +1,6 @@
 [sandbox]
 name=Sandbox repo
-baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/master/
+baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/HDP2Beta/
 path=/
 enabled=1
 gpgcheck=0
@@ -9,7 +9,7 @@ gpgcheck=0
 [hue-bigtop]
 # dev repository
 name=Hue repository
-baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/bigtop/centos6-master/
+baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/bigtop/centos6-HDP2Beta/
 path=/
 enabled=1
 gpgcheck=0

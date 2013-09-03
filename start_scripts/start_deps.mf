@@ -11,9 +11,9 @@ ERROR_STRING=[$(ERROR_COLOR)ERRORS$(NO_COLOR)]
 WARN_STRING=[$(WARN_COLOR)WARNINGS$(NO_COLOR)]
 
 ECHO=echo -e
-ECHO_ERR=printf 'Starting%-50s$(ERROR_STRING)\n' "$1"
-ECHO_WARN=printf 'Starting%-50s$(WARN_STRING)\n' "$1"
-ECHO_OK=printf 'Starting%-50s$(OK_STRING)\n' "$1"
+ECHO_ERR=printf 'Starting %-50s$(ERROR_STRING)\n' "$1"
+ECHO_WARN=printf 'Starting %-50s$(WARN_STRING)\n' "$1"
+ECHO_OK=printf 'Starting %-50s$(OK_STRING)\n' "$1"
 CAT=cat
 
 define colorized
@@ -25,16 +25,17 @@ endef
 
 all: Startup Ambari
 
-Startup: HDFS MapReduce Zookeeper HBase Hive_Metastore Templeton Oozie
+Startup: HDFS YARN Zookeeper HBase Hive_Metastore Tez WebHCat Oozie
 	@echo "`date`:\tStartup" >> $(LOG)
 Ambari: ambari_server ambari_agent ganglia nagios
 
 HDFS: namenode secondary_namenode datanode
-MapReduce: jobtracker historyserver tasktracker
+YARN: resourcemanager historyserver nodemanagers
+HBase: hbase_master hbase_regionservers
 Zookeeper: zookeeper
-HBase: hbase_master hbase_regionservers hbase_thrift
-Hive_Metastore: hive hcat
-Templeton: templeton
+Hive_Metastore: mysql hive hive2
+Tez: # tez
+WebHCat: webhcat
 Oozie: oozie
 
 postgresql:
@@ -48,14 +49,14 @@ postgresql:
 namenode: postgresql
 	$(call colorized,\
 		name node, \
-		@su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode",\
+		su -l hdfs -c "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode",\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-namenode-*.log)
 
 datanode: postgresql
 	$(call colorized,\
 		data node, \
-		su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode",\
+		su -l hdfs -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode",\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-datanode-*.log)
 	@su - hdfs -c"hadoop dfsadmin -safemode leave"
@@ -64,35 +65,34 @@ datanode: postgresql
 secondary_namenode: postgresql
 	$(call colorized,\
 		secondary name node, \
-		su - hdfs -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode",\
+		su -l hdfs -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode",\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-secondarynamenode-*.log)
 
 
-# ==== MapReduce ====
-
-jobtracker: postgresql HDFS
+# ==== YARN ====
+resourcemanager: postgresql HDFS
 	$(call colorized,\
-		job tracker, \
-		su - mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start jobtracker" ,\
+		resource manager, \
+		su -l yarn -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager",\
 		sleep 25,\
-		/var/log/hadoop/mapred/hadoop-mapred-jobtracker-*.log)
+		/var/log/hadoop/mapred/hadoop-yarn-resourcemanager-*.log)
 
 
 historyserver: postgresql HDFS
 	$(call colorized,\
 		history server, \
-		su - mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start historyserver",\
+		su -l mapred -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-mapreduce/sbin/mr-jobhistory-daemon.sh --config /etc/hadoop/conf start historyserver",\
 		sleep 5,\
 		/var/log/hadoop/mapred/hadoop-mapred-historyserver-*.log)
 
 
-tasktracker: postgresql HDFS
+nodemanagers: postgresql HDFS
 	$(call colorized,\
-		task trackers, \
-		su mapred -c "/usr/lib/hadoop/bin/hadoop-daemon.sh --config /etc/hadoop/conf start tasktracker",\
+		node manager, \
+		su -l yarn -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager",\
 		sleep 5,\
-		/var/log/hadoop/mapred/hadoop-mapred-tasktracker-*.log)
+		/var/log/hadoop/mapred/hadoop-yarn-nodemanager-*.log)
 
 
 # ==== HBase ====
@@ -100,53 +100,57 @@ tasktracker: postgresql HDFS
 hbase_master: postgresql zookeeper datanode
 	$(call colorized,\
 		hbase master, \
-		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master",\
+		su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master",\
 		sleep 25,\
 		/var/log/hbase/hbase-hbase-master-*.log)
 
 hbase_regionservers: namenode hbase_master datanode
 	$(call colorized,\
 		hbase regionservers, \
-		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver",\
+		su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver",\
 		sleep 5,\
 		/var/log/hbase/hbase-hbase-regionserver-*.log)
 
-hbase_thrift: hbase_master
-	$(call colorized,\
-		hbase thrift, \
-		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start thrift",\
-		sleep 5,\
-		/var/log/hbase/hbase-hbase-thrift-*.log)
-
 # ==== Hive ====
 
-hive: postgresql
-	/etc/init.d/mysqld start
+mysql:
 	$(call colorized,\
-		Hiveserver2, \
-		su - hive -c  'env JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startHiveserver2.sh /var/log/hive/hive-server2.out  /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid /etc/hive/conf.server ',true,\
-		/var/log/hive/hive-server2.log)
+		mysql, \
+		/etc/init.d/mysqld start,\
+		true)
 
-hcat: hive
+hive: HDFS postgresql mysql
 	$(call colorized,\
-		hcat server, \
-		su - hive -c  'env HADOOP_HOME=/usr JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startMetastore.sh /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server', true,\
+		hive server, \
+		su -  -c  'env HADOOP_HOME=/usr JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startMetastore.sh /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server ', true,\
 		/var/log/hive/hive.log)
 
+hive2: HDFS hive
+	$(call colorized,\
+		Hiveserver2, \
+		su -  -c  'env JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startHiveserver2.sh /var/log/hive/hive-server2.out  /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid /etc/hive/conf.server ',true,\
+		/var/log/hive/hive-server2.log)
 
 # ==== Single services ====
 
 zookeeper: namenode
 	$(call colorized,\
 		zookeeper nodes, \
-		su - zookeeper -c  'source /etc/zookeeper/conf/zookeeper-env.sh ; /bin/env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/lib/zookeeper/bin/zkServer.sh start',\
+		su - zookeeper -c "export  ZOOCFGDIR=/etc/zookeeper/conf ; export ZOOCFG=zoo.cfg ; source /etc/zookeeper/conf/zookeeper-env.sh ; /usr/lib/zookeeper/bin/zkServer.sh start",\
 		true)
 
 
-templeton: hcat HDFS
+tez: namenode
 	$(call colorized,\
-		templeton server, \
-		su - hcat -c '/usr/lib/hcatalog/sbin/webhcat_server.sh start', true\
+		tez node, \
+		su - tez -c "/usr/lib/tez/sbin/tez-daemon.sh start ampoolservice",\
+		true)
+	
+
+webhcat: hive HDFS
+	$(call colorized,\
+		webhcat server, \
+		su -l hcat -c "/usr/lib/hcatalog/sbin/webhcat_server.sh start", true\
 		, /var/log/webhcat/webhcat.log)
 
 
@@ -184,5 +188,4 @@ ambari_agent: ambari_server
 	$(call colorized,\
 		Ambari agent, \
 		ambari-agent start,true)
-
 

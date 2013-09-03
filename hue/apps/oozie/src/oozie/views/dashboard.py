@@ -70,9 +70,7 @@ def manage_oozie_jobs(request, job_id, action):
   response = {'status': -1, 'data': ''}
 
   try:
-    oozie_api = get_oozie()
-    oozie_api.setuser(request.user.username)
-    response['data'] = oozie_api.job_control(job_id, action)
+    response['data'] = get_oozie().job_control(job_id, action)
     response['status'] = 0
     if 'notification' in request.POST:
       request.info(_(request.POST.get('notification')))

@@ -27,52 +27,47 @@ from django.utils.translation import ugettext as _
 ${ commonheader(_('Create table from file'), app_name, user, '100px') | n,unicode }
 ${layout.menubar(section='query')}
 
-<script src="/static/ext/js/knockout-min.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/ext/js/knockout-2.1.0.js" type="text/javascript" charset="utf-8"></script>
 
 <div class="container-fluid">
 % if error_msg:
   <h4>${error_msg}</h4>
 % endif
-  <div class="card">
-    <h1 class="card-heading simple">${_('Save Query Results')}</h1>
-    <div class="card-body">
-      <p>
-        <form id="saveForm" action="${action}" method="POST" class="form form-inline"> ${ csrf_token_field | n }
-          <fieldset>
-            <div class="control-group">
-              <div class="controls">
-                <label class="radio">
-                  <input id="id_save_target_0" type="radio" name="save_target" value="${ form.SAVE_TYPE_TBL }" data-bind="checked: toWhere"/>
-                  &nbsp;${ _('In a new table') }
-                </label>
-                <span data-bind="visible: toWhere() == 'to a new table'">
-                  ${ comps.field(form['target_table'], notitle=True, placeholder='Table Name') }
-                </span>
-              </div>
-            </div>
-            <div class="control-group">
-              <div class="controls">
-                <label class="radio">
-                  <input id="id_save_target_1" type="radio" name="save_target" value="${ form.SAVE_TYPE_DIR }" data-bind="checked: toWhere">
-                  &nbsp;${ _('In an HDFS directory') }
-                </label>
-                <span data-bind="visible: toWhere() == 'to HDFS directory'">
-                  ${ comps.field(form['target_dir'], notitle=True, placeholder=_('Results location'), klass='pathChooser') }
-                </span>
-              </div>
-            </div>
-            <div id="fileChooserModal" class="smallModal well hide">
-              <a href="#" class="close" data-dismiss="modal">&times;</a>
-            </div>
-          </fieldset>
-          <div class="form-actions" style="padding-left:10px">
-            <input type="submit" name="save" value="${_('Save')}" class="btn btn-primary"/>
-            <input type="submit" name="cancel" value="${_('Cancel')}" class="btn"/>
-          </div>
-        </form>
-      </p>
+  <h1>${_('Save Query Results')}</h1>
+
+  <form id="saveForm" action="${action}" method="POST" class="form form-inline"> ${ csrf_token_field | n } 
+    <fieldset>
+      <div class="control-group">
+        <div class="controls">
+          <label class="radio">
+            <input id="id_save_target_0" type="radio" name="save_target" value="${ form.SAVE_TYPE_TBL }" data-bind="checked: toWhere"/>
+            &nbsp;${ _('In a new table') }
+          </label>
+          <span data-bind="visible: toWhere() == 'to a new table'">
+            ${ comps.field(form['target_table'], notitle=True, placeholder='Table Name') }
+          </span>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <label class="radio">
+            <input id="id_save_target_1" type="radio" name="save_target" value="${ form.SAVE_TYPE_DIR }" data-bind="checked: toWhere">
+            &nbsp;${ _('In an HDFS directory') }
+          </label>
+          <span data-bind="visible: toWhere() == 'to HDFS directory'">
+            ${ comps.field(form['target_dir'], notitle=True, placeholder=_('Results location'), klass='pathChooser') }
+          </span>
+        </div>
+      </div>
+      <div id="fileChooserModal" class="smallModal well hide">
+        <a href="#" class="close" data-dismiss="modal">&times;</a>
+      </div>
+    </fieldset>
+    <div class="form-actions">
+      <input type="submit" name="save" value="${_('Save')}" class="btn btn-primary"/>
+      <input type="submit" name="cancel" value="${_('Cancel')}" class="btn"/>
     </div>
-  </div>
+  </form>
 </div>
 
 <script type="text/javascript" charset="utf-8">

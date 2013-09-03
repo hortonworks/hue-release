@@ -1,0 +1,97 @@
+.chart_type_selectors {
+	/*width:865px;*/
+	/*height:150px;*/
+	position:relative;
+  margin-left: 5px;
+	
+}
+.chart_type_wrap {
+  position:relative;
+  left:30px;
+  display:inline-block;
+  vertical-align:top;
+  min-width:140px;
+  border-right: 1px solid #ccc;
+  padding: 0 15px 0 7px;
+  height: 80px;
+}
+
+.chart_type_wrap.direction{
+  border: none;
+}
+
+.chart_type input[type=radio] {
+  -moz-appearance: button;
+  background: white;
+  margin: 0 7px;
+  width: 39px;
+  height: 25px;
+  position: absolute;
+}
+.chart_type  label[for=area] {
+  background: url(/beeswax/static/css/images/charts/area.png);
+  background-repeat: no-repeat;
+}
+.chart_type  label[for=bar] {
+  background: url(/beeswax/static/css/images/charts/bar.png);
+  background-repeat: no-repeat;
+}
+.chart_type  label[for=line] {
+  background: url(/beeswax/static/css/images/charts/line.png);
+  background-repeat: no-repeat;
+}
+.chart_type  label[for=scatterplot] {
+  background: url(/beeswax/static/css/images/charts/scatter.png);
+  background-repeat: no-repeat;
+}
+.chart_type  label[for=pie] {
+  background: url(/beeswax/static/css/images/charts/pie.jpg);
+  background-repeat: no-repeat;
+}
+
+.chart_type  label {
+  display: inline-block;
+  padding: 0;
+  width: 39px;
+  padding-top: 27px;
+  text-align: center;
+  font-size: 10px;
+  color: #808080;
+  
+  position: relative;
+  margin: 0 7px;
+  cursor: pointer;
+}
+
+.chart_type input[type=radio]:checked {
+  outline: 2px solid #3EA211;
+}
+
+.y_axis {
+  display: none;
+}
+
+.CodeMirror {
+  float: left;
+  width: 0%;
+  border: 2px solid #3EA211;
+  margin-left: 5px;
+  height:200px;
+}
+
+iframe {
+  width: 95%;
+  float: left;
+  height: 550px;
+  border: 0px solid #3EA211;
+  margin-top: 5px;
+  margin-left: 5px;
+}
+
+select.pielimits {
+	width:55px!important;
+}
+
+.pielimits2 {
+	margin-left:16px;
+}

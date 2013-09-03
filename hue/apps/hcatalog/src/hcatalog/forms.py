@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import hive_metastore
+
 from django import forms
 from django.forms.fields import ChoiceField
 from desktop.lib.django_forms import simple_formset_factory, DependencyAwareForm

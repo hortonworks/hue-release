@@ -17,32 +17,22 @@
 # under the License.
 #
 
-import errno
-import os
-import socket
-import sys
-
 from TTransport import *
-
+import os
+import errno
+import socket
 
 class TSocketBase(TTransportBase):
   def _resolveAddr(self):
     if self._unix_socket is not None:
-      return [(socket.AF_UNIX, socket.SOCK_STREAM, None, None,
-               self._unix_socket)]
+      return [(socket.AF_UNIX, socket.SOCK_STREAM, None, None, self._unix_socket)]
     else:
-      return socket.getaddrinfo(self.host,
-                                self.port,
-                                socket.AF_UNSPEC,
-                                socket.SOCK_STREAM,
-                                0,
-                                socket.AI_PASSIVE | socket.AI_ADDRCONFIG)
+      return socket.getaddrinfo(self.host, self.port, socket.AF_UNSPEC, socket.SOCK_STREAM, 0, socket.AI_PASSIVE | socket.AI_ADDRCONFIG)
 
   def close(self):
     if self.handle:
       self.handle.close()
       self.handle = None
-
 
 class TSocket(TSocketBase):
   """Socket implementation of TTransport base."""
@@ -55,6 +45,7 @@ class TSocket(TSocketBase):
     @param unix_socket(str)  The filename of a unix socket to connect to.
                              (host and port will be ignored.)
     """
+
     self.host = host
     self.port = port
     self.handle = None
@@ -65,15 +56,15 @@ class TSocket(TSocketBase):
     self.handle = h
 
   def isOpen(self):
-    return self.handle is not None
+    return self.handle != None
 
   def setTimeout(self, ms):
     if ms is None:
       self._timeout = None
     else:
-      self._timeout = ms / 1000.0
+      self._timeout = ms/1000.0
 
-    if self.handle is not None:
+    if (self.handle != None):
       self.handle.settimeout(self._timeout)
 
   def open(self):
@@ -95,52 +86,34 @@ class TSocket(TSocketBase):
         message = 'Could not connect to socket %s' % self._unix_socket
       else:
         message = 'Could not connect to %s:%d' % (self.host, self.port)
-      raise TTransportException(type=TTransportException.NOT_OPEN,
-                                message=message)
+      raise TTransportException(TTransportException.NOT_OPEN, message)
 
   def read(self, sz):
-    try:
-      buff = self.handle.recv(sz)
-    except socket.error, e:
-      if (e.args[0] == errno.ECONNRESET and
-          (sys.platform == 'darwin' or sys.platform.startswith('freebsd'))):
-        # freebsd and Mach don't follow POSIX semantic of recv
-        # and fail with ECONNRESET if peer performed shutdown.
-        # See corresponding comment and code in TSocket::read()
-        # in lib/cpp/src/transport/TSocket.cpp.
-        self.close()
-        # Trigger the check to raise the END_OF_FILE exception below.
-        buff = ''
-      else:
-        raise
+    buff = self.handle.recv(sz)
     if len(buff) == 0:
-      raise TTransportException(type=TTransportException.END_OF_FILE,
-                                message='TSocket read 0 bytes')
+      raise TTransportException('TSocket read 0 bytes')
     return buff
 
   def write(self, buff):
     if not self.handle:
-      raise TTransportException(type=TTransportException.NOT_OPEN,
-                                message='Transport not open')
+      raise TTransportException(TTransportException.NOT_OPEN, 'Transport not open')
     sent = 0
     have = len(buff)
     while sent < have:
       plus = self.handle.send(buff)
       if plus == 0:
-        raise TTransportException(type=TTransportException.END_OF_FILE,
-                                  message='TSocket sent 0 bytes')
+        raise TTransportException('TSocket sent 0 bytes')
       sent += plus
       buff = buff[plus:]
 
   def flush(self):
     pass
 
-
 class TServerSocket(TSocketBase, TServerTransportBase):
   """Socket implementation of TServerTransport base."""
 
-  def __init__(self, host=None, port=9090, unix_socket=None):
-    self.host = host
+  def __init__(self, port=9090, unix_socket=None):
+    self.host = None
     self.port = port
     self._unix_socket = unix_socket
     self.handle = None
@@ -164,8 +137,8 @@ class TServerSocket(TSocketBase, TServerTransportBase):
 
     self.handle = socket.socket(res[0], res[1])
     self.handle.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    if hasattr(self.handle, 'settimeout'):
-      self.handle.settimeout(None)
+    if hasattr(self.handle, 'set_timeout'):
+      self.handle.set_timeout(None)
     self.handle.bind(res[4])
     self.handle.listen(128)
 

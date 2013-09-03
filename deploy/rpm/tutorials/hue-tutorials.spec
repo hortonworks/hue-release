@@ -3,7 +3,6 @@
 %define user               hue
 %define group              hadoop
 %global __os_install_post %{nil}
-%define  debug_package %{nil}
 %define _unpackaged_files_terminate_build 1
 %define _binaries_in_noarch_packages_terminate_build   0
 
@@ -158,6 +157,8 @@ Init scripts and splash
 # chkconfig --add hue
 # chkconfig --level 3 hue on
 
+echo "Sandbox=%{sandbox_timestamp}" > /var/lib/hue/EXTRA_VERSIONS
+
 /etc/init.d/hue setup
 
 ln -sf /usr/lib/hue/tools/start_scripts/startup_script /etc/init.d/startup_script
@@ -170,3 +171,6 @@ chkconfig --level 3 startup_script on
 %{hue_dir}
 %defattr(600,%{user},%{group})
 %{hue_dir}/.ssh
+
+%preun
+rm -f /var/lib/hue/EXTRA_VERSIONS

@@ -74,7 +74,7 @@
     % for dataset in coord.dataset_set.all():
     <dataset name="${ dataset.name }" frequency="${ dataset.frequency }"
              initial-instance="${ dataset.start_utc }" timezone="${ dataset.timezone }">
-      <uri-template>${ smart_path(dataset.uri, mapping) }</uri-template>
+      <uri-template>${ smart_path(dataset.uri, mapping, 'coord') }</uri-template>
       <done-flag>${ dataset.done_flag }</done-flag>
     </dataset>
     % endfor

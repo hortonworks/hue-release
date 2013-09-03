@@ -38,10 +38,7 @@ ${layout.menubar(section='tables')}
             </div>
         </div>
         <div class="span9">
-          <div class="card" style="margin-top: 0">
-            <div class="card-body">
-              <p>
-                <ul class="nav nav-pills">
+            <ul class="nav nav-pills">
                 <li><a id="step1" href="#">${_('Step 1: Choose File')}</a></li>
                 <li class="active"><a href="#">${_('Step 2: Choose Delimiter')}</a></li>
                 <li><a id="step3" href="#">${_('Step 3: Define Columns')}</a></li>
@@ -63,7 +60,7 @@ ${layout.menubar(section='tables')}
                             ${comps.field(delim_form["delimiter"], render_default=True)}
                             <input id="submit_preview" class="btn btn-info" type="submit" value="${_('Preview')}" name="submit_preview"/>
                             <span class="help-block">
-                            ${_('Enter the column delimiter which must be a single character. Use syntax like "\\001" or "\\t" for special characters.')}
+                            ${_('Enter the column delimiter. Must be a single character. Use syntax like "\\001" or "\\t" for special characters.')}
                             </span>
                         </div>
                     </div>
@@ -74,19 +71,19 @@ ${layout.menubar(section='tables')}
                                 <table class="table table-striped table-condensed">
                                     <thead>
                                     <tr>
-                                      % for i in range(n_cols):
-                                          <th>col_${i+1}</th>
-                                      % endfor
+                                            % for i in range(n_cols):
+                                                <th>col_${i+1}</th>
+                                            % endfor
                                     </tr>
                                     </thead>
                                     <tbody>
-                                      % for row in fields_list:
-                                      <tr>
-                                        % for val in row:
-                                          ${ comps.getEllipsifiedCell(val, "left")}
-                                        % endfor
-                                      </tr>
-                                      % endfor
+                                            % for row in fields_list:
+                                            <tr>
+                                                % for val in row:
+                                                    <td>${val}</td>
+                                                % endfor
+                                            </tr>
+                                            % endfor
                                     </tbody>
                                 </table>
                             </div>
@@ -94,59 +91,54 @@ ${layout.menubar(section='tables')}
                     </div>
                 </fieldset>
 
-                <div class="form-actions" style="padding-left: 10px">
+                <div class="form-actions">
                     <input class="btn" type="submit" value="${_('Previous')}" name="cancel_delim"/>
                     <input class="btn btn-primary" type="submit" name="submit_delim" value="${_('Next')}" />
                 </div>
             </form>
-              </p>
-            </div>
-          </div>
         </div>
     </div>
 </div>
 
-<style type="text/css">
-  .scrollable {
-    width: 100%;
-    overflow-x: auto;
-  }
+<style>
+    .scrollable {
+        width: 100%;
+        overflow-x: auto;
+    }
 </style>
 
 <script type="text/javascript" charset="utf-8">
-  $(document).ready(function () {
-    $("[rel='tooltip']").tooltip();
+    $(document).ready(function(){
+        $(".scrollable").width($(".form-actions").width());
 
-    $(".scrollable").width($(".form-actions").width() - 170);
+        $("#id_delimiter_1").css("margin-left","4px").attr("placeholder","${_('Please type your delimiter here')}").hide();
+        $("#id_delimiter_0").change(function(){
+            if ($(this).val() == "__other__"){
+                $("#id_delimiter_1").show();
+            }
+            else {
+                $("#id_delimiter_1").hide();
+                $("#id_delimiter_1").val('');
+            }
+        });
 
-    $("#id_delimiter_1").css("margin-left", "4px").attr("placeholder", "${_('Type your delimiter here')}").hide();
-    $("#id_delimiter_0").change(function () {
-      if ($(this).val() == "__other__") {
-        $("#id_delimiter_1").show();
-      }
-      else {
-        $("#id_delimiter_1").hide();
-        $("#id_delimiter_1").val('');
-      }
-    });
+        $("#id_delimiter_0").change();
 
-    $("#id_delimiter_0").change();
-
-    $("#step1").click(function (e) {
-      e.preventDefault();
-      $("input[name='cancel_delim']").click();
+        $("#step1").click(function(e){
+            e.preventDefault();
+            $("input[name='cancel_delim']").click();
+        });
+        $("#step3").click(function(e){
+            e.preventDefault();
+            $("input[name='submit_delim']").click();
+        });
+        $("body").keypress(function(e){
+            if(e.which == 13){
+                e.preventDefault();
+                $("input[name='submit_delim']").click();
+            }
+        });
     });
-    $("#step3").click(function (e) {
-      e.preventDefault();
-      $("input[name='submit_delim']").click();
-    });
-    $("body").keypress(function (e) {
-      if (e.which == 13) {
-        e.preventDefault();
-        $("input[name='submit_delim']").click();
-      }
-    });
-  });
 </script>
 
 ${ commonfooter(messages) | n,unicode }

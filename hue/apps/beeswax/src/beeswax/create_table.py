@@ -38,14 +38,15 @@ from beeswax.forms import CreateTableForm, ColumnTypeFormSet,\
   PartitionTypeFormSet, CreateByImportFileForm, CreateByImportDelimForm,\
   TERMINATOR_CHOICES
 from beeswax.server import dbms
-from beeswax.views import execute_directly
+from beeswax.views import execute_directly, _get_last_database
 
 
 LOG = logging.getLogger(__name__)
 
 
-def create_table(request, database='default'):
+def create_table(request, database=None):
   """Create a table by specifying its attributes manually"""
+  database = _get_last_database(request, database)
   db = dbms.get(request.user)
 
   form = MultiForm(
@@ -56,13 +57,13 @@ def create_table(request, database='default'):
   if request.method == "POST":
     form.bind(request.POST)
     form.table.db = db  # curry is invalid
-    form.table.database = database
 
     if request.POST.get('create'):
       if form.is_valid():
         columns = [ f.cleaned_data for f in form.columns.forms ]
         partition_columns = [ f.cleaned_data for f in form.partitions.forms ]
-        proposed_query = django_mako.render_to_string("create_table_statement.mako", {
+        proposed_query = django_mako.render_to_string("create_table_statement.mako",
+          {
             'database': database,
             'table': form.table.cleaned_data,
             'columns': columns,
@@ -97,7 +98,7 @@ DELIMITER_READABLE = {'\\001' : _('ctrl-As'),
                       ' '     : _('spaces')}
 FILE_READERS = [ ]
 
-def import_wizard(request, database='default'):
+def import_wizard(request, database=None):
   """
   Help users define table and based on a file they want to import to Hive.
   Limitations:
@@ -107,31 +108,36 @@ def import_wizard(request, database='default'):
     - No partition table.
     - Does not work with binary data.
   """
+  database = _get_last_database(request, database)
   encoding = i18n.get_site_encoding()
   app_name = get_app_name(request)
 
   if request.method == 'POST':
-    #
-    # General processing logic:
-    # - We have 3 steps. Each requires the previous.
-    #   * Step 1      : Table name and file location
-    #   * Step 2a     : Display sample with auto chosen delim
-    #   * Step 2b     : Display sample with user chosen delim (if user chooses one)
-    #   * Step 3      : Display sample, and define columns
-    # - Each step is represented by a different form. The form of an earlier step
-    #   should be present when submitting to a later step.
-    # - To preserve the data from the earlier steps, we send the forms back as
-    #   hidden fields. This way, when users revisit a previous step, the data would
-    #   be there as well.
-    #
-    delim_is_auto = False
-    fields_list, n_cols = [[]], 0
-    s3_col_formset = None
+    # Have a while loop to allow an easy way to break
+    for _ in range(1):
+      #
+      # General processing logic:
+      # - We have 3 steps. Each requires the previous.
+      #   * Step 1      : Table name and file location
+      #   * Step 2a     : Display sample with auto chosen delim
+      #   * Step 2b     : Display sample with user chosen delim (if user chooses one)
+      #   * Step 3      : Display sample, and define columns
+      # - Each step is represented by a different form. The form of an earlier step
+      #   should be present when submitting to a later step.
+      # - To preserve the data from the earlier steps, we send the forms back as
+      #   hidden fields. This way, when users revisit a previous step, the data would
+      #   be there as well.
+      #
+      delim_is_auto = False
+      fields_list, n_cols = [ [] ], 0
+      s3_col_formset = None
 
-    db = dbms.get(request.user)
-    s1_file_form = CreateByImportFileForm(request.POST, db=db)
+      # Everything requires a valid file form
+      db = dbms.get(request.user)
+      s1_file_form = CreateByImportFileForm(request.POST, db=db)
+      if not s1_file_form.is_valid():
+        break
 
-    if s1_file_form.is_valid():
       do_s2_auto_delim = request.POST.get('submit_file')        # Step 1 -> 2
       do_s2_user_delim = request.POST.get('submit_preview')     # Step 2 -> 2
       do_s3_column_def = request.POST.get('submit_delim')       # Step 2 -> 3
@@ -141,15 +147,23 @@ def import_wizard(request, database='default'):
       cancel_s3_column_def = request.POST.get('cancel_create')  # Step 3 -> 2
 
       # Exactly one of these should be True
-      if len(filter(None, (do_s2_auto_delim, do_s2_user_delim, do_s3_column_def, do_hive_create, cancel_s2_user_delim, cancel_s3_column_def))) != 1:
-        raise PopupException(_('Invalid form submission'))
+      assert len(filter(None, (do_s2_auto_delim,
+                               do_s2_user_delim,
+                               do_s3_column_def,
+                               do_hive_create,
+                               cancel_s2_user_delim,
+                               cancel_s3_column_def))) == 1, 'Invalid form submission'
 
+      #
+      # Fix up what we should do in case any form is invalid
+      #
       if not do_s2_auto_delim:
         # We should have a valid delim form
         s2_delim_form = CreateByImportDelimForm(request.POST)
         if not s2_delim_form.is_valid():
           # Go back to picking delimiter
           do_s2_user_delim, do_s3_column_def, do_hive_create = True, False, False
+
       if do_hive_create:
         # We should have a valid columns formset
         s3_col_formset = ColumnTypeFormSet(prefix='cols', data=request.POST)
@@ -162,12 +176,21 @@ def import_wizard(request, database='default'):
       #
       if do_s2_auto_delim:
         delim_is_auto = True
-        fields_list, n_cols, s2_delim_form = _delim_preview(request.fs, s1_file_form, encoding, [reader.TYPE for reader in FILE_READERS], DELIMITERS)
+        fields_list, n_cols, s2_delim_form = _delim_preview(
+                                              request.fs,
+                                              s1_file_form,
+                                              encoding,
+                                              [ reader.TYPE for reader in FILE_READERS ],
+                                              DELIMITERS)
 
       if (do_s2_user_delim or do_s3_column_def or cancel_s3_column_def) and s2_delim_form.is_valid():
         # Delimit based on input
-        fields_list, n_cols, s2_delim_form = _delim_preview(request.fs, s1_file_form, encoding, (s2_delim_form.cleaned_data['file_type'],),
-                                                            (s2_delim_form.cleaned_data['delimiter'],))
+        fields_list, n_cols, s2_delim_form = _delim_preview(
+                                              request.fs,
+                                              s1_file_form,
+                                              encoding,
+                                              (s2_delim_form.cleaned_data['file_type'],),
+                                              (s2_delim_form.cleaned_data['delimiter'],))
 
       if do_s2_auto_delim or do_s2_user_delim or cancel_s3_column_def:
         return render('choose_delimiter.mako', request, {
@@ -201,16 +224,17 @@ def import_wizard(request, database='default'):
           'column_formset': s3_col_formset,
           'fields_list': fields_list,
           'n_cols': n_cols,
-          'database': database,
+           'database': database,
         })
 
       #
-      # Final: Execute
+      # Finale: Execute
       #
       if do_hive_create:
         delim = s2_delim_form.cleaned_data['delimiter']
         table_name = s1_file_form.cleaned_data['name']
-        proposed_query = django_mako.render_to_string("create_table_statement.mako", {
+        proposed_query = django_mako.render_to_string("create_table_statement.mako",
+          {
             'table': dict(name=table_name,
                           comment=s1_file_form.cleaned_data['comment'],
                           row_format='Delimited',
@@ -267,7 +291,8 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters):
   path = file_form.cleaned_data['path']
   try:
     file_obj = fs.open(path)
-    delim, file_type, fields_list = _parse_fields(path, file_obj, encoding, file_types, delimiters)
+    delim, file_type, fields_list = _parse_fields(
+              path, file_obj, encoding, file_types, delimiters)
     file_obj.close()
   except IOError, ex:
     msg = "Failed to open file '%s': %s" % (path, ex)
@@ -288,7 +313,7 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters):
                                             file_type=file_type,
                                             n_cols=n_cols))
   if not delim_form.is_valid():
-    assert False, _('Internal error when constructing the delimiter form: %(error)s.') % {'error': delim_form.errors}
+    assert False, _('Internal error when constructing the delimiter form: %(error)s') % {'error': delim_form.errors}
   return fields_list, n_cols, delim_form
 
 
@@ -315,7 +340,7 @@ def _parse_fields(path, file_obj, encoding, filetypes, delimiters):
       return delim, reader.TYPE, fields_list
   else:
     # Even TextFileReader doesn't work
-    msg = _("Failed to decode file '%(path)s' into printable characters under %(encoding)s.") % {'path': path, 'encoding': encoding}
+    msg = _("Failed to decode file '%(path)s' into printable characters under %(encoding)s") % {'path': path, 'encoding': encoding}
     LOG.error(msg)
     raise PopupException(msg)
 
@@ -336,9 +361,6 @@ def _readfields(lines, delimiters):
     """
     n_lines = len(fields_list)
     len_list = [ len(fields) for fields in fields_list ]
-
-    if not len_list:
-      raise PopupException(_("Could not find any columns to import"))
 
     # All lines should break into multiple fields
     if min(len_list) == 1:
@@ -380,7 +402,7 @@ def _peek_file(fs, file_form):
     file_obj.close()
     return (path, file_head)
   except IOError, ex:
-    msg = _("Failed to open file '%(path)s': %(error)s.") % {'path': path, 'error': ex}
+    msg = _("Failed to open file '%(path)s': %(error)s") % {'path': path, 'error': ex}
     LOG.exception(msg)
     raise PopupException(msg)
 
@@ -432,7 +454,7 @@ def load_after_create(request, database):
   path = request.REQUEST.get('path')
 
   if not tablename or not path:
-    msg = _('Internal error: Missing needed parameter to load data into table.')
+    msg = _('Internal error: Missing needed parameter to load data into table')
     LOG.error(msg)
     raise PopupException(msg)
 

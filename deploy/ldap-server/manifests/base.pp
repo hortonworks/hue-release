@@ -78,10 +78,6 @@ class ldap {
         command => '/usr/bin/ldapadd -w 2222 -D "cn=Manager,dc=sandbox,dc=hortonworks,dc=com" -f /vagrant/ldif/passwd.ldif; true'
     }
 
-    exec {'groups':
-        command => '/usr/bin/ldapadd -w 2222 -D "cn=Manager,dc=sandbox,dc=hortonworks,dc=com" -f /vagrant/ldif/group.ldif; true'
-    }
-
     service {'iptables':
         ensure => stopped,
     }

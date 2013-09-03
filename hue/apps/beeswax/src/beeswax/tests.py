@@ -15,23 +15,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-try:
-  import json
-except ImportError:
-  import simplejson as json
+
 import cStringIO
 import gzip
 import logging
 import os
 import re
 import shutil
-import socket
 import tempfile
 import threading
 
-import hadoop
-
-from nose.tools import assert_true, assert_equal, assert_false, assert_not_equal
+from nose.tools import assert_true, assert_equal, assert_false
 from nose.plugins.skip import SkipTest
 
 from django.utils.encoding import smart_str
@@ -42,22 +36,22 @@ from desktop.lib.django_test_util import make_logged_in_client, assert_equal_mod
 from desktop.lib.django_test_util import assert_similar_pages
 from desktop.lib.test_utils import grant_access
 
+from beeswaxd import ttypes
+
 import beeswax.create_table
 import beeswax.forms
 import beeswax.hive_site
 import beeswax.models
 import beeswax.views
 
-from beeswax import conf, hive_site
+from beeswax import conf
 from beeswax.views import collapse_whitespace
 from beeswax.test_base import make_query, wait_for_query_to_finish, verify_history, get_query_server_config,\
-  HIVE_SERVER_TEST_PORT
+  BEESWAXD_TEST_PORT
 from beeswax.design import hql_query, _strip_trailing_semicolon
 from beeswax.data_export import download
-from beeswax.models import SavedQuery, QueryHistory, HQL
 from beeswax.server import dbms
-from beeswax.server.dbms import QueryServerException
-from beeswax.server.hive_server2_lib import HiveServerClient
+from beeswax.server.beeswax_lib import BeeswaxDataTable
 from beeswax.test_base import BeeswaxSampleProvider
 
 
@@ -132,6 +126,23 @@ class TestBeeswaxWithHadoop(BeeswaxSampleProvider):
     assert_true("tasktracker.http.threads" in response_verbose.content)
     assert_true("A base for other temporary directories" in response_verbose.content)
 
+  def test_describe_partitions(self):
+    response = self.client.get("/beeswax/table/default/test_partitions/partitions")
+    assert_true("baz_one" in response.content)
+    assert_true("boom_two" in response.content)
+    response = self.client.get("/beeswax/table/default/test/partitions")
+    assert_true("is not partitioned." in response.content)
+
+  def test_browse_partitions_with_limit(self):
+    # Limit to 90
+    finish = beeswax.conf.BROWSE_PARTITIONED_TABLE_LIMIT.set_for_testing("90")
+    try:
+      response = self.client.get("/beeswax/table/default/test_partitions")
+      assert_true("0x%x" % 89 in response.content, response.content)
+      assert_false("0x%x" % 90 in response.content, response.content)
+    finally:
+      finish()
+
   def test_query_with_resource(self):
     script = self.cluster.fs.open("/square.py", "w")
     script.write(
@@ -172,7 +183,39 @@ for x in sys.stdin:
     Test basic query submission
     """
     # Minimal server operation
-    assert_equal(['default', 'other_db'], self.db.get_databases())
+    assert_equal("echo", self.db.echo("echo"))
+
+    # Table should have been created
+    response = self.client.get("/beeswax/tables/")
+    assert_true("test" in response.context["tables"])
+
+    # Switch databases
+    response = self.client.get("/beeswax/tables/default")
+    assert_true("test" in response.context["tables"])
+
+    response = self.client.get("/beeswax/tables/not_there")
+    assert_false("test" in response.context["tables"])
+
+    # And have detail
+    response = self.client.get("/beeswax/table/default/test")
+    assert_true("foo" in response.content)
+
+    # Remember the number of history items. Use a generic fragment 'test' to pass verification.
+    history_cnt = verify_history(self.client, fragment='test')
+
+    # Show table data.
+    response = self.client.get("/beeswax/table/default/test/read", follow=True)
+    response = wait_for_query_to_finish(self.client, response, max=30.0)
+    # Note that it may not return all rows at once. But we expect at least 10.
+    assert_true(len(response.context['results']) > 10)
+    # Column names
+    assert_true("<td>foo</td>" in response.content)
+    assert_true("<td>bar</td>" in response.content)
+    # This should NOT go into the query history.
+    assert_equal(verify_history(self.client, fragment='test'), history_cnt,
+                 'Implicit queries should not be saved in the history')
+    assert_equal(str(response.context['query_context'][0]), 'table')
+    assert_equal(str(response.context['query_context'][1]), 'test:default')
 
     # Query the data
     # We use a semicolon here for kicks; the code strips it out.
@@ -270,6 +313,7 @@ for x in sys.stdin:
     hql = """
       SELECT foo FROM test;
     """
+
     query = hql_query(hql)
     handle = self.db.execute_and_wait(query)
 
@@ -290,7 +334,7 @@ for x in sys.stdin:
     query = hql_query(hql)
     try:
       self.db.execute_and_wait(query)
-    except QueryServerException, bex:
+    except ttypes.BeeswaxException, bex:
       assert_equal(bex.errorCode, 40000)
       assert_equal(bex.SQLState, "42000")
 
@@ -343,7 +387,7 @@ for x in sys.stdin:
     """
     response = _make_query(self.client, "SELECT foo FROM test WHERE foo='$x' and bar='$y'", is_parameterized=False)
     # Assert no parameterization was offered
-    assert_true(any(["watch_wait.mako" in _template.filename for _template in response.template]), "we should have seen the template for a query executing")
+    assert_true("watch_wait.mako" in response.template, "we should have seen the template for a query executing")
 
     response = _make_query(self.client, "SELECT foo FROM test WHERE foo='$x' and bar='$y'")
     assert_true("parameterization.mako", response.template)
@@ -357,7 +401,7 @@ for x in sys.stdin:
     # Now fill it out
     response = self.client.post("/beeswax/execute_parameterized/%d" % design_id, {
                                 "parameterization-x": str(1), "parameterization-y": str(2)}, follow=True)
-    assert_true(any(["watch_wait.mako" in _template.filename for _template in response.template]))
+    assert_true("watch_wait.mako" in response.template)
 
     # Check that substitution happened!
     assert_equal("SELECT foo FROM test WHERE foo='1' and bar='2'", response.context["query"].query)
@@ -366,7 +410,7 @@ for x in sys.stdin:
     response = self.client.post("/beeswax/execute_parameterized/%d" % design_id,
                                 {"parameterization-x": "'_this_is_not SQL ", "parameterization-y": str(2)},
                                 follow=True)
-    assert_true(any(["execute.mako" in _template.filename for _template in response.template]))
+    assert_true("execute.mako" in response.template)
     log = response.context["log"]
     assert_true(search_log_line('ql.Driver', 'FAILED: ParseException', log), log)
 
@@ -377,6 +421,7 @@ for x in sys.stdin:
     response = self.client.post("/beeswax/execute_parameterized/%d" % design_id, {
                                 "parameterization-x": str(1), "parameterization-y": str(2)}, follow=True)
     assert_equal('other_db', response.context['design'].get_design().query['database'])
+
 
   def test_explain_query(self):
     c = self.client
@@ -431,6 +476,22 @@ for x in sys.stdin:
       LOG.info("Finished: " + str(i))
     except:
       LOG.exception("Saw exception in child thread.")
+
+  def test_drop_multi_tables(self):
+    hql = """
+      CREATE TABLE test_drop_1 (a int);
+      CREATE TABLE test_drop_2 (a int);
+      CREATE TABLE test_drop_3 (a int);
+    """
+    resp = _make_query(self.client, hql)
+    resp = wait_for_query_to_finish(self.client, resp, max=30.0)
+
+    # Drop them
+    resp = self.client.get('/beeswax/tables/drop/default')
+    assert_true('want to delete' in resp.content, resp.content)
+    resp = self.client.post('/beeswax/tables/drop/default', {u'table_selection': [u'test_drop_1', u'test_drop_2', u'test_drop_3']})
+    assert_equal(resp.status_code, 302)
+
 
   def test_multiple_statements_no_result_set(self):
     hql = """
@@ -587,7 +648,6 @@ for x in sys.stdin:
 
     # Retrieve that design and check correct DB is selected
     design = beeswax.models.SavedQuery.objects.filter(name='rubbish')[0]
-    assert_equal('', design.desc)
     resp = cli.get('/beeswax/execute/%s' % (design.id,))
     assert_true('selected="selected">other_db</option>' in resp.content)
     assert_similar_pages(resp.content, exe_resp.content)
@@ -603,6 +663,7 @@ for x in sys.stdin:
     resp = cli.get('/beeswax/clone_design/%s' % (design.id,))
     resp = cli.get('/beeswax/clone_design/%s' % (design.id,))
     designs = beeswax.models.SavedQuery.objects.filter(name__contains='rubbish')[:3]
+    print designs
 
     # Delete a design
     resp = cli.get('/beeswax/delete_designs')
@@ -721,6 +782,30 @@ for x in sys.stdin:
     client_not_me.logout()
 
 
+  def test_load_data(self):
+    """
+    Test load data queries.
+    These require Hadoop, because they ask the metastore
+    about whether a table is partitioned.
+    """
+    # Check that view works
+    resp = self.client.get("/beeswax/table/default/test/load")
+    assert_true(resp.context["form"])
+
+    # Try the submission
+    resp = self.client.post("/beeswax/table/default/test/load", dict(path="/tmp/foo", overwrite=True))
+    assert_equal_mod_whitespace("LOAD DATA INPATH '/tmp/foo' OVERWRITE INTO TABLE `default.test`",
+        resp.context["form"].query.initial["query"])
+    resp = self.client.post("/beeswax/table/default/test/load", dict(path="/tmp/foo", overwrite=False))
+    assert_equal_mod_whitespace("LOAD DATA INPATH '/tmp/foo' INTO TABLE `default.test`",
+        resp.context["form"].query.initial["query"])
+
+    # Try it with partitions
+    resp = self.client.post("/beeswax/table/default/test_partitions/load", dict(path="/tmp/foo", partition_0="alpha", partition_1="beta"))
+    assert_equal_mod_whitespace("LOAD DATA INPATH '/tmp/foo' INTO TABLE `default.test_partitions` PARTITION (baz='alpha', boom='beta')",
+        resp.context["form"].query.initial["query"])
+
+
   def test_save_results_to_dir(self):
     """Check that saving to directory works"""
 
@@ -732,7 +817,7 @@ for x in sys.stdin:
         'save': True
       }
       resp = self.client.post('/beeswax/save_results/%s' % (qid,), save_data, follow=True)
-      resp = wait_for_query_to_finish(self.client, resp, max=60)
+      wait_for_query_to_finish(self.client, resp, max=60)
 
       # Check that data is right
       if verify:
@@ -753,30 +838,24 @@ for x in sys.stdin:
       self.cluster.fs.mkdir(TARGET_DIR_ROOT)
       self.cluster.fs.chown(TARGET_DIR_ROOT, user='test')
 
-    # Already existing dir
-    hql = "SELECT * FROM test"
-    resp = _make_query(self.client, hql, wait=True, local=False, max=180.0)
-    resp = save_and_verify(resp, TARGET_DIR_ROOT, verify=False)
-    assert_true('Directory already exists' in resp.content, resp.content)
-
-    # SELECT *. (Result dir is same as table dir.)
+    # Not supported. SELECT *. (Result dir is same as table dir.)
     hql = "SELECT * FROM test"
     resp = _make_query(self.client, hql, wait=True, local=False, max=180.0)
     resp = save_and_verify(resp, TARGET_DIR_ROOT + '/1', verify=False)
-    # Success and went to FB
-    assert_true('File Browser' in resp.content, resp.content)
+    assert_true('not supported' in resp.content)
 
     # SELECT columns. (Result dir is in /tmp.)
     hql = "SELECT foo, bar FROM test"
     resp = _make_query(self.client, hql, wait=True, local=False, max=180.0)
     resp = save_and_verify(resp, TARGET_DIR_ROOT + '/2')
-    assert_true('File Browser' in resp.content, resp.content)
+    # Results has a link to the FB
+    assert_true('/filebrowser/view' in resp.content)
 
-    # Partition tables
+    # Not supported. Partition tables
     hql = "SELECT * FROM test_partitions"
     resp = _make_query(self.client, hql, wait=True, local=False, max=180.0)
     resp = save_and_verify(resp, TARGET_DIR_ROOT + '/3', verify=False)
-    assert_true('File Browser' in resp.content, resp.content)
+    assert_true('not supported' in resp.content)
 
 
   def test_save_results_to_tbl(self):
@@ -794,7 +873,8 @@ for x in sys.stdin:
       wait_for_query_to_finish(self.client, resp, max=120)
 
       # Check that data is right. The SELECT may not give us the whole table.
-      resp = _make_query(self.client, 'SELECT * FROM %s' % (target_tbl,), wait=True, local=False)
+      resp = _make_query(self.client, 'SELECT * FROM %s' % (target_tbl,), wait=True,
+                        local=False)
       for i in xrange(90):
         assert_equal([str(i), '0x%x' % (i,)], resp.context['results'][i])
 
@@ -812,16 +892,19 @@ for x in sys.stdin:
 
 
   def test_install_examples(self):
+    """
+    Test installation of examples
+    """
     assert_true(not beeswax.models.MetaInstall.get().installed_example)
 
     # Check popup
     resp = self.client.get('/beeswax/install_examples')
-    assert_true('POST request is required.' in json.loads(resp.content)['message'])
+    assert_true('Install sample tables' in resp.content)
 
     self.client.post('/beeswax/install_examples')
 
     # New tables exists
-    resp = self.client.get('/metastore/tables/')
+    resp = self.client.get('/beeswax/tables/')
     assert_true('sample_08' in resp.content)
     assert_true('sample_07' in resp.content)
 
@@ -830,11 +913,22 @@ for x in sys.stdin:
     assert_true('Sample: Job loss' in resp.content)
     assert_true('Sample: Salary growth' in resp.content)
     assert_true('Sample: Top salary' in resp.content)
+    assert_true(beeswax.models.MetaInstall.get().installed_example)
 
-    # Now install it a second time, and no error
+    # Now install it a second time, and expect an error
     resp = self.client.post('/beeswax/install_examples')
-    assert_equal(0, json.loads(resp.content)['status'])
-    assert_equal('', json.loads(resp.content)['message'])
+    assert_true('false' in resp.content)
+    assert_true('already installed' in resp.content)
+
+    # First, unset the db entry to allow installation to re-run
+    meta = beeswax.models.MetaInstall.get()
+    meta.installed_example = False
+    meta.save()
+
+    # Now it should complain
+    resp = self.client.post('/beeswax/install_examples')
+    assert_true('false' in resp.content)
+    assert_true('already exists' in resp.content)
 
 
   def test_create_table_generation(self):
@@ -851,7 +945,7 @@ for x in sys.stdin:
       'table-name': 'my_table',
       'table-comment': 'Yo>>>>dude',  # Make sure escaping is sort of ok.
       'table-row_format': 'Delimited',
-      'table-field_terminator_0': r',',
+      'table-field_terminator_0': r'\001',
       'table-collection_terminator_0': r'\002',
       'table-map_key_terminator_0': r'\003',
       'table-file_format': 'TextFile',
@@ -865,25 +959,20 @@ for x in sys.stdin:
       'create': 'Create table',
     }, follow=True)
 
-    if "watch_wait.mako" in resp.template:
-      assert_equal_mod_whitespace("""
-          CREATE EXTERNAL TABLE `default.my_table`
-          (
-           `my_col` string
-          )
-          COMMENT "Yo>>>>dude"
-          ROW FORMAT DELIMITED
-            FIELDS TERMINATED BY ','
-            COLLECTION ITEMS TERMINATED BY '\\002'
-            MAP KEYS TERMINATED BY '\\003'
-            STORED AS TextFile LOCATION "/tmp/foo"
-      """, resp.context['query'].query)
-      assert_true('on_success_url=%2Fmetastore%2Ftable%2Fdefault%2Fmy_table' in resp.context['fwd_params'], resp.context['fwd_params'])
-    else:
-      # Create was fast
-      assert_true('describe_table.mako' in resp.template, resp.template)
-      assert_true('Table my_table' in resp.content, resp.content)
+    assert_equal_mod_whitespace("""
+        CREATE EXTERNAL TABLE `default.my_table`
+        (
+         `my_col` string
+        )
+        COMMENT "Yo>>>>dude"
+        ROW FORMAT DELIMITED
+          FIELDS TERMINATED BY '\\001'
+          COLLECTION ITEMS TERMINATED BY '\\002'
+          MAP KEYS TERMINATED BY '\\003'
+          STORED AS TextFile LOCATION "/tmp/foo"
+    """, resp.context['query'].query)
 
+    assert_true('on_success_url=%2Fbeeswax%2Ftable%2Fdefault%2Fmy_table' in resp.context['fwd_params'], resp.context['fwd_params'])
 
   def test_create_table_timestamp(self):
     # Check form
@@ -897,14 +986,14 @@ for x in sys.stdin:
     self._make_custom_data_file(filename, [0, 0, 0])
     self._make_table('timestamp_invalid_data', 'CREATE TABLE timestamp_invalid_data (timestamp1 TIMESTAMP)', filename)
 
-    response = self.client.get("/metastore/table/default/timestamp_invalid_data")
-    assert_true('NULL' in response.content, response.content)
+    response = self.client.get("/beeswax/table/default/timestamp_invalid_data")
+    assert_true('Error!' in response.content, response.content)
 
     # Good format
     self._make_custom_data_file(filename, ['2012-01-01 10:11:30', '2012-01-01 10:11:31'])
     self._make_table('timestamp_valid_data', 'CREATE TABLE timestamp_valid_data (timestamp1 TIMESTAMP)', filename)
 
-    response = self.client.get("/metastore/table/default/timestamp_valid_data")
+    response = self.client.get("/beeswax/table/default/timestamp_valid_data")
     assert_true('2012-01-01 10:11:30' in response.content, response.content)
 
   def test_partitioned_create_table(self):
@@ -1085,30 +1174,19 @@ for x in sys.stdin:
     resp = wait_for_query_to_finish(self.client, resp, max=180.0)
 
     # Check data is in the table (by describing it)
-    resp = self.client.get('/metastore/table/default/test_create_import')
+    resp = self.client.get('/beeswax/table/default/test_create_import')
     cols = resp.context['table'].cols
     assert_equal(len(cols), 3)
     assert_equal([ col.name for col in cols ], [ 'col_a', 'col_b', 'col_c' ])
     assert_true("nada</td>" in resp.content)
     assert_true("sp ace</td>" in resp.content)
 
-
-  def test_create_database(self):
-    resp = self.client.post("/beeswax/create/database", {
-      'name': 'my_db',
-      'comment': 'foo',
-      'create': 'Create database',
-      'use_default_location': True,
-    }, follow=True)
-
-    if "watch_wait.mako" in resp.template:
-      assert_equal_mod_whitespace("CREATE DATABASE my_db COMMENT \"foo\"", resp.context['query'].query, resp.content)
-    else:
-      # Create was fast
-      assert_true('databases.mako' in resp.template, resp.template)
-
-    resp = wait_for_query_to_finish(self.client, resp, max=180.0)
-    assert_true('my_db' in resp.context['databases'], resp)
+  def test_describe_view(self):
+    resp = self.client.get('/beeswax/table/default/myview')
+    assert_equal(None, resp.context['sample'])
+    assert_true(resp.context['table'].is_view)
+    assert_true("View Metadata" in resp.content)
+    assert_true("Drop View" in resp.content)
 
 
   def test_select_query_server(self):
@@ -1118,14 +1196,7 @@ for x in sys.stdin:
     history = beeswax.models.QueryHistory.objects.latest('id')
     assert_equal('beeswax', history.server_name)
     assert_equal('localhost', history.server_host)
-    assert_equal(HIVE_SERVER_TEST_PORT, history.server_port)
-
-    query_server = history.get_query_server_config()
-    assert_equal('beeswax', query_server['server_name'])
-    assert_equal('localhost', query_server['server_host'])
-    assert_equal(HIVE_SERVER_TEST_PORT, query_server['server_port'])
-    assert_equal('beeswax', query_server['server_type'])
-    assert_true(query_server['principal'].startswith('hue/'), query_server['principal'])
+    assert_equal(BEESWAXD_TEST_PORT, history.server_port)
 
 
   def test_select_multi_db(self):
@@ -1155,24 +1226,6 @@ for x in sys.stdin:
     assert_false('"><script>alert(1);</script>' in resp.content, resp.content)
     assert_true('&quot;&gt;&lt;script&gt;alert(1);&lt;/script&gt;' in resp.content, resp.content)
 
-  def test_list_design_pagination(self):
-    client = make_logged_in_client()
-
-    _make_query(client, 'SELECT', name='my query history', submission_type='Save')
-    design = SavedQuery.objects.get(name='my query history')
-
-    for i in range(25):
-      client.get('/beeswax/clone_design/%s' % (design.id,))
-
-    resp = client.get('/beeswax/list_designs')
-    ids_page_1 = set([query.id for query in resp.context['page'].object_list])
-    resp = client.get('/beeswax/list_designs?q-page=2')
-    ids_page_2 = set([query.id for query in resp.context['page'].object_list])
-    for id in ids_page_2:
-      assert_true(id not in ids_page_1)
-
-    SavedQuery.objects.filter(name='my query history').delete()
-
 
 def test_import_gzip_reader():
   """Test the gzip reader in create table"""
@@ -1197,6 +1250,12 @@ def test_import_gzip_reader():
     beeswax.create_table.IMPORT_PEEK_SIZE = old_peek_size
 
 
+def test_parse_results():
+  data = ["foo\tbar", "baz\tboom"]
+  results = type('Result', (object,), {'has_more': False, 'start_row': False, 'columns': False, 'data': data})
+  assert_equal([["foo", "bar"], ["baz", "boom"]], [ x for x in list(BeeswaxDataTable(results).rows()) ])
+
+
 def test_index_page():
   """Minimal test that index page renders."""
   c = make_logged_in_client()
@@ -1208,41 +1267,18 @@ def test_history_page():
   Exercise the query history view.
   """
   client = make_logged_in_client()
-  test_user = User.objects.get(username='test')
 
-  query, created = SavedQuery.objects.get_or_create(
-    type=HQL,
-    owner=test_user,
-    data='HQL query...',
-    name='Test query',
-    desc='Description',
-  )
-
-  QueryHistory.objects.get_or_create(
-      owner=test_user,
-      query='SELECT',
-      design=query,
-      last_state=0,
-      has_results=True,
-      query_type=HQL
-  )
-
-  def do_view(param, n=1):
+  def do_view(param):
     resp = client.get('/beeswax/query_history?' + param)
-    if n == 0:
-      assert_equal(len(resp.context['page'].object_list), 0)
-    else:
-      assert_true(len(resp.context['page'].object_list) >= n)     # Make the query run
+    assert_true(len(resp.context['page'].object_list) >= 0)     # Make the query run
     return resp
 
-  do_view('')
-  do_view('q-user=test')
-  do_view('q-user=test_who', 0)
-  do_view('q-user=:all')
-  do_view('q-design_id=%s' % query.id)
-  do_view('q-design_id=9999999', 0)
-  do_view('q-auto_query=0')
-  do_view('q-auto_query=1')
+  do_view('user=test')
+  do_view('user=:all')
+  do_view('design_id=1')
+  do_view('auto_query=0')
+  do_view('auto_query=1')
+  do_view('type=hql')
   do_view('sort=date')
   do_view('sort=-date')
   do_view('sort=state')
@@ -1256,16 +1292,7 @@ def test_history_page():
 
   # Only show Beeswax queries
   response = do_view('')
-  assert_equal({u'q-type': [u'beeswax']}, response.context['filter_params'])
-
-  # Test pagination
-  response = do_view('q-page=100', 0)
-  assert_equal(0, len(response.context['page'].object_list))
-
-  client = make_logged_in_client(username='test_who')
-  grant_access('test_who', 'test_who', 'test_who')
-  do_view('q-user=test_who', 0)
-  do_view('q-user=:all')
+  assert_equal('beeswax', response.context['filter_params']['type'])
 
 def test_strip_trailing_semicolon():
   # Note that there are two queries (both an execute and an explain) scattered
@@ -1293,89 +1320,55 @@ Starting Job = job_201003191517_0003, Tracking URL = http://localhost:50030/jobd
 
 
 def test_hive_site():
+  """Test hive-site parsing"""
+  HIVE_SITE = """
+    <configuration>
+      <property>
+        <name>hive.metastore.local</name>
+        <value>false</value>
+      </property>
+
+      <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://darkside-1234:9999</value>
+      </property>
+
+      <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>/abc</value>
+      </property>
+
+      <property>
+        <name>hive.metastore.kerberos.principal</name>
+        <value>test/test.com@TEST.COM</value>
+      </property>
+    </configuration>
+  """
+
+  beeswax.hive_site.reset()
   tmpdir = tempfile.mkdtemp()
   saved = None
   try:
+    file(os.path.join(tmpdir, 'hive-site.xml'), 'w').write(HIVE_SITE)
+
     # We just replace the Beeswax conf variable
     class Getter(object):
       def get(self):
         return tmpdir
 
-    xml = hive_site_xml(is_local=True, use_sasl=False)
-    file(os.path.join(tmpdir, 'hive-site.xml'), 'w').write(xml)
+    saved = beeswax.conf.BEESWAX_HIVE_CONF_DIR
+    beeswax.conf.BEESWAX_HIVE_CONF_DIR = Getter()
 
-    beeswax.hive_site.reset()
-    saved = beeswax.conf.HIVE_CONF_DIR
-    beeswax.conf.HIVE_CONF_DIR = Getter()
-
+    is_local, host, port, kerberos_principal = beeswax.hive_site.get_metastore()
+    assert_false(is_local)
+    assert_equal(host, 'darkside-1234')
+    assert_equal(port, 9999)
     assert_equal(beeswax.hive_site.get_conf()['hive.metastore.warehouse.dir'], u'/abc')
-    assert_equal(beeswax.hive_site.get_hiveserver2_kerberos_principal('localhost'), 'hs2test/test.com@TEST.COM')
-    assert_equal(beeswax.hive_site.get_hiveserver2_authentication(), 'NONE')
+    assert_equal(kerberos_principal, 'test/test.com@TEST.COM')
   finally:
-    beeswax.hive_site.reset()
     if saved is not None:
-      beeswax.conf.HIVE_CONF_DIR = saved
+      beeswax.conf.BEESWAX_HIVE_CONF_DIR = saved
     shutil.rmtree(tmpdir)
-
-
-def test_hive_site_host_pattern_local_host():
-  hostname = socket.getfqdn()
-  tmpdir = tempfile.mkdtemp()
-  saved = None
-  try:
-    # We just replace the Beeswax conf variable
-    class Getter(object):
-      def get(self):
-        return tmpdir
-
-    thrift_uris = 'thrift://%s:9999' % hostname
-    xml = hive_site_xml(is_local=False, use_sasl=False, thrift_uris=thrift_uris, kerberos_principal='test/_HOST@TEST.COM', hs2_kerberos_principal='test/_HOST@TEST.COM')
-    file(os.path.join(tmpdir, 'hive-site.xml'), 'w').write(xml)
-
-    beeswax.hive_site.reset()
-    saved = beeswax.conf.HIVE_CONF_DIR
-    beeswax.conf.HIVE_CONF_DIR = Getter()
-
-    reset = []
-    reset.append(beeswax.conf.HIVE_SERVER_HOST.set_for_testing(hostname))
-
-    assert_equal(beeswax.hive_site.get_conf()['hive.metastore.warehouse.dir'], u'/abc')
-    assert_equal(beeswax.hive_site.get_hiveserver2_kerberos_principal(hostname), 'test/' + socket.getfqdn().lower() + '@TEST.COM')
-  finally:
-    for finish in reset:
-      finish()
-    beeswax.hive_site.reset()
-    if saved is not None:
-      beeswax.conf.HIVE_CONF_DIR = saved
-    shutil.rmtree(tmpdir)
-
-
-def test_hive_site_null_hs2krb():
-  """Test hive-site parsing with null hs2 kerberos principal"""
-  tmpdir = tempfile.mkdtemp()
-  saved = None
-  try:
-    # We just replace the Beeswax conf variable
-    class Getter(object):
-      def get(self):
-        return tmpdir
-
-    xml = hive_site_xml(is_local=True, use_sasl=False, hs2_kerberos_principal=None)
-    file(os.path.join(tmpdir, 'hive-site.xml'), 'w').write(xml)
-
-    beeswax.hive_site.reset()
-    saved = beeswax.conf.HIVE_CONF_DIR
-    beeswax.conf.HIVE_CONF_DIR = Getter()
-
-    assert_equal(beeswax.hive_site.get_conf()['hive.metastore.warehouse.dir'], u'/abc')
-    assert_equal(beeswax.hive_site.get_hiveserver2_kerberos_principal('localhost'), None)
-    assert_equal(beeswax.hive_site.get_hiveserver2_authentication(), 'NONE')
-  finally:
-    beeswax.hive_site.reset()
-    if saved is not None:
-      beeswax.conf.HIVE_CONF_DIR = saved
-    shutil.rmtree(tmpdir)
-
 
 def test_collapse_whitespace():
   assert_equal("", collapse_whitespace("\t\n\n  \n\t \n"))
@@ -1408,229 +1401,6 @@ def test_search_log_line():
   assert_false(search_log_line('ql.Driver', 'FAILED: Parse Error', logs))
 
 
-def test_split_statements():
-  assert_equal([''], hql_query(";;;").statements)
-  assert_equal(["select * where id == '10'"], hql_query("select * where id == '10'").statements)
-  assert_equal(["select * where id == '10'"], hql_query("select * where id == '10';").statements)
-  assert_equal(['select', "select * where id == '10;' limit 100"], hql_query("select; select * where id == '10;' limit 100;").statements)
-  assert_equal(['select', "select * where id == \"10;\" limit 100"], hql_query("select; select * where id == \"10;\" limit 100;").statements)
-  assert_equal(['select', "select * where id == '\\'10;' limit 100"], hql_query("select; select * where id == '\\'10;' limit 100;").statements)
-  assert_equal(['select', "select * where id == '\"10;\"\"\"' limit 100"], hql_query("select; select * where id == '\"10;\"\"\"' limit 100;").statements)
-
-
-
-class MockDbms:
-
-  def __init__(self, client, server_type):
-    pass
-
-  def get_databases(self):
-    return ['default', 'test']
-
-  def get_tables(self, database):
-    return ['table1', 'table2']
-
-
-class TestWithMockedServer(object):
-
-  def setUp(self):
-    # Beware: Monkey patch Beeswax/Hive server with Mock API
-    if not hasattr(dbms, 'OriginalBeeswaxApi'):
-      dbms.OriginalBeeswaxApi = dbms.Dbms
-    dbms.Dbms = MockDbms
-
-    self.client = make_logged_in_client(is_superuser=False)
-    grant_access("test", "test", "beeswax")
-
-  def tearDown(self):
-    dbms.Dbms = dbms.OriginalBeeswaxApi
-
-  def test_save_design_properties(self):
-    resp = self.client.get('/beeswax/save_design_properties')
-    content = json.loads(resp.content)
-    assert_equal(-1, content['status'])
-
-    response = _make_query(self.client, 'SELECT', submission_type='Save', name='My Name', desc='My Description')
-    design = response.context['design']
-
-    try:
-      resp = self.client.post('/beeswax/save_design_properties', {'name': 'name', 'value': 'New Name', 'pk': design.id})
-      design = SavedQuery.objects.get(id=design.id)
-      content = json.loads(resp.content)
-      assert_equal(0, content['status'])
-      assert_equal('New Name', design.name)
-      assert_equal('My Description', design.desc)
-    finally:
-      design.delete()
-
-    response = _make_query(self.client, 'SELECT', submission_type='Save', name='My Name', desc='My Description')
-    design = response.context['design']
-
-    try:
-      resp = self.client.post('/beeswax/save_design_properties', {'name': 'description', 'value': 'New Description', 'pk': design.id})
-      design = SavedQuery.objects.get(id=design.id)
-      content = json.loads(resp.content)
-      assert_equal(0, content['status'])
-      assert_equal('My Name', design.name)
-      assert_equal('New Description', design.desc)
-    finally:
-      design.delete()
-
-  def test_bulk_query_trash(self):
-    response = _make_query(self.client, 'SELECT', submission_type='Save', name='My Name 1', desc='My Description')
-    query = response.context['design']
-    response = _make_query(self.client, 'SELECT', submission_type='Save', name='My Name 2', desc='My Description')
-    query2 = response.context['design']
-    ids = [query.id, query2.id]
-
-    resp = self.client.get('/beeswax/list_designs')
-    ids_page_1 = set([query.id for query in resp.context['page'].object_list])
-    assert_equal(2, sum([query_id in ids_page_1 for query_id in ids]))
-
-    resp = self.client.post(reverse('beeswax:delete_design'), {u'skipTrash': [u'false'], u'designs_selection': ids})
-    queries = SavedQuery.objects.filter(id__in=ids)
-    assert_true(queries[0].is_trashed)
-    assert_true(queries[1].is_trashed)
-
-    resp = self.client.get('/beeswax/list_designs')
-    ids_page_1 = set([query.id for query in resp.context['page'].object_list])
-    assert_equal(0, sum([query_id in ids_page_1 for query_id in ids]))
-
-    resp = self.client.post(reverse('beeswax:restore_design'), {u'skipTrash': [u'false'], u'designs_selection': ids})
-    query = SavedQuery.objects.filter(id__in=ids)
-    assert_false(queries[0].is_trashed)
-    assert_false(queries[1].is_trashed)
-
-    resp = self.client.get('/beeswax/list_designs')
-    ids_page_1 = set([query.id for query in resp.context['page'].object_list])
-    assert_equal(2, sum([query_id in ids_page_1 for query_id in ids]))
-
-    resp = self.client.post(reverse('beeswax:delete_design'), {u'skipTrash': [u'false'], u'designs_selection': ids})
-    query = SavedQuery.objects.filter(id__in=ids)
-    assert_true(queries[0].is_trashed)
-    assert_true(queries[1].is_trashed)
-
-    resp = self.client.get('/beeswax/list_designs')
-    ids_page_1 = set([query.id for query in resp.context['page'].object_list])
-    assert_equal(0, sum([query_id in ids_page_1 for query_id in ids]))
-
-    resp = self.client.post(reverse('beeswax:delete_design'), {u'skipTrash': [u'true'], u'designs_selection': ids})
-    assert_false(SavedQuery.objects.filter(id__in=ids).exists())
-
-    resp = self.client.get('/beeswax/list_designs')
-    ids_page_1 = set([query.id for query in resp.context['page'].object_list])
-    assert_equal(0, sum([query_id in ids_page_1 for query_id in ids]))
-
-
 def search_log_line(component, expected_log, all_logs):
   """Checks if 'expected_log' can be found in one line of 'all_logs' outputed by the logging component 'component'."""
   return re.compile('.+?%(component)s(.+?)%(expected_log)s' % {'component': component, 'expected_log': expected_log}).search(all_logs)
-
-
-def test_hiveserver2_get_security():
-  # Bad but easy mocking
-  hive_site.get_conf()
-
-  prev = hive_site._HIVE_SITE_DICT.get(hive_site._CNF_HIVESERVER2_AUTHENTICATION)
-  try:
-    hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_KERBEROS_PRINCIPAL] = 'hive/hive@test.com'
-
-    principal = get_query_server_config('beeswax')['principal']
-    assert_true(principal.startswith('hive/'), principal)
-
-    principal = get_query_server_config('impala')['principal']
-    assert_true(principal.startswith('impala/'), principal)
-
-    # Beeswax
-    beeswax_query_server = {'server_name': 'beeswax', 'principal': 'hive'}
-    assert_equal((True, 'PLAIN', 'hive', False), HiveServerClient.get_security(beeswax_query_server))
-
-    hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_AUTHENTICATION] = 'NOSASL'
-    hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_IMPERSONATION] = 'true'
-    assert_equal((False, 'NOSASL', 'hive', True), HiveServerClient.get_security(beeswax_query_server))
-    hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_AUTHENTICATION] = 'KERBEROS'
-    assert_equal((True, 'GSSAPI', 'hive', True), HiveServerClient.get_security(beeswax_query_server))
-
-    # Impala
-    impala_query_server = {'server_name': 'impala', 'principal': 'impala', 'impersonation_enabled': False}
-    assert_equal((False, 'GSSAPI', 'impala', False), HiveServerClient.get_security(impala_query_server))
-
-    impala_query_server = {'server_name': 'impala', 'principal': 'impala', 'impersonation_enabled': True}
-    assert_equal((False, 'GSSAPI', 'impala', True), HiveServerClient.get_security(impala_query_server))
-
-    cluster_conf = hadoop.cluster.get_cluster_conf_for_job_submission()
-    finish = cluster_conf.SECURITY_ENABLED.set_for_testing(True)
-    try:
-      assert_equal((True, 'GSSAPI', 'impala', True), HiveServerClient.get_security(impala_query_server))
-    finally:
-      finish()
-  finally:
-    if prev is not None:
-      hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_AUTHENTICATION] = prev
-    else:
-      del hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_AUTHENTICATION]
-
-
-def hive_site_xml(is_local=False, use_sasl=False, thrift_uris='thrift://darkside-1234:9999',
-                  warehouse_dir='/abc', kerberos_principal='test/test.com@TEST.COM',
-                  hs2_kerberos_principal='hs2test/test.com@TEST.COM',
-                  hs2_authentication='NOSASL', hs2_impersonation='false'):
-  if not is_local:
-    uris = """
-       <property>
-        <name>hive.metastore.uris</name>
-        <value>%(thrift_uris)s</value>
-      </property>
-    """ % {'thrift_uris': thrift_uris}
-  else:
-    uris = ''
-
-  if hs2_kerberos_principal:
-    hs2_krb_princ = """
-      <property>
-        <name>hive.server2.authentication.kerberos.principal</name>
-        <value>%(hs2_kerberos_principal)s</value>
-      </property>
-    """ % {'hs2_kerberos_principal': hs2_kerberos_principal}
-  else:
-    hs2_krb_princ = ""
-
-  return """
-    <configuration>
-      %(uris)s
-      <property>
-        <name>hive.metastore.warehouse.dir</name>
-        <value>%(warehouse_dir)s</value>
-      </property>
-
-      <property>
-        <name>hive.metastore.kerberos.principal</name>
-        <value>%(kerberos_principal)s</value>
-      </property>
-
-      %(hs2_krb_princ)s
-
-      <property>
-        <name>hive.server2.enable.impersonation</name>
-        <value>%(hs2_impersonation)s</value>
-      </property>
-
-      <property>
-        <name>hive.metastore.sasl.enabled</name>
-        <value>%(hs2_authentication)s</value>
-      </property>
-
-      <property>
-        <name>hive.metastore.sasl.enabled</name>
-        <value>%(use_sasl)s</value>
-      </property>
-    </configuration>
-  """ % {
-    'uris': uris,
-    'warehouse_dir': warehouse_dir,
-    'kerberos_principal': kerberos_principal,
-    'hs2_krb_princ': hs2_krb_princ,
-    'hs2_authentication': hs2_authentication,
-    'use_sasl': str(use_sasl).lower(),
-    'hs2_impersonation': hs2_impersonation,
-  }

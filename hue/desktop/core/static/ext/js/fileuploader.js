@@ -613,11 +613,6 @@ qq.extend(qq.FileUploader.prototype, {
                 dropArea.style.display = 'none';
             }
         });
-        function _hide () {
-            if (dropArea.style.display == 'block') dropArea.style.display = 'none';
-        }
-        qq.attach(document, 'dragend', _hide);
-        qq.attach(document, 'mouseup', _hide);
     },
     _onSubmit: function(id, fileName){
         qq.FileUploaderBasic.prototype._onSubmit.apply(this, arguments);
@@ -1054,10 +1049,10 @@ qq.extend(qq.UploadHandlerForm.prototype, {
             self._dequeue(id);
 
             delete self._inputs[id];
-            // timeout added to fix busy state in FF3.6 and IE9
+            // timeout added to fix busy state in FF3.6
             setTimeout(function(){
                 qq.remove(iframe);
-            }, 100);
+            }, 1);
         });
 
         form.submit();

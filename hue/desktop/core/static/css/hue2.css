@@ -1,6 +1,9 @@
 a {
 color: #3EA211;
 }
+a:hover {
+color: #2a8e00;
+}
 
 .navbar .brand {
     color: #FFFFFF;

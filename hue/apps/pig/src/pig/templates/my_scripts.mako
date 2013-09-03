@@ -1,16 +1,11 @@
-<%!
-from django.utils.translation import ugettext as _
-%>
-
 <%def name="my_scripts(pig_scripts)">
-  <h4 class="pull-left"> ${_('My scripts')} </h4>
+  <h4 class="pull-left">My scripts </h4>
 <div class="nav-header script_list_header">
   <a  class="pull-right new_script" data-placement="right" rel="tooltip" title="New script"
-      href="${url('root_pig')}?new=true"> <i class="icon-plus-sign"></i> ${_('My scripts')}</a>
+      href="${url('root_pig')}?new=true"> <i class="icon-plus-sign"></i> New script</a>
 </div>
 
 <div class="script_list">
-% if pig_scripts:
   <ul class="nav nav-list">
     % for v in pig_scripts:
     <li id="copy" >
@@ -33,9 +28,6 @@ from django.utils.translation import ugettext as _
     </li>
     % endfor
   </ul>
-% else:
-  <small><i>${_('No scripts yet')}</i></small>
-% endif
 </div>
 
 <style>

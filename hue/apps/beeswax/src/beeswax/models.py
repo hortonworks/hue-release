@@ -19,6 +19,7 @@ import copy
 import base64
 import datetime
 import logging
+import traceback
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -28,9 +29,12 @@ from enum import Enum
 
 from desktop.lib.exceptions_renderable import PopupException
 
+from beeswax.conf import SERVER_INTERFACE
 from beeswax.design import HQLdesign, hql_query
-from TCLIService.ttypes import TSessionHandle, THandleIdentifier,\
+from beeswaxd.ttypes import QueryHandle as BeeswaxdQueryHandle, QueryState
+from cli_service.ttypes import TSessionHandle, THandleIdentifier,\
   TOperationState, TOperationHandle, TOperationType
+
 
 
 LOG = logging.getLogger(__name__)
@@ -40,7 +44,6 @@ QUERY_SUBMISSION_TIMEOUT = datetime.timedelta(0, 60 * 60)               # 1 hour
 # Constants for DB fields, hue ini
 BEESWAX = 'beeswax'
 HIVE_SERVER2 = 'hiveserver2'
-QUERY_TYPES = (HQL, IMPALA) = range(2)
 
 
 class QueryHistory(models.Model):
@@ -68,7 +71,6 @@ class QueryHistory(models.Model):
   server_port = models.SmallIntegerField(help_text=_('Port of the query server.'), default=0)
   server_name = models.CharField(max_length=128, help_text=_('Name of the query server.'), default='')
   server_type = models.CharField(max_length=128, help_text=_('Type of the query server.'), default=BEESWAX, choices=SERVER_TYPE)
-  query_type = models.SmallIntegerField(help_text=_('Type of the query.'), default=HQL, choices=((HQL, 'HQL'), (IMPALA, 'IMPALA')))
 
   design = models.ForeignKey('SavedQuery', to_field='id', null=True) # Some queries (like read/create table) don't have a design
   notify = models.BooleanField(default=False)                        # Notify on completion
@@ -78,33 +80,29 @@ class QueryHistory(models.Model):
 
   @staticmethod
   def build(*args, **kwargs):
-    return HiveServerQueryHistory(*args, **kwargs)
+    if SERVER_INTERFACE.get() == HIVE_SERVER2:
+      return HiveServerQueryHistory(*args, **kwargs)
+    else:
+      return BeeswaxQueryHistory(*args, **kwargs)
 
   def get_full_object(self):
-    return HiveServerQueryHistory.objects.get(id=self.id)
+    if self.server_type == HiveServerQueryHistory.node_type:
+      return HiveServerQueryHistory.objects.get(id=self.id)
+    # Default is Beeswax
+    else:
+      return BeeswaxQueryHistory.objects.get(id=self.id)
 
   @staticmethod
   def get(id):
-    return HiveServerQueryHistory.objects.get(id=id)
-
-  def get_type_name(self):
-    if self.query_type == 1:
-      return 'impala'
+    if QueryHistory.objects.filter(id=id, server_type=BEESWAX).exists():
+      return BeeswaxQueryHistory.objects.get(id=id)
     else:
-      return 'beeswax'
+      return HiveServerQueryHistory.objects.get(id=id)
+
 
   def get_query_server_config(self):
-    from beeswax.server.dbms import get_query_server_config
-
-    query_server = get_query_server_config(self.get_type_name())
-    query_server.update({
-        'server_name': self.server_name,
-        'server_host': self.server_host,
-        'server_port': self.server_port,
-        'server_type': self.server_type,
-    })
-
-    return query_server
+    return dict(zip(['server_name', 'server_host', 'server_port', 'server_type'],
+                    [self.server_name, self.server_host, self.server_port, self.server_type]))
 
 
   def get_current_statement(self):
@@ -115,13 +113,11 @@ class QueryHistory(models.Model):
       return self.query
 
   def is_finished(self):
-    is_statement_finished = not self.is_running()
-
     if self.design is not None:
       design = self.design.get_design()
-      return is_statement_finished and self.statement_number + 1 == design.statement_count # Last statement
+      return self.is_success() and self.statement_number + 1 == design.statement_count
     else:
-      return is_statement_finished
+      return self.is_success()
 
   def is_running(self):
     return self.last_state in (QueryHistory.STATE.running.index, QueryHistory.STATE.submitted.index)
@@ -184,7 +180,65 @@ class HiveServerQueryHistory(QueryHistory):
 
   def save_state(self, new_state):
     self.last_state = new_state.index
-    self.save()
+
+
+class BeeswaxQueryHistory(QueryHistory):
+  # Map from (thrift) server state
+  STATE_MAP = {
+    QueryState.CREATED          : QueryHistory.STATE.submitted,
+    QueryState.INITIALIZED      : QueryHistory.STATE.submitted,
+    QueryState.COMPILED         : QueryHistory.STATE.running,
+    QueryState.RUNNING          : QueryHistory.STATE.running,
+    QueryState.FINISHED         : QueryHistory.STATE.available,
+    QueryState.EXCEPTION        : QueryHistory.STATE.failed
+  }
+
+  node_type = BEESWAX
+
+  class Meta:
+    proxy = True
+
+  def get_handle(self):
+    """
+    get_server_id() ->  (server-side query id)
+
+    The boolean indicates success/failure. The server_id follows, and may be None.
+    Note that the server_id can legally be None when the query is just submitted.
+    This method handles the various cases of the server_id being absent.
+
+    Does not issue RPC.
+    """
+    if self.server_id:
+      return BeeswaxQueryHandle(secret=self.server_id, has_result_set=self.has_results, log_context=self.log_context)
+    else:
+      # Query being submitted have no server_id?
+      if self.last_state == QueryHistory.STATE.submitted.index:
+        # (1) Really? Check the submission date.
+        #     This is possibly due to the server dying when compiling the query
+        if self.submission_date.now() - self.submission_date > QUERY_SUBMISSION_TIMEOUT:
+          LOG.error("Query submission taking too long. Expiring id %s: [%s]..." % (self.id, self.query[:40]))
+          self.save_state(QueryHistory.STATE.expired)
+        else:
+          # (2) It's not an error. Return the current state
+          LOG.debug("Query %s (submitted) has no server id yet" % (self.id,))
+      else:
+        # (3) It has no server_id for no good reason. A case (1) will become this
+        #     after we expire it. Note that we'll never be able to recover this
+        #     query.
+        LOG.error("Query %s (%s) has no server id [%s]..." %
+                  (self.id, QueryHistory.STATE[self.last_state], self.query[:40]))
+        self.save_state(QueryHistory.STATE.expired)
+      return None
+
+  def save_state(self, new_state):
+    """Set the last_state from an enum, and save"""
+    if self.last_state != new_state.index:
+      if new_state.index < self.last_state:
+        backtrace = ''.join(traceback.format_stack(limit=5))
+        LOG.error("Invalid query state transition: %s -> %s\n%s" % (QueryHistory.STATE[self.last_state], new_state, backtrace))
+        return
+      self.last_state = new_state.index
+      self.save()
 
 
 class SavedQuery(models.Model):
@@ -194,10 +248,10 @@ class SavedQuery(models.Model):
   Note that this used to be called QueryDesign. Any references to 'design'
   probably mean a SavedQuery.
   """
-  DEFAULT_NEW_DESIGN_NAME = _('My saved query')
+  DEFAULT_NEW_DESIGN_NAME = _('Unsaved')
   AUTO_DESIGN_SUFFIX = _(' (new)')
-  TYPES = QUERY_TYPES
-  TYPES_MAPPING = {'beeswax': HQL, 'hql': HQL, 'impala': IMPALA}
+  TYPES = HQL = 0
+  TYPES_MAPPING = {'beeswax': HQL, 'hql': HQL}
 
   type = models.IntegerField(null=False)
   owner = models.ForeignKey(User, db_index=True)
@@ -209,8 +263,6 @@ class SavedQuery(models.Model):
   # An auto design is a place-holder for things users submit but not saved.
   # We still want to store it as a design to allow users to save them later.
   is_auto = models.BooleanField(default=False, db_index=True)
-  is_trashed = models.BooleanField(default=False, db_index=True, verbose_name=_t('Is trashed'),
-                                   help_text=_t('If this query is trashed.'))
 
   class Meta:
     ordering = ['-mtime']
@@ -250,16 +302,16 @@ class SavedQuery(models.Model):
     try:
       design = SavedQuery.objects.get(id=id)
     except SavedQuery.DoesNotExist, err:
-      msg = _('Cannot retrieve query id %(id)s.') % {'id': id}
+      msg = _('Cannot retrieve Beeswax design id %(id)s') % {'id': id}
       raise err
 
     if owner is not None and design.owner != owner:
-      msg = _('Query id %(id)s does not belong to user %(user)s.') % {'id': id, 'user': owner}
+      msg = _('Design id %(id)s does not belong to user %(user)s') % {'id': id, 'user': owner}
       LOG.error(msg)
       raise PopupException(msg)
 
     if type is not None and design.type != type:
-      msg = _('Type mismatch for design id %(id)s (owner %(owner)s) - Expected %(expected_type)s, got %(real_type)s.') % \
+      msg = _('Type mismatch for design id %(id)s (owner %(owner)s) - Expected %(expected_type)s got %(real_type)s') % \
             {'id': id, 'owner': owner, 'expected_type': design.type, 'real_type': type}
       LOG.error(msg)
       raise PopupException(msg)
@@ -277,24 +329,20 @@ class SavedQuery(models.Model):
 
 
 class SessionManager(models.Manager):
-  def get_session(self, user, application='beeswax'):
+  def get_session(self, user):
     try:
-      return self.filter(owner=user, application=application).latest("last_used")
+      return self.filter(owner=user).latest("last_used")
     except Session.DoesNotExist:
       pass
 
 
 class Session(models.Model):
-  """
-  A sessions is bound to a user and an application (e.g. Bob with the Impala application).
-  """
   owner = models.ForeignKey(User, db_index=True)
   status_code = models.PositiveSmallIntegerField()
   secret = models.TextField(max_length='100')
   guid = models.TextField(max_length='100')
   server_protocol_version = models.SmallIntegerField(default=0)
   last_used = models.DateTimeField(auto_now=True, db_index=True, verbose_name=_t('Last used'))
-  application = models.CharField(max_length=128, help_text=_t('Application we communicate with.'), default='beeswax')
 
   objects = SessionManager()
 
@@ -349,15 +397,15 @@ class HiveServerQueryHandle(QueryHandle):
                             hasResultSet=self.has_result_set,
                             modifiedRowCount=self.modified_row_count)
 
+  # TODO hide
   @classmethod
   def get_decoded(cls, secret, guid):
     return base64.decodestring(secret), base64.decodestring(guid)
 
+  # TODO hide
   def get_encoded(self):
     return base64.encodestring(self.secret), base64.encodestring(self.guid)
 
-
-# Deprecated. Could be removed.
 
 class BeeswaxQueryHandle(QueryHandle):
   """

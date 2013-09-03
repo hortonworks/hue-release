@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<Foundry>
+<VM>
+<VMId type="string">52 27 55 b0 5b ff 71 8a-9c ee a4 b6 62 c2 5c f3</VMId>
+<ClientMetaData>
+<clientMetaDataAttributes/>
+<HistoryEventList/></ClientMetaData>
+<vmxPathName type="string">Hortonworks Sandbox 2.0.vmx</vmxPathName></VM></Foundry>

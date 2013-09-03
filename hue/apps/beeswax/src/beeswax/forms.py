@@ -18,11 +18,14 @@
 from django import forms
 from django.utils.translation import ugettext as _, ugettext_lazy as _t
 
+import hive_metastore
+
 from desktop.lib.django_forms import simple_formset_factory, DependencyAwareForm
 from desktop.lib.django_forms import ChoiceOrOtherField, MultiForm, SubmitButton
 from filebrowser.forms import PathField
 
 from beeswax import common
+from beeswax.server.dbms import NoSuchObjectException
 from beeswax.models import SavedQuery
 
 
@@ -34,6 +37,20 @@ class QueryForm(MultiForm):
       file_resources=FileResourceFormSet,
       functions=FunctionFormSet,
       saveform=SaveForm)
+
+
+class DbForm(forms.Form):
+  """For 'show tables'"""
+  database = forms.ChoiceField(required=False,
+                           label='',
+                           choices=(('default', 'default'),),
+                           initial=0,
+                           widget=forms.widgets.Select(attrs={'class': 'span6'}))
+
+  def __init__(self, *args, **kwargs):
+    databases = kwargs.pop('databases')
+    super(DbForm, self).__init__(*args, **kwargs)
+    self.fields['database'].choices = ((db, db) for db in databases)
 
 
 class SaveForm(forms.Form):
@@ -57,16 +74,14 @@ class SaveForm(forms.Form):
     return self.cleaned_data.get('name', '').strip()
 
   def clean(self):
-    cleaned_data = super(SaveForm, self).clean()
-
     if self.errors:
       return
-    save = cleaned_data.get('save')
-    name = cleaned_data.get('name')
+    save = self.cleaned_data.get('save')
+    name = self.cleaned_data.get('name')
     if save and not name:
       # Bother with name iff we're saving
-      raise forms.ValidationError(_('Enter a name.'))
-    return cleaned_data
+      raise forms.ValidationError(_('Please enter a name'))
+    return self.cleaned_data
 
   def set_data(self, name, desc=''):
     """Set the name and desc programmatically"""
@@ -90,7 +105,7 @@ class SaveResultsForm(DependencyAwareForm):
                                   help_text=_t("Name of the new table"))
   target_dir = PathField(label=_t("Results Location"),
                          required=False,
-                         help_text=_t("Empty directory in HDFS to store results."))
+                         help_text=_t("Empty directory in HDFS to put the results"))
   dependencies = [
     ('save_target', SAVE_TYPE_TBL, 'target_table'),
     ('save_target', SAVE_TYPE_DIR, 'target_dir'),
@@ -98,7 +113,6 @@ class SaveResultsForm(DependencyAwareForm):
 
   def __init__(self, *args, **kwargs):
     self.db = kwargs.pop('db', None)
-    self.fs = kwargs.pop('fs', None)
     super(SaveResultsForm, self).__init__(*args, **kwargs)
 
   def clean(self):
@@ -112,14 +126,8 @@ class SaveResultsForm(DependencyAwareForm):
             self.db.get_table('default', tbl) # Assumes 'default' DB
           self._errors['target_table'] = self.error_class([_('Table already exists')])
           del cleaned_data['target_table']
-        except Exception:
+        except hive_metastore.ttypes.NoSuchObjectException:
           pass
-    elif cleaned_data['save_target'] == SaveResultsForm.SAVE_TYPE_DIR:
-      target_dir = cleaned_data['target_dir']
-      if not target_dir.startswith('/'):
-        self._errors['target_dir'] = self.error_class([_('Directory should start with /')])
-      elif self.fs.exists(target_dir):
-        self._errors['target_dir'] = self.error_class([_('Directory already exists.')]) # Overwrite destination directory content
 
     return cleaned_data
 
@@ -135,7 +143,7 @@ class HQLForm(forms.Form):
                            label='',
                            choices=(('default', 'default'),),
                            initial=0,
-                           widget=forms.widgets.Select(attrs={'class': 'input-medium'}))
+                           widget=forms.widgets.Select(attrs={'class': 'span6'}))
 
 
 class FunctionForm(forms.Form):
@@ -207,7 +215,7 @@ class CreateTableForm(DependencyAwareForm):
   serde_name = forms.CharField(required=False, label=_t("SerDe Name"))
   serde_properties = forms.CharField(
                         required=False,
-                        help_text=_t("Comma-separated list of key-value pairs. E.g. 'p1=v1, p2=v2'"))
+                        help_text=_t("Comma-separated list of key-value pairs, eg., 'p1=v1, p2=v2'"))
 
   dependencies += [
     ("row_format", "SerDe", "serde_name"),
@@ -227,7 +235,7 @@ class CreateTableForm(DependencyAwareForm):
   ]
 
   # External?
-  use_default_location = forms.BooleanField(required=False, initial=True, label=_t("Use default location."))
+  use_default_location = forms.BooleanField(required=False, initial=True, label=_t("Use default location"))
   external_location = forms.CharField(required=False, help_text=_t("Path to HDFS directory or file of table data."))
 
   dependencies += [
@@ -244,15 +252,15 @@ class CreateTableForm(DependencyAwareForm):
     return _clean_terminator(self.cleaned_data.get('map_key_terminator'))
 
   def clean_name(self):
-    return _clean_tablename(self.db, self.cleaned_data['name'], self.database)
+    return _clean_tablename(self.db, self.cleaned_data['name'])
 
 
-def _clean_tablename(db, name, database='default'):
+def _clean_tablename(db, name):
   try:
-    table = db.get_table(database, name)
+    table = db.get_table("default", name)
     if table.name:
-      raise forms.ValidationError(_('Table "%(name)s" already exists.') % {'name': name})
-  except Exception:
+      raise forms.ValidationError(_('Table "%(name)s" already exists') % {'name': name})
+  except (hive_metastore.ttypes.NoSuchObjectException, NoSuchObjectException):
     return name
 
 
@@ -335,9 +343,30 @@ class ColumnTypeForm(DependencyAwareForm):
                                      choices=common.to_choices(HIVE_PRIMITIVE_TYPES),
                                      help_text=_t("Specify if column_type is map."))
 
-ColumnTypeFormSet = simple_formset_factory(ColumnTypeForm, initial=[{}], add_label=_t("Add a column"))
+ColumnTypeFormSet = simple_formset_factory(ColumnTypeForm, initial=[{}], add_label=_t("add a column"))
 # Default to no partitions
-PartitionTypeFormSet = simple_formset_factory(PartitionTypeForm, add_label=_t("Add a partition"))
+PartitionTypeFormSet = simple_formset_factory(PartitionTypeForm, add_label=_t("add a partition"))
+
+
+class LoadDataForm(forms.Form):
+  """Form used for loading data into an existing table."""
+  path = PathField(label=_t("Path"))
+  overwrite = forms.BooleanField(required=False, initial=False, label=_t("Overwrite?"))
+
+  def __init__(self, table_obj, *args, **kwargs):
+    """
+    @param table_obj is a hive_metastore.thrift Table object,
+    used to add fields corresponding to partition keys.
+    """
+    super(LoadDataForm, self).__init__(*args, **kwargs)
+    self.partition_columns = dict()
+    for i, column in enumerate(table_obj.partition_keys):
+      # We give these numeric names because column names
+      # may be unpleasantly arbitrary.
+      name = "partition_%d" % i
+      char_field = forms.CharField(required=True, label=_t("%(column_name)s (partition key with type %(column_type)s)") % {'column_name': column.name, 'column_type': column.type})
+      self.fields[name] = char_field
+      self.partition_columns[name] = column.name
 
 
 def _clean_databasename(name):

@@ -25,17 +25,7 @@ ${ commonheader(_('Parameterize Query'), app_name, user, '100px') | n,unicode }
 
 ${layout.menubar()}
 
-<style class="text/css">
-  .form-horizontal .controls {
-    margin-left: 100px!important;
-  }
-  .control-label {
-    width: 80px!important;
-  }
-</style>
-
 <div class="container-fluid">
-   <div class="card">
     <%
         if explain:
             action = url(app_name + ':explain_parameterized_query', design.id)
@@ -44,28 +34,23 @@ ${layout.menubar()}
             action = url(app_name + ':execute_parameterized_query', design.id)
             btn = _("Execute query")
     %>
-     <h1 class="card-heading simple">${_('Please specify parameters for this query')}</h1>
-     <div class="card-body">
-       <p>
-          <form method="POST" action="${action}" class="form-horizontal">
-            <fieldset>
-              % for field in form:
-              <div class="control-group">
-                <label class="control-label">${comps.bootstrapLabel(field)}</label>
-                <div class="controls">
-                ${comps.field(field)}
+    <form method="POST" action="${action}" class="form-horizontal"> ${ csrf_token_field | n } 
+        <fieldset>
+            <legend>${_('Please specify parameters for this query:')}</legend>
+            % for field in form:
+                <div class="control-group">
+                    <label class="control-label">${comps.bootstrapLabel(field)}</label>
+                    <div class="controls">
+                    ${comps.field(field)}
+                    </div>
                 </div>
-              </div>
-              % endfor
-              <div class="form-actions" style="padding-left: 10px">
+            % endfor
+            <div class="form-actions">
                 <a class="btn" href="javascript:history.go(-1);">${_('Cancel')}</a>
                 <button type="submit" class="btn btn-primary">${btn}</button>
-              </div>
-            </fieldset>
-          </form>
-       </p>
-     </div>
-  </div>
+            </div>
+        </fieldset>
+    </form>
 </div>
 
 ${ commonfooter(messages) | n,unicode }
