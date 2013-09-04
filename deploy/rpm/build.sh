@@ -45,42 +45,11 @@ tar zcf $SRC/tutorials-env.tgz .env
 
 # Build Hue
 
-<<COMMENT
-rm -rf $SRC/hue
-
-cd $SRC
-
-if [ ! -d "apache-maven-3.0.5" ]; then
-    wget http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz
-    tar xvf apache-maven-3.0.5-bin.tar.gz
-    rm apache-maven-3.0.5-bin.tar.gz
-fi
-
-cd $SRC/sandbox-shared/hue
-PREFIX=$SRC make install
-#Building started ....
-#After it's finished there would be a directory /usr/lib/hue
-bash $SRC/hue/tools/relocatable.sh
-
-cd $SRC
-tar zcf $SRC/hue.tgz hue
-COMMENT
-
 echo "making rpms"
 
 #======= Making rpms =======
 
 cd $SRC/sandbox-shared/deploy/rpm
-
-<<COMMENT
-( #Hue RPM
-    cd hue
-    cp $SRC/hue.tgz $SRC/start_scripts.tgz ./
-
-    bash make_hue_rpm.sh
-    mv *.rpm $OUT/
-)
-COMMENT
 
 ( #Tutorials RPM
     cd tutorials
@@ -91,11 +60,3 @@ COMMENT
 )
 
 unset GIT_SSH
-
-#====== Create repository =====
-#cd $OUT
-#createrepo .
-
-#set +x
-
-#echo "Building repository finished: $OUT"
