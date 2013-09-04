@@ -6,7 +6,7 @@ from django.utils.translation import ugettext as _
   <h4 class="pull-left"> ${_('My scripts')} </h4>
 <div class="nav-header script_list_header">
   <a  class="pull-right new_script" data-placement="right" rel="tooltip" title="New script"
-      href="${url('root_pig')}?new=true"> <i class="icon-plus-sign"></i> ${_('My scripts')}</a>
+      href="${url('root_pig')}?new=true"> <i class="icon-plus-sign"></i> ${_('New script')}</a>
 </div>
 
 <div class="script_list">

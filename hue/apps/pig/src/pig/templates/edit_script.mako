@@ -157,6 +157,7 @@ UDF_PATH = conf.UDF_PATH.get()
               %>
 	            <input class="btn primary action_btn" type="button" id="start_job" name="submit_action" value="Execute" style="${ hideaction if runningJob else ''}"/>
               <input class="btn primary " type="button"id="kill_job"  value="Kill job" style="${ hideaction if not runningJob else ''}" />
+              <img id="spinner" src="/static/art/spinner.gif" class="hide" />
 	            <input class="btn primary action_btn" type="button"id="explain" name="submit_action" value="Explain" style="${ hideaction if runningJob else ''}"/>
 	            <input class="btn primary action_btn" name="submit_action"type="button" value="Syntax check" id="syntax_check" style="${ hideaction if runningJob else ''}"/>
 	          </div>
@@ -206,6 +207,9 @@ UDF_PATH = conf.UDF_PATH.get()
 <link href="/pig/static/css/bootstrap-tagmanager.css" rel="stylesheet">
 
 <style type="text/css" media="screen">
+.CodeMirror{
+  height: 300px;
+}
 .CodeMirror-focused span.cm-CodeMirror-matchhighlight {
   background:  #e7e4ff; !important; 
 }
@@ -241,6 +245,9 @@ label.error {
   cursor: pointer;
   width: 85px;
 }
+.script_label:hover {
+  box-shadow: inset 0px 0px 1px 1px #bbb;
+}
 .CodeMirror {
   border: 2px solid #eee;
 }
@@ -262,6 +269,9 @@ label.error {
 .pig_helper_wrap{
   display: inline-block;
   margin-bottom: 3px;
+}
+#spinner {
+  margin-left: 15px;
 }
 </style>
 
@@ -318,26 +328,31 @@ function get_job_result(job_id)
 
 }
 
+<%
+  arguments = ''
+  if result.get("arguments"):
+    for arg in result["arguments"].split("\t"):
+      arguments += '\'' + arg + '\','
+  elif 'id' not in result:
+    arguments = '-useHCatalog'
+  endif
+%>
 
 
 $(document).ready(function(){
 
-var prefilledArgs = [\
-% if result.get("arguments"):
-% for arg in result["arguments"].split("\t"):
-'${arg}',\
-% endfor
-% elif 'id' not in result:
-'-useHCatalog',\
-% endif
-];
-
   $("#help").popover({
-    'title': "${'Did you know?'}" +'<i class="icon-remove"></i>',
-    'content': $("#help-content").html(),
-    'html': true,
+    title: "${'Did you know?'}" +'<i class="icon-remove"></i>',
+    content: $("#help-content").html(),
+    html: true,
     delay: { hide: 500 },
     placement: 'bottom'
+  });
+
+  $('.script_label').tooltip({
+    placement: 'bottom',
+    title: 'Toggle editor',
+    delay: 200
   });
 
   $(document).on('click','.popover i',function () {
@@ -350,7 +365,7 @@ var prefilledArgs = [\
   % endif
 
   $(".pigArgument").tagsManager({
-    prefilled: prefilledArgs,
+    prefilled: [${arguments|n}],
     separateHiddenName: 'pigParams',
     hiddenTagListId:'fakeArgs',
     tagClass: 'pigArg',
@@ -394,6 +409,7 @@ var prefilledArgs = [\
       $(".bar").attr("class", "bar");
       if (!$("#pig_script_form").valid()) return false;
       $(".action_btn").hide();
+      $("#spinner").removeClass('hide');
       percent = 0;
       $(".bar").css("width", percent+"%");
       pig_editor.save();
@@ -404,6 +420,7 @@ var prefilledArgs = [\
           type: "POST",
           data: $("#pig_script_form").serialize(),
           success: function(data){
+              $("#spinner").addClass('hide');
               $("#kill_job").show();
               $("#job_info_outer").removeClass('hide').prepend(data.text);
               job_id = data.job_id;

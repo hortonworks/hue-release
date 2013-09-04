@@ -12,10 +12,11 @@ function ping_job(job_id){
       function(data) {
         if (data.exitValue !== null)
         {
-          if (data.status.failureInfo != 'NA')
+          if (data.status.failureInfo != 'NA'){
             $("#failure_info").removeClass('hide').html(data.status.failureInfo);
-	  	percent += 0.5;
-		$(".bar").css("width", percent+"%");
+          }
+	  	    percent += 0.5;
+		      $(".bar").css("width", percent+"%");
 	        globalTimer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
           return
         }
@@ -28,8 +29,9 @@ function ping_job(job_id){
         }
         else
         {
-	if (percent < 3)
-          percent += 1;
+	        if (percent < 3) {
+            percent += 1;
+          }
           $(".bar").css("width", percent+"%");
         }
         globalTimer = window.setTimeout("ping_job('"+job_id+"');", 200);
@@ -163,6 +165,26 @@ function getTables(database){
   },"json");
 }
 
+CodeMirror.toggleEditor = function (mode,editor) {
+  var mode = mode || '';
+  var piged = editor == 'pig';
+  var pyed = editor == 'python';
+  var pigwrap = $(pig_editor.getWrapperElement());
+  var pythonwrap = $(python_editor.getWrapperElement());
+  if (mode=='show') {
+    if (!pigwrap.is(":visible") && !pyed) pigwrap.toggle('fast',pig_editor.refresh);
+    if (!pythonwrap.is(":visible") && !piged) pythonwrap.toggle('fast');
+  } else if (mode=='hide') {
+    if (pigwrap.is(":visible") && !pyed) pigwrap.toggle('fast');
+    if (pythonwrap.is(":visible") && !piged) pythonwrap.toggle('fast');
+  } else {
+    if (!pyed) pigwrap.toggle('fast',function  () {
+      if (pigwrap.is(":visible")) pig_editor.refresh(); 
+    });
+    if (!piged) pythonwrap.toggle('fast');
+  }
+}
+
 
 CodeMirror.commands.autocomplete = function (cm) {
   $(document.body).on("contextmenu", function (e) {
@@ -259,8 +281,6 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
   }
 });
 
-pig_editor.on('change',function (){autosave();});
-
 var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code"), {
   mode: {name: "python",
     version: 2,
@@ -273,15 +293,33 @@ var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code
   mode: "text/x-python"
 });
 
-python_editor.on('change',function (){autosave();});
+var resizeTimeout = -1;
+var winWidth = 0;
+var winHeight = 0;
+
+function resizeCM () {
+  window.clearTimeout(resizeTimeout);
+  resizeTimeout = window.setTimeout(function () {
+    // prevents endless loop in IE8
+    if (winWidth != $(window).width() || winHeight != $(window).height()) {
+      pig_editor.setSize("", ($(window).height()>=550)?$(window).height()-350:200);
+      winWidth = $(window).width();
+      winHeight = $(window).height();
+    }
+  }, 200);
+}
+
+python_editor.on('change',autosave);
+pig_editor.on("change", autosave);
+$(window).resize(resizeCM).trigger('resize');
 
 $('.script_label').on('click',function(e){
   if (e.target.tagName.toLowerCase() == 'i'){
     return false;
   } else if ($(this).attr('for')=="id_pig_script") {
-    $(pig_editor.getWrapperElement()).toggle();
+    CodeMirror.toggleEditor('','pig')
   } else if ($(this).attr('for')=="python_code") {
-    $(python_editor.getWrapperElement()).toggle();
+    CodeMirror.toggleEditor('','python')
   }
 })
 
