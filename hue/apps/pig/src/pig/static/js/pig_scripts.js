@@ -280,6 +280,7 @@ var pig_editor = CodeMirror.fromTextArea(document.getElementById("id_pig_script"
     }
   }
 });
+pig_editor.setSize("", ($(window).height()>=550)?$(window).height()-350:200);
 
 var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code"), {
   mode: {name: "python",
@@ -311,7 +312,7 @@ function resizeCM () {
 
 python_editor.on('change',autosave);
 pig_editor.on("change", autosave);
-$(window).resize(resizeCM).trigger('resize');
+$(window).resize(resizeCM);
 
 $('.script_label').on('click',function(e){
   if (e.target.tagName.toLowerCase() == 'i'){

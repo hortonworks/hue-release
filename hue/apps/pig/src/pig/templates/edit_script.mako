@@ -121,7 +121,7 @@ UDF_PATH = conf.UDF_PATH.get()
             <div class="pig_helper_wrap">
               <%include file="pig_helper.html" />
             </div>
-            <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
+            <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script" class="hide">${result.get("pig_script", "")}</textarea>
             % if result.get("python_script"):
             <div id="python_textarea">
               <label class="script_label" for="python_code">${_('Python UDF:')}</label>
@@ -334,7 +334,7 @@ function get_job_result(job_id)
     for arg in result["arguments"].split("\t"):
       arguments += '\'' + arg + '\','
   elif 'id' not in result:
-    arguments = '-useHCatalog'
+    arguments = '\'-useHCatalog\''
   endif
 %>
 
