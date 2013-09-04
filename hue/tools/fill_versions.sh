@@ -12,7 +12,7 @@ function get_version() {
 
     if which yum &>/dev/null; then
         # RPM
-        VERSION=$(yum list $1 | grep "^$1\." | awk '{print $2}' | cut -d. -f${RANGE} | sed "s/.[0-9]*-/:/g" | head -n 1)
+        VERSION=$(yum list $1 | grep "^$1\." | awk '{print $2}' | cut -d. -f${RANGE} | sed "s/.[0-9]*-/-/g" | head -n 1)
     elif which zypper &>/dev/null; then
         # SLES
         VERSION=$(zypper search --match-exact -t package --details $1 | grep ' package ' | awk -F'|' '{print $4}')
