@@ -24,9 +24,7 @@ ${shared.menubar(section='My Scripts')}
 
 <%!
 from django.utils.translation import ugettext as _
-from pig.models import UDF
 from pig import conf
-udfs = UDF.objects.all()
 UDF_PATH = conf.UDF_PATH.get()
 %>
 
@@ -75,7 +73,15 @@ UDF_PATH = conf.UDF_PATH.get()
                   </div>
                   <div id="collapseOne2" class="accordion-body collapse" style="text-transform:none;">
                     <div class="accordion-inner">
-                       ${my_scripts.udfs(result['udfs'])}
+                      <!-- ko foreach: {data: udflist, as: 'udf'} -->
+                        <a data-bind='click: $root.rmUdf' href="#">
+                            <img src="/pig/static/art/delete.gif" alt="Delete" height="12" width="12" title="Delete UDF">
+                        </a>
+                        <a class="udf_register" href="#" data-bind="click: $root.putToEditor, text: udf.file_name"></a>
+                        <br/>
+                      <!-- /ko -->
+                      <input type="hidden" class="get_udf_url" value="${url('udf_get')}">
+                      <input type="hidden" class="del_udf_url" value="${url('udf_delete')}">
                     </div>
                   </div>
                 </div>
@@ -200,6 +206,20 @@ UDF_PATH = conf.UDF_PATH.get()
   </div>
 </div>
 
+<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">${_('Confirm Delete')}</h3>
+  </div>
+  <div class="modal-body">
+    <p>${_('Are you sure, you want to delete this udf?')}</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">${_('Cancel')}</button>
+    <button class="btn btn-danger" data-bind="click: rm_confirm">${_('Delete')}</button>
+  </div>
+</div>
+
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
 <link href="/pig/static/css/show-hint.css" rel="stylesheet">
@@ -290,6 +310,7 @@ label.error {
 <script src="/pig/static/js/pig_scripts.js"></script>
 <script src="/pig/static/js/bootstrap-fileupload.min.js"></script>
 <script src="/pig/static/js/bootstrap-tagmanager.js"></script>
+<script src="/static/ext/js/knockout-min.js" type="text/javascript"></script>
 <script type="text/javascript">
 var percent = 0;
 var globalTimer = null;

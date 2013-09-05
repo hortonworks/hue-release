@@ -18,6 +18,7 @@ import re
 import logging
 import simplejson as json
 from datetime import datetime
+from os.path import basename
 
 from django.core.urlresolvers import reverse
 from django.shortcuts import redirect, get_object_or_404
@@ -125,12 +126,17 @@ def script_clone(request, obj_id):
     return redirect(reverse("root_pig"))
 
 
+def udf_get(request):
+    udfs = UDF.objects.all()
+    return HttpResponse(json.dumps(dict((u.id, u.file_name) for u in udfs)))
+
 def udf_create(request):
     response = {'status': -1, 'data': ''}
     try:
         resp = _upload_file(request)
         response.update(resp)
-        UDF.objects.create(url=resp['path'], file_name=request.FILES['hdfs_file'].name, owner=request.user)
+        udf = UDF.objects.create(url=resp['path'], file_name=request.FILES['hdfs_file'].name, owner=request.user)
+        response['udf_id'] = udf.id
     except Exception, ex:
         response['error'] = str(ex)
         hdfs_file = request.FILES.get('hdfs_file')
@@ -139,14 +145,18 @@ def udf_create(request):
     return HttpResponse(json.dumps(response))
 
 
-def udf_delete(request, obj_id):
+def udf_delete(request, obj_id=None):
     udf = get_object_or_404(UDF, pk=obj_id)
+    status = -1
+    message = ''
     try:
         request.fs.remove(udf.url)
         udf.delete()
+        status = 0
+        message = udf.file_name + " was successfully removed"
     except:
-        raise PopupException("Can't delete %s from HDFS, check if it exist." % udf.url)
-    return redirect(request.META.get("HTTP_REFERER", reverse("root_pig")))
+        message = "Can't delete %s from HDFS, check if it exist." % udf.url
+    return HttpResponse(json.dumps({'status': status, 'message': message}))
 
 
 def start_job(request):

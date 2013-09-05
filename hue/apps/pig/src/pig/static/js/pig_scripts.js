@@ -386,7 +386,50 @@ $(document).ready(function(){
     {$('.intoemail').attr('value', 'no checked')};
   });
 
-  var uploader = new qq.FileUploader({
+  var Udf = function (data) {
+    this.id = ko.observable(data.id);
+    this.file_name = ko.observable(data.file_name);
+  }
+
+  var viewModel = function () {
+    var self = this;
+    self.udflist = ko.observableArray([]);
+    self.get_url = $('.get_udf_url').val();
+    self.del_url = $('.del_udf_url').val().substr(0,$('.del_udf_url').val().length-1);
+    self.selectedUdf = ko.observable();
+
+    self.loadUdfs = function(){
+      self.udflist([])
+      $.getJSON(self.get_url, function (data) {
+        $.each(data,function (id,name) {
+          self.udflist.push(new Udf({id:id,file_name:name}));
+        })
+      });
+    }
+
+    self.rmUdf = function (udf) {
+      self.selectedUdf = udf;
+      $('#myModal').modal('show');
+    }
+
+    self.rm_confirm = function  () {
+      var udf = self.selectedUdf;
+      $.post(self.del_url+udf.id()+'/',function  (response) {
+        $('#myModal').modal('hide');
+        if (response.status==0) {
+          self.udflist.remove(udf);
+          $.jHueNotify.info(response.message);
+        } else {
+          $.jHueNotify.error(response.message);
+        }
+      },'json');
+    }
+
+    self.putToEditor = function (udf) {
+      pig_editor.setValue('REGISTER ' + udf.file_name() + '\n'+ pig_editor.getValue());
+    }
+
+    self.uploader = new qq.FileUploader({
           //debug: true,
           element: document.getElementById('udf_file_upload'),
           allowedExtensions: ["jar"],
@@ -405,20 +448,20 @@ $(document).ready(function(){
             if (response.status != 0) {
               if (!response.error) $.jHueNotify.error("Error: occured. Please check udf_path setting in hue.ini" );
             } else {
+                self.udflist.push(new Udf({id:response.udf_id,file_name:fileName}));
                 $.jHueNotify.info("UDF was successfully uploaded");
-                setTimeout("window.location.reload(true)", 1000);
             }
           },
           showMessage: function(msg){
             $.jHueNotify.error("Error: " + msg);
           }
-  });
+    });
 
+    self.loadUdfs();
 
-  $(".udf_register").click(function() {
-      pig_editor.setValue('REGISTER ' + $(this).attr('value') + '\n'+ pig_editor.getValue());
-  
-  });
+  }
+
+  ko.applyBindings(new viewModel());
   
   $("#save_button").live("click", function(){
    if(percent > 0 && percent < 100) return confirm("Job is running. Are you sure, you want to switch to edit mode?");
