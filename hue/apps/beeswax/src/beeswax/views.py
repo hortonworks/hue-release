@@ -125,7 +125,7 @@ def save_design(request, form, type, design, explicit_save):
   """
   assert form.saveform.is_valid()
 
-  if type == models.SavedQuery.HQL:
+  if type == models.HQL:
     design_cls = beeswax.design.HQLdesign
   else:
     raise ValueError(_('Invalid design type %(type)s') % {'type': type})
