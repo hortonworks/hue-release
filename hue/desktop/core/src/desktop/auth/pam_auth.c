@@ -19,7 +19,14 @@ int main(int argc, char *argv[]) {
     int retcode = 0;
     pam_handle_t *pamh = NULL;
 
+    if (argc <= 2) {
+        printf("usage: pam_auth <username> <service>\n");
+        exit(1);
+    }
+
     const char *user = argv[1];
+    const char *service = argv[2];
+    printf("pam_auth: user %s, service %s.\nType password: ", user, service);
     reply = malloc(sizeof(struct pam_response));
 
     char *password;
@@ -31,7 +38,7 @@ int main(int argc, char *argv[]) {
     reply->resp = password;
     reply->resp_retcode = 0;
 
-    retcode = pam_start("hue", user, &conv, &pamh);
+    retcode = pam_start(service, user, &conv, &pamh);
     if (retcode == PAM_SUCCESS)
         retcode = pam_authenticate(pamh, 0);
 
@@ -39,7 +46,7 @@ int main(int argc, char *argv[]) {
         retcode = pam_acct_mgmt(pamh, 0);
 
     if (pam_end(pamh,retcode) != PAM_SUCCESS)
-        exit(1); //pam_end failed
+        exit(2); //pam_end failed
 
     return retcode;
 }

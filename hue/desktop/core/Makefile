@@ -36,3 +36,8 @@ default::
 env-install: compile ext-env-install
 	@echo '--- Installing $(APP_NAME) into virtual-env'
 	@$(ENV_PYTHON) setup.py develop -N -q
+
+pam_auth:
+	make -C src/desktop/auth
+
+compile: pam_auth

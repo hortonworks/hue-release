@@ -31,18 +31,22 @@ In Desktop, only one authentication backend may be specified.
 """
 from django.contrib.auth.models import User
 import django.contrib.auth.backends
-import logging
 import desktop.conf
 from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from useradmin.models import get_profile, get_default_user_group, UserProfile
+from django_auth_ldap.backend import LDAPBackend, ldap_settings
+
+import os
+import subprocess
+import logging
 
 import pam
-from django_auth_ldap.backend import LDAPBackend, ldap_settings
 import ldap
 
 
 LOG = logging.getLogger(__name__)
+_PAM_AUTH_PROG = os.path.join(os.path.dirname(__file__), 'build', 'pam_auth')
 
 def load_augmentation_class():
   """
@@ -197,8 +201,11 @@ class PamBackend(DesktopBackendBase):
   Authentication backend that uses PAM to authenticate logins. The first user to
   login will become the superuser.
   """
+  def _do_auth(self, username, password):
+    return pam.authenticate(username, password, desktop.conf.AUTH.PAM_SERVICE.get())
+
   def check_auth(self, username, password):
-    if pam.authenticate(username, password, desktop.conf.AUTH.PAM_SERVICE.get()):
+    if self._do_auth(username, password):
       is_super = False
       if User.objects.count() == 0:
         is_super = True
@@ -227,6 +234,20 @@ class PamBackend(DesktopBackendBase):
   @classmethod
   def manages_passwords_externally(cls):
     return True
+
+
+class PamUnprivilegedBackend(PamBackend):
+  """
+  Authentication backend that uses PAM to authenticate logins. The first user to
+  login will become the superuser.
+  Difference from PamBackend: can be used when Hue started from regular user
+  """
+  def _do_auth(self, username, password):
+    print "PamUnprivilegedBackend " + username
+    child = subprocess.Popen([_PAM_AUTH_PROG, username, desktop.conf.AUTH.PAM_SERVICE.get()],
+                            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    print child.communicate("%s\n" % password)
+    return child.returncode == 0
 
 
 
