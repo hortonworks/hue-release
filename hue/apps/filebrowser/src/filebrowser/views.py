@@ -63,6 +63,7 @@ from filebrowser.forms import RenameForm, UploadFileForm, UploadArchiveForm, MkD
 from hadoop.core_site import get_trash_interval
 from hadoop.fs.hadoopfs import Hdfs
 from hadoop.fs.exceptions import WebHdfsException
+from hadoop.fs.upload import HDFStemporaryUploadedFile
 
 from django.utils.translation import ugettext as _
 
@@ -1134,7 +1135,6 @@ def upload_file(request):
     e.g. {'status' 0/1, data:'message'...}
     """
     response = {'status': -1, 'data': ''}
-
     if request.method == 'POST':
         try:
             resp = _upload_file(request)
@@ -1142,7 +1142,7 @@ def upload_file(request):
         except Exception, ex:
             response['data'] = str(ex)
             hdfs_file = request.FILES.get('hdfs_file')
-            if hdfs_file:
+            if hdfs_file and isinstance(hdfs_file, HDFStemporaryUploadedFile):
                 hdfs_file.remove()
     else:
         response['data'] = _('A POST request is required.')
@@ -1151,7 +1151,6 @@ def upload_file(request):
         request.info(_('%(destination)s upload succeeded') % {'destination': response['path']})
     else:
         request.error(_('Upload failed: %(data)s') % {'data': response['data']})
-
     return HttpResponse(json.dumps(response), content_type="text/plain")
 
 def _upload_file(request):
@@ -1166,6 +1165,9 @@ def _upload_file(request):
     if form.is_valid():
         uploaded_file = request.FILES['hdfs_file']
         dest = form.cleaned_data['dest']
+        if not isinstance(uploaded_file, HDFStemporaryUploadedFile):
+            msg = _('File uploading to %(name)s failed. Please check access rights of destination directory.') % {'name': dest}
+            raise PopupException(msg)
 
         if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
             raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))

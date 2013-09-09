@@ -141,9 +141,8 @@ class HDFSfileUploadHandler(FileUploadHandler):
         self._starttime = time.time()
       except Exception, ex:
         LOG.error("Not using HDFS upload handler: %s" % (ex,))
-        raise ex
-
-      raise StopFutureHandlers()
+      else:
+        raise StopFutureHandlers()
 
   def receive_data_chunk(self, raw_data, start):
     if not self._activated:
