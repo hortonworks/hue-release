@@ -315,7 +315,7 @@ def notify_job_complited(request, job_id):
     job.save()
     if job.email_notification:
         subject = 'Query result'
-        body = "Your PIG script '%s' started at %s has been complited.\n\
+        body = "Your PIG script '%s' started at %s has been completed.\n\
         You can check result at the following link %s" % (
             job.script.title,
             job.start_time.strftime('%d.%m.%Y %H:%M'),
