@@ -1166,7 +1166,7 @@ def _upload_file(request):
         uploaded_file = request.FILES['hdfs_file']
         dest = form.cleaned_data['dest']
         if not isinstance(uploaded_file, HDFStemporaryUploadedFile):
-            msg = _('File uploading to %(name)s failed. Please check access rights of destination directory.') % {'name': dest}
+            msg = _('Could not upload to %(name)s . Please check access rights of destination directory.') % {'name': dest}
             raise PopupException(msg)
 
         if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
