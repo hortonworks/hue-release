@@ -1,1 +1,1 @@
-bigwheel-GA is branched from HDP2Beta (SHA1 494e6a9839b549cd9ae1b0a6635aa673906f7762) @ git@github.com/hortonworks.com/sandbox-shared.git
+bigwheel-GA-2.2.1 is branched from bigwheel-GA  (SHA1 5e3aea6828b957d1d0562de28e3dfa6298f40879) @ git@github.com/hortonworks.com/sandbox-shared.git
