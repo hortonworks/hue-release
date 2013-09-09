@@ -8,16 +8,16 @@ CodeMirror.db_list = {};
 
 function ping_job(job_id){
   var url = '/pig/ping_job/';
-  $.get(url+job_id + "/",
+  var get_ping = $.get(url+job_id + "/",
       function(data) {
         if (data.exitValue !== null)
         {
           if (data.status.failureInfo != 'NA'){
             $("#failure_info").removeClass('hide').html(data.status.failureInfo);
           }
-	  	    percent += 0.5;
-		      $(".bar").css("width", percent+"%");
-	        globalTimer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
+          percent += 0.5;
+          $(".bar").css("width", percent+"%");
+          globalTimer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
           return
         }
         if (/[1-9]\d?0?\%/.test(data.percentComplete))
@@ -29,7 +29,7 @@ function ping_job(job_id){
         }
         else
         {
-	        if (percent < 3) {
+          if (percent < 3) {
             percent += 1;
           }
           $(".bar").css("width", percent+"%");
@@ -39,6 +39,7 @@ function ping_job(job_id){
 
     $("#kill_job").unbind('click');
     $("#kill_job").click(function(){
+        get_ping.abort();
         clearTimeout(globalTimer);
         $(this).hide();
         $("#id_text").removeAttr("disabled");
