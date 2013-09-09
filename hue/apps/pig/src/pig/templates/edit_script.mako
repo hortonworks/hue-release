@@ -17,10 +17,10 @@
 
 
 <%!from desktop.views import commonheader, commonfooter %>
-<%namespace name="shared" file="shared_components.mako" />
+<%namespace name="shared"  file="shared_components.mako" />
 <%namespace name="my_scripts" file="my_scripts.mako" />
 ${commonheader("Pig", "pig", user, "100px")| n,unicode}
-${shared.menubar(section='My Scripts')}
+<%shared:menubar section='My Scripts' />
 
 <%!
 from django.utils.translation import ugettext as _
@@ -30,23 +30,37 @@ UDF_PATH = conf.UDF_PATH.get()
 
 ## Use double hashes for a mako template comment
 ## Main body
-<div id="show-modal-for-var" class="modal hide fade">
-    <div class="modal-header">
-        <a href="#" class="close" data-dismiss="modal">&times;</a>
-        <h3>Please specify parameters for this variable(s):</h3>
-    </div>
-    <div class="modal-body">
-        <div class="clearfix">
-           <div class="modal-for-var-input-warp">
 
-           </div>
-        </div>
-    </div>
-    <div class="modal-footer">
-        <button id="save-values-for-var" class="btn primary">${_('Save')}</button>
-    </div>
-</div>
 
+${my_scripts.modal({
+  'windowId':'show-modal-for-var',
+  'cBtnId':'save-values-for-var',
+  'cBtnText':'Save',
+  'title':'Please specify parameters for this variable(s):',
+  'htmlbody':'<div class="clearfix">\
+                <div class="modal-for-var-input-warp">\
+                </div>\
+              </div>',
+  'cancelBtn': False,
+})}
+
+${my_scripts.modal({
+  'windowId':'udfRmConfirm',
+  'title': 'Confirm Delete',
+  'textbody': 'Are you sure, you want to delete this udf?',
+  'cBtnId': 'rmUdfBtn',
+  'cBtnText':'Delete',
+  'cBtnAttr': 'data-bind="click: rm_confirm"',
+  'cBtnClass':'btn btn-danger',
+})}
+
+${my_scripts.modal({
+  'windowId':'onRunJobSave',
+  'cBtnId': 'runningJobSaveBtn',
+  'cBtnText':'Save and switch',
+  'title': 'Job is running.',
+  'textbody': 'Are you sure, you want to switch to edit mode?',
+})}
 
 <div class="container-fluid">
   <div class="row-fluid">
@@ -203,20 +217,6 @@ UDF_PATH = conf.UDF_PATH.get()
         </div>
       </div>
     </div>
-  </div>
-</div>
-
-<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="myModalLabel">${_('Confirm Delete')}</h3>
-  </div>
-  <div class="modal-body">
-    <p>${_('Are you sure, you want to delete this udf?')}</p>
-  </div>
-  <div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">${_('Cancel')}</button>
-    <button class="btn btn-danger" data-bind="click: rm_confirm">${_('Delete')}</button>
   </div>
 </div>
 

@@ -409,20 +409,22 @@ $(document).ready(function(){
 
     self.rmUdf = function (udf) {
       self.selectedUdf = udf;
-      $('#myModal').modal('show');
+      $('#udfRmConfirm').modal('show');
     }
 
     self.rm_confirm = function  () {
       var udf = self.selectedUdf;
       $.post(self.del_url+udf.id()+'/',function  (response) {
-        $('#myModal').modal('hide');
+        $('#udfRmConfirm').modal('hide');
         if (response.status==0) {
           self.udflist.remove(udf);
           $.jHueNotify.info(response.message);
         } else {
           $.jHueNotify.error(response.message);
         }
-      },'json');
+      },'json').error(function(){
+        $.jHueNotify.error("UDF not found");
+      });
     }
 
     self.putToEditor = function (udf) {
@@ -464,14 +466,13 @@ $(document).ready(function(){
   ko.applyBindings(new viewModel());
   
   $("#save_button").live("click", function(){
-   if(percent > 0 && percent < 100) return confirm("Job is running. Are you sure, you want to switch to edit mode?");
+    if(percent > 0 && percent < 100) {
+      $("#onRunJobSave").modal("show");
+      return false;
+    }
   });
 
-
-  $("#save-param-modal-for-dollar").click(function(){
-    dollarSaveParamTrig=1;
-    $("#show-modal-for-dollar").modal("hide");
-  })
+  $('#runningJobSaveBtn').click(function(){$("#pig_script_form").submit()});
 
   $("#save-values-for-var").click(function(){
     varSaveParamTrig=1;
@@ -488,18 +489,18 @@ $(document).ready(function(){
       python_editor.refresh();
     }
     var cursor = pig_editor.getCursor();
-    pig_editor.replaceRange($(this).text(), cursor, cursor)
+    pig_editor.replaceRange($(this).text(), cursor, cursor);
     pig_editor.focus();
     //pig_editor.setCursor({line:pig_editor.lineCount(), ch:"0"});
 
     var pos = findPosition($(this).text());
 
-    if(pos.length>3)
+    //if(pos.length>3)
       //pig_editor.setOption("keyMap", "emacs");
 
-    if(pos.length>1)
-      pig_editor.setSelection({line:cursor['line'], ch:cursor['ch'] + pos[0]},
-        {line:cursor['line'], ch:cursor['ch'] + pos[1]+1});
+    if (pos.length>1) {
+      pig_editor.setSelection({line:cursor.line, ch:cursor.ch + pos[0]},
+                              {line:cursor.line, ch:cursor.ch + pos[1]+1});}
 
     return false;
   });
