@@ -36,6 +36,7 @@ from desktop.lib.paginator import Paginator
 from desktop.lib.django_util import copy_query_dict, format_preserving_redirect, render
 from desktop.lib.django_util import login_notrequired, get_desktop_uri_prefix
 from desktop.lib.exceptions_renderable import PopupException
+from desktop.lib.exceptions import StructuredException
 
 from hadoop.fs.exceptions import WebHdfsException
 from jobsub.parameterization import find_variables, substitute_variables
@@ -817,6 +818,9 @@ def save_results(request, id):
       except QueryNotFoundException, ex:
         LOG.exception(ex)
         raise PopupException(_('Cannot find query.'))
+      except StructuredException, ex:
+        LOG.exception(ex)
+        raise PopupException(_('There is no data to be saved.'))
       if result_meta.table_dir:
         result_meta.table_dir = request.fs.urlsplit(result_meta.table_dir)[2]
 
