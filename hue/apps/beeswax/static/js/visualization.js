@@ -103,49 +103,47 @@ $(document).ready(function () {
 		i++;
 	});
 
-	$.ajax({
-        type: "GET",
-        url: csvfile+1005,
-        dataType: "text",
-        success: function(data) {
-			var csvdata = $.csv.toObjects(data);
-			if (csvdata.length>1000) {
-				$('.chart_type_selectors').addClass('hide');
-				$('.chart_toobig_message').removeClass('hide');
-				$('#preview').hide();
-				return false;
-			}
-			if (csvdata.length==0) {
-				blankcsv = true;
-				return false;
-			} else {
-				blankcsv = false;
-			}
-			
-			for(var j = 0; j < i; j++) {
-				for(var m = 0; m < 3; m++) {
-					if(isNaN(csvdata[m][yAxis[j]]) && csvdata[m][yAxis[j]].toLowerCase() != 'null')	{
-						$('input[value='+yAxis[j]+']').attr('disabled',true).attr('checked',false);
-					} else {
-						$('input[value='+yAxis[j]+']').removeAttr('disabled');
-					}
-				}
-			}
-			$('.y_axis input:enabled').attr('checked',true).each(function(t){
-		    	$('#graph_sort').append($("<option></option>").attr("value",$(this).val()).text($(this).val()));
-			});
-			$('.y_axis input[value='+$('select[name=xAxis]').find(":selected").text()+']').attr('checked',false);
-			updatePreview();
-		}
-    });
-
 	$('a[href="#visualizations"]').on('shown', function(e){
-		/*
-		  Bug, in mozilla. 
-		  Rickshaw can't draw invisible charts, 
-		  so let's redraw them when we go to visualizations tab
-		*/
-		if(jQuery.browser.mozilla){
+		if (blankcsv) { 
+			$.ajax({
+		        type: "GET",
+		        url: csvfile+1005,
+		        dataType: "text",
+		        success: function(data) {
+					var csvdata = $.csv.toObjects(data);
+					if (csvdata.length>1000) {
+						$('.chart_type_selectors').addClass('hide');
+						$('.chart_toobig_message').removeClass('hide');
+						$('#preview').hide();
+						return false;
+					}
+					if (csvdata.length==0) {
+						blankcsv = true;
+						return false;
+					} else {
+						blankcsv = false;
+					}
+					
+					for(var j = 0; j < i; j++) {
+						for(var m = 0; m < 3; m++) {
+							if(isNaN(csvdata[m][yAxis[j]]) && csvdata[m][yAxis[j]].toLowerCase() != 'null')	{
+								$('input[value='+yAxis[j]+']').attr('disabled',true).attr('checked',false);
+							} else {
+								$('input[value='+yAxis[j]+']').removeAttr('disabled');
+							}
+						}
+					}
+					$('.y_axis input:enabled').attr('checked',true).each(function(t){
+				    	$('#graph_sort').append($("<option></option>").attr("value",$(this).val()).text($(this).val()));
+					});
+					$('.y_axis input[value='+$('select[name=xAxis]').find(":selected").text()+']').attr('checked',false);
+					updatePreview();
+				}
+		    });
+		} else if(jQuery.browser.mozilla){
+			/* Bug, in mozilla.
+		  	Rickshaw can't draw invisible charts, 
+		  	so let's redraw them when we go to visualizations tab */
 			redrawPreview();
 		}
 	});
