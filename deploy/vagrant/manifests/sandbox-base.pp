@@ -206,6 +206,13 @@ class sandbox {
         command => "hostname sandbox.hortonworks.com",
     }
 
+    user { 'guest':
+        name => 'guest',
+        ensure => present,
+        groups => ["users"],
+        home => '/home/guest',
+        managehome => true,
+    }
 }
 
 

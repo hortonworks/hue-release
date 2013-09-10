@@ -25,6 +25,11 @@ su - $USER -c "/usr/lib/hue/build/env/bin/hue jobsub_setup"
 su - $USER -c "/usr/lib/hue/build/env/bin/hue beeswax_install_examples"
 rm /tmp/udfs.tar.gz
 rm  -rf /tmp/udfs
+
+echo "Adding guest user"
+su - hdfs -c "hadoop dfs -mkdir /user/guest"
+su - hdfs -c "hadoop dfs -chown guest:guest /user/guest"
+
 touch /root/.hdfs_prepared
 /etc/init.d/hue restart
 )
