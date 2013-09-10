@@ -74,6 +74,12 @@ ${layout.menubar(section='query')}
                     <li class="nav-header">${_('Downloads')}</li>
                     <li><a target="_blank" href="${download_urls["csv"]}">${_('Download as CSV')}</a></li>
                     <li><a target="_blank" href="${download_urls["xls"]}">${_('Download as XLS')}</a></li>
+                    <li>
+                      <label class="checkbox">
+                          <a>${_('Enable visualization')}</a>
+                          <input type="checkbox" class="vn-enable">
+                      </label>
+                    </li>
                     % endif
                     %if can_save:
                     <li><a data-toggle="modal" href="#saveAs">${_('Save')}</a></li>
@@ -127,7 +133,7 @@ ${layout.menubar(section='query')}
         % if not error:
         <li><a href="#columns" data-toggle="tab">${_('Columns')}</a></li>
         % if download_urls:
-        <!--Visualization --><li><a href="#visualizations" data-toggle="tab">Visualizations</a></li><!--/Visualization -->
+        <!--Visualization --><li><a href="#visualizations" data-toggle="tab" style="display: none;">Visualizations</a></li><!--/Visualization -->
         % endif
         % endif
       </ul>
@@ -435,6 +441,13 @@ ${layout.menubar(section='query')}
         $("#log pre").css("overflow", "auto").height($(window).height() - $("#log pre").position().top - 40);
       }
 
+      $('.vn-enable').change(function () {
+        if ($(this).attr('checked')) {
+          $('a[href="#visualizations"]').show();
+        } else {
+          $('a[href="#visualizations"]').hide();
+        }
+      });
 
     });
 </script>
