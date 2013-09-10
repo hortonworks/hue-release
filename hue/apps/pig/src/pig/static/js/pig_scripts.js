@@ -1,8 +1,3 @@
-var dollarSaveParamTrig = 0;
-var varSaveParamTrig = 0;
-var submitFormPopup=false;
-var table_fields={};
-var tmpDirList={path:"",list:[]};
 CodeMirror.db_list = {};
 
 
@@ -54,17 +49,7 @@ function ping_job(job_id){
 
 function call_popup_var_edit(){
 
-  var d = $.Deferred();
-
-  setInterval(function() {
-    if(submitFormPopup==true) {
-      //submitFormPopup=false;
-      return  d.resolve();
-    }
-    else{
-      return d.promise();
-    }
-  }, 100);
+  var deffer = $.Deferred();
 
   if(!pig_editor.getValue())
   {
@@ -77,7 +62,7 @@ function call_popup_var_edit(){
           "font-weight":"bold"
       });
       setTimeout(function(){pig_editor.focus();}, 50);
-      return d.promise();
+      return deffer.promise();
   }
 
   var html="";
@@ -90,10 +75,13 @@ function call_popup_var_edit(){
     })
     $(".modal-for-var-input-warp").html( html );
     $("#show-modal-for-var").modal("show");
-  }else{
-    submitFormPopup=true;
+    $('#save-values-for-var').unbind('click').bind('click', function () {
+      return modVarInput(deffer);
+    });
+  } else {
+    return deffer.resolve();
   }
-  return d.promise();
+  return deffer.promise();
 }
 
 function autosave(){
@@ -104,39 +92,31 @@ function autosave(){
   return true;
 }
 
-$("#show-modal-for-var").on('hide', function() {
-  if(varSaveParamTrig==1){
+function modVarInput(deffer) {
     var out_html="";
     $(".modal-for-var-input-warp > input").each(function(){
       if($(this).val().trim()!=""){
         out_html+='<input class="var-input-for-form-submit" type="hidden" name="'+$(this).attr("name")+'" value="'+$(this).val()+'" />';
       }else{
         out_html="";
-        return false;
+        return deffer.promise();
       }
     });
     if(out_html!=""){
       $(".var-input-for-form-submit").remove();
       $("#pig_script_form").append( out_html );
       $(".modal-for-var-input-warp").html( "" );
-      submitFormPopup=true;
+      $("#show-modal-for-var").modal("hide");
+      return deffer.resolve();
     } else {
-      varSaveParamTrig=0;
       $(".modal-for-var-input-warp > input").each(function(){
         if($(this).val().trim()=="")
           $(this).css("border","solid 1px red");
         $(".var-input-for-form-submit").remove();
       })
-      submitFormPopup=false;
-      return false;
+      return deffer.promise();
     }
-  } else {
-    $(".var-input-for-form-submit").remove();
-    $(".modal-for-var-input-warp").html( "" );
-    submitFormPopup=false;
-  }
-  varSaveParamTrig=0;
-});
+}
 
 function getDatabases(){
   $.get("/hcatalog/databases/json" , function(data){
@@ -474,11 +454,6 @@ $(document).ready(function(){
   });
 
   $('#runningJobSaveBtn').click(function(){$("#pig_script_form").submit()});
-
-  $("#save-values-for-var").click(function(){
-    varSaveParamTrig=1;
-    $("#show-modal-for-var").modal("hide");
-  })
 
   $("#id_title").live('keyup', autosave);
 
