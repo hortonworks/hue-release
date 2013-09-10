@@ -19,7 +19,6 @@
 
 import logging
 import time
-import itertools
 
 from django.http import HttpResponse
 
@@ -82,14 +81,12 @@ def data_generator(handle, format, db, cut=None):
       time.sleep(_DATA_WAIT_SLEEP)
       results = db.fetch(handle, start_over=is_first_row, rows=rows_to_fetch)
 
-    results_count = sum(1 for i in results.rows())
-    step = results_count // 1000 if (results_count // 1000) > 0 else 1
     # TODO Check for concurrent reading when HS2 supports start_row
     if is_first_row:
       is_first_row = False
       yield formatter.format_header(results.cols())
 
-    for row in itertools.islice(results.rows(), 0, results_count, step):
+    for row in results.rows():
       try:
         yield formatter.format_row(row)
       except TooBigToDownloadException, ex:
