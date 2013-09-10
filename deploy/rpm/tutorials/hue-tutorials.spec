@@ -2,6 +2,7 @@
 %define hue_dir            /usr/lib/hue
 %define user               hue
 %define group              hadoop
+%define  debug_package %{nil}
 %global __os_install_post %{nil}
 %define _unpackaged_files_terminate_build 1
 %define _binaries_in_noarch_packages_terminate_build   0

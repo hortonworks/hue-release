@@ -5,7 +5,7 @@ export SRC=$HOME/rpmbuild/src
 export OUT=$HOME/rpmbuild/out
 export PATH=$PATH:$SRC/apache-maven-3.0.5/bin/
 
-BRANCH=Caterpillar
+[ -z "$1" ] && BRANCH=Comanche || BRANCH="$1"
 
 # remove all src files (except of repository)
 find $SRC -maxdepth 1 | sed "1d" | grep -v -e "sandbox-shared" -e "tutorials-env" -e "apache-maven-3.0.5" | xargs rm -rf
