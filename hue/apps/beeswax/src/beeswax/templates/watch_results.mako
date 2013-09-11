@@ -74,6 +74,12 @@ ${layout.menubar(section='query')}
                     <li class="nav-header">${_('Downloads')}</li>
                     <li><a target="_blank" href="${download_urls["csv"]}">${_('Download as CSV')}</a></li>
                     <li><a target="_blank" href="${download_urls["xls"]}">${_('Download as XLS')}</a></li>
+                    <li>
+                      <label class="checkbox">
+                          <a>${_('Enable visualization')}</a>
+                          <input type="checkbox" class="vn-enable">
+                      </label>
+                    </li>
                     % endif
                     %if can_save:
                     <li><a data-toggle="modal" href="#saveAs">${_('Save')}</a></li>
@@ -127,7 +133,7 @@ ${layout.menubar(section='query')}
         % if not error:
         <li><a href="#columns" data-toggle="tab">${_('Columns')}</a></li>
         % if download_urls:
-        <!--Visualization --><li><a href="#visualizations" data-toggle="tab">Visualizations</a></li><!--/Visualization -->
+        <!--Visualization --><li><a href="#visualizations" data-toggle="tab" style="display: none;">Visualizations</a></li><!--/Visualization -->
         % endif
         % endif
       </ul>
@@ -205,73 +211,79 @@ ${layout.menubar(section='query')}
         </div>
         % if columns:
         <!--- Visualization -->
-		<link href="/pig/static/css/codemirror.css" rel="stylesheet">
-        <link href="/hcatalog/static/css/visualization.css" rel="stylesheet">
+        <link href="/pig/static/css/codemirror.css" rel="stylesheet">
+        <link href="/beeswax/static/css/visualization.css" rel="stylesheet">
         <script src="/pig/static/js/codemirror.js"></script>
-        <script src="/hcatalog/static/js/visualization.js"></script>
-        <script src="/hcatalog/static/js/htmlmixed.js"></script>
-        <script src="/hcatalog/static/js/xml.js"></script>
-        <script src="/hcatalog/static/js/css.js"></script>
-        <script src="/hcatalog/static/js/javascript.js"></script>
-		<script src="/hcatalog/static/js/lib/jquery.csv-0.71.min.js"></script>
-		
+        <script src="/beeswax/static/js/visualization.js"></script>
+        <script src="/beeswax/static/js/htmlmixed.js"></script>
+        <script src="/beeswax/static/js/xml.js"></script>
+        <script src="/beeswax/static/js/css.js"></script>
+        <script src="/beeswax/static/js/javascript.js"></script>
+        <script src="/beeswax/static/js/lib/jquery.csv-0.71.min.js"></script>
         <div class="tab-pane" id="visualizations">
-       <!--<textarea id="vis_code" name="code">
-		<script>
-		var settings = {
-			csv:"${download_urls["csv"]}",
-			xAxis:"${columns[0]}",
-			yAxis:[
-				% for col in columns[1:]:
-				"${col}",
-				% endfor
-				],
-			minY:null,
-			maxY:null
-		}
-		</script>
-        </textarea>--> 
-		   	<div class='chart_type_selectors'>	
-				<div class='chart_type_wrap'>		
-					xAxis:<br/>
-					<select name="xAxis" id="xAxis">
-						% for col in columns[0:]:
-						<option value='"${col}"'>${col}</option>
-						% endfor
-					</select>
-				</div>
+              <!--<textarea id="vis_code" name="code">
+                <script>
+                var settings = {
+                  csv:"${download_urls["csv"]}",
+                  xAxis:"${columns[0]}",
+                  yAxis:[
+                    % for col in columns[1:]:
+                    "${col}",
+                    % endfor
+                    ],
+                  minY:null,
+                  maxY:null
+                }
+                </script>
+              </textarea>-->
+          <div class='chart_type_selectors'>
+            <div class='chart_type_wrap x_axis'>
+              <div class="nav-header">x Axis:</div>
+              <select name="xAxis" id="xAxis">
+                % for col in columns:
+                <option value='"${col}"'>${col}</option>
+                % endfor
+              </select>
+            </div>
+            <div class='chart_type_wrap y_axis' >
+              yAxis:<br/>
+              <input type="checkbox" name="yAxis" value="${columns[0]}">${columns[0]}<br>
+              % for col in columns[1:]:
+              <input type="checkbox" name="yAxis" value="${col}" checked="checked" >${col}<br>
+              % endfor
+            </div>
+            <div class='chart_type_wrap chart_type'>
+              <div class="nav-header">chart type:</div>
+              <input type="radio" name="type" value="area"        id="area"  checked="checked"/><label for="area">area</label>
+              <input type="radio" name="type" value="bar"         id="bar"                    /><label for="bar">bar</label>
+              <input type="radio" name="type" value="line"        id="line"                   /><label for="line">line</label>
+              <input type="radio" name="type" value="scatterplot" id="scatterplot"            /><label for="scatterplot">scatter</label>
+              <input type="radio" name="type" value="pie"         id="pie"                    /><label for="pie"> pie</label>
+            </div>
+            <div class='chart_type_wrap value_type'>
+              <div class="nav-header">value type:</div>
+              <input type="radio" name="stacked" value="false"  /> <img src='/beeswax/static/css/images/charts/stack.png'> stack<br/>
+              <input type="radio" name="stacked" value="true" checked="checked" /> <img src='/beeswax/static/css/images/charts/value.png'> value<br/>
+            </div>
+            <div class='chart_type_wrap sort'>
+              <div class="nav-header">Sort:</div>
+              <select name="sort" id="graph_sort">
+                <option value=''></option>
+              </select>
+            </div>
+            <div class="chart_type_wrap direction">
+              <div class="nav-header">Direction:</div>
+              <input type="radio" name="direction" value="true" checked="checked" />  asc<br/>
+              <input type="radio" name="direction" value="false"  /> desc<br/>
+            </div>
 
-				<div class='chart_type_wrap'>
-				yAxis:<br/>	
-					<input type="checkbox" name="yAxis" value="${columns[0]}" disabled="disabled">${columns[0]}<br>
-					% for col in columns[1:]:
-					<input type="checkbox" name="yAxis" value="${col}" checked="checked" >${col}<br>
-					% endfor
-				</div>
-
-				<div class='chart_type_wrap'>
-				chart type:<br/>
-					<input type="radio" name="type" value="area"  checked="checked"/> <img src='/hcatalog/static/css/images/charts/area.png'> area<br/>	
-					<input type="radio" name="type" value="bar"  /> <img src='/hcatalog/static/css/images/charts/bar.png'> bar<br/>
-					<input type="radio" name="type" value="line"  /> <img src='/hcatalog/static/css/images/charts/line.png'> line<br/>
-					<input type="radio" name="type" value="scatterplot" /> <img src='/hcatalog/static/css/images/charts/scatter.png'> scatter<br/>
-					<input type="radio" name="type" value="pie" /> <img src='/hcatalog/static/css/images/charts/pie.jpg' width="26px" style="margin-left:5px; margin-right:5px"/> pie<br/>
-				</div>
-				<div class='chart_type_wrap'>
-				value type:<br/>
-					<input type="radio" name="stacked" value="false"  /> <img src='/hcatalog/static/css/images/charts/stack.png'> stack<br/>
-					<input type="radio" name="stacked" value="true" checked="checked" /> <img src='/hcatalog/static/css/images/charts/value.png'> value<br/>
-				</div>
-        <input type="hidden" value='${download_urls["csv"]}' name="csv"/>
-				<input type="hidden" value='${visualize_url}' name="visualize_csv"/>
-			</div>
-			<iframe id="preview"></iframe>
-
-
-
+            <input type="hidden" value='${download_urls["csv"]}' name="csv"/>
+            <input type="hidden" value='${visualize_url}' name="visualize_csv"/>
+          </div>
+          <div class='nav-header chart_toobig_message hide'>${_('Can\'t show visualizations for more than 1000 rows')}</div>
+          <div class='nav-header chart_nodata_message hide'>${_('No data to visualize')}</div>
+          <iframe id="preview" class="well"></iframe>
         </div>
-
-
         <!--/Visualization -->
         % else:
 
@@ -429,6 +441,13 @@ ${layout.menubar(section='query')}
         $("#log pre").css("overflow", "auto").height($(window).height() - $("#log pre").position().top - 40);
       }
 
+      $('.vn-enable').change(function () {
+        if ($(this).attr('checked')) {
+          $('a[href="#visualizations"]').show();
+        } else {
+          $('a[href="#visualizations"]').hide();
+        }
+      });
 
     });
 </script>
