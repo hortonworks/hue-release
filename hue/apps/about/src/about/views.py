@@ -86,7 +86,7 @@ def _get_components():
       components += _read_versions(extra_versions_path)
   except ValueError:#Exception:
     components = [
-      ('HDP', "1.3"),
+      ('HDP', "2.0.5"),
       ('Hadoop', "1.2.0.1.3.0.0-107"),
       ('HCatalog', "0.11.0.1.3.0.0-107"),
       ('Pig', "0.11.1.1.3.0.0-107"),
