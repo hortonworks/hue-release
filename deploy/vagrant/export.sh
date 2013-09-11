@@ -16,6 +16,22 @@ fi
 MEM=4096
 VERSION="2.0 Beta"
 
+if [ -z $1 ]; then
+	TARGET=default
+else
+	TARGET="$1"
+fi
+
+if [ "$TARGET" == "clean" ]; then
+	echo "Cleaning artifacts"
+	rm -f *.ova
+	rm -f "hyper-v/sandbox.vhd"
+	echo "Clean done"
+	exit 0
+fi
+
+_SSH="vagrant ssh $TARGET -c"
+
 # Returns property from vminfo
 # Arguments:
 # 	$1 machine UUID
@@ -31,32 +47,35 @@ function vmhdd() {
 	VBoxManage showvminfo "$1" | grep vmdk | $SED "s/[^:]*: (.*) \(.*/\1/g"
 }
 
-# BEGIN
+function poweroff_target() {
+	(set +e; vagrant halt $TARGET >/dev/null; true)
+}
 
-if [ -z $1 ]; then
-	TARGET=default
-else
-	TARGET="$1"
-fi
+# Prints $1 to stderr
+function echoerr() {
+	echo "$1" >&2
+}
+
+# BEGIN
 
 echo "Using target '$TARGET'"
 
 if ! which ovftool &>/dev/null; then
-	echo >&2
-	echo "WARNING: ovftool not found!" >&2
-	echo "WARNING: VMware image can NOT be built" >&2
-	echo >&2
+	echoerr
+	echoerr "WARNING: ovftool not found!"
+	echoerr "WARNING: VMware image can NOT be built"
+	echoerr
 fi
 
 if [ ! -f .vagrant/machines/$TARGET/virtualbox/id ]; then
-	echo "ERROR: No machine found" >&2
-	echo "Please, deploy machine with Vagrant ($ vagrant up default)" >&2
+	echoerr "ERROR: No machine found"
+	echoerr "Please, deploy machine with Vagrant ($ vagrant up default)"
 	exit 1
 fi
 
 ID=`cat .vagrant/machines/$TARGET/virtualbox/id`
 if ! VBoxManage showvminfo "$ID" &>/dev/null; then
-	echo "ERROR: Machine not found in VirtualBox. Please, redeploy it with Vagrant" >&2
+	echoerr "ERROR: Machine not found in VirtualBox. Please, redeploy it with Vagrant"
 	exit 2
 fi
 
@@ -65,16 +84,16 @@ MACHINE="$(vminfo $ID Name)"
 HDDFILE="$(vmhdd $ID)"
 
 if [[ ! "`vminfo $ID State`" == "running"* ]]; then
-	echo "ERROR: Machine is not running" >&2
+	echoerr "ERROR: Machine is not running"
 	exit 3
 fi
 
 # ======== VirtualBox ========
 echo "VirtualBox preparing..."
 echo "	. /virtualization"
-vagrant ssh $TARGET -c "echo 'vbox' | sudo tee /virtualization" >/dev/null
+$_SSH "echo 'vbox' | sudo tee /virtualization" >/dev/null
 echo -n "	. powering off.."
-vagrant halt $TARGET >/dev/null
+poweroff_target
 echo -n "."; sleep 5; echo "."; sleep 5
 echo "	. Removing shared folders"
 VBoxManage sharedfolder remove "$MACHINE" --name '/vagrant' &>/dev/null || true
@@ -94,11 +113,11 @@ echo "VMware preparing..."
 echo "	. Booting..."
 vagrant up $TARGET --no-provision >/dev/null
 echo "	. Uninstalling VBoxGuestAdditions"
-vagrant ssh $TARGET -c "sudo /opt/VBoxGuestAdditions-*/uninstall.sh" >/dev/null
+$_SSH "sudo /opt/VBoxGuestAdditions-*/uninstall.sh" >/dev/null
 echo "	. /virtualization"
-vagrant ssh $TARGET -c "echo 'vmware' | sudo tee /virtualization" >/dev/null
+$_SSH "echo 'vmware' | sudo tee /virtualization" >/dev/null
 echo -n "	. powering off.."
-vagrant halt $TARGET >/dev/null
+poweroff_target
 echo -n "."; sleep 5; echo "."; sleep 5
 
 if which ovftool &>/dev/null; then
@@ -109,7 +128,7 @@ if which ovftool &>/dev/null; then
 	ovftool "./vmware/Hortonworks Sandbox 2.0.vmx" "$FILENAME_VW";
 	echo "VMware image done! `pwd`/$FILENAME_VW";
 else
-	echo "WARNING: Skipping VMware exporting due to missing ovftool" >&2;
+	echoerr "WARNING: Skipping VMware exporting due to missing ovftool"
 fi
 
 # ======== Hyper-V ========
@@ -120,11 +139,15 @@ VBoxManage startvm $ID
 sleep 90
 
 echo "	. adding 'noapic' to kernel options..."
-vagrant ssh $TARGET -c 'sudo sed -i /boot/grub/menu.lst -r -e "s/(kernel .*)$/\1 noapic/g"'
+$_SSH 'sudo sed -i /boot/grub/menu.lst -r -e "s/(kernel .*)$/\1 noapic/g"'
 echo "	. /virtualization"
-vagrant ssh $TARGET -c "echo 'hyper-v' | sudo tee /virtualization"
+$_SSH "echo 'hyper-v' | sudo tee /virtualization"
+echo "	. set static IP"
+$_SSH 'sed -i "s/dhcp/static\nIPADDR=192.168.56.101\nNETMASK=255.255.255.0\nGATEWAY=192.168.56.1/g" /etc/sysconfig/network-scripts/ifcfg-eth0'
+echo "	. disabling DHCP client"
+$_SSH 'sed -i "s/dhclient/#dhclient/g" /etc/init.d/startup_script'
 echo "	. powering off.."
-vagrant halt $TARGET
+poweroff_target
 echo -n "."; sleep 5; echo "."; sleep 5
 echo "	. Cloning image VMDK to VHD..."
 FILENAME_HV="./hyper-v/sandbox.vhd"
