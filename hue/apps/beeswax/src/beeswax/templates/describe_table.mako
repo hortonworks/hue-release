@@ -107,6 +107,11 @@ ${layout.menubar(section='tables')}
                               % for col in table.cols:
                                 <th>${col.name}</th>
                               % endfor
+                              % if table.partition_keys:
+                                % for col in table.partition_keys:
+                                  <th>${col.name}</th>
+                                % endfor
+                              % endif
                             </tr>
                           </thead>
                           <tbody>
