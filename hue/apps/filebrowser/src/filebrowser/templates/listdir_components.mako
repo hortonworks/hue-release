@@ -1236,6 +1236,7 @@ from django.utils.translation import ugettext as _
       };
 
       self.uploadFile = (function () {
+        var uploadComplete = false;
         var num_of_pending_uploads = 0;
         var action = "/filebrowser/upload/file";
         var uploader = new qq.FileUploader({
@@ -1262,13 +1263,17 @@ from django.utils.translation import ugettext as _
             if (response.status !== undefined && response.status != 0) {
               $.jHueNotify.error("${ _('Error: ') }" + (response['data'] ? response['data'] : "${ _('Check file permissions') }"));
             } else if (num_of_pending_uploads == 0) {
-              window.location = "/filebrowser/view" + self.currentPath();
+                uploadComplete = true;
             }
           },
           onSubmit:function (id, fileName, responseJSON) {
             num_of_pending_uploads++;
           },
           debug:false
+        });
+
+        $("#uploadFileModal").on('hidden',function () {
+          if (uploadComplete) window.location = "/filebrowser/view" + self.currentPath();
         });
 
         $("#fileUploader").on('fb:updatePath', function (e, options) {
@@ -1287,6 +1292,7 @@ from django.utils.translation import ugettext as _
       })();
 
       self.uploadArchive = (function () {
+        var uploadComplete = false;
         var num_of_pending_uploads = 0;
         var uploader = new qq.FileUploader({
           element:document.getElementById("archiveUploader"),
@@ -1310,13 +1316,17 @@ from django.utils.translation import ugettext as _
           onComplete:function (id, fileName, responseJSON) {
             num_of_pending_uploads--;
             if (num_of_pending_uploads == 0) {
-              window.location = "/filebrowser/view" + self.currentPath();
+              uploadComplete = true;
             }
           },
           onSubmit:function (id, fileName, responseJSON) {
             num_of_pending_uploads++;
           },
           debug:false
+        });
+
+        $("#uploadArchiveModal").on('hidden',function () {
+          if (uploadComplete) window.location = "/filebrowser/view" + self.currentPath();
         });
 
         $("#archiveUploader").on('fb:updatePath', function (e, options) {
