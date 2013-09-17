@@ -379,9 +379,54 @@ var python_editor = CodeMirror.fromTextArea(document.getElementById("python_code
 
 });
 
+CodeMirror.toggleEditor = function (mode,editor) {
+  var mode = mode || '';
+  var piged = editor == 'pig';
+  var pyed = editor == 'python';
+  var pigwrap = $(pig_editor.getWrapperElement());
+  var pythonwrap = $(python_editor.getWrapperElement());
+  if (mode=='show') {
+    if (!pigwrap.is(":visible") && !pyed) pigwrap.toggle('fast',pig_editor.refresh);
+    if (!pythonwrap.is(":visible") && !piged) pythonwrap.toggle('fast');
+  } else if (mode=='hide') {
+    if (pigwrap.is(":visible") && !pyed) pigwrap.toggle('fast');
+    if (pythonwrap.is(":visible") && !piged) pythonwrap.toggle('fast');
+  } else {
+    if (!pyed) pigwrap.toggle('fast',function  () {
+      if (pigwrap.is(":visible")) pig_editor.refresh(); 
+    });
+    if (!piged) pythonwrap.toggle('fast');
+  }
+}
 
 
+var resizeTimeout = -1;
+var winWidth = 0;
+var winHeight = 0;
 
+function resizeCM () {
+  window.clearTimeout(resizeTimeout);
+  resizeTimeout = window.setTimeout(function () {
+    // prevents endless loop in IE8
+    if (winWidth != $(window).width() || winHeight != $(window).height()) {
+      pig_editor.setSize("", ($(window).height()>=550)?$(window).height()-350:200);
+      winWidth = $(window).width();
+      winHeight = $(window).height();
+    }
+  }, 200);
+}
+
+$(window).resize(resizeCM).trigger('resize');
+
+ $('.script_label').on('click',function(e){
+   if (e.target.tagName.toLowerCase() == 'i'){
+     return false;
+   } else if ($(this).attr('for')=="id_pig_script") {
+    CodeMirror.toggleEditor('','pig')
+   } else if ($(this).attr('for')=="python_code") {
+    CodeMirror.toggleEditor('','python')
+   }
+ });
 
 
 function findPosition(curLine){

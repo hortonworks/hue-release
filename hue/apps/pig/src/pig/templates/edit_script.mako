@@ -122,11 +122,11 @@ UDF_PATH = conf.UDF_PATH.get()
             </div>
             <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
             % if result.get("python_script"):
-            <label class="script_label" >Python UDF</label>
+            <label class="script_label" for="python_code">Python UDF</label>
             <textarea id="python_code" name="python_script" rows="4" >${result['python_script']}</textarea>
             % else:
             <div style="display:none;" id="python_textarea">
-              <label class="script_label" >Python UDF</label>
+              <label class="script_label" for="python_code">Python UDF</label>
               <textarea id="python_code" name="python_script"></textarea>
             </div>
             % endif
@@ -234,6 +234,11 @@ label.error {
   padding: 5px;
   margin-bottom: 0;
   vertical-align: bottom;
+  cursor: pointer;
+  width: 85px;
+}
+.script_label:hover {
+  box-shadow: inset 0px 0px 1px 1px #bbb;
 }
 .CodeMirror {
   border: 2px solid #eee;
@@ -335,6 +340,12 @@ var prefilledArgs = [\
   $(document).on('click','.popover i',function () {
     $("#help").popover('hide');
   })
+
+  $('.script_label').tooltip({
+    placement: 'bottom',
+    title: 'Toggle editor',
+    delay: 200
+  });
 
   % if result.get("job_id") and result.get("JOB_SUBMITED"):
   percent = 10;
