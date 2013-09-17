@@ -103,6 +103,16 @@ class sandbox_rpm {
        content => template("/vagrant/files/hue.ini"),
        require => Package['hue']
     }
+
+    exec { 'hue_password':
+       command => "echo 'hue:hadoop' | chpasswd",
+       require => Package['hue'],
+    }
+
+    exec { 'hue_sudoers':
+       command => "echo 'hue ALL=(ALL) ALL' >> /etc/sudoers",
+       require => Package['hue'],
+    }
 }
 
 

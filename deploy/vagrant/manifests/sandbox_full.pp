@@ -52,6 +52,12 @@ class tutorials {
         require => Class['sandbox_rpm'],
     }
 
+/*  Disable showing Sandbox build hash for release */
+    file {'/var/lib/hue/EXTRA_VERSIONS':
+        ensure => absent,
+        require => Package['hue-tutorials'],
+    }
+
 /*  Disable single user mode
     file {'/var/lib/hue/single_user_mode':
         ensure => absent,
