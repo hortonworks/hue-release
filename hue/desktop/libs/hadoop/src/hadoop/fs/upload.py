@@ -89,9 +89,7 @@ class HDFStemporaryUploadedFile(object):
 
   def remove(self):
     try:
-      original = self._fs.setskiptrash(True)
-      self._fs.remove(self._path)
-      self._fs.setskiptrash(original)
+      self._fs.remove(self._path, True)
       self._do_cleanup = False
     except IOError, ex:
       if ex.errno != errno.ENOENT:
@@ -118,7 +116,7 @@ class HDFSfileUploadHandler(FileUploadHandler):
   In practice, the middlewares (which access the request.REQUEST/POST/FILES objects) triggers
   the upload before reaching the view in case of permissions error. Read about Django
   uploading documentation.
-  
+
   This might trigger the upload before executing the hue auth middleware. HDFS destination
   permissions will be doing the checks.
   """
@@ -127,7 +125,8 @@ class HDFSfileUploadHandler(FileUploadHandler):
     self._file = None
     self._starttime = 0
     self._activated = False
-    self._destination = request.GET.get('dest', None)
+    self._destination = request.GET.get('dest', None) # GET param avoids infinite looping
+    self.request = request
     # Need to directly modify FileUploadHandler.chunk_size
     FileUploadHandler.chunk_size = UPLOAD_CHUNK_SIZE.get()
 
@@ -141,12 +140,14 @@ class HDFSfileUploadHandler(FileUploadHandler):
         self._starttime = time.time()
       except Exception, ex:
         LOG.error("Not using HDFS upload handler: %s" % (ex,))
-        raise ex
+        self.request.META['upload_failed'] = ex
 
       raise StopFutureHandlers()
 
   def receive_data_chunk(self, raw_data, start):
     if not self._activated:
+      if self.request.META.get('PATH_INFO').startswith('/filebrowser') and self.request.META.get('PATH_INFO') != '/filebrowser/upload/archive':
+        raise StopUpload()
       return raw_data
 
     try:

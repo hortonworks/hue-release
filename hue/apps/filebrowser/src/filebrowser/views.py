@@ -25,7 +25,6 @@ import logging
 import mimetypes
 import operator
 import posixpath
-import re
 import shutil
 import stat as stat_module
 import os
@@ -1030,10 +1029,8 @@ def rmtree(request):
     recurring = []
     params = ["path"]
     def bulk_rmtree(*args, **kwargs):
-        original = request.fs.setskiptrash('skip_trash' in request.GET)
         for arg in args:
-            request.fs.do_as_user(request.user, request.fs.rmtree, arg['path'])
-        request.fs.setskiptrash(original)
+          request.fs.do_as_user(request.user, request.fs.rmtree, arg['path'], 'skip_trash' in request.GET)
     return generic_op(RmTreeFormSet, request, bulk_rmtree, ["path"], None,
                       data_extractor=formset_data_extractor(recurring, params),
                       arg_extractor=formset_arg_extractor,

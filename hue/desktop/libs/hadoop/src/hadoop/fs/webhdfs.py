@@ -126,22 +126,17 @@ class WebHdfs(Hdfs):
   @property
   def trash_path(self):
     try:
-      return self._thread_local.trash_path
+      return self._thread_local.trash_path[self.user]
     except AttributeError:
-      self._thread_local.trash_path = self.join(self.get_home_dir(), '.Trash')
-    return self._thread_local.trash_path
+      self._thread_local.trash_paths = {}
+      self._thread_local.trash_paths[self.user] = self.join(self.get_home_dir(), '.Trash')
+    except KeyError:
+      self._thread_local.trash_paths[self.user] = self.join(self.get_home_dir(), '.Trash')
+    return self._thread_local.trash_paths[self.user]
 
   @property
   def current_trash_path(self):
     return self.join(self.trash_path, self.TRASH_CURRENT)
-
-  @property
-  def skip_trash(self):
-    try:
-      return self._thread_local.skip_trash
-    except AttributeError:
-      self._thread_local.skip_trash = False
-    return self._thread_local.skip_trash
 
   def _getparams(self):
     return {
@@ -153,11 +148,6 @@ class WebHdfs(Hdfs):
     """Set a new user. Return the current user."""
     curr = self.user
     self._thread_local.user = user
-    return curr
-
-  def setskiptrash(self, skip_trash):
-    curr = self.skip_trash
-    self._thread_local.skip_trash = skip_trash
     return curr
 
   def listdir_stats(self, path, glob=None):
@@ -234,7 +224,7 @@ class WebHdfs(Hdfs):
 
   def _ensure_current_trash_directory(self):
     """Create trash directory for a user if it doesn't exist."""
-    if not self.exists(self.current_trash_path):
+    if self.exists(self.current_trash_path):
       self.mkdir(self.current_trash_path)
     return self.current_trash_path
 
@@ -283,20 +273,20 @@ class WebHdfs(Hdfs):
     if not result['boolean']:
       raise IOError(_('Delete failed: %s') % path)
 
-  def remove(self, path):
+  def remove(self, path, skip_trash=False):
     """Delete a file."""
-    if hadoop.core_site.get_trash_interval() is None or self.skip_trash:
+    if hadoop.core_site.get_trash_interval() is None or skip_trash:
       self._delete(path, recursive=False)
     else:
       self._trash(path, recursive=False)
 
-  def rmdir(self, path):
+  def rmdir(self, path, skip_trash=False):
     """Delete a directory."""
-    self.remove(path)
+    self.remove(path, skip_trash)
 
-  def rmtree(self, path):
+  def rmtree(self, path, skip_trash=False):
     """Delete a tree recursively."""
-    if hadoop.core_site.get_trash_interval() is None or self.skip_trash:
+    if hadoop.core_site.get_trash_interval() is None or skip_trash:
       self._delete(path, recursive=True)
     else:
       self._trash(path, recursive=True)
@@ -339,10 +329,8 @@ class WebHdfs(Hdfs):
     if hadoop.core_site.get_trash_interval() is None:
       raise IOError(errno.EPERM, _("Trash is not enabled."))
 
-    original = self.setskiptrash(True)
     for timestamped_directory in self.listdir(self.trash_path):
-      self.rmtree(self.join(self.trash_path, timestamped_directory))
-    self.setskiptrash(original)
+      self.rmtree(self.join(self.trash_path, timestamped_directory), True)
 
   def mkdir(self, path, mode=None):
     """
@@ -538,8 +526,7 @@ class WebHdfs(Hdfs):
         self.do_as_superuser(self.chown, destination_file, owner, owner)
 
 
-  def copy(self, src, dest, recursive=False, dir_mode=0755, owner=None,
-           allow_duplicate=False, duplicate_prefix="copy_"):
+  def copy(self, src, dest, recursive=False, dir_mode=0755, owner=None):
     """
     Copy file, or directory, in HDFS to another location in HDFS.
 
@@ -558,6 +545,7 @@ class WebHdfs(Hdfs):
     """
     if owner is None:
       owner = self.user
+
     src = self.abspath(src)
     dest = self.abspath(dest)
 
@@ -592,12 +580,7 @@ class WebHdfs(Hdfs):
       # If 'dest' is a directory, then copy 'src' into that directory.
       # Other wise, copy to 'dest'.
       if self.exists(dest) and self.isdir(dest):
-        target_file = self.join(dest, self.basename(src))
-        if self.exists(target_file) and allow_duplicate:
-          LOG.info("File '%s' copied to itself: duplication." % target_file)
-          self.copyfile(src, self.join(dest, duplicate_prefix + self.basename(src)))
-        else:
-          self.copyfile(src, target_file)
+        self.copyfile(src, self.join(dest, self.basename(src)))
       else:
         self.copyfile(src, dest)
 
@@ -669,7 +652,6 @@ class WebHdfs(Hdfs):
 
   def do_as_user(self, username, fn, *args, **kwargs):
     prev_user = self.user
-
     try:
       self.setuser(username)
       return fn(*args, **kwargs)
