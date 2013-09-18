@@ -1160,6 +1160,8 @@ def _upload_file(request):
     The uploaded file is stored in HDFS at its destination with a .tmp suffix.
     We just need to rename it to the destination path.
     """
+    if hasattr(request, '_error_message'):
+        raise PopupException(request._error_message.split("\n")[0])
     form = UploadFileForm(request.POST, request.FILES)
 
     if form.is_valid():

@@ -36,6 +36,8 @@ import hadoop.cluster
 from hadoop.conf import UPLOAD_CHUNK_SIZE
 from hadoop.fs.exceptions import WebHdfsException
 
+from desktop.lib.exceptions_renderable import PopupException
+
 UPLOAD_SUBDIR = 'hue-uploads'
 LOG = logging.getLogger(__name__)
 
@@ -128,6 +130,7 @@ class HDFSfileUploadHandler(FileUploadHandler):
     self._starttime = 0
     self._activated = False
     self._destination = request.GET.get('dest', None)
+    self._request = request
     # Need to directly modify FileUploadHandler.chunk_size
     FileUploadHandler.chunk_size = UPLOAD_CHUNK_SIZE.get()
 
@@ -141,6 +144,7 @@ class HDFSfileUploadHandler(FileUploadHandler):
         self._starttime = time.time()
       except Exception, ex:
         LOG.error("Not using HDFS upload handler: %s" % (ex,))
+        self._request._error_message = "%s" % (ex,)
       else:
         raise StopFutureHandlers()
 
