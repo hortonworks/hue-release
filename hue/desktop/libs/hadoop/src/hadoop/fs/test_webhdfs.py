@@ -15,33 +15,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Tests for Hadoop FS.
-"""
-from nose.tools import assert_false, assert_true, assert_equals, assert_raises, assert_not_equals
-from nose.plugins.attrib import attr
+
 import logging
 import posixfile
 import random
 import sys
-from threading import Thread
+import threading
 import unittest
 
-from hadoop import conf, pseudo_hdfs4
+from nose.tools import assert_false, assert_true, assert_equals, assert_raises, assert_not_equals
+
+from hadoop import pseudo_hdfs4
 from hadoop.fs.exceptions import WebHdfsException
 from hadoop.fs.hadoopfs import Hdfs
 
 LOG = logging.getLogger(__name__)
 
+
 class WebhdfsTests(unittest.TestCase):
   requires_hadoop = True
 
   @classmethod
-  def setup_class(cls):
+  def setUpClass(cls):
     cls.cluster = pseudo_hdfs4.shared_cluster()
 
   def setUp(self):
-    WebhdfsTests.setup_class()
     self.cluster.fs.setuser(self.cluster.superuser)
 
   def tearDown(self):
@@ -173,7 +171,7 @@ class WebhdfsTests(unittest.TestCase):
     for stat in dest_stat:
       assert_equals('testcopy', stat.user)
       assert_equals('testcopy', stat.group)
-      assert_equals('100644', '%o' % stat.mode)
+      assert_equals('100755', '%o' % stat.mode)
 
   def test_two_files_open(self):
     """
@@ -265,7 +263,7 @@ class WebhdfsTests(unittest.TestCase):
     # make sure that isn't reflected.
     fs = self.cluster.fs
     fs.setuser("alpha")
-    class T(Thread):
+    class T(threading.Thread):
       def run(self):
         fs.setuser("beta")
         assert_equals("beta", fs.user)
@@ -293,19 +291,19 @@ class WebhdfsTests(unittest.TestCase):
       fs.chmod(dir1, 01000, recursive=True)
       assert_equals(041000, fs.stats(dir1).mode)
       assert_equals(041000, fs.stats(subdir1).mode)
-      assert_equals(0100000, fs.stats(file1).mode)
+      assert_equals(0101000, fs.stats(file1).mode)
 
       # Chmod non-recursive
       fs.chmod(dir1, 01222, recursive=False)
       assert_equals(041222, fs.stats(dir1).mode)
       assert_equals(041000, fs.stats(subdir1).mode)
-      assert_equals(0100000, fs.stats(file1).mode)
+      assert_equals(0101000, fs.stats(file1).mode)
 
       # Chmod recursive
       fs.chmod(dir1, 01444, recursive=True)
       assert_equals(041444, fs.stats(dir1).mode)
       assert_equals(041444, fs.stats(subdir1).mode)
-      assert_equals(0100444, fs.stats(file1).mode)
+      assert_equals(0101444, fs.stats(file1).mode)
     finally:
       try:
         fs.rmtree(dir1)
@@ -446,9 +444,50 @@ class WebhdfsTests(unittest.TestCase):
       trash_path = reduce(lambda a, b: a[0] and a or b, zip(exists, trash_paths))[1]
 
       # Restore
-      assert_raises(WebHdfsException, self.cluster.fs.do_as_user, 'nouser', self.cluster.fs.restore, trash_path)
+      assert_raises(IOError, self.cluster.fs.do_as_user, 'nouser', self.cluster.fs.restore, trash_path)
     finally:
       try:
         self.cluster.fs.rmtree(PATH)
       except Exception, ex:
         LOG.error('Failed to cleanup %s: %s' % (PATH, ex))
+
+  def test_trash_users(self):
+    """
+    Imitate eventlet green thread re-use and ensure trash works.
+    """
+    class test_local(object):
+      def __getattribute__(self, name):
+        return object.__getattribute__(self, name)
+      def __setattr__(self, name, value):
+        return object.__setattr__(self, name, value)
+      def __delattr__(self, name):
+        return object.__delattr__(self, name)
+
+    threading.local = test_local
+
+    USERS = ['test1', 'test2']
+    CLEANUP = []
+
+    try:
+      for user in USERS:
+        # Create home directory.
+        self.cluster.fs.setuser(user)
+        self.cluster.fs.create_home_dir()
+        CLEANUP.append(self.cluster.fs.get_home_dir())
+
+        # Move to trash for both users.
+        # If there is a thread local issue, then this will fail.
+        PATH = self.cluster.fs.join(self.cluster.fs.get_home_dir(), 'trash_test')
+        self.cluster.fs.open(PATH, 'w').close()
+        assert_true(self.cluster.fs.exists(PATH))
+        self.cluster.fs.remove(PATH)
+        assert_false(self.cluster.fs.exists(PATH))
+        assert_true(self.cluster.fs.exists(self.cluster.fs.trash_path))
+    finally:
+      reload(threading)
+      self.cluster.fs.setuser(self.cluster.superuser)
+      for directory in CLEANUP:
+        try:
+          self.cluster.fs.rmtree(dir)
+        except Exception, ex:
+          LOG.error('Failed to cleanup %s: %s' % (directory, ex))
