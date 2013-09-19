@@ -239,9 +239,9 @@ class BeeswaxClient:
         Expects to find the server_id from the ``query_history``.
         Return None on error. (It catches all anticipated exceptions.)
         """
-        rpc_handle = handle.get_rpc_handle()
 
         try:
+          rpc_handle = handle.get_rpc_handle()
           rpc_state = self._client.get_state(rpc_handle)
           return models.BeeswaxQueryHistory.STATE_MAP[rpc_state]
         except QueryNotFoundException:
@@ -249,6 +249,8 @@ class BeeswaxClient:
           return models.QueryHistory.STATE.expired
         except thrift.transport.TTransport.TTransportException, ex:
           LOG.error("Failed to retrieve server state of submitted query id %s: %s" % (handle.secret, ex)) # queryhistory.id
+          return None
+        except Exception:
           return None
 
 
