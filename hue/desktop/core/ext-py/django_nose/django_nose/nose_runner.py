@@ -54,7 +54,7 @@ def teardown_test_environment(teardown_funcs):
         func()
 
 
-def run_tests_explicit(nose_args, verbosity=1, interactive=True):
+def run_tests_explicit(nose_args, verbosity=1, interactive=False):
     """Setup django and run nose with given arguments."""
     setup_funcs, teardown_funcs = get_test_enviroment_functions()
     # Prepare django for testing.
@@ -73,7 +73,7 @@ def run_tests_explicit(nose_args, verbosity=1, interactive=True):
 
     return ret
 
-def run_tests(test_labels, verbosity=1, interactive=True, extra_tests=[]):
+def run_tests(test_labels, verbosity=1, interactive=False, extra_tests=[]):
     """Calculates nose arguments and runs tests."""
     nose_argv = ['nosetests']
     if hasattr(settings, 'NOSE_ARGS'):

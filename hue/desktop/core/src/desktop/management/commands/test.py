@@ -93,7 +93,7 @@ class Command(BaseCommand):
       sys.exit(1)
 
     if nose_args:
-      ret = nose_runner.run_tests_explicit(nose_args, interactive=True, verbosity=1)
+      ret = nose_runner.run_tests_explicit(nose_args, interactive=False, verbosity=1)
 
     logging.info("Tests (%s) returned %s" % (' '.join(nose_args), ret))
 
