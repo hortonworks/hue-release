@@ -45,5 +45,5 @@ SANDBOX_VERSION = Config(
   key="sandbox_version",
   help="Version of Sandbox being used",
   private=True,
-  default="1.3",
+  default="2.0.5",
 )
