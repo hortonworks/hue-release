@@ -28,6 +28,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_util import login_notrequired, render, get_desktop_uri_prefix
 from filebrowser.views import _do_newfile_save, _file_reader, _upload_file
+from jobbrowser.api import get_api
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm
@@ -260,10 +261,11 @@ def query_history(request):
         jobs = paginator.page(page)
     except (EmptyPage, InvalidPage):
         jobs = paginator.page(paginator.num_pages)
+    api = get_api(request.user.username, request.jt)
     return render(
         "query_history.mako",
         request,
-        {"jobs": jobs}
+        {"jobs": jobs, "api": api}
     )
 
 

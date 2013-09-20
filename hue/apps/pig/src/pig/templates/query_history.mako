@@ -6,6 +6,15 @@ ${shared.menubar(section='Query history')}
 
 ## Use double hashes for a mako template comment
 ## Main body
+<script src="/jobbrowser/static/js/utils.js" type="text/javascript"
+        charset="utf-8"></script>
+<script type="text/javascript">
+  $(document).ready(function(){
+  $(".status").each(function (i){
+  $(this).attr("class", "label " + getStatusClass($(this).data("status")));
+  })
+  });
+</script>
 <div class="span-5">
 <table class="table table-bordered">
 <thead>
@@ -22,15 +31,7 @@ ${shared.menubar(section='Query history')}
       <td>${job.start_time.strftime('%d.%m.%Y %H:%M')}</td>
       <td><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.title}</a></td>
       <td>
-        <span class="label label-success-warning">
-          % if job.status == job.JOB_SUBMITED:
-          <i class="icon-refresh icon-red" title="running"></i>
-          running
-          % else:
-          <i class="icon-briefcase icon-green" title="succeeded"></i>
-          succeeded
-          % endif
-        </span>
+          <span class="label status" data-status="${api.get_job(job.job_id).status}">${api.get_job(job.job_id).status}</span>
       </td>
       <td><a href="${url("delete_job_object", job_id=job.job_id)}" onClick="return confirm('Are you sure you want to delete job result?');"><i class="icon-trash"></i> Delete</a></td>
     </tr>
