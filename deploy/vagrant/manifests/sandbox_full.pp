@@ -104,6 +104,14 @@ class sandbox_customize inherits sandbox {
         ensure => installed,
     }
 
+    package { 'mlocate':
+        ensure => installed,
+    }
+
+    exec { 'updatedb':
+        command => "updatedb",
+        require => Package["mlocate"],
+    }
 }
 
 
