@@ -56,7 +56,7 @@ class Command(NoArgsCommand):
     fs.do_as_user(fs.DEFAULT_USER, fs.copyFromLocal, local_dir, remote_data_dir)
 
     # Load jobs
-    USERNAME = 'sample'
+    USERNAME = 'hue'
     try:
       sample_user = User.objects.get(username=USERNAME)
     except User.DoesNotExist:

@@ -387,6 +387,7 @@ def listdir(request, path, chooser):
         stats.insert(0, parent_stat)
 
     data['files'] = [_massage_stats(request, stat) for stat in stats]
+
     if chooser:
         return render('chooser.mako', request, data)
     else:

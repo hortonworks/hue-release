@@ -833,7 +833,7 @@ $(document).ready(function () {
         var isValid = true;
 
         var filePathField = $("input[name='table-path']");
-        if (!isDataValid(filePath)) {
+        if (!isDataValid(filePath.replace(/ /g,''))) {
             showFieldError(filePathField);
             isValid = false;
         }

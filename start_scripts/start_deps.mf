@@ -36,6 +36,7 @@ Zookeeper: zookeeper
 Hive_Metastore: mysql hive hive2
 Tez: # tez
 WebHCat: webhcat
+Tez: # tez
 Oozie: oozie
 
 postgresql:
