@@ -537,7 +537,6 @@ class GzipFileProcessor():
         dest_file_obj = fs.open(path, mode='w')
         gz = gzip.GzipFile(fileobj=dest_file_obj, mode='wb')
         # data = data.encode(encoding, 'ignore')
-        # fs.append(path, data)
         gz.write(data)
         dest_file_obj.close()
 
@@ -850,7 +849,7 @@ class XlsFileProcessor():
         for row in data:
             new_row = []
             for field in row:
-                new_row.append(unicode(field).replace(field_terminator.decode('string_escape'), ''))
+                new_row.append(unicode(field).encode('utf-8', "ignore").replace(field_terminator.decode('string_escape'), ''))
             data_to_store.append(field_terminator.decode('string_escape').join(new_row))
         gz.write(newline_terminator.join(data_to_store))
         dest_file_obj.close()
