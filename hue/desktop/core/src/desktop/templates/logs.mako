@@ -35,7 +35,11 @@ ${layout.menubar(section='log_view')}
   }
 
   pre.highlighted {
-    background-color: #FFFF88;
+    background-color: yellow;
+  }
+
+  pre.highlighted.active {
+    background-color: orange;
   }
 
   #logs {
@@ -53,6 +57,12 @@ ${layout.menubar(section='log_view')}
   .notFound {
     background-color: #f09999 !important;
   }
+  .search-handle{
+    display: inline-block;
+  }
+  .search-info{
+    display: none;
+  }
 </style>
 
 <div class="container-fluid">
@@ -61,6 +71,11 @@ ${layout.menubar(section='log_view')}
   <%actionbar:render>
     <%def name="search()">
         <input type="text" class="input-xxlarge search-query" placeholder="${_('Search...')}" value="${query}">
+          <div class="btn-group search-handle">
+            <input type="button" class="prev btn btn-mini disabled" value="Prev"></input>
+            <input type="button" class="next btn btn-mini disabled" value="Next"></input>
+          </div>
+        <span class="search-info help-inline"><span class="cur"></span> of <span class="com"></span></span>
     </%def>
     <%def name="creation()">
         <span class="btn-group">
@@ -92,16 +107,62 @@ ${layout.menubar(section='log_view')}
       }, 200);
     });
 
-    var filterTimeout = -1;
-    $(".search-query").keyup(function () {
-      window.clearTimeout(filterTimeout);
-      filterTimeout = window.setTimeout(function () {
-        filterLogs($(".search-query").val());
-      }, 500);
+    var filterTimeout = searchTimeout = -1;
+    var matches = [];
+    $(".search-query").keyup(function (e) {
+      if (e.keyCode=='13' && matches.length > 0) {
+        window.clearTimeout(searchTimeout);
+        searchTimeout = window.setTimeout(toNextMatch, 50);
+      } else {
+        window.clearTimeout(filterTimeout);
+        filterTimeout = window.setTimeout(function () {
+          filterLogs($(".search-query").val());
+        }, 500);
+      }
     });
 
     if ("${query}" != "") {
       filterLogs("${query}");
+    }
+
+    $('#logs').on('click','.highlighted',function () {
+      if (!$(this).hasClass('active')) {
+        $('pre.highlighted.active').removeClass('active');
+        $(this).addClass('active');
+        for (var el in matches) {
+          i = parseInt(el);
+          if ($(matches[i]).hasClass('active')) {
+            $('.search-info').find('.cur').text(i+1);
+            return false;
+          }
+        }
+      }
+    });
+
+    $('.prev').on('click',{'dir':'prev'},toNextMatch)
+    $('.next').on('click',{'dir':'next'},toNextMatch)
+
+    function toNextMatch(_arg) {
+      var arg=_arg||'next'; 
+      var dir=(arg.data)?arg.data.dir||'next':arg;
+      var i = 0,nextMatch;
+      for (var el in matches) {
+        i = parseInt(el);
+        if ($(matches[i]).hasClass('active')) {
+          $(matches[i]).removeClass('active');
+          var ni=(dir=='next')?i+1:i-1;
+          if (matches[ni]) {
+            nextMatch=$(matches[ni]);
+          } else {
+            ni=(dir=='next')?0:matches.length-1;
+            nextMatch=$(matches[ni])
+          }
+          $('.search-info').find('.cur').text(ni+1);
+          nextMatch.addClass('active');
+          scrollToMatch(nextMatch)
+          return false;
+        }
+      }
     }
 
     function resizeScrollingLogs() {
@@ -119,27 +180,37 @@ ${layout.menubar(section='log_view')}
     }
 
     function filterLogs(query) {
+      $("pre.highlighted").removeClass("highlighted active");
       $(".search-query").removeClass("notFound");
+      $('.search-handle .btn').addClass('disabled');
+      $('.search-info').hide().find('span').text('');
       if ($.trim(query) == "") {
         $("#logs").scrollTop(0);
         return false;
       }
-      $("pre.highlighted").removeClass("highlighted");
-      var found = false;
+      matches = [];
       $("#logs pre").each(function () {
-        var _el = $(this);
-        if (_el.text().toLowerCase().replace(/\s/g, "").indexOf(query.toLowerCase().replace(/\s/g, "")) > -1) {
-          _el.addClass("highlighted");
-          $("#logs").scrollTop(_el.offset().top - $("#logs").position().top - 4);
-          found = true;
-          return false;
+        if ($(this).text().toLowerCase().replace(/\s/g, "").indexOf(query.toLowerCase().replace(/\s/g, "")) > -1) {
+          matches.push(this);
         }
       });
-      if (!found) {
+      if (matches.length > 0) {
+        $('.search-info').show().find('.com').text(matches.length).parent().find('.cur').text('1');
+        $(matches).addClass("highlighted").first().addClass("active");
+        $('.search-handle .btn').removeClass('disabled');
+        scrollToMatch($(matches).first())
+      }
+      if (matches.length < 1) {
         $(".search-query").addClass("notFound");
         $("#logs").scrollTop(0);
       }
     }
+
+    function scrollToMatch (match) {
+      var scrollVal = $("#logs")[0].scrollTop+match.offset().top-$("#logs").position().top-$('#logs').height()/2+15;
+      $("#logs").animate({scrollTop:scrollVal}, {duration: 100 });
+    }
+
   });
 </script>
 
