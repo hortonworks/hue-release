@@ -556,6 +556,10 @@ $(document).ready(function () {
         $("#chooseFile").modal("show");
     });
 
+    $('.pathChooser').change(function () {
+        reactOnFilePathChange($(this).val());
+    });
+
     $('form#mainForm').submit(function (event) {
         if (!validateOnCreateTable()) {
             event.preventDefault();
