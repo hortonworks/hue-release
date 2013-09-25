@@ -1,0 +1,1 @@
+condorM30-2.2.0 is branched from hortonworks  Comanche  SHA1 aa41d684681bf7cf5a8cb610362ba2d700695bc2 @  git@github.com:hortonworks/sandbox-shared.git 
