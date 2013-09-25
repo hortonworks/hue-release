@@ -206,19 +206,24 @@
                             url:"/filebrowser/mkdir",
                             data:{
                                 name:_folderName.val(),
-                                path:path
+                                path:path,
+                                csrfmiddlewaretoken:getCookie('csrftoken')
                             },
                             beforeSend:function (xhr) {
                                 xhr.setRequestHeader("X-Requested-With", "Hue"); // need to override the default one because otherwise Django returns HTTP 500
                             },
                             success:function (xhr, status) {
                                 if (status == "success") {
-                                    _parent.navigateTo(path);
-                                    if (_uploadFileBtn) {
-                                        _uploadFileBtn.removeClass("disabled");
+                                    if ($.jHueNotify && xhr.error) {
+                                        $.jHueNotify.error(xhr.error);
+                                    } else {
+                                       _parent.navigateTo(path);
+                                       if (_uploadFileBtn) {
+                                           _uploadFileBtn.removeClass("disabled");
+                                       }
+                                       _createFolderBtn.removeClass("disabled");
+                                       _createFolderDetails.slideUp();
                                     }
-                                    _createFolderBtn.removeClass("disabled");
-                                    _createFolderDetails.slideUp();
                                 }
                             }
                         });
