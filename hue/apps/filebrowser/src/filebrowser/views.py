@@ -967,7 +967,13 @@ def generic_op(form_class, request, op, parameter_names, piggyback=None, templat
                 if request.user.is_superuser and not request.user == request.fs.superuser:
                     msg += _(' Note: you are a Hue admin but not a HDFS superuser (which is "%(superuser)s").') \
                            % {'superuser': request.fs.superuser}
-                raise PopupException(msg, detail=e)
+                if request.META.get('HTTP_X_REQUESTED_WITH') == 'Hue':
+                  exception = {
+                    'error': msg
+                  }
+                  return render_json(exception)
+                else:
+                  raise PopupException(msg, detail=e)
             if next:
                 logging.debug("Next: %s" % next)
                 # Doesn't need to be quoted: quoting is done by HttpResponseRedirect.
