@@ -20,11 +20,8 @@ from django.utils.translation import ugettext as _
 %>
 
 <%namespace name="layout" file="about_layout.mako" />
-${ commonheader(_('About'), "about", user, "100px") | n,unicode }
 
-${layout.menubar(section='check_config')}
-
-<div class="container-fluid">
+<%def name="error_page(conf_dir, error_list)">
     ${_('Configuration files located in')} <code>${conf_dir}</code>
     <br/><br/>
     % if error_list:
@@ -55,6 +52,30 @@ ${layout.menubar(section='check_config')}
     % else:
       <h2>${_('All OK. Configuration check passed.')}</h2>
     % endif
+</%def>
+
+<%def name="container()">
+${ commonheader(_('About'), "about", user, "100px") | n,unicode }
+
+${ layout.menubar(section='check_config') }
+
+<div class="container-fluid">
+    <div class="spinner" style="text-align: center;">
+    <!--[if !IE]><!--><i class="icon-spinner icon-spin" style="font-size: 60px;"></i><!--<![endif]-->
+    <!--[if IE]><img src="/static/art/spinner.gif" width="16" height="16"/><![endif]-->
+    </div>
 </div>
+<script type="text/javascript">
+  $.get("${ url('desktop.views.check_config') }", function(response) {
+    $(".spinner").replaceWith(response);
+  }).fail(function() { $.jHueNotify.error('${ _("Check config failed: ")}'); });
+</script>
 
 ${ commonfooter(messages) | n,unicode }
+</%def>
+
+% if not show_error:
+  ${container()}
+% else:
+  ${error_page(conf_dir, error_list)}
+% endif

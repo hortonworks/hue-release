@@ -351,10 +351,19 @@ def check_config(request):
   """Check config and view for the list of errors"""
   if not request.user.is_superuser:
     return HttpResponse(_("You must be a superuser."))
-  conf_dir = os.path.realpath(os.getenv("HUE_CONF_DIR", get_desktop_root("conf")))
-  return render('check_config.mako', request, dict(
-                    error_list=_get_config_errors(cache=False),
-                    conf_dir=conf_dir))
+  # double request to this view
+  # first is page container, second is error check made with ajax 
+  show_error = False
+  error_list = conf_dir = None
+  if request.is_ajax():
+    show_error = True
+    conf_dir = os.path.realpath(os.getenv("HUE_CONF_DIR", get_desktop_root("conf")))
+    error_list = _get_config_errors(cache=False)
+  return render('check_config.mako', request, {
+                  'error_list': error_list,
+                  'conf_dir': conf_dir,
+                  'show_error': show_error
+              },force_template=True)
 
 def check_config_ajax(request):
   """Alert administrators about configuration problems."""
@@ -370,4 +379,3 @@ def check_config_ajax(request):
                 dict(error_list=error_list),
                 force_template=True)
 
-register_status_bar_view(check_config_ajax)
