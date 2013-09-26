@@ -590,12 +590,15 @@ class WebHdfs(Hdfs):
     else:
       # 'src' is a file.
       # If 'dest' is a directory, then copy 'src' into that directory.
-      # Other wise, copy to 'dest'.
+      # Otherwise, copy to 'dest'.
       if self.exists(dest) and self.isdir(dest):
         target_file = self.join(dest, self.basename(src))
         if self.exists(target_file) and allow_duplicate:
-          LOG.info("File '%s' copied to itself: duplication." % target_file)
-          self.copyfile(src, self.join(dest, duplicate_prefix + self.basename(src)))
+          if target_file == src:
+            LOG.info("File '%s' copied to itself: duplication." % target_file)
+            self.copyfile(src, self.join(dest, duplicate_prefix + self.basename(src)))
+          else:
+            raise IOError(errno.ENOENT, _("%s already exists") % src)
         else:
           self.copyfile(src, target_file)
       else:
