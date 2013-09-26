@@ -137,7 +137,6 @@ class WebhdfsTests(unittest.TestCase):
 
   def test_copy_remote_dir(self):
     fs = self.cluster.fs
-
     src_dir = '/copy_remote_dir'
     fs.mkdir(src_dir)
     f1 = fs.open("/copy_remote_dir/test_one.txt", "w")
@@ -165,6 +164,7 @@ class WebhdfsTests(unittest.TestCase):
 
     src_names = set([stat.name for stat in src_stat])
     dest_names = set([stat.name for stat in dest_stat])
+
     assert_true(src_names)
     assert_equals(src_names, dest_names)
 
@@ -213,7 +213,7 @@ class WebhdfsTests(unittest.TestCase):
       listing = self.cluster.fs.listdir(parent)
       assertion(name in listing, "%s should be in %s" % (name, listing))
 
-    name = u'''pt-Olá_ch-你好_ko-안녕_ru-Здравствуйте%20,.<>~`!@#$%^&()_-+='"'''
+    name = u'''pt-Olá_ch-你好_ko-안녕_ru-Здравствуйте%20,.~!@$&()_-+='''
     prefix = '/tmp/i18n'
     dir_path = '%s/%s' % (prefix, name)
     file_path = '%s/%s' % (dir_path, name)
@@ -225,7 +225,7 @@ class WebhdfsTests(unittest.TestCase):
       check_existence(name, prefix)
 
       # Create a file (same name) in the directory
-      self.cluster.fs.open(file_path, 'w').close()
+      self.cluster.fs.create(file_path, overwrite=True)
       # File is there
       check_existence(name, dir_path)
 
@@ -286,24 +286,24 @@ class WebhdfsTests(unittest.TestCase):
       f = fs.open(file1, "w")
       f.write("hello")
       f.close()
-
       # Check currrent permissions are not 777 (666 for file)
-      fs.chmod(dir1, 01000, recursive=True)
-      assert_equals(041000, fs.stats(dir1).mode)
-      assert_equals(041000, fs.stats(subdir1).mode)
-      assert_equals(0101000, fs.stats(file1).mode)
+
+      fs.chmod(dir1, 0000, recursive=True)
+      assert_equals(040000, fs.stats(dir1).mode)
+      assert_equals(040000, fs.stats(subdir1).mode)
+      assert_equals(0100000, fs.stats(file1).mode)
 
       # Chmod non-recursive
-      fs.chmod(dir1, 01222, recursive=False)
-      assert_equals(041222, fs.stats(dir1).mode)
-      assert_equals(041000, fs.stats(subdir1).mode)
-      assert_equals(0101000, fs.stats(file1).mode)
+      fs.chmod(dir1, 0222, recursive=False)
+      assert_equals(040222, fs.stats(dir1).mode)
+      assert_equals(040000, fs.stats(subdir1).mode)
+      assert_equals(0100000, fs.stats(file1).mode)
 
       # Chmod recursive
-      fs.chmod(dir1, 01444, recursive=True)
-      assert_equals(041444, fs.stats(dir1).mode)
-      assert_equals(041444, fs.stats(subdir1).mode)
-      assert_equals(0101444, fs.stats(file1).mode)
+      fs.chmod(dir1, 0444, recursive=True)
+      assert_equals(040444, fs.stats(dir1).mode)
+      assert_equals(040444, fs.stats(subdir1).mode)
+      assert_equals(0100444, fs.stats(file1).mode)
     finally:
       try:
         fs.rmtree(dir1)

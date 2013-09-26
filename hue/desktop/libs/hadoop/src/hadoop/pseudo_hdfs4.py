@@ -258,12 +258,12 @@ class PseudoHdfs4(object):
     # Make sure /tmp is 1777
     self.fs.setuser(self.superuser)
     if not self.fs.isdir('/tmp'):
-      self.fs.mkdir('/tmp', 01777)
+      self.fs.mkdir('/tmp', 0777)
     else:
-      self.fs.chmod('/tmp', 01777)
+      self.fs.chmod('/tmp', 0777)
 
-    self.fs.chmod(self._tmpdir, 01777)
-    self.fs.chmod(self._tmpdir + '/hadoop_tmp_dir/mapred', 01777)
+    self.fs.chmod(self._tmpdir, 0777)
+    self.fs.chmod(self._tmpdir + '/hadoop_tmp_dir/mapred', 0777)
 
 
   def _start_mr1(self, env):
@@ -417,7 +417,8 @@ class PseudoHdfs4(object):
       'dfs.datanode.http.address': '0.0.0.0:0',
       'dfs.datanode.ipc.address': '%s:0' % self._fqdn,
       'dfs.replication': 1,
-      'dfs.safemode.min.datanodes': 1
+      'dfs.safemode.min.datanodes': 1,
+      'dfs.support.broken.append': 'true'
     }
     self._hdfs_site = self._tmppath('conf/hdfs-site.xml')
     write_config(hdfs_configs, self._hdfs_site)

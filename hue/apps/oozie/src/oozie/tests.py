@@ -751,23 +751,23 @@ class TestEditor(OozieMockBase):
   def test_workflow_gen_xml(self):
     assert_equal(
         '<workflow-app name="wf-name-1" xmlns="uri:oozie:workflow:0.2">\n'
-        '    <global>\n'
-        '        <job-xml>jobconf.xml</job-xml>\n'
-        '        <configuration>\n'
-        '            <property>\n'
-        '                <name>sleep-all</name>\n'
-        '                <value>${SLEEP}</value>\n'
-        '            </property>\n'
-        '         </configuration>\n'
-        '    </global>\n'
+        '  <global>\n'
+        '      <job-xml>jobconf.xml</job-xml>\n'
+        '            <configuration>\n'
+        '                <property>\n'
+        '                    <name>sleep-all</name>\n'
+        '                    <value>${SLEEP}</value>\n'
+        '                </property>\n'
+        '            </configuration>\n'
+        '  </global>\n'
         '    <start to="action-name-1"/>\n'
         '    <action name="action-name-1">\n'
         '        <map-reduce>\n'
-        '           <job-tracker>${jobTracker}</job-tracker>\n'
+        '            <job-tracker>${jobTracker}</job-tracker>\n'
         '            <name-node>${nameNode}</name-node>\n'
         '            <prepare>\n'
-        '                <delete path="${nameNode}${output}"/>\n'
-        '                <mkdir path="${nameNode}/test"/>\n'
+        '                  <delete path="${nameNode}/user/${wf:user()}/${output}"/>\n'
+        '                  <mkdir path="${nameNode}/test"/>\n'
         '            </prepare>\n'
         '            <configuration>\n'
         '                <property>\n'
@@ -784,8 +784,8 @@ class TestEditor(OozieMockBase):
         '            <job-tracker>${jobTracker}</job-tracker>\n'
         '            <name-node>${nameNode}</name-node>\n'
         '            <prepare>\n'
-        '                <delete path="${nameNode}${output}"/>\n'
-        '                <mkdir path="${nameNode}/test"/>\n'
+        '                  <delete path="${nameNode}/user/${wf:user()}/${output}"/>\n'
+        '                  <mkdir path="${nameNode}/test"/>\n'
         '            </prepare>\n'
         '            <configuration>\n'
         '                <property>\n'
@@ -802,8 +802,8 @@ class TestEditor(OozieMockBase):
         '            <job-tracker>${jobTracker}</job-tracker>\n'
         '            <name-node>${nameNode}</name-node>\n'
         '            <prepare>\n'
-        '                <delete path="${nameNode}${output}"/>\n'
-        '                <mkdir path="${nameNode}/test"/>\n'
+        '                  <delete path="${nameNode}/user/${wf:user()}/${output}"/>\n'
+        '                  <mkdir path="${nameNode}/test"/>\n'
         '            </prepare>\n'
         '            <configuration>\n'
         '                <property>\n'
@@ -959,14 +959,13 @@ class TestEditor(OozieMockBase):
     Link(parent=action1, child=self.wf.end, name="ok").save()
 
     xml = self.wf.to_xml({'mkdir2': '/path'})
-
     assert_true("""
     <action name="MyFs">
         <fs>
               <delete path='${nameNode}/to/delete'/>
               <delete path='${nameNode}/user/${wf:user()}/to/delete2'/>
               <mkdir path='${nameNode}/to/mkdir'/>
-              <mkdir path='${nameNode}${mkdir2}'/>
+              <mkdir path='${nameNode}/user/${wf:user()}/${mkdir2}'/>
               <move source='${nameNode}/to/move/source' target='${nameNode}/to/move/destination'/>
               <move source='${nameNode}/to/move/source2' target='${nameNode}/to/move/destination2'/>
               <chmod path='${nameNode}/to/chmod' permissions='-rwxrw-rw-' dir-files='true'/>
@@ -1085,7 +1084,6 @@ class TestEditor(OozieMockBase):
     Link(parent=action1, child=self.wf.end, name="ok").save()
 
     xml = self.wf.to_xml()
-
     assert_true("""
     <action name="Generic">
         <email xmlns="uri:oozie:email-action:0.1">
@@ -1339,10 +1337,9 @@ class TestEditor(OozieMockBase):
                            {"type": "delete","value": "/user/test/out"},
                            {"type": "delete","value": "hdfs://localhost:8020/user/test/out"}])
     action1.save()
-
     xml = self.wf.to_xml({'output': '/path'})
 
-    assert_true('<delete path="${nameNode}${output}"/>' in xml, xml)
+    assert_true('<delete path="${nameNode}/user/${wf:user()}/${output}"/>' in xml, xml)
     assert_true('<delete path="${nameNode}/user/${wf:user()}/out"/>' in xml, xml)
     assert_true('<delete path="${nameNode}/user/test/out"/>' in xml, xml)
     assert_true('<delete path="hdfs://localhost:8020/user/test/out"/>' in xml, xml)
@@ -2844,13 +2841,13 @@ class TestUtils(OozieMockBase):
     assert_equal('${nameNode}/user/${wf:user()}/out', smart_path('out', {'output': '/path/out'}))
     assert_equal('${nameNode}/path', smart_path('/path', {'output': '/path/out'}))
     assert_equal('${nameNode}/path', smart_path('/path', {}))
-    assert_equal('${nameNode}${output}', smart_path('${output}', {'output': '/path/out'}))
+    assert_equal('${nameNode}/user/${wf:user()}/${output}', smart_path('${output}', {'output': '/path/out'}))
     assert_equal('hdfs://nn${output}', smart_path('hdfs://nn${output}', {'output': '/path/out'}))
 
-    assert_equal('${output}', smart_path('${output}', {}))
-    assert_equal('${output}', smart_path('${output}', {'output': 'hdfs://nn/path/out'}))
-    assert_equal('${output}', smart_path('${output}', {'output': '${path}'}))
-    assert_equal('${output_dir}', smart_path('${output_dir}', {'output': '/path/out', 'output_dir': 'hdfs://nn/path/out'}))
+    assert_equal('${nameNode}/user/${wf:user()}/${output}', smart_path('${output}', {}))
+    assert_equal('${nameNode}/user/${wf:user()}/${output}', smart_path('${output}', {'output': 'hdfs://nn/path/out'}))
+    assert_equal('${nameNode}/user/${wf:user()}/${output}', smart_path('${output}', {'output': '${path}'}))
+    assert_equal('${nameNode}/user/${wf:user()}/${output_dir}', smart_path('${output_dir}', {'output': '/path/out', 'output_dir': 'hdfs://nn/path/out'}))
 
 
 # Utils
