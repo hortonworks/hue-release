@@ -102,7 +102,8 @@ ${layout.menubar(section='tables')}
                     placeholder="/user/user_name/data_dir",
                     klass="pathChooser",
                     file_chooser=True,
-                    show_errors=False
+                    show_errors=False,
+                    attrs={'autocomplete':'off'}
                     )}
                     <span class="help-inline error-inline hide">${_('This field is required. Select path to the file on HDFS.')}</span>
                 </div>
@@ -365,6 +366,9 @@ ${layout.menubar(section='tables')}
         width: 80%;
     }
 
+    .notFound {
+        background-color: #f09999 !important;
+    }
 </style>
 
 </div>
@@ -556,8 +560,47 @@ $(document).ready(function () {
         $("#chooseFile").modal("show");
     });
 
-    $('.pathChooser').change(function () {
-        reactOnFilePathChange($(this).val());
+    var pathChooser = $('.pathChooser');
+
+    pathChooser.typeahead({
+        source: function (path,resp) {
+            pathChooser.removeClass('notFound');
+            if (path.slice(-1) != '/') path = path.replace(/\\/g,'/').replace(/\/[^\/]*$/, '')+'/';
+            $.get(
+                "/filebrowser/view" + path,
+                function (data) {
+                    var complitions = [];
+                    if (data.error != null) {
+                      $.jHueNotify.error(data.error);
+                      pathChooser.addClass('notFound');
+                      complitions.length = 0;
+                    } else {
+                      $(data.files).each(function (cnt, item) {
+                        itm_name = item.name;
+                        if (itm_name != ".") {
+                          var _ico = "icon-file";
+                          if (item.type == "dir") {
+                            _ico = "icon-folder-close";
+                          }
+                          complitions.push(path+itm_name);
+                        }
+                      });
+                      window.setTimeout(function () {
+                        return resp(complitions);
+                      }, 50);  // timeout for IE8
+                    }
+                },'json'
+            );
+        },
+        updater: function (item) {
+            $.get("/filebrowser/view" + item,
+                function (data) {
+                    if (data.type=='file') {
+                        reactOnFilePathChange(pathChooser.val())}
+                },'json');
+            return item;
+        },
+        items:15
     });
 
     $('form#mainForm').submit(function (event) {
