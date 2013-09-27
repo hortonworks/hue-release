@@ -1,6 +1,6 @@
 [sandbox]
 name=Sandbox repo
-baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/repo/dev/Comanche/utils/
+baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/repo/dev/condorM30-2.2.0/utils/
 path=/
 enabled=1
 gpgcheck=0
@@ -9,7 +9,7 @@ gpgcheck=0
 [hue-bigtop]
 # dev repository
 name=Hue repository
-baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/repo/dev/Comanche/bigtop/centos6/
+baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/repo/dev/condorM30-2.2.0/bigtop/centos6/
 path=/
 enabled=1
 gpgcheck=0
