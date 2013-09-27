@@ -1062,13 +1062,11 @@ def copy(request):
     params = ['src_path']
     def bulk_copy(*args, **kwargs):
         for arg in args:
-            request.fs.copy(arg['src_path'], arg['dest_path'], recursive=True, owner=request.user,
-                            allow_duplicate=True)
+            request.fs.copy(arg['src_path'], arg['dest_path'], recursive=True, owner=request.user)
     return generic_op(CopyFormSet, request, bulk_copy, ["src_path", "dest_path"], None,
                       data_extractor=formset_data_extractor(recurring, params),
                       arg_extractor=formset_arg_extractor,
                       initial_value_extractor=formset_initial_value_extractor)
-
 
 @require_http_methods(["POST"])
 def chmod(request):
