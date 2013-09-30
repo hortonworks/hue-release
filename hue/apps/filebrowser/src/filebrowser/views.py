@@ -54,6 +54,7 @@ from desktop.lib.conf import coerce_bool
 from desktop.lib.django_util import make_absolute, render, render_json, format_preserving_redirect
 from desktop.lib.exceptions_renderable import PopupException
 from filebrowser.conf import MAX_SNAPPY_DECOMPRESSION_SIZE
+from filebrowser import conf
 from filebrowser.lib.archives import archive_factory
 from filebrowser.lib.rwx import filetype, rwx
 from filebrowser.lib import xxd
@@ -70,7 +71,8 @@ from django.utils.translation import ugettext as _
 
 DEFAULT_CHUNK_SIZE_BYTES = 1024 * 4 # 4KB
 MAX_CHUNK_SIZE_BYTES = 1024 * 1024 # 1MB
-DOWNLOAD_CHUNK_SIZE = 64 * 1024 * 1024 # 64MB
+DOWNLOAD_CHUNK_SIZE = conf.HDFS_DOWNLOAD_CHUNK_SIZE.get()
+USER_DOWNLOAD_CHUNK_SIZE = conf.USER_DOWNLOAD_CHUNK_SIZE.get()
 
 # Defaults for "xxd"-style output.
 # Sentences refer to groups of bytes printed together, within a line.
@@ -98,7 +100,12 @@ def _file_reader(fh):
         if chunk == '':
             fh.close()
             break
-        yield chunk
+
+        chunk_buf = buffer(chunk)
+        chunk_count = -(-len(chunk_buf)/USER_DOWNLOAD_CHUNK_SIZE)  # ceiling integer division
+        logging.debug("Downloading chunk [%d subchunks]" % chunk_count)
+        for subchunk in xrange(chunk_count):
+            yield chunk_buf[subchunk * USER_DOWNLOAD_CHUNK_SIZE : (subchunk+1) * USER_DOWNLOAD_CHUNK_SIZE]
 
 
 def download(request, path):

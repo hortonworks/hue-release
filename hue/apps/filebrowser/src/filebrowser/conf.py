@@ -27,3 +27,15 @@ MAX_SNAPPY_DECOMPRESSION_SIZE = Config(
   private=True,
   default=1024*1024*25,
   type=int)
+
+HDFS_DOWNLOAD_CHUNK_SIZE = Config(
+  key="hdfs_download_chunk_size",
+  help=_("Size of chunk downladable from HDFS."),
+  default=64 * 1024 * 1024, # 64MB
+  type=int)
+
+USER_DOWNLOAD_CHUNK_SIZE = Config(
+  key="hdfs_download_chunk_size",
+  help=_("Size of chunk downladable from HDFS."),
+  default=1 * 1024 * 1024, # 1MB
+  type=int)
