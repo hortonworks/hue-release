@@ -417,6 +417,26 @@ ul.errorlist li {
     padding-bottom:0;
 }
 
+.dropdown-menu {
+    max-height: 208px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.dropdown-menu .active>a,
+.dropdown-menu .active>a:hover{color:#fff;
+    text-decoration:none;
+    background-color:#69be28;
+    background-image:linear-gradient(to bottom,#69be28,#3ea211);
+    background-image:-moz-linear-gradient(top,#69be28,#3ea211);
+    background-image:-webkit-gradient(linear,0 0,0 100%,from(#69be28),to(#3ea211));
+    background-image:-webkit-linear-gradient(top,#69be28,#3ea211);
+    background-image:-o-linear-gradient(top,#69be28,#3ea211);
+    background-repeat:repeat-x;
+    outline:0;
+    filter:progid:dximagetransform.microsoft.gradient(startColorstr='#ff0088cc',endColorstr='#ff0077b3',GradientType=0)
+}
+
 /*********************************************************
  * From: http://datatables.net/blog/Twitter_Bootstrap
  */
