@@ -417,6 +417,12 @@ ul.errorlist li {
     padding-bottom:0;
 }
 
+.dropdown-menu {
+    max-height: 208px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
 .dropdown-menu .active>a,
 .dropdown-menu .active>a:hover{color:#fff;
     text-decoration:none;

@@ -25,6 +25,7 @@
         fixedHeader:false,
         firstColumnTooltip:false,
         hintElement:null,
+        typeaheadItems:200,
         labels:{
           GO_TO_COLUMN:"Go to column:",
           PLACEHOLDER:"column name..."
@@ -91,8 +92,10 @@
       source.push($(this).text());
     });
 
+    var dropScroll = (!jQuery.browser.mozilla)?'keydown':'keyup';
     jHueTableExtenderNavigator.find("input").typeahead({
       source:source,
+      items: _this.options.typeaheadItems,
       updater:function (item) {
         jHueTableExtenderNavigator.hide();
         $(_this.element).find("tr td:nth-child(" + ($(_this.element).find("th:econtains(" + item + ")").index() + 1) + ")").addClass("columnSelected");
@@ -108,6 +111,9 @@
         }, 300);
         $(_this.element).find("tr.rowSelected td:nth-child(" + ($(_this.element).find("th:econtains(" + item + ")").index() + 1) + ")").addClass("cellSelected");
       }
+    }).on(dropScroll,function () {
+      var tdm = $('.typeahead.dropdown-menu');
+          tdm.scrollTop(tdm.find('li').index(tdm.find('.active'))*tdm.find('li').height());
     });
 
     $(_this.element).parent().bind("mouseleave", function () {
