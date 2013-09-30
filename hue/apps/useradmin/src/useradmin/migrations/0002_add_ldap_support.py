@@ -11,23 +11,12 @@ from useradmin.models import UserProfile
 class Migration(DataMigration):
 
     def forwards(self, orm):
-        """
-        This migration has been customized to support upgrades from Cloudera
-        Enterprise 3.5, as well as Hue 1.2
-        """
-        try:
-          db.rename_table('userman_ldapgroup', 'useradmin_ldapgroup')
-          db.delete_column('useradmin_ldapgroup', 'hidden')
-        except Exception, e:
-          db.rollback_transaction()
-          db.start_transaction()
-
-          # Adding model 'LdapGroup'
-          db.create_table('useradmin_ldapgroup', (
-              ('group', self.gf('django.db.models.fields.related.ForeignKey')(related_name='group', to=orm['auth.Group'])),
-              ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-          ))
-          db.send_create_signal('useradmin', ['LdapGroup'])
+        # Adding model 'LdapGroup'
+        db.create_table('useradmin_ldapgroup', (
+            ('group', self.gf('django.db.models.fields.related.ForeignKey')(related_name='group', to=orm['auth.Group'])),
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+        ))
+        db.send_create_signal('useradmin', ['LdapGroup'])
 
         # Adding field 'UserProfile.creation_method'
         try:

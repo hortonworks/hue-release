@@ -21,13 +21,13 @@ class Migration(SchemaMigration):
     def backwards(self, orm):
 
         # Changing field 'OozieStreamingAction.job_properties'
-        db.alter_column('jobsub_ooziestreamingaction', 'job_properties', self.gf('django.db.models.fields.CharField')(max_length=32768))
+        db.alter_column('jobsub_ooziestreamingaction', 'job_properties', self.gf('django.db.models.fields.TextField')())
 
         # Changing field 'OozieMapreduceAction.job_properties'
-        db.alter_column('jobsub_ooziemapreduceaction', 'job_properties', self.gf('django.db.models.fields.CharField')(max_length=32768))
+        db.alter_column('jobsub_ooziemapreduceaction', 'job_properties', self.gf('django.db.models.fields.TextField')())
 
         # Changing field 'OozieJavaAction.job_properties'
-        db.alter_column('jobsub_ooziejavaaction', 'job_properties', self.gf('django.db.models.fields.CharField')(max_length=32768))
+        db.alter_column('jobsub_ooziejavaaction', 'job_properties', self.gf('django.db.models.fields.TextField')())
 
 
     models = {

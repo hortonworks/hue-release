@@ -17,8 +17,8 @@ class Migration(SchemaMigration):
     def backwards(self, orm):
 
         # Changing field 'JobDesign.data'
-        # db.alter_column('jobsub_jobdesign', 'data', self.gf('django.db.models.fields.CharField')(max_length=4096))
-        # db.alter_column('jobsub_ooziejavaaction', 'data', self.gf('django.db.models.fields.CharField')(max_length=4096, blank=True))
+        # db.alter_column('jobsub_jobdesign', 'data', self.gf('django.db.models.fields.TextField')())
+        # db.alter_column('jobsub_ooziejavaaction', 'data', self.gf('django.db.models.fields.TextField')(blank=True))
         raise RuntimeError(_("Cannot backwards migrate this change."))
 
     models = {
