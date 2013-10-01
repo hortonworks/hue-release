@@ -78,7 +78,7 @@ Vagrant.configure("2") do |config|
   #   end
 
   #   subconf.vm.provider :virtualbox do |vb|
-  #     vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox HDP2 Beta  Secure", "--groups", "/Hortonworks"]
+  #     vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox HDP2 GA  Secure", "--groups", "/Hortonworks"]
   #   end
   # end
 
