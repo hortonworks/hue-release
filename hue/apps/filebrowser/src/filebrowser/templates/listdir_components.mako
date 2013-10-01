@@ -317,7 +317,7 @@ from django.utils.translation import ugettext as _
                         <th class="center">${_('Group')}</th>
                         <th class="center">${_('Other')}</th>
                         <th class="center">&nbsp;</th>
-                        <th width="120">&nbsp</th>
+                        <th width="120">&nbsp;</th>
                     </tr>
                     </thead>
                     <tbody>
