@@ -10,7 +10,15 @@ ORACLE_INSTANTCLIENT_LD_CONF=/etc/ld.so.conf.d/oracle-instantclient-x86_64.conf
 #     instantclient-jdbc-linuxAMD64-10.1.0.5.0-20060519.zip (4,650,957 bytes) (cksum - 2639141761)
 #     instantclient-sqlplus-linuxAMD64-10.1.0.5.0-20060519.zip (366,963 bytes) (cksum - 567416601)
 #     instantclient-sdk-linuxAMD64-10.1.0.5.0-20060519.zip (294,632 bytes) (cksum - 3782887635)
-ORA_BACKEND_TAR_LINK=ftp://10.2.2.42/pub/temp/oracle-instantclientAMD64-10.1.0.5.0.tgz
+#
+#     to make this tarball:
+#     tar cfvz ./oracle-instantclientAMD64-10.1.0.5.0.tgz \
+#         ./instantclient-basic-linuxAMD64-10.1.0.5.0-20060519.zip \
+#         ./instantclient-jdbc-linuxAMD64-10.1.0.5.0-20060519.zip \
+#         ./instantclient-sqlplus-linuxAMD64-10.1.0.5.0-20060519.zip \
+#         ./instantclient-sdk-linuxAMD64-10.1.0.5.0-20060519.zip
+
+ORA_BACKEND_TAR_LINK=http://dev2.hortonworks.com.s3.amazonaws.com/stuff/oracle-instantclientAMD64-10.1.0.5.0.tgz
 ORA_BACKEND_TAR=$CUR_DIR/oracle-instantclientAMD64-10.1.0.5.0.tgz
 
 if [ ! -f "$ORA_BACKEND_TAR" ]; then

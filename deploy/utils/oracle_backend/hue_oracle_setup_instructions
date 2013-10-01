@@ -22,7 +22,7 @@ SQL> GRANT CONNECT, RESOURCE TO hue WITH ADMIN OPTION;
 Where 'name' is a SID value your Oracle database. To get this use the following command:
 SQL> select instance from v$thread;
 
-3. Download setup_oracle_backend.sh and oracle-instantclientAMD64-10.1.0.5.0.tgz into the same directory.
+3. Download setup_oracle_backend.sh script and execute it:
 cd YOUR_DOWNLOAD_DIR
 bash setup_oracle_backend.sh
 
