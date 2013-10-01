@@ -33,7 +33,7 @@
         </div>
     % endif
 
-    <textarea class="span9" rows="35" placeholder="${_('Example: SELECT * FROM tablename')}" name="${form.query["query"].html_name}" id="queryField">${extract_field_data(form.query["query"]) or ''}</textarea>
+    <textarea class="span9" rows="35" name="${form.query["query"].html_name}" id="queryField">${extract_field_data(form.query["query"]) or ''}</textarea>
 
     <div id="validationResults">
     % if len(form.query["query"].errors):
