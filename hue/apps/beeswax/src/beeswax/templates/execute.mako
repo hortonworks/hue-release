@@ -116,9 +116,7 @@ ${layout.menubar(section='query')}
 
                                 <div class="control-group">
                                     ${comps.label(f['type'])}
-                                    ${comps.field(f['type'], render_default=True, attrs=dict(
-                                        klass="span8"
-                                    ))}
+                                    ${comps.field(f['type'], render_default=True)}
                                 </div>
 
                                 <div class="control-group">
