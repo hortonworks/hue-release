@@ -371,7 +371,11 @@ class WebHdfs(Hdfs):
     params['destination'] = smart_str(new)
     result = self._root.put(old, params)
     if not result['boolean']:
-      raise IOError(_("Rename failed: %s -> %s") %
+      error_message = "Rename failed:"
+      if self.isdir(new) and not self.isdir(old):
+        error_message = "Move failed:"
+        new = Hdfs.join(new, self.basename(old))
+      raise IOError(_(error_message + " %s -> %s") %
                     (str(smart_str(old)), str(smart_str(new))))
 
   def rename_star(self, old_dir, new_dir):
