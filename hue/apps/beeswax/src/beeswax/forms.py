@@ -162,7 +162,8 @@ class FileResourceForm(forms.Form):
     ], help_text=_t("Resources to upload with your Hive job." +
        "  Use 'jar' for UDFs.  Use 'file' and 'archive' for "
        "files to be copied and made locally available during MAP/TRANSFORM. " +
-       "Paths are on HDFS.")
+       "Paths are on HDFS."),
+    widget=forms.widgets.Select(attrs={'class': 'span8'})
   )
 
   path = forms.CharField(required=True, help_text=_t("Path to file on HDFS."))
