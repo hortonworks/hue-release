@@ -149,7 +149,7 @@ UDF_PATH = conf.UDF_PATH.get()
                    % endif
                    />
               <%
-                runningJob = result.get("job_id") and result.get("JOB_SUBMITED")
+                runningJob = result.get("job_id") and result.get("JOB_SUBMITTED")
                 hideaction = 'display:none;'
               %>
 	            <input class="btn primary action_btn" type="button" id="start_job" name="submit_action" value="Execute" style="${ hideaction if runningJob else ''}"/>
@@ -347,7 +347,7 @@ var prefilledArgs = [\
     delay: 200
   });
 
-  % if result.get("job_id") and result.get("JOB_SUBMITED"):
+  % if result.get("job_id") and result.get("JOB_SUBMITTED"):
   percent = 10;
   ping_job("${result['job_id']}");
   % endif

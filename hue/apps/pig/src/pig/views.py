@@ -277,8 +277,8 @@ def show_job_result(request, job_id):
     result['job_id'] = job.job_id
     if job.email_notification:
         result['email_notification'] = True
-    if job.status == job.JOB_SUBMITED:
-        result['JOB_SUBMITED'] = True
+    if job.status == job.JOB_SUBMITTED:
+        result['JOB_SUBMITTED'] = True
     else:
         result.update(_job_result(request, job))
         result['stdout'] = result['stdout'].decode("utf-8")

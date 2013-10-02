@@ -50,11 +50,11 @@ class UDF(models.Model):
 
 
 class Job(models.Model):
-    JOB_SUBMITED = 1
+    JOB_SUBMITTED = 1
     JOB_COMPLETED = 2
 
     JOB_STATUSES = (
-        (JOB_SUBMITED, "Submited"),
+        (JOB_SUBMITTED, "Submitted"),
         (JOB_COMPLETED, "Completed"),
         (3, "Failed"),
     )
