@@ -311,7 +311,7 @@ def delete_job_object(request, job_id):
 
 
 @login_notrequired
-def notify_job_complited(request, job_id):
+def notify_job_completed(request, job_id):
     job = Job.objects.get(job_id=job_id)
     job.status = job.JOB_COMPLETED
     job.save()

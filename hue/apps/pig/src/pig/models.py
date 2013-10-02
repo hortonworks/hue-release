@@ -55,7 +55,7 @@ class Job(models.Model):
 
     JOB_STATUSES = (
         (JOB_SUBMITED, "Submited"),
-        (JOB_COMPLETED, "Complited"),
+        (JOB_COMPLETED, "Completed"),
         (3, "Failed"),
     )
 
