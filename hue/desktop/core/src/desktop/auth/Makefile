@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Werror -Wall -lpam
+CFLAGS := -Wall -lpam
 DESTDIR := build
 
 default: $(DESTDIR)/pam_auth
