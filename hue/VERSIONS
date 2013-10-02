@@ -1,4 +1,4 @@
-HUE_VERSION=2.2.0
+HUE_VERSION=2.3.0
 HDP=2.0.5
 Hadoop=1.2.0.1.3.0.0-107
 HCatalog=0.11.0.1.3.0.0-107
