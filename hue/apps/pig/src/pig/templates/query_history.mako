@@ -45,7 +45,7 @@ ${shared.menubar(section='Query history')}
               data_status = status = api.get_job(job.job_id).status
             except:
               data_status = 'RETIRED'
-              status = dict(Job.JOB_STATUSES)[job.status] if job.status != Job.JOB_SUBMITED else data_status
+              status = dict(Job.JOB_STATUSES)[job.status] if job.status != Job.JOB_SUBMITTED else data_status
           %>
           <span class="label status" data-status="${data_status}">${status}</span>
       </td>
