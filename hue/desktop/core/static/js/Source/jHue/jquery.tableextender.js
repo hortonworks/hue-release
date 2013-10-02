@@ -113,6 +113,7 @@
       }
     }).on(dropScroll,function () {
       var tdm = $('.typeahead.dropdown-menu');
+          tdm.css({'max-height':'208px', 'overflow-y':'auto', 'overflow-x':'hidden'});
           tdm.scrollTop(tdm.find('li').index(tdm.find('.active'))*tdm.find('li').height());
     });
 
