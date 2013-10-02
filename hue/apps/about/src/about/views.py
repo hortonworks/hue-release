@@ -78,7 +78,7 @@ def _read_versions(filename):
 
 def _get_components():
   components = []
-  HUE_VERSION = "2.2.0"
+  HUE_VERSION = "2.3.0"
   try:
     components += _read_versions(os.path.join(get_run_root(), "VERSIONS"))
     extra_versions_path = os.path.join(get_var_root(), "EXTRA_VERSIONS")
