@@ -9,21 +9,6 @@ ${shared.menubar(section='Query history')}
 
 ## Use double hashes for a mako template comment
 ## Main body
-<script src="/jobbrowser/static/js/utils.js" type="text/javascript"
-        charset="utf-8"></script>
-<script type="text/javascript">
-  $(document).ready(function(){
-    $(".status").each(function (i){
-      var label;
-      if ($(this).data("status") == 'RETIRED') {
-        label = 'label-success-warning';
-      } else {
-        label = getStatusClass($(this).data("status"));
-      };
-      $(this).attr("class", "label " + label);
-    })
-  });
-</script>
 <div class="span-5">
 <table class="table table-bordered">
 <thead>
@@ -40,14 +25,15 @@ ${shared.menubar(section='Query history')}
       <td>${job.start_time.strftime('%d.%m.%Y %H:%M')}</td>
       <td><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.title}</a></td>
       <td>
-          <%
-            try:
-              data_status = status = api.get_job(job.job_id).status
-            except:
-              data_status = 'RETIRED'
-              status = dict(Job.JOB_STATUSES)[job.status] if job.status != Job.JOB_SUBMITTED else data_status
-          %>
-          <span class="label status" data-status="${data_status}">${status}</span>
+          % if job.status == job.JOB_SUBMITTED:
+          <span class="label label-warning">RUNNING</span>
+          % elif job.status == job.JOB_FAILED:
+          <span class="label label-important">FAILED</span>
+           % elif job.status == job.JOB_KILLED:
+          <span class="label label-important">KILLED</span>
+          % else:
+          <span class="label label-success">SUCCEEDED</span>
+          % endif
       </td>
       <td><a href="${url("delete_job_object", job_id=job.job_id)}" onClick="return confirm('Are you sure you want to delete job result?');"><i class="icon-trash"></i> Delete</a></td>
     </tr>
