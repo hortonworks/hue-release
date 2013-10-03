@@ -28,8 +28,8 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_util import login_notrequired, render, get_desktop_uri_prefix
+from desktop.conf import SERVER_USER
 from filebrowser.views import _do_newfile_save, _file_reader, _upload_file
-from jobbrowser.api import get_api
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm
@@ -218,7 +218,9 @@ def kill_job(request):
     try:
         job_id = request.POST['job_id']
         t.kill_job(job_id)
-        Job.objects.get(job_id=request.POST['job_id']).delete()
+        job = Job.objects.get(job_id=request.POST['job_id'])
+        job.status = job.JOB_KILLED
+        job.save()
         return HttpResponse(json.dumps({"text": "Job %s was killed" % job_id}))
     except:
         return HttpResponse(json.dumps({"text": "An error was occured"}))
@@ -271,11 +273,10 @@ def query_history(request):
         jobs = paginator.page(page)
     except (EmptyPage, InvalidPage):
         jobs = paginator.page(paginator.num_pages)
-    api = get_api(request.user.username, request.jt)
     return render(
         "query_history.mako",
         request,
-        {"jobs": jobs, "api": api}
+        {"jobs": jobs}
     )
 
 
@@ -312,8 +313,21 @@ def delete_job_object(request, job_id):
 
 @login_notrequired
 def notify_job_completed(request, job_id):
+    t = Templeton(SERVER_USER.get())
     job = Job.objects.get(job_id=job_id)
     job.status = job.JOB_COMPLETED
+    try:
+        result = t.check_job(job_id)
+        exitValue = result['exitValue'] if 'exitValue' in result else None
+        completed = result['completed'] if 'completed' in result else None
+        runState = result['status']['runState'] if 'status' in result and 'runState' in result['status'] else None
+        if completed and exitValue != 0:
+            if runState == 5:
+                job.status = job.JOB_KILLED
+            else:
+                job.status = job.JOB_FAILED
+    except Exception, ex:
+        LOG.debug(unicode(ex))
     job.save()
     if job.email_notification:
         subject = 'Query result'
