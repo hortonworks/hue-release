@@ -52,11 +52,14 @@ class UDF(models.Model):
 class Job(models.Model):
     JOB_SUBMITTED = 1
     JOB_COMPLETED = 2
+    JOB_FAILED = 3
+    JOB_KILLED = 4
 
     JOB_STATUSES = (
         (JOB_SUBMITTED, "Submitted"),
         (JOB_COMPLETED, "Completed"),
-        (3, "Failed"),
+        (JOB_FAILED, "Failed"),
+        (JOB_KILLED, "Killed"),
     )
 
     EXECUTE = 1
