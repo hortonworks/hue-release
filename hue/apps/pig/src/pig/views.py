@@ -38,6 +38,8 @@ LOG = logging.getLogger(__name__)
 
 UDF_PATH = conf.UDF_PATH.get()
 
+JOB_RUN_STATES = {"RUNNING":1, "SUCCEEDED":2, "FAILED":3, "PREP":4, "KILLED":5}
+
 
 def index(request, obj_id=None):
     result = {}
@@ -301,6 +303,24 @@ def delete_job_object(request, job_id):
     return redirect(reverse("query_history"))
 
 
+def check_running_job(request, job_id):
+    t = Templeton(request.user.username)
+    job = Job.objects.get(job_id=job_id)
+    if job is not None:
+        try:
+            result = t.check_job(job_id)
+            runState = result['status']['runState'] if 'status' in result and 'runState' in result['status'] else None
+            if runState == JOB_RUN_STATES['KILLED']:
+                job.status = job.JOB_KILLED
+            elif runState == JOB_RUN_STATES['FAILED']:
+                job.status = job.JOB_FAILED
+            job.save()
+            return HttpResponse(json.dumps({"status":job.status}))
+        except Exception, ex:
+            LOG.debug(unicode(ex))
+    return HttpResponse(json.dumps({"status":0}))
+
+
 @login_notrequired
 def notify_job_completed(request, job_id):
     t = Templeton(SERVER_USER.get())
@@ -312,7 +332,7 @@ def notify_job_completed(request, job_id):
         completed = result['completed'] if 'completed' in result else None
         runState = result['status']['runState'] if 'status' in result and 'runState' in result['status'] else None
         if completed and exitValue != 0:
-            if runState == 5:
+            if runState == JOB_RUN_STATES.KILLED:
                 job.status = job.JOB_KILLED
             else:
                 job.status = job.JOB_FAILED

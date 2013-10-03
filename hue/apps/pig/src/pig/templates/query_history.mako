@@ -23,7 +23,11 @@ ${shared.menubar(section='Query history')}
 % for job in jobs.object_list:
     <tr>
       <td>${job.start_time.strftime('%d.%m.%Y %H:%M')}</td>
-      <td><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.title}</a></td>
+      <td
+        % if job.status == job.JOB_SUBMITTED:
+          class='running' data-jobid="${job.job_id}"
+        % endif
+        ><a href="${url("show_job_result", job_id=job.job_id)}">${job.script.title}</a></td>
       <td>
           % if job.status == job.JOB_SUBMITTED:
           <span class="label label-warning">RUNNING</span>
@@ -53,4 +57,20 @@ ${shared.menubar(section='Query history')}
    </ul>
 </div>
 </div>
+<script type="text/javascript">
+$(document).ready(function () {
+  $('.table tbody').find('td.running').each(function (i,_td) {
+    var td=_td;
+    $.post('/pig/check_running_job/'+$(td).data('jobid')+'/', function (data) {
+        var span = $(td).next().find('span');
+        if (data.status==${Job.JOB_FAILED}) {
+          span.attr('class','label label-important').text('FAILED');
+        } else if (data.status==${Job.JOB_KILLED}) {
+          span.attr('class','label label-important').text('KILLED');
+        }
+      },
+    'json');
+  });
+});
+</script>
 ${commonfooter(messages)| n,unicode}
