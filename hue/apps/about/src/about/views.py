@@ -27,6 +27,7 @@ from about import conf
 
 LOG = logging.getLogger(__name__)
 
+HUE_VERSION = "2.3.0"  # default version if VERSIONS file not exists
 
 def index(request):
   if request.method == 'POST':
@@ -59,6 +60,7 @@ def _get_tutorials_version():
 
 
 def _read_versions(filename):
+  global HUE_VERSION
   components = []
   with open(filename) as f:
     for line in f:
@@ -67,7 +69,7 @@ def _read_versions(filename):
         continue
       component, version = l
       if component == "HUE_VERSION":
-        HUE_VERSION, buildnumber = version.split(":")
+        HUE_VERSION, buildnumber = version.split("-")
         components.append(('Hue', version))
       elif component == "Sandbox":
         components.append(('Sandbox Build', version))
@@ -78,7 +80,6 @@ def _read_versions(filename):
 
 def _get_components():
   components = []
-  HUE_VERSION = "2.2.0"
   try:
     components += _read_versions(os.path.join(get_run_root(), "VERSIONS"))
     extra_versions_path = os.path.join(get_var_root(), "EXTRA_VERSIONS")
