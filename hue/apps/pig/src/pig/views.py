@@ -19,6 +19,7 @@ import logging
 import simplejson as json
 from datetime import datetime
 from os.path import basename
+import time
 
 from django.core.urlresolvers import reverse
 from django.shortcuts import redirect, get_object_or_404
@@ -30,6 +31,8 @@ from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_util import login_notrequired, render, get_desktop_uri_prefix
 from desktop.conf import SERVER_USER
 from filebrowser.views import _do_newfile_save, _file_reader, _upload_file
+from jobbrowser.api import get_api
+from jobbrowser import conf as jobbrowser_conf
 from pig.models import PigScript, UDF, Job
 from pig.templeton import Templeton
 from pig.forms import PigScriptForm
@@ -213,7 +216,7 @@ def start_job(request):
     )
 
 
-def kill_job(request):
+def kill_job_by_templeton(request):
     t = Templeton(request.user.username)
     try:
         job_id = request.POST['job_id']
@@ -224,6 +227,35 @@ def kill_job(request):
         return HttpResponse(json.dumps({"text": "Job %s was killed" % job_id}))
     except:
         return HttpResponse(json.dumps({"text": "An error was occured"}))
+
+
+def kill_job(request):
+    if request.method != "POST":
+        raise Exception("kill_job may only be invoked with a POST (got a %(method)s).") % dict(method=request.method)
+    job_id = request.POST['job_id']
+
+    # check job permission
+    try:
+        api = get_api(request.user, request.jt)
+        job = api.get_job(jobid=job_id)
+    except Exception, e:
+        return HttpResponse(json.dumps({"text": "Could not find job %s. The job might not be running yet." % job_id}))
+
+    if not jobbrowser_conf.SHARE_JOBS.get() and not request.user.is_superuser and job.user != request.user.username:
+        return HttpResponse(json.dumps({"text": "You don't have the permissions to access job %(id)s." % job_id}))
+    if job.user != request.user.username and not request.user.is_superuser:
+        return HttpResponse(
+            json.dumps({"text": "Permission denied.  User %(username)s cannot delete user %(user)s's job." %
+                                dict(username=request.user.username, user=job.user)}))
+    # killing job
+    job.kill()
+    cur_time = time.time()
+    while time.time() - cur_time < 15:
+        if job.status not in ["RUNNING", "QUEUED"]:
+            return HttpResponse(json.dumps({"text": "Job %s was killed" % job_id}))
+        time.sleep(1)
+        job = api.get_job(jobid=job_id)
+    return HttpResponse(json.dumps({"text": "An error was occurred: job did not appear as killed within 15 seconds"}))
 
 
 def _job_result(request, job):
@@ -273,6 +305,7 @@ def query_history(request):
         jobs = paginator.page(page)
     except (EmptyPage, InvalidPage):
         jobs = paginator.page(paginator.num_pages)
+
     return render(
         "query_history.mako",
         request,
@@ -311,6 +344,26 @@ def delete_job_object(request, job_id):
     return redirect(reverse("query_history"))
 
 
+def check_running_job(request, job_id):
+    t = Templeton(request.user.username)
+    job = Job.objects.get(job_id=job_id)
+    if job is not None:
+        try:
+            result = t.check_job(job_id)
+            exitValue = result['exitValue'] if 'exitValue' in result else None
+            completed = result['completed'] if 'completed' in result else None
+            runState = result['status']['runState'] if 'status' in result and 'runState' in result['status'] else None
+            if runState == job.TEMPLETON_JOB_RUN_STATE_KILLED:
+                job.status = job.JOB_KILLED
+            elif runState == job.TEMPLETON_JOB_RUN_STATE_FAILED or (completed and exitValue is not None and exitValue != 0):
+                job.status = job.JOB_FAILED
+            job.save()
+            return HttpResponse(json.dumps({"status": job.status}))
+        except Exception, ex:
+            LOG.debug(unicode(ex))
+    return HttpResponse(json.dumps({"status": 0}))
+
+
 @login_notrequired
 def notify_job_completed(request, job_id):
     t = Templeton(SERVER_USER.get())
@@ -321,11 +374,10 @@ def notify_job_completed(request, job_id):
         exitValue = result['exitValue'] if 'exitValue' in result else None
         completed = result['completed'] if 'completed' in result else None
         runState = result['status']['runState'] if 'status' in result and 'runState' in result['status'] else None
-        if completed and exitValue != 0:
-            if runState == 5:
-                job.status = job.JOB_KILLED
-            else:
-                job.status = job.JOB_FAILED
+        if runState == job.TEMPLETON_JOB_RUN_STATE_KILLED:
+            job.status = job.JOB_KILLED
+        elif runState == job.TEMPLETON_JOB_RUN_STATE_FAILED or (completed and exitValue is not None and exitValue != 0):
+            job.status = job.JOB_FAILED
     except Exception, ex:
         LOG.debug(unicode(ex))
     job.save()
