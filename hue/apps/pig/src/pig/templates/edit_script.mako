@@ -390,7 +390,7 @@ var prefilledArgs = [\
   $(".action_btn").live("click", function(e){
     $("#operation_type").attr("name", $(this).attr("id"));
     $("#operation_type").val(1);
-
+    $("#failure_info").addClass('hide');
     call_popup_var_edit($(this)).done(function() {
       $("#job_info_outer").removeClass('hide').html('<pre id="job_info"></pre>');
       $(".bar").attr("class", "bar");
