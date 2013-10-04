@@ -20,12 +20,14 @@ function ping_job(job_id){
         timeToGetJobResults = true;
       }
       if (data.status.runState == templetonJobRunStates.KILLED){
-        $("#failure_info").removeClass('hide').html("Job " + job_id + " was killed");
+        $("#failure_info").removeClass('hide').html("Job " + job_id + " was failed");
+        if (percent < 90){
+          percent = 90;
+        }
         timeToGetJobResults = true;
       }
       else if (data.status.runState == templetonJobRunStates.FAILED ||
-          (data.completed && data.exitValue != null && data.exitValue != 0) ||
-          (data.status.runState == templetonJobRunStates.SUCCEEDED && data.exitValue == null)){
+          (data.completed && data.exitValue != null && data.exitValue != 0)){
         $("#failure_info").removeClass('hide').html("Job " + job_id + " was failed");
         timeToGetJobResults = true;
       }
