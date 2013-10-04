@@ -359,7 +359,9 @@ def check_running_job(request, job_id):
             runState = result['status']['runState'] if 'status' in result and 'runState' in result['status'] else None
             if runState == job.TEMPLETON_JOB_RUN_STATE_KILLED:
                 job.status = job.JOB_KILLED
-            elif runState == job.TEMPLETON_JOB_RUN_STATE_FAILED or (completed and exitValue is not None and exitValue != 0):
+            elif runState == job.TEMPLETON_JOB_RUN_STATE_FAILED or \
+                (completed and exitValue is not None and exitValue != 0) or \
+                (runState == job.TEMPLETON_JOB_RUN_STATE_SUCCEEDED and exitValue is None):
                 job.status = job.JOB_FAILED
             job.save()
             return HttpResponse(json.dumps({"status": job.status}))
