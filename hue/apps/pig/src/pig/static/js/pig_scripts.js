@@ -24,7 +24,8 @@ function ping_job(job_id){
         timeToGetJobResults = true;
       }
       else if (data.status.runState == templetonJobRunStates.FAILED ||
-          (data.completed && data.exitValue != null && data.exitValue != 0)){
+          (data.completed && data.exitValue != null && data.exitValue != 0) ||
+          (data.status.runState == templetonJobRunStates.SUCCEEDED && data.exitValue == null)){
         $("#failure_info").removeClass('hide').html("Job " + job_id + " was failed");
         timeToGetJobResults = true;
       }
