@@ -285,10 +285,10 @@ var job_id = null;
 function get_job_result(job_id)
 {
     $.post("${url("get_job_result")}", {job_id: job_id}, function(data){
-        if (data.error==="" && data.stdout==="")
+        if (data.error==="" && data.stdout==="" && percent <= 100)
         {
             globalTimer = window.setTimeout("get_job_result('"+job_id+"');", 3000);
-            percent += 1;
+            percent += 5;
             $(".bar").css("width", percent+"%");
             return;
         }
@@ -297,8 +297,7 @@ function get_job_result(job_id)
         else $(".bar").addClass("bar-danger");
 
         $("#download_job_result").show();
-        $("#download_job_result").attr("href", "/pig/download_job_result/" +
-                                       job_id + "/");
+        $("#download_job_result").attr("href", "/pig/download_job_result/" + job_id + "/");
         //var stdout = escape(data.stdout).replace(/\n/g, "<br>");
         //stdout = stdout.replace(/\s/g, "&nbsp;");
         $('#accordion2').removeClass('hide');

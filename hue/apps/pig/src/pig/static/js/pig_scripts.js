@@ -6,36 +6,52 @@ var submitFormPopup=false;
 var db_list = {};
 var table_fields={};
 var tmpDirList={path:"",list:[]};
-
+var templetonJobRunStates = {RUNNING:1, SUCCEEDED:2, FAILED:3, PREP:4, KILLED:5};
 
 function ping_job(job_id){
   var url = '/pig/ping_job/';
+    var timeToGetJobResults = false;
   $.get(url+job_id + "/",
-      function(data) {
-        if (data.exitValue !== null)
-        {
-          if (data.status.failureInfo != 'NA')
-            $("#failure_info").removeClass('hide').html(data.status.failureInfo);
-	  	percent += 0.5;
-		$(".bar").css("width", percent+"%");
-	        globalTimer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
-          return
+    function(data) {
+      if (data.exitValue !== null){
+        if (data.status.failureInfo != 'NA'){
+          $("#failure_info").removeClass('hide').html(data.status.failureInfo);
         }
-        if (/[1-9]\d?0?\%/.test(data.percentComplete))
-        {
-          var job_done = parseInt(data.percentComplete.match(/\d+/)[0]);
-          if (job_done==100) job_done=90
-          percent = (job_done < percent)?percent:job_done;
-          $(".bar").css("width", percent + "%");
-        }
-        else
-        {
-	if (percent < 3)
-          percent += 1;
-          $(".bar").css("width", percent+"%");
-        }
-        globalTimer = window.setTimeout("ping_job('"+job_id+"');", 2000);
-      }, "json");
+        timeToGetJobResults = true;
+      }
+      if (data.status.runState == templetonJobRunStates.KILLED){
+        $("#failure_info").removeClass('hide').html("Job " + job_id + " was killed");
+        timeToGetJobResults = true;
+      }
+      else if (data.status.runState == templetonJobRunStates.FAILED ||
+          (data.completed && data.exitValue != null && data.exitValue != 0)){
+        $("#failure_info").removeClass('hide').html("Job " + job_id + " was failed");
+        timeToGetJobResults = true;
+      }
+      if(timeToGetJobResults)
+      {
+        percent += 0.5;
+        $(".bar").css("width", percent+"%");
+        globalTimer = window.setTimeout("get_job_result('"+job_id+"');", 8000);
+        return;
+      }
+
+
+      if (/[1-9]\d?0?\%/.test(data.percentComplete))
+      {
+        var job_done = parseInt(data.percentComplete.match(/\d+/)[0]);
+        if (job_done==100) job_done=90
+        percent = (job_done < percent)?percent:job_done;
+        $(".bar").css("width", percent + "%");
+      }
+      else
+      {
+	    if (percent < 3)
+        percent += 1;
+        $(".bar").css("width", percent+"%");
+      }
+      globalTimer = window.setTimeout("ping_job('"+job_id+"');", 2000);
+    }, "json");
 
     $("#kill_job").unbind('click');
     $("#kill_job").click(function(){
