@@ -47,22 +47,6 @@ class sandbox_rpm {
         content => "nameserver 8.8.8.8",
     }
 
-    file { 'HDP.repo':
-        path    => "/etc/yum.repos.d/HDP.repo",
-        ensure  => absent,
-    }
-
-    exec { 'yum_clean_all':
-        command => "yum clean all",
-    }
-
-    file { 'ambari.repo':
-        path    => "/etc/yum.repos.d/ambari.repo",
-        content => template("/vagrant/files/ambari.repo"),
-        ensure  => file,
-        require => [File['HDP.repo']],
-    }
-
     package { "yum-plugin-priorities":
         ensure => present,
     }
@@ -71,7 +55,7 @@ class sandbox_rpm {
         path    => "/etc/yum.repos.d/sandbox.repo",
         content => template("/vagrant/files/sandbox.repo"),
         ensure  => file,
-        require => [Package['yum-plugin-priorities'], File['ambari.repo']],
+        require => [Package['yum-plugin-priorities']],
     }
 
     file { 'issue':
@@ -105,8 +89,7 @@ class sandbox_rpm {
 
     package { ['hue', 'hue-sandbox']:
         ensure => latest,
-        require => [ Exec['yum_clean_all'],
-                     File['sandbox.repo'],
+        require => [ File['sandbox.repo'],
                      Package['libxslt'],
                      Package['python-lxml'],
                      Exec['yum-cache'],

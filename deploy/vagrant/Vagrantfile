@@ -42,6 +42,10 @@ Vagrant.configure("2") do |config|
   config.vm.define :default do |subconf|
     subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
       puppet.manifests_path = "manifests"
+      puppet.manifest_file  = "update-repo.pp"
+    end
+    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
+      puppet.manifests_path = "manifests"
       puppet.manifest_file  = "sandbox_full.pp"
     end
   end
