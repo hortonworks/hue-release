@@ -47,6 +47,12 @@ class sandbox_rpm {
         content => "nameserver 8.8.8.8",
     }
 
+    file { 'ambari.repo':
+        path    => "/etc/yum.repos.d/ambari.repo",
+        content => template("/vagrant/files/ambari.repo"),
+        ensure  => file,
+    }
+
     package { "yum-plugin-priorities":
         ensure => present,
     }
@@ -55,7 +61,7 @@ class sandbox_rpm {
         path    => "/etc/yum.repos.d/sandbox.repo",
         content => template("/vagrant/files/sandbox.repo"),
         ensure  => file,
-        require => [Package['yum-plugin-priorities']],
+        require => [Package['yum-plugin-priorities'], File['ambari.repo']],
     }
 
     file { 'issue':
