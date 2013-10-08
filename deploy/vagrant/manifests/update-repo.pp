@@ -4,7 +4,7 @@ file { 'HDP.repo':
 }
 
 exec { 'yum_clean_all':
-    command => "yum clean all",
+    command => "/usr/bin/yum clean all",
     require => [File['HDP.repo']]
 }
 
