@@ -52,11 +52,15 @@ class sandbox_rpm {
         ensure  => absent,
     }
 
+    exec { 'yum_clean_all':
+        command => "yum clean all",
+    }
+
     file { 'ambari.repo':
         path    => "/etc/yum.repos.d/ambari.repo",
         content => template("/vagrant/files/ambari.repo"),
         ensure  => file,
-        require => [File['HDP.repo']],
+        require => [File['HDP.repo'], Exec['yum_clean_all']],
     }
 
     package { "yum-plugin-priorities":
