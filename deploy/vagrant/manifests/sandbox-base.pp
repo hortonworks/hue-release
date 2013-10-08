@@ -49,8 +49,14 @@ class sandbox_rpm {
 
     file { 'HDP.repo':
         path    => "/etc/yum.repos.d/HDP.repo",
-        content => template("/vagrant/files/HDP.repo"),
+        ensure  => absent,
+    }
+
+    file { 'ambari.repo':
+        path    => "/etc/yum.repos.d/ambari.repo",
+        content => template("/vagrant/files/ambari.repo"),
         ensure  => file,
+        require => [File['HDP.repo']],
     }
 
     package { "yum-plugin-priorities":
@@ -61,7 +67,7 @@ class sandbox_rpm {
         path    => "/etc/yum.repos.d/sandbox.repo",
         content => template("/vagrant/files/sandbox.repo"),
         ensure  => file,
-        require => [Package['yum-plugin-priorities'], File['HDP.repo']],
+        require => [Package['yum-plugin-priorities'], File['ambari.repo']],
     }
 
     file { 'issue':
