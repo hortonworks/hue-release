@@ -60,7 +60,7 @@ class sandbox_rpm {
         path    => "/etc/yum.repos.d/ambari.repo",
         content => template("/vagrant/files/ambari.repo"),
         ensure  => file,
-        require => [File['HDP.repo'], Exec['yum_clean_all']],
+        require => [File['HDP.repo']],
     }
 
     package { "yum-plugin-priorities":
@@ -105,7 +105,8 @@ class sandbox_rpm {
 
     package { ['hue', 'hue-sandbox']:
         ensure => latest,
-        require => [ File['sandbox.repo'],
+        require => [ Exec['yum_clean_all'],
+                     File['sandbox.repo'],
                      Package['libxslt'],
                      Package['python-lxml'],
                      Exec['yum-cache'],
