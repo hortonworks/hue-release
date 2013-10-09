@@ -110,6 +110,7 @@ def test_tricky_confparse():
   assert_equal("org.apache.hadoop.examples.SleepJob", cp_data["mapred.mapper.class"])
 
 
+@attr('requires_hadoop')
 def test_config_validator_basic():
   reset = (
     conf.HDFS_CLUSTERS['default'].WEBHDFS_URL.set_for_testing('http://not.the.re:50070/'),

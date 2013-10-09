@@ -15,25 +15,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from desktop.lib import django_mako
 
-from nose.tools import assert_true, assert_equal, assert_not_equal
-from django.conf.urls.defaults import patterns, url
-from django.core.urlresolvers import reverse
-from django.http import HttpResponse
-from django.db.models import query, CharField, SmallIntegerField
-from desktop.lib.django_test_util import make_logged_in_client
-from desktop.lib.paginator import Paginator
-from desktop.lib.conf import validate_path
 import desktop
 import desktop.urls
 import desktop.conf
 import logging
+import os
 import time
-from desktop.lib.django_util import TruncatingModel
-from desktop.lib.exceptions_renderable import PopupException
+
 import desktop.views as views
 import proxy.conf
+
+from nose.plugins.attrib import attr
+from nose.tools import assert_true, assert_equal, assert_not_equal, assert_raises
+from django.conf.urls.defaults import patterns, url
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse
+from django.db.models import query, CharField, SmallIntegerField
+
+from desktop.lib import django_mako
+from desktop.lib.django_test_util import make_logged_in_client
+from desktop.lib.paginator import Paginator
+from desktop.lib.conf import validate_path
+from desktop.lib.django_util import TruncatingModel
+from desktop.lib.exceptions_renderable import PopupException
+from desktop.lib.test_utils import grant_access
+from desktop.views import check_config_ajax
 
 
 def setup_test_environment():
@@ -125,6 +132,26 @@ def test_dump_config():
   assert_true(CANARY in response1.content, response1.content)
 
   clear()
+
+  CANARY = '/tmp/space.dat'
+  finish = proxy.conf.WHITELIST.set_for_testing(CANARY)
+  try:
+    response = c.get('/dump_config')
+    assert_true(CANARY in response.content, response.content)
+  finally:
+    finish()
+
+  # Login as someone else
+  client_not_me = make_logged_in_client(username='not_me', is_superuser=False, groupname='test')
+  grant_access("not_me", "test", "desktop")
+
+  response = client_not_me.get('/dump_config')
+  assert_equal("You must be a superuser.", response.content)
+
+  os.environ["HUE_CONF_DIR"] = "/tmp/test_hue_conf_dir"
+  resp = c.get('/dump_config')
+  del os.environ["HUE_CONF_DIR"]
+  assert_true('/tmp/test_hue_conf_dir' in resp.content, resp)
 
 
 def test_prefs():
@@ -295,7 +322,7 @@ def test_error_handling():
 def test_error_handling_failure():
   # Change rewrite_user to call has_hue_permission
   # Try to get filebrowser page
-  # test for werkzeug debugger
+  # test for default 500 page
   # Restore rewrite_user
   import desktop.auth.backend
 
@@ -311,15 +338,13 @@ def test_error_handling_failure():
     delattr(user, 'has_hue_permission')
     return user
 
-  def store_exc_info(*args, **kwargs): pass
-  c.store_exc_info = store_exc_info
-
   original_rewrite_user = desktop.auth.backend.rewrite_user
   desktop.auth.backend.rewrite_user = rewrite_user
 
   try:
-    response = c.get('/dump_config')
-    assert_true('AttributeError at /dump_config' in response.content, response)
+    # Make sure we are showing default 500.html page.
+    # See django.test.client#L246
+    assert_raises(AttributeError, c.get, '/dump_config')
   finally:
     # Restore the world
     restore_django_debug()
@@ -365,7 +390,7 @@ def test_log_event():
   c.post("/log_frontend_event", {
     "message": "01234567" * 1024})
   assert_equal("INFO", handler.records[-1].levelname)
-  assert_equal("Untrusted log event from user test: " + "01234567"*(1024/8), 
+  assert_equal("Untrusted log event from user test: " + "01234567"*(1024/8),
     handler.records[-1].message)
 
   root.removeHandler(handler)
@@ -379,6 +404,7 @@ def test_validate_path():
   assert_not_equal([], validate_path(desktop.conf.SSL_PRIVATE_KEY, is_dir=True))
   reset()
 
+@attr('requires_hadoop')
 def test_config_check():
   reset = (
     desktop.conf.SECRET_KEY.set_for_testing(''),
@@ -397,9 +423,15 @@ def test_config_check():
     assert_true('klingon' in resp.content, resp)
     assert_true('Encoding not supported' in resp.content, resp)
 
+    # Set HUE_CONF_DIR and make sure check_config returns appropriate conf
+    os.environ["HUE_CONF_DIR"] = "/tmp/test_hue_conf_dir"
+    resp = cli.get('/debug/check_config')
+    del os.environ["HUE_CONF_DIR"]
+    assert_true('/tmp/test_hue_conf_dir' in resp.content, resp)
+
     # Alert present in the status bar
-    resp = cli.get('/status_bar/')
-    assert_true('Misconfiguration' in resp.content)
+    resp = cli.get('/about', follow=True)
+    assert_true('misconfiguration' in resp.content, resp.content)
   finally:
     for old_conf in reset:
       old_conf()
@@ -410,7 +442,7 @@ def test_last_access_time():
   c.post('/accounts/login/')
   login = desktop.auth.views.get_current_users()
   before_access_time = time.time()
-  response = c.post('/status_bar')
+  response = c.post('/about')
   after_access_time = time.time()
   access = desktop.auth.views.get_current_users()
 
@@ -433,8 +465,15 @@ def test_ui_customizations():
 
   try:
     c = make_logged_in_client()
-    resp = c.get('/debug/check_config')
-    assert_true(custom_banner in resp.content)
+    resp = c.get('/about', follow=True)
+    assert_true(custom_banner in resp.content, resp)
   finally:
     for old_conf in reset:
       old_conf()
+
+
+@attr('requires_hadoop')
+def test_check_config_ajax():
+  c = make_logged_in_client()
+  response = c.get(reverse(check_config_ajax))
+  assert_true("Misconfiguration" in response.content, response.content)

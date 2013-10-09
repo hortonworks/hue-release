@@ -104,11 +104,11 @@ ${layout.menubar(section='dump_config')}
                     <p class="dump_config_help"><i>${_('No variables are currently configured for the ')}${config_obj.config.key}${_(' application')}</i></p>
                 % endif
               % else:
-                <p>${str(config_obj.get_raw())}</p>
+                <p>${str(config_obj.get_raw()).decode('utf-8', 'replace')}</p>
                 % if config_obj.config.help:
                 <p class="dump_config_help"><i>${config_obj.config.help}</i></p>
                 % endif
-                <p class="dump_config_default">${_('Default:')} <i>${config_obj.config.default}</i></p>
+                <p class="dump_config_default">${_('Default:')} <i>${str(config_obj.config.default).decode('utf-8', 'replace')}</i></p>
               % endif
               </td>
             </tr>
