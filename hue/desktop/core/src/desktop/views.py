@@ -52,12 +52,17 @@ def log_view(request):
   if not request.user.is_superuser:
     return HttpResponse(_("You must be a superuser."))
 
+  logs = dict(log=[_("No logs found!")])
   l = logging.getLogger()
   for h in l.handlers:
     if isinstance(h, desktop.log.log_buffer.FixedBufferHandler):
-      return render('logs.mako', request, dict(log=[l for l in h.buf], query=request.GET.get("q", "")))
+      logs = dict(log=[l for l in h.buf], query=request.GET.get("q", ""))
 
-  return render('logs.mako', request, dict(log=[_("No logs found!")]))
+  if request.method == 'POST':
+    return render_json(logs)
+  else:
+    return render('logs.mako', request, logs)
+
 
 @access_log_level(logging.WARN)
 def download_log_view(request):
