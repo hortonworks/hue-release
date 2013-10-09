@@ -137,7 +137,7 @@ $(document).ready(function(){
   });
 
   if ($('.errorlist').length>0) {
-    routie($('.errorlist').parents('.stepDetails').attr('id'));
+    routie($('.errorlist').first().parents('.stepDetails').attr('id'));
   }
 
   function showStep(step) {
@@ -165,8 +165,10 @@ $(document).ready(function(){
         msg = '';
     $("#" + step).find("[validate=true]").each(function () {
       if ($(this).val().trim() == "") {
-        proceed = false;
-        msg = "${ _('This field is required.') }";
+        if ($(this).attr('name') != "email") {
+          proceed = false;
+          msg = "${ _('This field is required.') }";
+        }
       } else if ($(this).attr('name') == "email"){
         var re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
         if (!re.test($(this).val())) {
