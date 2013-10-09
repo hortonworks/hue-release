@@ -75,6 +75,7 @@ ${layout.menubar(section='log_view')}
             <input type="button" class="prev btn btn-mini disabled" value="Prev"></input>
             <input type="button" class="next btn btn-mini disabled" value="Next"></input>
           </div>
+        <input type="button" class="update btn btn-mini" value="Update"></input>
         <span class="search-info help-inline"><span class="cur"></span> of <span class="com"></span></span>
     </%def>
     <%def name="creation()">
@@ -139,8 +140,19 @@ ${layout.menubar(section='log_view')}
       }
     });
 
-    $('.prev').on('click',{'dir':'prev'},toNextMatch)
-    $('.next').on('click',{'dir':'next'},toNextMatch)
+    function updateLogs () {
+      $.post('/logs',function(data){
+        $('#logs').html('');
+        for (var i = data.log.length - 1; i >= 0; i--) {
+          $('<pre>').text(data.log[i]).appendTo($('#logs'));
+        };
+        filterLogs($(".search-query").val());
+      },'json');
+    }
+
+    $('.prev').on('click',{'dir':'prev'},toNextMatch);
+    $('.next').on('click',{'dir':'next'},toNextMatch);
+    $('.update').on('click',updateLogs);
 
     function toNextMatch(_arg) {
       var arg=_arg||'next'; 
