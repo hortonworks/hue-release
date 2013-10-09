@@ -60,7 +60,7 @@ ${ commonheader(_('Hue Users'), "useradmin", user, "100px") | n,unicode }
               ${layout.render_field(form["last_name"])}
             % endif
 
-            ${layout.render_field(form["email"])}
+            ${layout.render_field(form["email"], extra_attrs={'validate':'true'})}
             % if user.is_superuser:
               ${layout.render_field(form["groups"])}
             % endif
@@ -136,6 +136,10 @@ $(document).ready(function(){
     }
   });
 
+  if ($('.errorlist').length>0) {
+    routie($('.errorlist').parents('.stepDetails').attr('id'));
+  }
+
   function showStep(step) {
     currentStep = step;
     if (step != "step1") {
@@ -157,14 +161,24 @@ $(document).ready(function(){
   }
 
   function validateStep(step) {
-    var proceed = true;
+    var proceed = true,
+        msg = '';
     $("#" + step).find("[validate=true]").each(function () {
       if ($(this).val().trim() == "") {
         proceed = false;
+        msg = "${ _('This field is required.') }";
+      } else if ($(this).attr('name') == "email"){
+        var re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+        if (!re.test($(this).val())) {
+          proceed = false;
+          msg = "${ _('Enter a valid e-mail address.') }";
+        }
+      }
+      if (!proceed) {
         routie(step);
         $(this).parents(".control-group").addClass("error");
         $(this).parent().find(".help-inline").remove();
-        $(this).after("<span class=\"help-inline\"><strong>${ _('This field is required.') }</strong></span>");
+        $(this).after("<span class=\"help-inline\"><ul class=\"errorlist\"><li>"+msg+"</li></ul></span>");
       }
     });
     return proceed;
