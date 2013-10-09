@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from nose.plugins.attrib import attr
 import logging
 import os
 import socket
@@ -91,7 +92,7 @@ class SimpleThriftServer(object):
         _, status = os.waitpid(self.pid, os.WNOHANG)
         if status != 0:
           logging.info("SimpleThriftServer child process exited with %s" % (status,))
-        time.sleep(0.1)
+        time.sleep(1)
 
     logging.info("SimpleThriftServer took too long to come online")
     self.stop_server_process()
@@ -125,9 +126,11 @@ class TestWithThriftServer(object):
   def teardown_class(cls):
     cls.server.stop_server_process()
 
+  @attr('requires_hadoop')
   def test_basic_operation(self):
     assert_equal(10, self.client.ping(5))
 
+  @attr('requires_hadoop')
   def test_connection_race(self):
     class Racer(threading.Thread):
       def __init__(self, client, n_iter, begin):

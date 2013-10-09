@@ -766,7 +766,7 @@ class TestEditor(OozieMockBase):
         '           <job-tracker>${jobTracker}</job-tracker>\n'
         '            <name-node>${nameNode}</name-node>\n'
         '            <prepare>\n'
-        '                <delete path="${nameNode}${output}"/>\n'
+        '                <delete path="${nameNode}/user/${wf:user()}/${output}"/>\n'
         '                <mkdir path="${nameNode}/test"/>\n'
         '            </prepare>\n'
         '            <configuration>\n'
@@ -784,7 +784,7 @@ class TestEditor(OozieMockBase):
         '            <job-tracker>${jobTracker}</job-tracker>\n'
         '            <name-node>${nameNode}</name-node>\n'
         '            <prepare>\n'
-        '                <delete path="${nameNode}${output}"/>\n'
+        '                <delete path="${nameNode}/user/${wf:user()}/${output}"/>\n'
         '                <mkdir path="${nameNode}/test"/>\n'
         '            </prepare>\n'
         '            <configuration>\n'
@@ -802,7 +802,7 @@ class TestEditor(OozieMockBase):
         '            <job-tracker>${jobTracker}</job-tracker>\n'
         '            <name-node>${nameNode}</name-node>\n'
         '            <prepare>\n'
-        '                <delete path="${nameNode}${output}"/>\n'
+        '                <delete path="${nameNode}/user/${wf:user()}/${output}"/>\n'
         '                <mkdir path="${nameNode}/test"/>\n'
         '            </prepare>\n'
         '            <configuration>\n'
@@ -966,7 +966,7 @@ class TestEditor(OozieMockBase):
               <delete path='${nameNode}/to/delete'/>
               <delete path='${nameNode}/user/${wf:user()}/to/delete2'/>
               <mkdir path='${nameNode}/to/mkdir'/>
-              <mkdir path='${nameNode}${mkdir2}'/>
+              <mkdir path='${nameNode}/user/${wf:user()}/${mkdir2}'/>
               <move source='${nameNode}/to/move/source' target='${nameNode}/to/move/destination'/>
               <move source='${nameNode}/to/move/source2' target='${nameNode}/to/move/destination2'/>
               <chmod path='${nameNode}/to/chmod' permissions='-rwxrw-rw-' dir-files='true'/>
@@ -1342,7 +1342,7 @@ class TestEditor(OozieMockBase):
 
     xml = self.wf.to_xml({'output': '/path'})
 
-    assert_true('<delete path="${nameNode}${output}"/>' in xml, xml)
+    assert_true('<delete path="${nameNode}/user/${wf:user()}/${output}"/>' in xml, xml)
     assert_true('<delete path="${nameNode}/user/${wf:user()}/out"/>' in xml, xml)
     assert_true('<delete path="${nameNode}/user/test/out"/>' in xml, xml)
     assert_true('<delete path="hdfs://localhost:8020/user/test/out"/>' in xml, xml)
@@ -2844,13 +2844,13 @@ class TestUtils(OozieMockBase):
     assert_equal('${nameNode}/user/${wf:user()}/out', smart_path('out', {'output': '/path/out'}))
     assert_equal('${nameNode}/path', smart_path('/path', {'output': '/path/out'}))
     assert_equal('${nameNode}/path', smart_path('/path', {}))
-    assert_equal('${nameNode}${output}', smart_path('${output}', {'output': '/path/out'}))
+    assert_equal('${nameNode}/user/${wf:user()}/${output}', smart_path('${output}', {'output': '/path/out'}))
     assert_equal('hdfs://nn${output}', smart_path('hdfs://nn${output}', {'output': '/path/out'}))
 
-    assert_equal('${output}', smart_path('${output}', {}))
-    assert_equal('${output}', smart_path('${output}', {'output': 'hdfs://nn/path/out'}))
-    assert_equal('${output}', smart_path('${output}', {'output': '${path}'}))
-    assert_equal('${output_dir}', smart_path('${output_dir}', {'output': '/path/out', 'output_dir': 'hdfs://nn/path/out'}))
+    assert_equal('${nameNode}/user/${wf:user()}/${output}', smart_path('${output}', {}))
+    assert_equal('${nameNode}/user/${wf:user()}/${output}', smart_path('${output}', {'output': 'hdfs://nn/path/out'}))
+    assert_equal('${nameNode}/user/${wf:user()}/${output}', smart_path('${output}', {'output': '${path}'}))
+    assert_equal('${nameNode}/user/${wf:user()}/${output_dir}', smart_path('${output_dir}', {'output': '/path/out', 'output_dir': 'hdfs://nn/path/out'}))
 
 
 # Utils
