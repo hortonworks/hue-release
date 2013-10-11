@@ -181,16 +181,6 @@ class sandbox {
         require => Service['iptables']
     }
 
-    service { 'ip6tables':
-        ensure => stopped,
-        enable => false,
-    }
-
-    exec { 'ip6tables -F':
-        onlyif => "which ip6tables",
-        require => Service['ip6tables']
-    }
-
     line { no_priority:
         ensure => absent,
         file => "/etc/yum.repos.d/sandbox.repo",
@@ -225,5 +215,75 @@ class sandbox {
     }
 }
 
+class optimizations {
+    # Virtual memory optimizations
+    file { 'memory_clean':
+        path    => "/etc/cron.d/99memory_clean",
+        content => template("/vagrant/files/memory_clean_cron"),
+        ensure  => file,
+    }
+
+    line { dirty_ratio:
+        ensure => present,
+        file => "/etc/sysctl.conf",
+        line => "vm.dirty_background_ratio = 1",
+    }
+
+    line { dirty_background_ratio:
+        ensure => present,
+        file => "/etc/sysctl.conf",
+        line => "vm.dirty_ratio = 5",
+    }
+
+    file { 'zram_init.sh':
+        path    => "/usr/libexec/zram_init.sh",
+        content => template("/vagrant/files/scripts/zram_init.sh"),
+    }
+
+    exec { "zram_init.sh":
+        command => '/bin/bash /usr/libexec/zram_init.sh',
+        require => [File['zram_init.sh']],
+        timeout => 0,
+        logoutput=> "on_failure",
+    }
+
+    line { zram_rc_local:
+        ensure => present,
+        file => "/etc/rc.local",
+        line => "bash /usr/libexec/zram_init.sh",
+    }
+
+    # Unnecessary services
+    exec { 'ip6tables -F':
+        onlyif => "which ip6tables",
+        require => Service['ip6tables']
+    }
+
+    service { 'ip6tables':
+        ensure => stopped,
+        enable => false,
+    }
+
+    service { 'cups':
+        ensure => stopped,
+        enable => false,
+    }
+
+    service { 'iscsi':
+        ensure => stopped,
+        enable => false,
+    }
+
+    service { 'iscsid':
+        ensure => stopped,
+        enable => false,
+    }
+
+    service { 'mdmonitor':
+        ensure => stopped,
+        enable => false,
+    }
+}
 
 include sandbox
+include optimizations

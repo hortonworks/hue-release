@@ -75,8 +75,9 @@ start)
     echo 0 > /proc/sys/kernel/hung_task_timeout_secs
 
     
-    echo "You can now launch sandbox!"
     stty -F /dev/tty1 -echo
+    # drop caches (minimize swapping)
+    sync && echo 3 > /proc/sys/vm/drop_caches && echo 0 > /proc/sys/vm/drop_caches
 ;;
 stop)
     date >> $LOG

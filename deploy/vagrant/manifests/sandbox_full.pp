@@ -80,6 +80,7 @@ class tutorials {
 
 class sandbox_customize inherits sandbox {
     include tutorials
+    include optimizations
 
     service { "hue":
         ensure => running,
