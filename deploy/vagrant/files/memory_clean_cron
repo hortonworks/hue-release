@@ -1,0 +1,5 @@
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+# drop caches (to minimize swapping)
+*/5 * * * * root sync && echo 3 > /proc/sys/vm/drop_caches && echo 0 > /proc/sys/vm/drop_caches
