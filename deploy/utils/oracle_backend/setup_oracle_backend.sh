@@ -1,5 +1,26 @@
 #!/bin/sh
 
+
+function usage_help {
+  echo
+  echo "Usage:"
+  echo "bash setup_oracle_backend.sh host_os"
+  echo "    where host_os is one of the following:"
+  echo "        centos5.9"
+  echo "        centos6.4"
+  echo "        suse11"
+  echo
+  echo "e.g.    bash setup_oracle_backend.sh centos6.4"
+}
+
+if [ -z "$1" ]
+  then
+    echo "No argument supplied"
+    usage_help
+    exit 1
+fi
+
+
 CUR_DIR=`pwd`
 TMP_DIR="/tmp/oracle-instantclient"
 ORACLE_INSTANTCLIENT_LIB_DIR="/usr/lib64/oracle"
@@ -49,12 +70,28 @@ echo $ORACLE_INSTANTCLIENT_LIB_DIR > $ORACLE_INSTANTCLIENT_LD_CONF
 ldconfig
 export ORACLE_HOME="$TMP_DIR/instantclient10_1"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ORACLE_HOME"
-yum install -y python-devel python26-devel unzip
+
+case "$1" in
+    "centos5.9" )
+        # it assumes that python2.6 is already installed
+        yum install -y python26-devel python-devel unzip
+        ;;
+    "centos6.4" )
+        yum install -y python-devel unzip
+        ;;
+    "suse11" )
+        zypper install -y python-devel unzip
+        ;;
+    *)
+        echo "unknown host_os argument"
+        usage_help
+        ;;
+esac
 
 /etc/init.d/hue stop
 #/usr/lib/hue/build/env/bin/hue dumpdata > /tmp/db_dump.json
 
-cd /usr/lib/hue
+cd /usr/lib/hue/
 . ./build/env/bin/activate
 pip install south --upgrade
 pip install cx_Oracle
