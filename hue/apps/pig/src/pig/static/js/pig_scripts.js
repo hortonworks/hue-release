@@ -1,3 +1,4 @@
+var templetonJobRunStates = {RUNNING:1, SUCCEEDED:2, FAILED:3, PREP:4, KILLED:5};
 CodeMirror.db_list = {};
 
 function ping_job(job_id){
