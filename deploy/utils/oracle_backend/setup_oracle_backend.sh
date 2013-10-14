@@ -49,15 +49,19 @@ echo $ORACLE_INSTANTCLIENT_LIB_DIR > $ORACLE_INSTANTCLIENT_LD_CONF
 ldconfig
 export ORACLE_HOME="$TMP_DIR/instantclient10_1"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ORACLE_HOME"
-yum install -y python-devel
+yum install -y python-devel python26-devel unzip
 
 /etc/init.d/hue stop
 #/usr/lib/hue/build/env/bin/hue dumpdata > /tmp/db_dump.json
-/usr/lib/hue/build/env/bin/pip install south --upgrade
-/usr/lib/hue/build/env/bin/pip install cx_Oracle
-/usr/lib/hue/build/env/bin/hue syncdb --noinput
-/usr/lib/hue/build/env/bin/hue migrate
+
+cd /usr/lib/hue
+. ./build/env/bin/activate
+pip install south --upgrade
+pip install cx_Oracle
+hue syncdb --noinput
+hue migrate
+deactivate
+
 #/usr/lib/hue/build/env/bin/hue loaddata /tmp/db_dump.json
 /etc/init.d/hue start
 rm -Rf "$TMP_DIR"
-
