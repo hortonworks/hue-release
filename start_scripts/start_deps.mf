@@ -31,7 +31,7 @@ Ambari: ambari_server ambari_agent ganglia nagios
 
 HDFS: namenode secondary_namenode datanode
 YARN: resourcemanager historyserver nodemanagers
-HBase: hbase_master hbase_regionservers hbase_stargate
+HBase: hbase_master hbase_regionservers hbase_stargate hbase_thrift
 Zookeeper: zookeeper
 Hive_Metastore: mysql hive hive2
 Tez: # tez
@@ -109,6 +109,13 @@ hbase_stargate: postgresql hbase_master
 	$(call colorized,\
 		hbase stargate, \
 		su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh start rest -p 60080",\
+		true,\
+		/var/log/hbase/hbase-hbase-rest-*.log)
+
+hbase_thrift: postgresql hbase_master
+	$(call colorized,\
+		hbase thrift, \
+		su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh start thrift",\
 		true,\
 		/var/log/hbase/hbase-hbase-rest-*.log)
 
