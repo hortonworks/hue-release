@@ -79,7 +79,7 @@ class UserChangeForm(django.contrib.auth.forms.UserChangeForm):
     password1 = self.cleaned_data.get("password1", "")
     password2 = self.cleaned_data["password2"]
     if password1 != password2:
-      raise forms.ValidationError(self.fields.get("password2").error_messages.get('invalid')
+      raise forms.ValidationError(self.fields.get("password2").error_messages.get('invalid'))
     return password2
 
   def clean_password1(self):
