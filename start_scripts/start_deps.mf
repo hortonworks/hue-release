@@ -97,7 +97,7 @@ nodemanagers: postgresql HDFS
 
 # ==== HBase ====
 
-hbase_master: postgresql zookeeper datanode
+hbase_master: postgresql zookeeper
 	$(call colorized,\
 		hbase master, \
 		su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master",\
@@ -118,7 +118,7 @@ hbase_thrift: postgresql hbase_master
 		true,\
 		/var/log/hbase/hbase-hbase-rest-*.log)
 
-hbase_regionservers: namenode hbase_master datanode
+hbase_regionservers: hbase_master
 	$(call colorized,\
 		hbase regionservers, \
 		su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver",\
