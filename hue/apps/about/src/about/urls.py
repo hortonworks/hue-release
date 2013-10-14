@@ -19,4 +19,5 @@ from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('about',
   url(r'^$', 'views.index'),
+  url(r'^ambari/(?P<action>\w+)$', 'views.ambari'),
 )

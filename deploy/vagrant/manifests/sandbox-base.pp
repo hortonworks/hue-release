@@ -110,7 +110,7 @@ class sandbox_rpm {
     }
 
     exec { 'hue_sudoers':
-       command => "echo 'hue ALL=(ALL) ALL' >> /etc/sudoers",
+       command => "echo -e 'hue ALL=(ALL) ALL\nhue ALL=(ALL) NOPASSWD: /sbin/chkconfig\nhue ALL=(ALL) NOPASSWD: /sbin/service' >> /etc/sudoers",
        require => Package['hue'],
     }
 }

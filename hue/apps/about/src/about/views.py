@@ -22,7 +22,7 @@ from desktop.lib.paths import get_run_root, get_var_root
 from django.http import HttpResponse
 import simplejson as json
 
-from sh import bash
+from sh import ErrorReturnCode, bash, sudo, service, chkconfig
 from about import conf
 
 LOG = logging.getLogger(__name__)
@@ -45,7 +45,64 @@ def index(request):
   return render('index.mako', request, {
     'components': components,
     'hue_version': HUE_VERSION,
+    'ambari_status': _get_ambari_status(),
   })
+
+
+def ambari(request, action):
+  if request.method == 'POST':
+    action = action.lower()
+    if action == 'enable':
+      return _enable_ambari(request)
+    elif action == 'disable':
+      return _disable_ambari(request)
+    elif action == 'status':
+      return _ambari_status(request)
+
+
+def _enable_ambari(request):
+  error = ''
+  ret = ''
+  try:
+    ret = sudo.chkconfig("ambari", "on").stdout
+    ret += sudo.service("ambari", "start").stdout
+  except Exception, ex:
+    error = unicode(ex)
+  result = {
+    'return': ret,
+    'error': error
+  }
+  return HttpResponse(json.dumps(result))
+
+def _disable_ambari(request):
+  error = ''
+  ret = ''
+  try:
+    ret = sudo.chkconfig("ambari", "off").stdout
+    ret += sudo.service("ambari", "stop").stdout
+  except Exception, ex:
+    error = unicode(ex)
+  result = {
+    'return': ret,
+    'error': error
+  }
+  return HttpResponse(json.dumps(result))
+
+def _get_ambari_status():
+  """Returns True if ambari-agent started and False otherwise."""
+  from sh import ambari_agent
+  try:
+    ambari_agent("status")
+  except ErrorReturnCode:
+    return True
+  return False
+
+def _ambari_status(request):
+  val = "on" if _get_ambari_status() else "off"
+  result = {
+    'return': val,
+  }
+  return HttpResponse(json.dumps(result))
 
 def _get_tutorials_version():
   TUTORIAL_VERSION_FILE = os.path.join(conf.TUTORIALS_PATH.get(), 'version')
@@ -73,6 +130,8 @@ def _read_versions(filename):
         components.append(('Hue', version))
       elif component == "Sandbox":
         components.append(('Sandbox Build', version))
+      elif component == "Ambari-server":
+        components.append(('Ambari', version))
       else:
         components.append((component, version))
   return components

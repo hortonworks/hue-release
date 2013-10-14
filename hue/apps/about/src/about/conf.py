@@ -47,3 +47,10 @@ SANDBOX_VERSION = Config(
   private=True,
   default="2.0.5",
 )
+
+SANDBOX = Config(
+  key="sandbox",
+  help="Is About application installed in Sandbox",
+  default=False,
+  type=bool,
+)

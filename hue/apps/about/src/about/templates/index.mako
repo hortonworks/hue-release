@@ -34,8 +34,13 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 
 	<div class="container-fluid">
 		<h1 id="describe-header">Hortonworks Hue ${hue_version}</h1>
+
 		<div id="update-tutorials-spinner"><h1>Updating tutorials...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 		<h3 id="update-tutorials-msg"></h3>
+
+        <div id="start-ambari-spinner"><h1><span id="start-ambari-caption">Enabling Ambari...</span>&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+        <h3 id="start-ambari-msg"></h3>
+
 		<div class="span-3">
 			<div class="well sidebar-nav">
 				<ul class="nav nav-list">
@@ -58,13 +63,44 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 			  % for component, version in components:
     			  <tr>
       			    <td>${component}</td>
-                            % if component == 'Tutorials':
-                            <td><div id="${component}">${version}</div></td>
-        		    <td><a href="#" class="btn"
-        		    id="updateTutorialsBtn">Update</a></td>
-                            % else:
-        		    <td colspan="2"><div id="${component}">${version}</div></td>
-                            % endif
+                    % if conf.SANDBOX.get():
+## Tutorials updater
+                                % if component == 'Tutorials':
+                                <td><div id="${component}">${version}</div></td>
+                        <td><a href="#" class="btn"
+                        id="updateTutorialsBtn">Update</a></td>
+
+## Ambari switcher
+                                % elif component == 'Ambari':
+                                <td><div id="${component}">${version}</div></td>
+                        <td><a href="#" class="btn"
+                        id="startAmbariBtn">
+                        % if ambari_status:
+                            Enable
+                        % else:
+                            Disable
+                        % endif
+                        </a></td>
+
+## HBase switcher
+                                % elif component == 'HBase':
+                                <td><div id="${component}">${version}</div></td>
+                        <td><a href="#" class="btn"
+                        id="startHBaseBtn">
+                        % if hbase_status:
+                            Enable
+                        % else:
+                            Disable
+                        % endif
+                        </a></td>
+
+
+                                % else:
+                        <td colspan="2"><div id="${component}">${version}</div></td>
+                                % endif
+                    % else:
+                        <td colspan="2"><div id="${component}">${version}</div></td>
+                    % endif
     			  </tr>
 			  % endfor
 			</tbody>
@@ -77,57 +113,116 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 	#update-tutorials-spinner {
 		display:none;
 	}
+    #start-ambari-spinner {
+        display:none;
+    }
 </style>
 
 <script type="text/javascript" charset="utf-8">
-    function showError(msg){
+## Tutorials update
+
+    function showTutorialsError(msg){
         $('#update-tutorials-msg').html(msg);
         $('#update-tutorials-spinner').hide();
         $('#describe-header').show();
         $('#update-tutorials-msg').show();
     }
 	$(document).ready(function(){
-	    $.ajaxSetup({
-            error: function(jqXHR, exception) {
-                if (jqXHR.status === 0) {
-                    showError("Update tutorials failed: you are offline. Please check your network.");
-                } else if (jqXHR.status == 404) {
-                    showError("Update tutorials failed: requested page not found.");
-                } else if (jqXHR.status == 500) {
-                    showError("Update tutorials failed: internal server error.");
-                } else if (exception === 'parsererror') {
-                    showError("Update tutorials failed: requested JSON parse failed.");
-                } else if (exception === 'timeout') {
-                    showError("Update tutorials failed: time out error.");
-                } else if (exception === 'abort') {
-                    showError("Update tutorials failed: ajax request aborted.");
-                } else {
-                    showError("Update tutorials failed: unknown error.");
-                }
-            }
-        });
-
-		$("#updateTutorialsBtn").click(function(){
-			$('#describe-header').hide();
-       		$('#update-tutorials-spinner').show();
+        $("#updateTutorialsBtn").click(function(){
+            $('#describe-header').hide();
+            $('#update-tutorials-spinner').show();
             $.post("${url("about.views.index")}", function(data){
             if(data.error != ""){
-                    showError("Update tutorials failed: " + data.error);
+                    showTutorialsError("Update tutorials failed: " + data.error);
                 }
             else {
                 var curVersion = $("#Tutorials").text();
                 if (data.tutorials != curVersion) {
-                    showError("Tutorials were successfully updated to " + data.tutorials + " version");
+                    showTutorialsError("Tutorials were successfully updated to " + data.tutorials + " version");
                     window.location.reload(true);
                 }
                 else{
-                    showError("There are no available tutorial updates");
+                    showTutorialsError("There are no available tutorial updates");
                 }
             }
 
-            }, "json");
+            }, "json")
+             .fail(function(jqXHR, exception) {
+                if (jqXHR.status === 0) {
+                    showTutorialsError("Update tutorials failed: you are offline. Please check your network.");
+                } else if (jqXHR.status == 404) {
+                    showTutorialsError("Update tutorials failed: requested page not found." + jqXHR.uri);
+                } else if (jqXHR.status == 500) {
+                    showTutorialsError("Update tutorials failed: internal server error.");
+                } else if (exception === 'parsererror') {
+                    showTutorialsError("Update tutorials failed: requested JSON parse failed.");
+                } else if (exception === 'timeout') {
+                    showTutorialsError("Update tutorials failed: time out error.");
+                } else if (exception === 'abort') {
+                    showTutorialsError("Update tutorials failed: ajax request aborted.");
+                } else {
+                    showTutorialsError("Update tutorials failed: unknown error.");
+                }
+            });
       });
-	});
+
+
+## Ambari switch
+    function showAmbariError(msg){
+        $('#start-ambari-msg').html(msg);
+        $('#start-ambari-spinner').hide();
+        $('#describe-header').show();
+        $('#start-ambari-msg').show();
+    }
+        var ambariCaption = ""
+        $("#startAmbariBtn").click(function(){
+            $('#describe-header').hide();
+            var url = "";
+            var next_state = "";
+            if ($("#startAmbariBtn").text().trim() == 'Enable') {
+                ambariCaption = "Enabling Ambari";
+                url = "${url("about.views.ambari", "Enable")}";
+                next_state = "Disable";
+            } else {
+                ambariCaption = "Disabling Ambari";
+                url = "${url("about.views.ambari", "Disable")}";
+                next_state = "Enable";
+            }
+            console.log(ambariCaption);
+            $('#start-ambari-caption').text(ambariCaption + "...");
+
+            $('#start-ambari-spinner').show();
+            $.post(url, function(data){
+                if(data.error != ""){
+                    showAmbariError(ambariCaption + " failed: " + data.error);
+                }
+                else {
+                    showAmbariError("Ambari " + $("#startAmbariBtn").text().toLowerCase().trim() + "d successfully");
+                    $("#startAmbariBtn").text(next_state);
+                }
+            }, "json")
+             .fail(function(jqXHR, exception) {
+                if (jqXHR.status === 0) {
+                    showAmbariError(ambariCaption + " failed: you are offline. Please check your network.");
+                } else if (jqXHR.status == 404) {
+                    showAmbariError(ambariCaption + " failed: requested page not found." + jqXHR.uri);
+                } else if (jqXHR.status == 500) {
+                    showAmbariError(ambariCaption + " failed: internal server error.");
+                } else if (exception === 'parsererror') {
+                    showAmbariError(ambariCaption + " failed: requested JSON parse failed.");
+                } else if (exception === 'timeout') {
+                    showAmbariError(ambariCaption + " failed: time out error.");
+                } else if (exception === 'abort') {
+                    showAmbariError(ambariCaption + " failed: ajax request aborted.");
+                } else {
+                    showAmbariError(ambariCaption + " failed: unknown error.");
+                }
+            });
+      });
+
+##
+
+    });
 </script>
 
 ${commonfooter(messages)| n,unicode}
