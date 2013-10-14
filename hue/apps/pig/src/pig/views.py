@@ -206,7 +206,7 @@ def start_job(request):
     )
 
 
-def kill_job_by_templeton(request):
+def kill_job(request):
     t = Templeton(request.user.username)
     try:
         job_id = request.POST['job_id']
@@ -219,7 +219,7 @@ def kill_job_by_templeton(request):
         return HttpResponse(json.dumps({"text": "An error was occured"}))
 
 
-def kill_job(request):
+def kill_job_by_jt(request):
     if request.method != "POST":
         raise Exception("kill_job may only be invoked with a POST (got a %(method)s).") % dict(method=request.method)
     job_id = request.POST['job_id']
