@@ -160,23 +160,58 @@ $(document).ready(function(){
     $("#" + step).show();
   }
 
-  function validateStep(step) {
-    var proceed = true,
-        msg = '';
-    $("#" + step).find("[validate=true]").each(function () {
-      if ($(this).val().trim() == "") {
-        if ($(this).attr('name') != "email") {
-          proceed = false;
-          msg = "${ _('This field is required.') }";
+  function validateStep (step) {
+    var proceed = true, msg = '',
+        checklist = {
+          check:function (field) {
+            this.pass=true;
+            if (this.hasOwnProperty(field.attr('name'))) {
+              this[field.attr('name')](field);
+            }
+          },
+          pass:true,
+          username:function (field) {
+            var re = /${form.fields.get("username").regex.pattern}/;
+            if (field.val().trim() == "") {
+              this.pass = false;
+              msg = "${form.fields.get('username').error_messages.get('required')}";
+            } else if (!re.test(field.val())) {
+              this.pass = false;
+              msg = "${form.fields.get('username').error_messages.get('invalid')}";
+            }
+          },
+          password1:function (field) {
+            if (field.val().trim() == "") {
+              this.pass = false;
+              msg = "${form.fields.get('password1').error_messages.get('required')}";
+            }
+            if (field.val().length < 2) {
+              this.pass = false;
+              msg = "${_('Ensure this value has at least 2 characters')}";
+            }
+          },
+          password2:function (field) {
+            if (field.val() != $("input[name=password1]").val()) {
+              this.pass = false;
+              msg = "${form.fields.get('password2').error_messages.get('invalid')}";
+            }
+            if (field.val().length < 2) {
+              this.pass = false;
+              msg = "${_('Ensure this value has at least 2 characters')}";
+            }
+          },
+          email:function (field) {
+            var re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+            if (field.val().trim() != "" && !re.test(field.val())) {
+              this.pass = false;
+              msg = "${form.fields.get('email').error_messages.get('invalid')}";
+            }
+          }
         }
-      } else if ($(this).attr('name') == "email"){
-        var re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-        if (!re.test($(this).val())) {
-          proceed = false;
-          msg = "${ _('Enter a valid e-mail address.') }";
-        }
-      }
-      if (!proceed) {
+    $("#"+step).find("[validate=true]").each(function () {
+      checklist.check($(this));
+      if (!checklist.pass) {
+        proceed = false;
         routie(step);
         $(this).parents(".control-group").addClass("error");
         $(this).parent().find(".help-inline").remove();

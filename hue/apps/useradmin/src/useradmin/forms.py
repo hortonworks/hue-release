@@ -42,15 +42,29 @@ class UserChangeForm(django.contrib.auth.forms.UserChangeForm):
   username = forms.RegexField(
       label=_t("Username"),
       max_length=30,
+      min_length=2,
       regex='^%s$' % (get_username_re_rule(),),
       help_text = _t("Required. 30 characters or fewer. No whitespaces or colons."),
-      error_messages = {'invalid': _t("Whitespaces and ':' not allowed") })
-  password1 = forms.CharField(label=_t("Password"), widget=forms.PasswordInput, required=False)
-  password2 = forms.CharField(label=_t("Password confirmation"), widget=forms.PasswordInput, required=False)
-  ensure_home_directory = forms.BooleanField(label=_t("Create home directory"),
-                                            help_text=_t("Create home directory if one doesn't already exist."),
-                                            initial=True,
-                                            required=False)
+      error_messages = {'invalid': _t("Username contains one or more not permitted characters.") })
+  password1 = forms.CharField(
+      label=_t("Password"),
+      max_length=30,
+      min_length=2,
+      widget=forms.PasswordInput,
+      required=False,
+      error_messages = {'required': _t("You must specify a password when creating a new user.") })
+  password2 = forms.CharField(
+      label=_t("Password confirmation"),
+      max_length=30,
+      min_length=2,
+      widget=forms.PasswordInput,
+      required=False,
+      error_messages = {'invalid': _t("Passwords do not match.") })
+  ensure_home_directory = forms.BooleanField(
+      label=_t("Create home directory"),
+      help_text=_t("Create home directory if one doesn't already exist."),
+      initial=True,
+      required=False)
 
   def __init__(self, *args, **kwargs):
     super(UserChangeForm, self).__init__(*args, **kwargs)
@@ -65,13 +79,13 @@ class UserChangeForm(django.contrib.auth.forms.UserChangeForm):
     password1 = self.cleaned_data.get("password1", "")
     password2 = self.cleaned_data["password2"]
     if password1 != password2:
-      raise forms.ValidationError(_t("Passwords do not match."))
+      raise forms.ValidationError(self.fields.get("password2").error_messages.get('invalid')
     return password2
 
   def clean_password1(self):
     password = self.cleaned_data.get("password1", "")
     if self.instance.id is None and password == "":
-      raise forms.ValidationError(_("You must specify a password when creating a new user."))
+      raise forms.ValidationError(self.fields.get("password1").error_messages.get('required'))
     return self.cleaned_data.get("password1", "")
 
   def save(self, commit=True):
