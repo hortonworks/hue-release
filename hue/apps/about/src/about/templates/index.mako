@@ -44,6 +44,12 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
         <div id="start-hbase-spinner"><h1><span id="start-hbase-caption">Enabling HBase...</span>&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
         <h3 id="start-hbase-msg"></h3>
 
+        % if RAM_ALERT:
+        <div class="alert">
+            The recommended amount of RAM for tolerable usage and using Ambari and HBase is at least 4 GB. Now you have ${RAM} GB.
+        </div>
+        % endif
+
 		<div class="span-3">
 			<div class="well sidebar-nav">
 				<ul class="nav nav-list">
@@ -182,6 +188,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
     }
         var ambariCaption = ""
         $("#startAmbariBtn").click(function(){
+            $("#startAmbariBtn").attr('disabled', true);
             $('#describe-header').hide();
             var url = "";
             var next_state = "";
@@ -206,6 +213,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
                     showAmbariError("Ambari " + $("#startAmbariBtn").text().toLowerCase().trim() + "d successfully");
                     $("#startAmbariBtn").text(next_state);
                 }
+                $("#startAmbariBtn").attr('disabled', false);
             }, "json")
              .fail(function(jqXHR, exception) {
                 if (jqXHR.status === 0) {
@@ -236,6 +244,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
     }
         var hbaseCaption = ""
         $("#startHBaseBtn").click(function(){
+            $("#startHBaseBtn").attr('disabled', true);
             $('#describe-header').hide();
             var url = "";
             var next_state = "";
@@ -260,6 +269,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
                     showHBaseError("HBase " + $("#startHBaseBtn").text().toLowerCase().trim() + "d successfully");
                     $("#startHBaseBtn").text(next_state);
                 }
+                $("#startHBaseBtn").attr('disabled', false);
             }, "json")
              .fail(function(jqXHR, exception) {
                 if (jqXHR.status === 0) {

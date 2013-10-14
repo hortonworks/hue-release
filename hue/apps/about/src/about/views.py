@@ -42,11 +42,15 @@ def index(request):
     }
     return HttpResponse(json.dumps(result))
   components, HUE_VERSION = _get_components()
+
+  RAM = int(os.popen("free -m").readlines()[1].split()[1])/1024.
   return render('index.mako', request, {
     'components': components,
     'hue_version': HUE_VERSION,
     'ambari_status': _get_ambari_status(),
     'hbase_status': _get_hbase_status(),
+    'RAM_ALERT': RAM < 3.5,
+    'RAM': "%0.1f" % RAM,
   })
 
 # ====== Ambari =======
