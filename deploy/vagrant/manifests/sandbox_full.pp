@@ -101,6 +101,12 @@ class sandbox_customize inherits sandbox {
         mode => 0755,
     }
 
+    file {'/root/start_hbase.sh':
+        ensure => link,
+        target => "/usr/lib/hue/tools/start_scripts/start_hbase.sh",
+        mode => 0755,
+    }
+
     package { 'acpid':
         ensure => installed,
     }

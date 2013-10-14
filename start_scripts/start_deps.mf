@@ -25,7 +25,7 @@ endef
 
 all: Startup Ambari
 
-Startup: HDFS YARN Zookeeper HBase Hive_Metastore Tez WebHCat Oozie
+Startup: HDFS YARN Zookeeper Hive_Metastore Tez WebHCat Oozie # HBase
 	@echo "`date`:\tStartup" >> $(LOG)
 Ambari: ambari_server ambari_agent ganglia nagios
 
@@ -36,7 +36,6 @@ Zookeeper: zookeeper
 Hive_Metastore: mysql hive hive2
 Tez: # tez
 WebHCat: webhcat
-Tez: # tez
 Oozie: oozie
 
 postgresql:

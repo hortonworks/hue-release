@@ -46,8 +46,10 @@ def index(request):
     'components': components,
     'hue_version': HUE_VERSION,
     'ambari_status': _get_ambari_status(),
+    'hbase_status': _get_hbase_status(),
   })
 
+# ====== Ambari =======
 
 def ambari(request, action):
   if request.method == 'POST':
@@ -94,8 +96,8 @@ def _get_ambari_status():
   try:
     ambari_agent("status")
   except ErrorReturnCode:
-    return True
-  return False
+    return False
+  return True
 
 def _ambari_status(request):
   val = "on" if _get_ambari_status() else "off"
@@ -103,6 +105,65 @@ def _ambari_status(request):
     'return': val,
   }
   return HttpResponse(json.dumps(result))
+
+# ====== HBase =======
+
+def hbase(request, action):
+  if request.method == 'POST':
+    action = action.lower()
+    if action == 'enable':
+      return _enable_hbase(request)
+    elif action == 'disable':
+      return _disable_hbase(request)
+    elif action == 'status':
+      return _hbase_status(request)
+
+
+def _enable_hbase(request):
+  error = ''
+  ret = ''
+  try:
+    ret = sudo.chkconfig("hbase-starter", "on").stdout
+    ret += sudo.service("hbase-starter", "start").stdout
+  except Exception, ex:
+    error = unicode(ex)
+  result = {
+    'return': ret,
+    'error': error
+  }
+  return HttpResponse(json.dumps(result))
+
+def _disable_hbase(request):
+  error = ''
+  ret = ''
+  try:
+    ret = sudo.chkconfig("hbase-starter", "off").stdout
+    ret += sudo.service("hbase-starter", "stop").stdout
+  except Exception, ex:
+    error = unicode(ex)
+  result = {
+    'return': ret,
+    'error': error
+  }
+  return HttpResponse(json.dumps(result))
+
+def _get_hbase_status():
+  """Returns True if hbase master started and False otherwise."""
+  try:
+    sudo.kill("-0", file(conf.HBASE_PID_FILE.get()).read().strip())
+  except (ErrorReturnCode, IOError):
+    return False
+  return True
+
+def _hbase_status(request):
+  val = "on" if _get_hbase_status() else "off"
+  result = {
+    'return': val,
+  }
+  return HttpResponse(json.dumps(result))
+
+# ==================
+
 
 def _get_tutorials_version():
   TUTORIAL_VERSION_FILE = os.path.join(conf.TUTORIALS_PATH.get(), 'version')

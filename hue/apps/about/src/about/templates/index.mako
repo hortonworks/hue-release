@@ -41,6 +41,9 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
         <div id="start-ambari-spinner"><h1><span id="start-ambari-caption">Enabling Ambari...</span>&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
         <h3 id="start-ambari-msg"></h3>
 
+        <div id="start-hbase-spinner"><h1><span id="start-hbase-caption">Enabling HBase...</span>&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
+        <h3 id="start-hbase-msg"></h3>
+
 		<div class="span-3">
 			<div class="well sidebar-nav">
 				<ul class="nav nav-list">
@@ -75,7 +78,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
                                 <td><div id="${component}">${version}</div></td>
                         <td><a href="#" class="btn"
                         id="startAmbariBtn">
-                        % if ambari_status:
+                        % if not ambari_status:
                             Enable
                         % else:
                             Disable
@@ -87,7 +90,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
                                 <td><div id="${component}">${version}</div></td>
                         <td><a href="#" class="btn"
                         id="startHBaseBtn">
-                        % if hbase_status:
+                        % if not hbase_status:
                             Enable
                         % else:
                             Disable
@@ -114,6 +117,9 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 		display:none;
 	}
     #start-ambari-spinner {
+        display:none;
+    }
+    #start-hbase-spinner {
         display:none;
     }
 </style>
@@ -216,6 +222,60 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
                     showAmbariError(ambariCaption + " failed: ajax request aborted.");
                 } else {
                     showAmbariError(ambariCaption + " failed: unknown error.");
+                }
+            });
+      });
+
+
+## HBase switch
+    function showHBaseError(msg){
+        $('#start-hbase-msg').html(msg);
+        $('#start-hbase-spinner').hide();
+        $('#describe-header').show();
+        $('#start-hbase-msg').show();
+    }
+        var hbaseCaption = ""
+        $("#startHBaseBtn").click(function(){
+            $('#describe-header').hide();
+            var url = "";
+            var next_state = "";
+            if ($("#startHBaseBtn").text().trim() == 'Enable') {
+                hbaseCaption = "Enabling HBase";
+                url = "${url("about.views.hbase", "Enable")}";
+                next_state = "Disable";
+            } else {
+                hbaseCaption = "Disabling HBase";
+                url = "${url("about.views.hbase", "Disable")}";
+                next_state = "Enable";
+            }
+            console.log(hbaseCaption);
+            $('#start-hbase-caption').text(hbaseCaption + "...");
+
+            $('#start-hbase-spinner').show();
+            $.post(url, function(data){
+                if(data.error != ""){
+                    showHBaseError(hbaseCaption + " failed: " + data.error);
+                }
+                else {
+                    showHBaseError("HBase " + $("#startHBaseBtn").text().toLowerCase().trim() + "d successfully");
+                    $("#startHBaseBtn").text(next_state);
+                }
+            }, "json")
+             .fail(function(jqXHR, exception) {
+                if (jqXHR.status === 0) {
+                    showHBaseError(hbaseCaption + " failed: you are offline. Please check your network.");
+                } else if (jqXHR.status == 404) {
+                    showHBaseError(hbaseCaption + " failed: requested page not found." + jqXHR.uri);
+                } else if (jqXHR.status == 500) {
+                    showHBaseError(hbaseCaption + " failed: internal server error.");
+                } else if (exception === 'parsererror') {
+                    showHBaseError(hbaseCaption + " failed: requested JSON parse failed.");
+                } else if (exception === 'timeout') {
+                    showHBaseError(hbaseCaption + " failed: time out error.");
+                } else if (exception === 'abort') {
+                    showHBaseError(hbaseCaption + " failed: ajax request aborted.");
+                } else {
+                    showHBaseError(hbaseCaption + " failed: unknown error.");
                 }
             });
       });
