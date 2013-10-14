@@ -252,6 +252,10 @@ def kill_job_by_jt(request):
     cur_time = time.time()
     while time.time() - cur_time < 15:
         if job.status not in ["RUNNING", "QUEUED"]:
+            # updating job status in pig query history
+            job = Job.objects.get(job_id=job_id)
+            job.status = job.JOB_KILLED
+            job.save()
             return HttpResponse(json.dumps({"text": "Job %s was killed" % job_id}))
         time.sleep(1)
         job = api.get_job(jobid=job_id)
