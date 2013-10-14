@@ -12,18 +12,25 @@ from urlparse import urlparse
 import mimetypes
 
 
+def registration_required(func):
+    def _registration_required(*args, **kwargs):
+        if userinfo.load_info() or not settings.REQUIRE_REGISTRATION or \
+            userinfo.is_skipped():
+            return func(*args, **kwargs)
+        else:
+            return redirect('/registration_form/')
+    return _registration_required
+
+
+@registration_required
 def landing(request):
-    if userinfo.load_info() or not settings.REQUIRE_REGISTRATION or \
-        userinfo.is_skipped():
-        landing_index = os.path.join(settings.LANDING_PATH, 'splash.html')
+    landing_index = os.path.join(settings.LANDING_PATH, 'splash.html')
 
-        rfile = landing_index
-        response = HttpResponse(FileWrapper(file(rfile, 'rb')),
-                                mimetype=mimetypes.guess_type(rfile)[0])
+    rfile = landing_index
+    response = HttpResponse(FileWrapper(file(rfile, 'rb')),
+                            mimetype=mimetypes.guess_type(rfile)[0])
 
-        return response
-    else:
-        return redirect('/register/')
+    return response
 
 
 def csrf_token(context):
@@ -64,6 +71,7 @@ def register_skip(request):
     return redirect('/')
 
 
+@registration_required
 def tutorials(request):
     location = settings.CONTENT_FRAME_URL() % request.get_host().split(':')[0]
     step_location = "/lesson/"
