@@ -15,8 +15,8 @@
 ##########################################################
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "sandbox-hdp-2.0.6-rc1"
-  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.6-rc1.box"
+  config.vm.box = "sandbox-hdp-2.0.6-rc2"
+  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.6-rc2.box"
 
   config.vm.hostname = "sandbox.hortonworks.com"
 
@@ -40,10 +40,6 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define :default do |subconf|
-#    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
-#      puppet.manifests_path = "manifests"
-#      puppet.manifest_file  = "update-repo.pp"
-#    end
     subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
       puppet.manifests_path = "manifests"
       puppet.manifest_file  = "sandbox_full.pp"
