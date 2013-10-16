@@ -89,8 +89,11 @@ def delete_user(request):
     userp = UserProfile.objects.filter(user__id__in=ids)
     if delhomedir:
       for user in userp:
-        request.fs.do_as_superuser(request.fs.rmtree, user.home_directory)
-      
+        try:
+          request.fs.do_as_superuser(request.fs.rmtree, user.home_directory)
+        except IOError, e:
+          raise PopupException(_("Directory '%(dir)s' doesn't exist.") % {'dir': user.home_directory}, detail=e,error_code=401)
+
     userp.delete()
     User.objects.filter(id__in=ids).delete()
   finally:
