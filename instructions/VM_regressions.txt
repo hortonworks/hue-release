@@ -64,6 +64,7 @@ VBoxManage modifyvm "SandboxBimiotaRC8v.2" --memory 2048 --cpus 2
 
 13) Disable console screensaver:
 add consoleblank=0 to kernel parameters in /boot/grub/grub.conf
+remove rhgb and quiet
 
 14) Setup network & DNS:
 add nameserver 8.8.8.8 to /etc/resolv.conf
