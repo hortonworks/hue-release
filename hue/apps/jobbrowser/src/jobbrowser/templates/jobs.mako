@@ -98,6 +98,8 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
 
   $(document).ready(function () {
 
+    var activeStates = ['ACCEPTED', 'FINISHING', 'RUNNING', 'PREP', 'WAITING', 'SUSPENDED', 'PREPSUSPENDED', 'PREPPAUSED', 'PAUSED'];
+
     var jobTable = $(".datatables").dataTable({
       "sPaginationType": "bootstrap",
       "iDisplayLength": 30,
@@ -135,6 +137,8 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
     });
 
     function populateTable(data) {
+      var rowar = [];
+          newRows=[];
       if (data != null) {
         jobTable.fnClearTable();
         $("#loading").addClass("hide");
@@ -145,15 +149,22 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
           $(".datatables").hide();
         }
         else {
-          $(data).each(function (cnt, job) {
-            try {
-              jobTable.fnAddData(getJobRow(job));
-              $("a[data-row-selector='true']").jHueRowSelector();
-            }
-            catch (error) {
-              $.jHueNotify.error(error);
-            }
-          });
+          var status_value = $(".btn-status.active").data("value"),
+              status_filter = (status_value)?status_value.toUpperCase():'';
+          for (var cnt in data) {
+              var job = data[cnt]; 
+                  rowar.push(getJobRow(job));
+              if (activeStates.indexOf(job.status) > -1 && (status_filter.indexOf(job.status)||!status_filter)) {
+                newRows.push(job);
+              }
+          }
+          try {
+            jobTable.fnAddData(rowar);
+            $("a[data-row-selector='true']").jHueRowSelector();
+          }
+          catch (error) {
+            $.jHueNotify.error(error);
+          }
         }
       }
     }
@@ -162,6 +173,14 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
     var newRows = [];
 
     function updateRunning(data) {
+      function popNewRow (i) {
+        var row = newRows[i];
+        callJobDetails(row, function (status) {
+          if (activeStates.indexOf(status.toUpperCase()) < 0) {
+            newRows.splice(i);
+          }
+        });
+      }
       if (data != null && data.length > 0) {
         for (var i = 0; i < newRows.length; i++) {
           var isDone = true;
@@ -171,8 +190,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
             }
           });
           if (isDone) {
-            callJobDetails(newRows[i]);
-            newRows.splice(i);
+            popNewRow(i);
           }
         }
         $(data).each(function (cnt, job) {
@@ -184,7 +202,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
             }
           });
           if (foundRow == null) {
-            if (['RUNNING', 'PREP', 'WAITING', 'SUSPENDED', 'PREPSUSPENDED', 'PREPPAUSED', 'PAUSED'].indexOf(job.status.toUpperCase()) > -1) {
+            if (activeStates.indexOf(job.status.toUpperCase()) > -1) {
               newRows.push(job);
               try {
                 jobTable.fnAddData(getJobRow(job));
@@ -206,8 +224,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
       }
       else {
         for (var i = 0; i < newRows.length; i++) {
-          callJobDetails(newRows[i]);
-          newRows.splice(i);
+          popNewRow(i);
         }
       }
       isUpdating = false;
@@ -258,18 +275,22 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
       jobTable.fnUpdate(_killCell, row, 11, false);
     }
 
-    function callJobDetails(job) {
-      $.getJSON(job.url + "?format=json&rnd=" + Math.random(), function (data) {
-        if (data != null && data.job) {
+    function callJobDetails(job,callback) {
+      $.getJSON("?format=json&text="+job.id+"&rnd=" + Math.random(), function (data) {
+        if (data != null && data.length > 0) {
+          var job = data[0];
           var jobTableNodes = jobTable.fnGetNodes();
           var _foundRow = null;
           $(jobTableNodes).each(function (iNode, node) {
-            if ($(node).children("td").eq(1).text().trim() == data.job.shortId) {
+            if ($(node).children("td").eq(1).text().trim() == job.shortId) {
               _foundRow = node;
             }
           });
           if (_foundRow != null) {
-            updateJobRow(data.job, _foundRow);
+            updateJobRow(job, _foundRow);
+          }
+          if (typeof callback == 'function') {
+            callback(job.status);
           }
         }
       });
@@ -277,7 +298,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
 
     function callJsonData(callback, justRunning) {
       var _url = "?format=json";
-      if (justRunning == undefined) {
+      if (justRunning == undefined || $(".btn-status.active").data("value")) {
         if ($(".btn-status.active").length > 0) {
           _url += "&state=" + $(".btn-status.active").data("value");
         }
