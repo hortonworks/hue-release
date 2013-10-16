@@ -312,10 +312,11 @@
         }
         // check if it's a relative path
         var pathAddition = "";
+        var workflow_deployment_dir = "/${ workflow.deployment_dir }/";
         if ($.trim(inputElement.val()) != "") {
-          var checkPath = "/filebrowser/chooser${ workflow.deployment_dir }" + "/" + inputElement.val();
+          var checkPath = "/filebrowser/chooser" + workflow_deployment_dir + "/" + inputElement.val();
           $.getJSON(checkPath, function (data) {
-            pathAddition = "${ workflow.deployment_dir }/";
+            pathAddition = "workflow_deployment_dir/";
             callFileChooser();
           }).error(function () {
             callFileChooser();
@@ -342,16 +343,16 @@
             },
             createFolder:false,
             uploadFile:true,
-            initialPath:$.trim(inputElement.val()) != "" ? pathAddition + inputElement.val() : "${ workflow.deployment_dir }",
-            errorRedirectPath:"${ workflow.deployment_dir }",
+            initialPath:$.trim(inputElement.val()) != "" ? pathAddition + inputElement.val() : workflow_deployment_dir,
+            errorRedirectPath: workflow_deployment_dir,
             forceRefresh:true
           });
           $("#chooseFile").modal("show");
         }
 
         function handleChoice(filePath) {
-          if (filePath.indexOf("${ workflow.deployment_dir }") > -1) {
-            filePath = filePath.substring("${ workflow.deployment_dir }".length + 1);
+          if (filePath.indexOf(workflow_deployment_dir) > -1) {
+            filePath = filePath.substring(workflow_deployment_dir.length + 1);
             if (filePath == "") {
               filePath = "./";
             }
