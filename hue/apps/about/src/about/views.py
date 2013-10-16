@@ -71,7 +71,10 @@ def _enable_ambari(request):
   ret = ''
   try:
     ret = sudo.chkconfig("ambari", "on").stdout
-    ret += sudo.service("ambari", "start").stdout
+
+    # FIXME: sh module uses os.fork() to create child process, which is not appropriate to run ambari
+    # ret += sudo.service("ambari", "start").stdout
+    os.system("sudo service ambari start")
   except Exception, ex:
     error = unicode(ex)
   result = {
