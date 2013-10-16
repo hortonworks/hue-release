@@ -154,7 +154,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
           for (var cnt in data) {
               var job = data[cnt]; 
                   rowar.push(getJobRow(job));
-              if (activeStates.indexOf(job.status) > -1 && (status_filter.indexOf(job.status)||!status_filter)) {
+              if (activeStates.indexOf(job.status) > -1 && (status_filter.indexOf(job.status) > -1||!status_filter)) {
                 newRows.push(job);
               }
           }
