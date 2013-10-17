@@ -45,8 +45,8 @@ DJANGO = 'django'
 MAKO = 'mako'
 
 # This is what Debian allows. See chkname.c in shadow.
-# And */\ not allowed.
-USERNAME_RE_RULE = r"[^-\*/\\:\s\.][^\*/\\:\s]*"
+# * \ / : @ - . { } ~ | not allowed.
+USERNAME_RE_RULE = r"[^\*\\/\:\@\-\.\{\}\~\|\s]*"
 GROUPNAME_RE_RULE = ".{,80}"
 
 

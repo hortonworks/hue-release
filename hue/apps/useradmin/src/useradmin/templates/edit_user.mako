@@ -187,7 +187,7 @@ $(document).ready(function(){
             }
             if (field.val().length < 2) {
               this.pass = false;
-              msg = "${_('Ensure this value has at least 2 characters')}";
+              msg = "${_('Passwords must be 2-30 char long')}";
             }
           },
           password2:function (field) {
