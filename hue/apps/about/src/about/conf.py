@@ -52,7 +52,7 @@ SANDBOX_VERSION = Config(
   key="sandbox_version",
   help="Version of Sandbox being used",
   private=True,
-  default="2.0.5",
+  default="2.0.6",
 )
 
 SANDBOX = Config(
