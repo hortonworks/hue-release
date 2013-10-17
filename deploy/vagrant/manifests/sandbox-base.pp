@@ -288,6 +288,14 @@ class optimizations {
         ensure => stopped,
         enable => false,
     }
+
+    file { '/etc/cron.daily/readahead.cron':
+        ensure => absent,
+    }
+
+    file { '/etc/cron.monthly/readahead-monthly.cron':
+        ensure => absent,
+    }
 }
 
 include sandbox
