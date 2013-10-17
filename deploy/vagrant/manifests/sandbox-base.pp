@@ -130,15 +130,15 @@ class hdfs_prepare {
       }
 }
 
-class groups_fix {
-      file { 'groups_fix.sh':
-        path    => "/tmp/groups_fix.sh",
-        content => template("/vagrant/files/scripts/groups_fix.sh"),
+class custom_fixes {
+      file { 'custom_fixes.sh':
+        path    => "/tmp/custom_fixes.sh",
+        content => template("/vagrant/files/scripts/custom_fixes.sh"),
       }
 
-      exec { "groups_fix.sh":
-        command => '/bin/bash /tmp/groups_fix.sh |tee /var/log/groups_fix.log',
-        require => File['groups_fix.sh'],
+      exec { "custom_fixes.sh":
+        command => '/bin/bash /tmp/custom_fixes.sh |tee /var/log/custom_fixes.log',
+        require => File['custom_fixes.sh'],
         timeout => 0,
         logoutput=> "on_failure",
       }
@@ -162,7 +162,7 @@ class java_home {
 class sandbox {
     include sandbox_rpm
     include hdfs_prepare
-    include groups_fix
+    include custom_fixes
     include java_home
 
     file {"/usr/lib/hue/apps/shell/src/shell/build/setuid":
@@ -191,7 +191,7 @@ class sandbox {
     exec { 'start':
         command => "/etc/init.d/startup_script restart",
         require => [   Class[sandbox_rpm],
-                       Class[groups_fix],
+                       Class[custom_fixes],
                        Exec['hostname'],
                     ],
     }
@@ -280,6 +280,11 @@ class optimizations {
     }
 
     service { 'mdmonitor':
+        ensure => stopped,
+        enable => false,
+    }
+
+    service { 'auditd':
         ensure => stopped,
         enable => false,
     }
