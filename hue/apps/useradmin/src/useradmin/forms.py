@@ -47,7 +47,7 @@ class UserChangeForm(django.contrib.auth.forms.UserChangeForm):
       help_text = _t("Required. 30 characters or fewer. No whitespaces or colons."),
       error_messages = {
         'required': _t("Username field is required"),
-        'invalid': _t("Username must be 2-30 char long and can not contain * \ / : @ - . { } | ~ and whitespaces")
+        'invalid': _t("Whitespaces and ':' not allowed")
       })
   password1 = forms.CharField(
       label=_t("Password"),
