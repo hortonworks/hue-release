@@ -316,7 +316,7 @@
         if ($.trim(inputElement.val()) != "") {
           var checkPath = "/filebrowser/chooser" + workflow_deployment_dir + "/" + inputElement.val();
           $.getJSON(checkPath, function (data) {
-            pathAddition = "workflow_deployment_dir/";
+            pathAddition = workflow_deployment_dir;
             callFileChooser();
           }).error(function () {
             callFileChooser();
