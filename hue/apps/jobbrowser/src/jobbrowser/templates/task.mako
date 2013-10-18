@@ -30,9 +30,9 @@ ${ commonheader(_('Job Task: %(taskId)s') % dict(taskId=task.taskId_short), "job
             <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Task ID')}</li>
-                    <li class="hellipsify">${task.taskId_short}</li>
+                    <li class="wordbreak">${task.taskId_short}</li>
                     <li class="nav-header">${_('Job')}</li>
-                    <li><a href="${url('jobbrowser.views.single_job', job=joblnk.jobId)}" class="hellipsify">${joblnk.jobId_short}</a></li>
+                    <li><a href="${url('jobbrowser.views.single_job', job=joblnk.jobId)}" class="wordbreak">${joblnk.jobId_short}</a></li>
                     <li class="nav-header">${_('Status')}</li>
                     <li>
                             % if task.state.lower() == 'running' or task.state.lower() == 'pending':
@@ -206,8 +206,6 @@ ${ commonheader(_('Job Task: %(taskId)s') % dict(taskId=task.taskId_short), "job
         "sZeroRecords": "${_('No matching records')}",
       }
     });
-
-    hellipsify();
 
     $("a[data-row-selector='true']").jHueRowSelector();
   });

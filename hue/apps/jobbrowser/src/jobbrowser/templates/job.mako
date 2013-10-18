@@ -112,7 +112,7 @@ ${ commonheader(_('Job: %(jobId)s') % dict(jobId=job.jobId_short), "jobbrowser",
             <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Job ID')}</li>
-                    <li class="hellipsify">${job.jobId_short}</li>
+                    <li class="wordbreak">${job.jobId_short}</li>
                     <li class="nav-header">${_('User')}</li>
                     <li>${job.user}</li>
                     <li class="nav-header">${_('Status')}</li>
@@ -572,8 +572,6 @@ $(document).ready(function () {
       callJobDetails();
     }
   }, 2000);
-
-  hellipsify();
 
   $("a[data-row-selector='true']").jHueRowSelector();
 });
