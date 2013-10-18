@@ -83,21 +83,20 @@ def _fork(kill_parent=False, do_in_fork=None):
         sys.exit(1)
 
 
-def fork():
-  def _doublefork():
+def ambari_fork_start():
+  def _fork():
     # remove references from the main process
     os.chdir('/')
     os.setsid()
     os.umask(0)
 
-    def _ambari():
+    def _doublefork():
       subprocess.call("sudo service ambari start", shell=True)
-      sys.exit(0)
 
-    _fork(kill_parent=True, do_in_fork=_ambari)
+    _fork(kill_parent=True, do_in_fork=_doublefork)
     sys.exit(0)
 
-  _fork(kill_parent=False, do_in_fork=_doublefork)
+  _fork(kill_parent=True, do_in_fork=_fork)
 
 def _enable_ambari(request):
   error = ''
@@ -107,8 +106,9 @@ def _enable_ambari(request):
 
     # FIXME: sh module uses os.fork() to create child process, which is not appropriate to run ambari
     # ret += sudo.service("ambari", "start").stdout
-    p = Process(target=fork())
+    p = Process(target=ambari_fork_start)
     p.start()
+    # subprocess.Popen(["sudo", "service", "ambari", "start"])
   except Exception, ex:
     error = unicode(ex)
   result = {
@@ -122,7 +122,8 @@ def _disable_ambari(request):
   ret = ''
   try:
     ret = sudo.chkconfig("ambari", "off").stdout
-    ret += sudo.service("ambari", "stop").stdout
+    # ret += sudo.service("ambari", "stop").stdout
+    subprocess.Popen(["sudo", "service", "ambari", "stop"])
   except Exception, ex:
     error = unicode(ex)
   result = {
