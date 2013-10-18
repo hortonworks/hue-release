@@ -30,12 +30,12 @@ ${ commonheader(_('Task Attempt: %(attemptId)s') % dict(attemptId=attempt.attemp
             <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Attempt ID')}</li>
-                    <li class="hellipsify">${attempt.attemptId_short}</li>
+                    <li class="wordbreak">${attempt.attemptId_short}</li>
                     <li class="nav-header">${_('Task')}</li>
-                    <li><a href="${url('jobbrowser.views.single_task', job=joblnk.jobId, taskid=taskid)}" class="hellipsify">${task.taskId_short}</a>
+                    <li><a href="${url('jobbrowser.views.single_task', job=joblnk.jobId, taskid=taskid)}" class="wordbreak">${task.taskId_short}</a>
                     </li>
                     <li class="nav-header">${_('Job')}</li>
-                    <li><a href="${url('jobbrowser.views.single_job', job=joblnk.jobId)}" class="hellipsify">${joblnk.jobId_short}</a></li>
+                    <li><a href="${url('jobbrowser.views.single_job', job=joblnk.jobId)}" class="wordbreak">${joblnk.jobId_short}</a></li>
                     <li class="nav-header">${_('Status')}</li>
                     <li>
                         <%
@@ -176,7 +176,6 @@ ${ commonheader(_('Task Attempt: %(attemptId)s') % dict(attemptId=attempt.attemp
       $('#tabs a[href="#' + window.location.hash.substring(2) + '"]').tab('show');
     }
 
-    hellipsify();
   });
 </script>
 
