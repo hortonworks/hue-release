@@ -128,6 +128,10 @@ ln -sf %{hue_dir}/tools/start_scripts/ambari /etc/init.d/ambari
 chkconfig --add ambari
 chkconfig ambari off
 
+ln -sf %{hue_dir}/tools/start_scripts/hbase-starter /etc/init.d/hbase-starter
+chkconfig --add hbase-starter
+chkconfig hbase-starter off
+
 chkconfig httpd on
 service httpd start
 

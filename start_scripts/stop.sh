@@ -32,6 +32,9 @@ su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf stop
 echo "Stop Hbase Stargate"
 su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh stop rest"
 
+echo "Stop Hbase thrift"
+su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh stop thrift"
+
 echo "Stop YARN"
 # slave node
 echo "Stop NodeManagers"

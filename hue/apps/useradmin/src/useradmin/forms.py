@@ -45,14 +45,17 @@ class UserChangeForm(django.contrib.auth.forms.UserChangeForm):
       min_length=2,
       regex='^%s$' % (get_username_re_rule(),),
       help_text = _t("Required. 30 characters or fewer. No whitespaces or colons."),
-      error_messages = {'invalid': _t("Username contains one or more not permitted characters.") })
+      error_messages = {
+        'required': _t("Username field is required"),
+        'invalid': _t("Username must be 2-30 char long and can not contain * \ / : @ - . { } | ~ and whitespaces")
+      })
   password1 = forms.CharField(
       label=_t("Password"),
       max_length=30,
       min_length=2,
       widget=forms.PasswordInput,
       required=False,
-      error_messages = {'required': _t("You must specify a password when creating a new user.") })
+      error_messages = {'required': _t("Password fields is required") })
   password2 = forms.CharField(
       label=_t("Password confirmation"),
       max_length=30,

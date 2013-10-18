@@ -102,4 +102,3 @@ deactivate
 #/usr/lib/hue/build/env/bin/hue loaddata /tmp/db_dump.json
 /etc/init.d/hue start
 rm -Rf "$TMP_DIR"
-

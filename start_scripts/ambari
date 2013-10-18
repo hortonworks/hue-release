@@ -26,7 +26,7 @@ start() {
     echo;
     echo "Ambari autostart enabled"
     echo "To disable auto-start of Ambari do";
-    echo "  # service ambari stop";
+    echo "  # chkconfig ambari off";
     echo;
     echo "====================================";
 }
@@ -49,11 +49,9 @@ stop() {
 
 case "$1" in
 start)
-	chkconfig ambari on
 	start
 	;;
 stop)
-	chkconfig ambari off
 	stop
 	;;
 

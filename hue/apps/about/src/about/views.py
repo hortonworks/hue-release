@@ -22,7 +22,7 @@ from desktop.lib.paths import get_run_root, get_var_root
 from django.http import HttpResponse
 import simplejson as json
 
-from sh import bash
+from sh import ErrorReturnCode, bash, sudo, service, chkconfig
 from about import conf
 
 LOG = logging.getLogger(__name__)
@@ -42,10 +42,135 @@ def index(request):
     }
     return HttpResponse(json.dumps(result))
   components, HUE_VERSION = _get_components()
+
+  RAM = int(os.popen("free -m").readlines()[1].split()[1])/1024.
   return render('index.mako', request, {
     'components': components,
     'hue_version': HUE_VERSION,
+    'ambari_status': _get_ambari_status(),
+    'hbase_status': _get_hbase_status(),
+    'RAM_ALERT': RAM < 3.5,
+    'RAM': "%0.1f" % RAM,
   })
+
+# ====== Ambari =======
+
+def ambari(request, action):
+  if request.method == 'POST':
+    action = action.lower()
+    if action == 'enable':
+      return _enable_ambari(request)
+    elif action == 'disable':
+      return _disable_ambari(request)
+    elif action == 'status':
+      return _ambari_status(request)
+
+
+def _enable_ambari(request):
+  error = ''
+  ret = ''
+  try:
+    ret = sudo.chkconfig("ambari", "on").stdout
+
+    # FIXME: sh module uses os.fork() to create child process, which is not appropriate to run ambari
+    # ret += sudo.service("ambari", "start").stdout
+    os.system("sudo service ambari start")
+  except Exception, ex:
+    error = unicode(ex)
+  result = {
+    'return': ret,
+    'error': error
+  }
+  return HttpResponse(json.dumps(result))
+
+def _disable_ambari(request):
+  error = ''
+  ret = ''
+  try:
+    ret = sudo.chkconfig("ambari", "off").stdout
+    ret += sudo.service("ambari", "stop").stdout
+  except Exception, ex:
+    error = unicode(ex)
+  result = {
+    'return': ret,
+    'error': error
+  }
+  return HttpResponse(json.dumps(result))
+
+def _get_ambari_status():
+  """Returns True if ambari-agent started and False otherwise."""
+  from sh import ambari_agent
+  try:
+    ambari_agent("status")
+  except ErrorReturnCode:
+    return False
+  return True
+
+def _ambari_status(request):
+  val = "on" if _get_ambari_status() else "off"
+  result = {
+    'return': val,
+  }
+  return HttpResponse(json.dumps(result))
+
+# ====== HBase =======
+
+def hbase(request, action):
+  if request.method == 'POST':
+    action = action.lower()
+    if action == 'enable':
+      return _enable_hbase(request)
+    elif action == 'disable':
+      return _disable_hbase(request)
+    elif action == 'status':
+      return _hbase_status(request)
+
+
+def _enable_hbase(request):
+  error = ''
+  ret = ''
+  try:
+    ret = sudo.chkconfig("hbase-starter", "on").stdout
+    ret += sudo.service("hbase-starter", "start").stdout
+  except Exception, ex:
+    error = unicode(ex)
+  result = {
+    'return': ret,
+    'error': error
+  }
+  return HttpResponse(json.dumps(result))
+
+def _disable_hbase(request):
+  error = ''
+  ret = ''
+  try:
+    ret = sudo.chkconfig("hbase-starter", "off").stdout
+    ret += sudo.service("hbase-starter", "stop").stdout
+  except Exception, ex:
+    error = unicode(ex)
+  result = {
+    'return': ret,
+    'error': error
+  }
+  return HttpResponse(json.dumps(result))
+
+def _get_hbase_status():
+  """Returns True if hbase master started and False otherwise."""
+  try:
+    sudo.kill("-0", file(conf.HBASE_PID_FILE.get()).read().strip())
+  except (ErrorReturnCode, IOError):
+    return False
+  return True
+
+def _hbase_status(request):
+  val = "on" if _get_hbase_status() else "off"
+  result = {
+    'return': val,
+  }
+  return HttpResponse(json.dumps(result))
+
+# ==================
+
 
 def _get_tutorials_version():
   TUTORIAL_VERSION_FILE = os.path.join(conf.TUTORIALS_PATH.get(), 'version')
@@ -73,6 +198,8 @@ def _read_versions(filename):
         components.append(('Hue', version))
       elif component == "Sandbox":
         components.append(('Sandbox Build', version))
+      elif component == "Ambari-server":
+        components.append(('Ambari', version))
       else:
         components.append((component, version))
   return components
@@ -87,7 +214,7 @@ def _get_components():
       components += _read_versions(extra_versions_path)
   except ValueError:#Exception:
     components = [
-      ('HDP', "2.0.5"),
+      ('HDP', "2.0.6"),
       ('Hadoop', "1.2.0.1.3.0.0-107"),
       ('HCatalog', "0.11.0.1.3.0.0-107"),
       ('Pig', "0.11.1.1.3.0.0-107"),
