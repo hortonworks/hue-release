@@ -17,6 +17,8 @@
 
 import logging
 import os
+import sys
+from multiprocessing import Process
 from desktop.lib.django_util import render
 from desktop.lib.paths import get_run_root, get_var_root
 from django.http import HttpResponse
@@ -24,6 +26,7 @@ import simplejson as json
 
 from sh import ErrorReturnCode, bash, sudo, service, chkconfig
 from about import conf
+import subprocess
 
 LOG = logging.getLogger(__name__)
 
@@ -66,6 +69,36 @@ def ambari(request, action):
       return _ambari_status(request)
 
 
+def _fork(kill_parent=False, do_in_fork=None):
+    try: 
+        pid = os.fork() 
+        if pid == 0:
+          if do_in_fork:
+            do_in_fork()
+        else:
+          if kill_parent:
+            sys.exit(0)
+    except OSError, e: 
+        print >>sys.stderr, 'Unable to fork: %d (%s)' % (e.errno, e.strerror) 
+        sys.exit(1)
+
+
+def fork():
+  def _doublefork():
+    # remove references from the main process
+    os.chdir('/')
+    os.setsid()
+    os.umask(0)
+
+    def _ambari():
+      subprocess.call("sudo service ambari start", shell=True)
+      sys.exit(0)
+
+    _fork(kill_parent=True, do_in_fork=_ambari)
+    sys.exit(0)
+
+  _fork(kill_parent=False, do_in_fork=_doublefork)
+
 def _enable_ambari(request):
   error = ''
   ret = ''
@@ -74,7 +107,8 @@ def _enable_ambari(request):
 
     # FIXME: sh module uses os.fork() to create child process, which is not appropriate to run ambari
     # ret += sudo.service("ambari", "start").stdout
-    os.system("sudo service ambari start")
+    p = Process(target=fork())
+    p.start()
   except Exception, ex:
     error = unicode(ex)
   result = {
