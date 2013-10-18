@@ -2,7 +2,8 @@ CC := gcc
 CFLAGS := -Wall -lpam
 DESTDIR := build
 
-default: $(DESTDIR)/pam_auth
+default:
+#default: $(DESTDIR)/pam_auth
 
 $(DESTDIR)/pam_auth: pam_auth.c
 	mkdir -p $(@D)
