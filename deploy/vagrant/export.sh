@@ -13,8 +13,8 @@ else
 fi
 
 # memory amount in MB for VirtualBox machine
-MEM=4096
-VERSION="2.0 Beta"
+MEM=2048
+VERSION="2.0"
 
 if [ -z $1 ]; then
 	TARGET=default
