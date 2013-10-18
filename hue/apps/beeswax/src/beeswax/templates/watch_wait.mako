@@ -40,11 +40,11 @@ ${layout.menubar(section='query')}
 				 	% if n_jobs > 0:
 						<li id="jobsHeader" class="nav-header">${mr_jobs} (${n_jobs})</li>
 						% for jobid in hadoop_jobs:
-						    <li><a class="jobLink" href="${url("jobbrowser.views.single_job", job=jobid)}">${jobid.replace("job_", "")}</a></li>
+						    <li><a class="jobLink wordbreak" href="${url("jobbrowser.views.single_job", job=jobid)}">${jobid.replace("job_", "")}</a></li>
 						% endfor
 					% else:
 						<li id="jobsHeader" class="nav-header">${mr_jobs}</li>
-						<li class="jobLink">${_('No Hadoop jobs were launched in running this query.')}</li>
+						<li class="jobLink wordbreak">${_('No Hadoop jobs were launched in running this query.')}</li>
 					% endif
 				</ul>
 			</div>
@@ -89,7 +89,7 @@ ${layout.menubar(section='query')}
           $(".jobLink").remove();
           $("#jobsHeader").text((data.jobs.length > 1 ? labels.MRJOBS : labels.MRJOB) + " (" + data.jobs.length + ")");
           for (var i = 0; i < data.jobs.length; i++) {
-            $("#jobsHeader").after($("<li>").addClass("jobLink").html("<a href=\"" + data.jobUrls[data.jobs[i]] + "\">" + data.jobs[i].replace("job_", "") + "</a>"));
+            $("#jobsHeader").after($("<li>").addClass("jobLink wordbreak").html("<a href=\"" + data.jobUrls[data.jobs[i]] + "\">" + data.jobs[i].replace("job_", "") + "</a>"));
           }
         }
         var _logsEl = $("#log pre");
