@@ -27,12 +27,12 @@ ${ commonheader(_('Task Attempt: %(attemptId)s') % dict(attemptId=attempt.attemp
             <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Attempt ID')}</li>
-                    <li>${attempt.attemptId_short}</li>
+                    <li class="wordbreak">${attempt.attemptId_short}</li>
                     <li class="nav-header">${_('Task')}</li>
-                    <li><a href="${url('jobbrowser.views.single_task', job=joblnk.jobId, taskid=taskid)}" title="${_('View this task')}">${task.taskId_short}</a>
+                    <li><a class="wordbreak" href="${url('jobbrowser.views.single_task', job=joblnk.jobId, taskid=taskid)}" title="${_('View this task')}">${task.taskId_short}</a>
                     </li>
                     <li class="nav-header">${_('Job')}</li>
-                    <li><a href="${url('jobbrowser.views.single_job', job=joblnk.jobId)}" title="${_('View this job')}">${joblnk.jobId_short}</a></li>
+                    <li><a class="wordbreak" href="${url('jobbrowser.views.single_job', job=joblnk.jobId)}" title="${_('View this job')}">${joblnk.jobId_short}</a></li>
                     <li class="nav-header">${_('Status')}</li>
                     <li>
                         <%
