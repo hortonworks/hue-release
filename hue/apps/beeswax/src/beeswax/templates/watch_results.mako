@@ -76,8 +76,8 @@ ${layout.menubar(section='query')}
                     <li><a target="_blank" href="${download_urls["xls"]}">${_('Download as XLS')}</a></li>
                     <li>
                       <label class="checkbox">
-                          <a>${_('Enable visualization')}</a>
                           <input type="checkbox" class="vn-enable">
+                          <a>${_('Enable visualization')}</a>
                       </label>
                     </li>
                     % endif
