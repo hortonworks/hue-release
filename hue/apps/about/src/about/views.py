@@ -18,6 +18,8 @@
 import logging
 import os
 import sys
+import time
+
 from multiprocessing import Process
 from desktop.lib.django_util import render
 from desktop.lib.paths import get_run_root, get_var_root
@@ -108,6 +110,7 @@ def _enable_ambari(request):
     # ret += sudo.service("ambari", "start").stdout
     p = Process(target=ambari_fork_start)
     p.start()
+    time.sleep(10)
     # subprocess.Popen(["sudo", "service", "ambari", "start"])
   except Exception, ex:
     error = unicode(ex)
