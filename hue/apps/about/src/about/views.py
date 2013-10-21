@@ -84,7 +84,7 @@ def _fork(kill_parent=False, do_in_fork=None):
 
 
 def ambari_fork_start():
-  def _fork():
+  def _in_fork():
     # remove references from the main process
     os.chdir('/')
     os.setsid()
@@ -96,7 +96,7 @@ def ambari_fork_start():
     _fork(kill_parent=True, do_in_fork=_doublefork)
     sys.exit(0)
 
-  _fork(kill_parent=True, do_in_fork=_fork)
+  _fork(kill_parent=True, do_in_fork=_in_fork)
 
 def _enable_ambari(request):
   error = ''
