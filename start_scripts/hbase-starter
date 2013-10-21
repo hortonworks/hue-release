@@ -22,13 +22,6 @@ start() {
     printf "%-50s\n" "Starting HBase..." | tee -a $LOG
     
     make --makefile $SCRIPTS_PATH/start_deps.mf -B HBase -j -i
-    echo "====================================";
-    echo;
-    echo "HBase autostart enabled"
-    echo "To disable auto-start of HBase do";
-    echo "  # chkconfig hbase-starter off";
-    echo;
-    echo "====================================";
 }
 
 
