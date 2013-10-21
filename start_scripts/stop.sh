@@ -38,15 +38,15 @@ su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh stop thrift"
 echo "Stop YARN"
 # slave node
 echo "Stop NodeManagers"
-su -l yarn -c "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf stop nodemanager"
+/etc/init.d/hadoop-yarn-nodemanager stop
 
 # host machine
 echo "Stop JobTracker History Server"
-su -l mapred -c "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf stop historyserver"
+/etc/init.d/hadoop-mapreduce-historyserver stop
 
 # host machine
 echo "Stop ResourceManager"
-su -l yarn -c "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf stop resourcemanager"
+/etc/init.d/hadoop-yarn-resourcemanager stop
 
 echo "Stop HDFS"
 # slave node

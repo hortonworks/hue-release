@@ -74,25 +74,22 @@ secondary_namenode: postgresql
 resourcemanager: postgresql HDFS
 	$(call colorized,\
 		resource manager, \
-		su -l yarn -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager",\
-		sleep 25,\
-		/var/log/hadoop/mapred/hadoop-yarn-resourcemanager-*.log)
+		/etc/init.d/hadoop-yarn-resourcemanager start,\
+		sleep 25)
 
 
 historyserver: postgresql HDFS
 	$(call colorized,\
 		history server, \
-		su -l mapred -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-mapreduce/sbin/mr-jobhistory-daemon.sh --config /etc/hadoop/conf start historyserver",\
-		sleep 5,\
-		/var/log/hadoop/mapred/hadoop-mapred-historyserver-*.log)
+		/etc/init.d/hadoop-mapreduce-historyserver start,\
+		sleep 5)
 
 
 nodemanagers: postgresql HDFS
 	$(call colorized,\
 		node manager, \
-		su -l yarn -c  "export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager",\
-		sleep 5,\
-		/var/log/hadoop/mapred/hadoop-yarn-nodemanager-*.log)
+		/etc/init.d/hadoop-yarn-nodemanager start,\
+		sleep 5)
 
 
 # ==== HBase ====

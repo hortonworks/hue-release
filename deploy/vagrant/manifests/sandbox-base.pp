@@ -188,11 +188,29 @@ class sandbox {
         require => Class[sandbox_rpm]
     }
 
+    service { 'hadoop-yarn-resourcemanager':
+        ensure => stopped,
+        enable => false,
+    }
+
+    service { 'hadoop-yarn-nodemanager':
+        ensure => stopped,
+        enable => false,
+    }
+
+    service { 'hadoop-mapreduce-historyserver':
+        ensure => stopped,
+        enable => false,
+    }
+
     exec { 'start':
         command => "/etc/init.d/startup_script restart",
         require => [   Class[sandbox_rpm],
                        Class[custom_fixes],
                        Exec['hostname'],
+                       Service['hadoop-yarn-resourcemanager'],
+                       Service['hadoop-yarn-nodemanager'],
+                       Service['hadoop-mapreduce-historyserver'],
                     ],
     }
 
