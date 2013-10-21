@@ -22,13 +22,6 @@ start() {
     printf "%-50s\n" "Starting Ambari..." | tee -a $LOG
     
     make --makefile $SCRIPTS_PATH/start_deps.mf -B Ambari -j -i
-    echo "====================================";
-    echo;
-    echo "Ambari autostart enabled"
-    echo "To disable auto-start of Ambari do";
-    echo "  # chkconfig ambari off";
-    echo;
-    echo "====================================";
 }
 
 
