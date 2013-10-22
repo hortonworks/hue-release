@@ -260,7 +260,10 @@ def save_file(request):
     messages.info(request, _('Saved %(path)s.') % {'path': os.path.basename(path)})
     """ Changing path to reflect the request path of the JFrame that will actually be returned."""
     request.path = urlresolvers.reverse("filebrowser.views.edit", kwargs=dict(path=path))
-    return edit(request, path, form)
+    if request.is_ajax():
+       return render_json({'message':_('Saved %(path)s.') % {'path': os.path.basename(path)},'path':request.path})
+    else:
+       return edit(request, path, form)
 
 
 def _do_overwrite_save(fs, path, data, encoding):

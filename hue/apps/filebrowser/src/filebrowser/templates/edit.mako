@@ -36,7 +36,7 @@ ${ commonheader(_('%(filename)s - File Viewer') % dict(filename=truncate(filenam
 
 <div class="container-fluid">
 <div class="well" >
-    <form class="form-stacked" method="post" action="${url('filebrowser.views.save_file')}"> ${ csrf_token_field | n } 
+    <form id="saveForm" class="form-stacked" method="post" action="${url('filebrowser.views.save_file')}"> ${ csrf_token_field | n } 
     <div class="toolbar">
 		<a class="btn" href="${url('filebrowser.views.view', path=dirname_enc)}">${_('View Location')}</a>
 	</div>
@@ -69,11 +69,13 @@ ${ commonheader(_('%(filename)s - File Viewer') % dict(filename=truncate(filenam
         <h3>${_('Save As')}</h3>
     </div>
     <div class="modal-body">
-		${edit.render_field(form["path"], notitle=True, klass="xlarge")}
-		<span class="help-block">${_("Enter the location where you'd like to save the file.")}</span>
+      <div class="control-group path">
+        ${edit.render_field(form["path"], notitle=True, klass="xlarge", attrs={'id':'path-input'})}
+        <span class="help-block">${_("Enter the location where you'd like to save the file.")}</span>
+      </div>
     </div>
     <div class="modal-footer">
-        <div id="saveAsNameRequiredAlert" class="alert-message error hide" style="position: absolute; left: 10;">
+        <div id="saveAsNameRequiredAlert" class="alert-message fieldError hide" style="position: absolute; left: 10;">
             <p><strong>${_('Name is required.')}</strong>
         </div>
 		${edit.render_field(form["contents"], hidden=True)}
@@ -98,18 +100,44 @@ ${ commonheader(_('%(filename)s - File Viewer') % dict(filename=truncate(filenam
         $("#saveAsModal").modal("hide");
       });
 
-      $("#saveAsForm").submit(function () {
-        if ($.trim($("#saveAsForm").find("input[name='path']").val()) == "") {
-          $("#saveAsForm").find("input[name='path']").addClass("fieldError");
+      function submitForm(form) {
+        var form_data = {};
+        $.map($(form).serializeArray(), function(n, i){
+            form_data[n['name']] = n['value'].replace(/\r\n/g,'\n');
+        });
+        $.ajax({
+          url:"${url('filebrowser.views.save_file')}",
+          type:'post',
+          dataType:'json',
+          data:form_data,
+          success:function(data){
+            window.location.replace(data.path)
+          },
+          error:function(data){
+            $.jHueNotify.error("${_('There was a problem with your request.')}");
+            resetPrimaryButtonsStatus();
+          }
+        });
+      }
+
+      $('#saveForm').submit(function (e){
+        e.preventDefault();
+        submitForm(this);
+      });
+
+      $("#saveAsForm").submit(function (e){
+        e.preventDefault();
+        if ($.trim($("#path-input").val()) == "") {
+          $("#saveAsForm").find(".path").addClass("error");
           $("#saveAsNameRequiredAlert").show();
           resetPrimaryButtonsStatus(); //globally available
           return false;
         }
-        return true;
+        submitForm(this);
       });
 
-      $("#saveAsForm").find("input[name='path']").focus(function () {
-        $(this).removeClass("fieldError");
+      $("#path-input").focus(function () {
+        $("#saveAsForm").find(".path").removeClass("error");
         $("#saveAsNameRequiredAlert").hide();
       });
     });
