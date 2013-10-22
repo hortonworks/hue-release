@@ -133,15 +133,20 @@ var NodeFields = {
   },
   addPrepareMkdir: function(data, event) {
     var self = this;
-    var prop = { value: ko.observable(""), type: ko.observable("mkdir") };
-    prop.value.subscribe(function(value) {
-      self.prepares.valueHasMutated();
-    });
-    prop.type.subscribe(function(value) {
-      self.prepares.valueHasMutated();
-    });
-    self.prepares.push(prop);
-    $(document).trigger('add.prepare_mkdir.workflow', [data]);
+    var preps = self.prepares();
+    if ((preps.length > 0) && (preps[preps.length-1].type() == "delete")) {
+      var prop = { value: ko.observable(""), type: ko.observable("mkdir") };
+      prop.value.subscribe(function(value) {
+        self.prepares.valueHasMutated();
+      });
+      prop.type.subscribe(function(value) {
+        self.prepares.valueHasMutated();
+      });
+      self.prepares.push(prop);
+      $(document).trigger('add.prepare_mkdir.workflow', [data]);
+    } else {
+      $.jHueNotify.error("'mkdir' should be after 'delete' entry");
+    }
   },
   removePrepare: function(data, event) {
     var self = this;
