@@ -147,7 +147,9 @@ ${layout.menubar(section='log_view')}
           $('<pre>').text(data.log[i]).appendTo($('#logs'));
         };
         filterLogs($(".search-query").val());
-      },'json');
+      },'json').error(function() {
+        window.location.reload(true);
+      });
     }
 
     $('.prev').on('click',{'dir':'prev'},toNextMatch);

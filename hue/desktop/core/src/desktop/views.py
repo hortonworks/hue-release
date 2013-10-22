@@ -59,7 +59,11 @@ def log_view(request):
       logs = dict(log=[l for l in h.buf], query=request.GET.get("q", ""))
 
   if request.method == 'POST':
-    return render_json(logs)
+    try:
+      return render_json(logs)
+    except UnicodeDecodeError, e:
+      LOG.warning("Failed to render logs to json")
+      pass
   else:
     return render('logs.mako', request, logs)
 
