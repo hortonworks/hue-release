@@ -177,7 +177,13 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
         var row = newRows[i];
         callJobDetails(row, function (status) {
           if (activeStates.indexOf(status.toUpperCase()) < 0) {
-            newRows.splice(i);
+            var tmpRows = [];
+            for (var j = 0; j < newRows.length; j++) {
+              if (row.id!=newRows[j].id) {
+                tmpRows.push(newRows[j])
+              }
+            }
+            newRows = tmpRows;
           }
         });
       }
