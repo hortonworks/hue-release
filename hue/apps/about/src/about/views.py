@@ -48,10 +48,15 @@ def index(request):
     return HttpResponse(json.dumps(result))
   components, HUE_VERSION = _get_components()
 
+  if conf.SANDBOX.get():
+    version = conf.SANDBOX_VERSION.get()
+  else:
+    version = HUE_VERSION
   RAM = int(os.popen("free -m").readlines()[1].split()[1])/1024.
   return render('index.mako', request, {
     'components': components,
-    'hue_version': HUE_VERSION,
+    'hue_title': conf.ABOUT_TITLE.get(),
+    'hue_version': version,
     'ambari_status': _get_ambari_status(),
     'hbase_status': _get_hbase_status(),
     'RAM_ALERT': RAM < 3.5,

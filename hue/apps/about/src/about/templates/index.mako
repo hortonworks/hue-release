@@ -18,7 +18,7 @@ from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 from about import conf
 %>
-${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
+${commonheader(_('About ' + hue_title), "about", user, "100px")| n,unicode}
 
         % if user.is_superuser:
 	<div class="subnav subnav-fixed">
@@ -33,7 +33,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
         % endif
 
 	<div class="container-fluid">
-		<h1 id="describe-header">Hortonworks Hue ${hue_version}</h1>
+		<h1 id="describe-header">Hortonworks ${hue_title} ${hue_version}</h1>
 
 		<div id="update-tutorials-spinner"><h1>Updating tutorials...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 		<h3 id="update-tutorials-msg"></h3>
