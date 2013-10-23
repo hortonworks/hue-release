@@ -60,7 +60,7 @@ ${commonheader(_('About ' + hue_title), "about", user, "100px")| n,unicode}
 				</ul>
 			</div>
 		</div>
-		<div class="span-9">
+		<div class="components span-9">
 			<table class="table table-bordered">
 			<thead>
     		<tr>
@@ -115,7 +115,24 @@ ${commonheader(_('About ' + hue_title), "about", user, "100px")| n,unicode}
 			</tbody>
 			</table>
 		</div>
-	</div>
+        <div class="footer">
+            <div class="container-fluid">
+                <div class="logo">
+                    <img src="/about/static/art/hortonworks_logo_bw.png"/>
+                </div> 
+                <div class="copyright">
+                    <p class="pull-right">
+                        Copyright © 2013 The Apache Software Foundation.
+                        <br>
+                        Apache Hadoop, Hadoop, HDFS, HBase, Hive, Mahout, Pig, Zookeeper are trademarks of the Apache Software Foundation.
+                        <br>
+                        Hue and the Hue logo are trademarks of Cloudera, Inc. and licensed under the Apache 2 license. For more information: 
+                        gethue.com 
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 <style>
@@ -127,6 +144,19 @@ ${commonheader(_('About ' + hue_title), "about", user, "100px")| n,unicode}
     }
     #start-hbase-spinner {
         display:none;
+    }
+    .logo {
+        float: left;
+        height: 78px;
+        width: 140px;
+    }
+    .copyright {
+        text-align: right;
+        font-size: 11px;
+        margin-top: 10px;
+    }
+    .components {
+        margin-bottom: 65px;
     }
 </style>
 
