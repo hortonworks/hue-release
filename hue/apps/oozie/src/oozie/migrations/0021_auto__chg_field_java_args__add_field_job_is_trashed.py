@@ -18,7 +18,7 @@ class Migration(SchemaMigration):
     def backwards(self, orm):
         
         # Changing field 'Java.args'
-        db.alter_column('oozie_java', 'args', self.gf('django.db.models.fields.TextField')(blank=True))
+        db.alter_column('oozie_java', 'args', self.gf('django.db.models.fields.CharField')(max_length=4096, blank=True))
 
         # Deleting field 'Job.is_trashed'
         db.delete_column('oozie_job', 'is_trashed')
