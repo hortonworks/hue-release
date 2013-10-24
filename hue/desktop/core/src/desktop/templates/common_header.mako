@@ -157,7 +157,7 @@ from django.utils.translation import ugettext as _
     <div class="navbar-inner">
       <div class="container-fluid">
         <a class="brand nav-tooltip"
-        title="${_('About<br>Hortonworks<br>Sandbox')}"
+        title="${_('About<br>Hortonworks<br>Hue')}"
         href="/about"><img src="/about/static/art/icon_sandbox_logo_24.png"/>
         </a>
         <div id="usernameDropdown" class="btn-group pull-right">

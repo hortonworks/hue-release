@@ -24,4 +24,4 @@ class UserPreferences(models.Model):
   """Holds arbitrary key/value strings."""
   user = models.ForeignKey(auth_models.User)
   key = models.CharField(max_length=20)
-  value = models.TextField()
+  value = models.TextField(max_length=4096)

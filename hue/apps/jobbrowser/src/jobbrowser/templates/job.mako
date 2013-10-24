@@ -72,10 +72,13 @@
             %>
             % if is_hdfs_uri:
                 <%
-                    if request.fs.isfile(url_splitted[2]):
-                      target = "FileViewer"
-                    else:
-                      target = "FileBrowser"
+                    try:
+                      if request.fs.isfile(url_splitted[2]):
+                        target = "FileViewer"
+                      else:
+                        target = "FileBrowser"
+                    except:
+                      target = "FileBrowser" 
                 %>
                     <a href="${location_to_url(val)}" title="${val}" target="${target}">${val}</a>
                 % if i != len(splitArray) - 1:

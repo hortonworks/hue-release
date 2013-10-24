@@ -24,7 +24,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding model 'UserPreferences'
         db.create_table('desktop_userpreferences', (
-            ('value', self.gf('django.db.models.fields.TextField')()),
+            ('value', self.gf('django.db.models.fields.TextField')(max_length=4096)),
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('key', self.gf('django.db.models.fields.CharField')(max_length=20)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
