@@ -267,6 +267,9 @@
                 if(num_of_pending_uploads == 0){
                     _parent.navigateTo(path);
                 }
+                if (responseJSON.status !== undefined && responseJSON.status != 0) {
+                    $.jHueNotify.error("'Error: " + (responseJSON['data'] ? responseJSON['data'] : "${ _('Check file permissions') }"));
+                }
             },
             onSubmit: function(id, fileName){
                 num_of_pending_uploads++;

@@ -659,7 +659,9 @@ def list_tables_json(request, database=None):
 
 def list_databases_json(request):
     tree = {}
-    databases = HCatClient(request.user.username).get_databases(like="*")
+    # databases = HCatClient(request.user.username).get_databases(like="*")
+    db = dbms.get(request.user)
+    databases = db.get_databases()
     for database in databases:
         tables = _get_table_list(request, database)
         tree[database] = tables

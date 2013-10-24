@@ -17,44 +17,57 @@
 
 
 <%!from desktop.views import commonheader, commonfooter %>
-<%namespace name="shared" file="shared_components.mako" />
+<%namespace name="shared"  file="shared_components.mako" />
 <%namespace name="my_scripts" file="my_scripts.mako" />
 ${commonheader("Pig", "pig", user, "100px")| n,unicode}
-${shared.menubar(section='My Scripts')}
+<%shared:menubar section='My Scripts' />
 
 <%!
-from pig.models import UDF
+from django.utils.translation import ugettext as _
 from pig import conf
-udfs = UDF.objects.all()
 UDF_PATH = conf.UDF_PATH.get()
 %>
 
 ## Use double hashes for a mako template comment
 ## Main body
-<div id="show-modal-for-var" class="modal hide fade">
-    <div class="modal-header">
-        <a href="#" class="close" data-dismiss="modal">&times;</a>
-        <h3>Please specify parameters for this variable(s):</h3>
-    </div>
-    <div class="modal-body">
-        <div class="clearfix">
-           <div class="modal-for-var-input-warp">
 
-           </div>
-        </div>
-    </div>
-    <div class="modal-footer">
-        <button id="save-values-for-var" class="btn primary">Save</button>
-    </div>
-</div>
 
+${my_scripts.modal({
+  'windowId':'show-modal-for-var',
+  'cBtnId':'save-values-for-var',
+  'cBtnText':'Save',
+  'title':'Please specify parameters for this variable(s):',
+  'htmlbody':'<div class="clearfix">\
+                <div class="modal-for-var-input-warp">\
+                </div>\
+              </div>',
+  'cancelBtn': False,
+})}
+
+${my_scripts.modal({
+  'windowId':'udfRmConfirm',
+  'title': 'Confirm Delete',
+  'textbody': 'Are you sure, you want to delete this udf?',
+  'cBtnId': 'rmUdfBtn',
+  'cBtnText':'Delete',
+  'cBtnAttr': 'data-bind="click: rm_confirm"',
+  'cBtnClass':'btn btn-danger',
+})}
+
+${my_scripts.modal({
+  'windowId':'onRunJobSave',
+  'cBtnId': 'runningJobSaveBtn',
+  'cBtnText':'Save and switch',
+  'title': 'Job is running.',
+  'textbody': 'Are you sure, you want to switch to edit mode?',
+})}
 
 <div class="container-fluid">
   <div class="row-fluid">
     <div class="span3" style="float: left;">
       <div class="well sidebar-nav">
         ${my_scripts.my_scripts(result['scripts'])}
-        <h5 >Settings</h5>
+        <h5 >${_('Settings')}</h5>
           <ul class="nav nav-list">
             <li>
               <label class="checkbox ">
@@ -62,19 +75,27 @@ UDF_PATH = conf.UDF_PATH.get()
                    % if result.get("email_notification"):
                    checked="checked"
                    % endif
-                   />Email notification</label>
+                   />${_('Email notification')}</label>
             </li>
             <li  class="nav-header">
               <div class="accordion" id="accordion3" >
                 <div class="accordion-group">
                   <div class="accordion-heading">
                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion3" href="#collapseOne2">
-                      User-defined Functions <i class="icon-chevron-down"></i>
+                      ${_('User-defined Functions')}<i class="icon-chevron-down"></i>
                     </a>
                   </div>
                   <div id="collapseOne2" class="accordion-body collapse" style="text-transform:none;">
                     <div class="accordion-inner">
-                       ${my_scripts.udfs(result['udfs'])}
+                      <!-- ko foreach: {data: udflist, as: 'udf'} -->
+                        <a data-bind='click: $root.rmUdf' href="#">
+                            <img src="/pig/static/art/delete.gif" alt="Delete" height="12" width="12" title="Delete UDF">
+                        </a>
+                        <a class="udf_register" href="#" data-bind="click: $root.putToEditor, text: udf.file_name"></a>
+                        <br/>
+                      <!-- /ko -->
+                      <input type="hidden" class="get_udf_url" value="${url('udf_get')}">
+                      <input type="hidden" class="del_udf_url" value="${url('udf_delete')}">
                     </div>
                   </div>
                 </div>
@@ -84,7 +105,7 @@ UDF_PATH = conf.UDF_PATH.get()
               <form id="udfs_form" enctype="multipart/form-data"
                   action="${url('pig.views.udf_create')}"
                   method="post" data-destination="${UDF_PATH}"> ${ csrf_token_field | n }
-                  <div id="udf_file_upload"><i class="icon-upload icon-white"></i> Upload UDF jar</div>
+                  <div id="udf_file_upload"><i class="icon-upload icon-white"></i>${_('Upload UDF jar')}</div>
               </form>
             </li>
           </ul>
@@ -98,7 +119,7 @@ UDF_PATH = conf.UDF_PATH.get()
             <div class="control-group">
               <div class="input-prepend">
                 <div class="controls">
-                <label class="control-label add-on" for="id_title">Title:</label>
+                <label class="control-label add-on" for="id_title">${_('Title:')}</label>
                   <input class="span2" id="id_title" type="text" name="title"
                           required="required" maxlength="200" value="${result.get('title',"")}">
                 </div>
@@ -111,8 +132,8 @@ UDF_PATH = conf.UDF_PATH.get()
                 <a href="javascript:void(0);" ><i class="icon-question-sign" id="help"></i></a>
                 <div id="help-content" class="hide">
                   <ul>
-                    <li class="text-success">Press ctrl+space for autocompletion</li>
-                    <li class="text-success">To see table fields helper type table_name + "." (e.g. sample_07.)</li>
+                    <li class="text-success">${_('Press ctrl+space for autocompletion')}</li>
+                    <li class="text-success">${_('To see table fields helper type table_name + "." (e.g. sample_07.)')}</li>
                   </ul>
                 </div>
               </span>
@@ -120,13 +141,15 @@ UDF_PATH = conf.UDF_PATH.get()
             <div class="pig_helper_wrap">
               <%include file="pig_helper.html" />
             </div>
-            <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script">${result.get("pig_script", "")}</textarea>
+            <textarea id="id_pig_script" required="required" rows="10" cols="40" name="pig_script" class="hide">${result.get("pig_script", "")}</textarea>
             % if result.get("python_script"):
-            <label class="script_label" for="python_code">Python UDF</label>
-            <textarea id="python_code" name="python_script" rows="4" >${result['python_script']}</textarea>
+            <div id="python_textarea">
+              <label class="script_label" for="python_code">${_('Python UDF:')}</label>
+              <textarea id="python_code" name="python_script" rows="4" >${result['python_script']}</textarea>
+            </div>
             % else:
-            <div style="display:none;" id="python_textarea">
-              <label class="script_label" for="python_code">Python UDF</label>
+            <div id="python_textarea"style="display:none;" >
+              <label class="script_label" for="python_code">${_('Python UDF:')}</label>
               <textarea id="python_code" name="python_script"></textarea>
             </div>
             % endif
@@ -154,6 +177,7 @@ UDF_PATH = conf.UDF_PATH.get()
               %>
 	            <input class="btn primary action_btn" type="button" id="start_job" name="submit_action" value="Execute" style="${ hideaction if runningJob else ''}"/>
               <input class="btn primary " type="button"id="kill_job"  value="Kill job" style="${ hideaction if not runningJob else ''}" />
+              <img id="spinner" src="/static/art/spinner.gif" class="hide" />
 	            <input class="btn primary action_btn" type="button"id="explain" name="submit_action" value="Explain" style="${ hideaction if runningJob else ''}"/>
 	            <input class="btn primary action_btn" name="submit_action"type="button" value="Syntax check" id="syntax_check" style="${ hideaction if runningJob else ''}"/>
 	          </div>
@@ -198,11 +222,15 @@ UDF_PATH = conf.UDF_PATH.get()
 
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
 <link href="/pig/static/css/simple-hint.css" rel="stylesheet">
+<link href="/pig/static/css/show-hint.css" rel="stylesheet">
 <link href="/pig/static/css/bootstrap-fileupload.min.css" rel="stylesheet">
 <link href="/pig/static/css/bootstrap-tagmanager.css" rel="stylesheet">
 
 <style type="text/css" media="screen">
-.CodeMirror-focused span.CodeMirror-matchhighlight {
+.CodeMirror{
+  height: 300px;
+}
+.CodeMirror-focused span.cm-CodeMirror-matchhighlight {
   background:  #e7e4ff; !important; 
 }
 label.valid {
@@ -262,6 +290,9 @@ label.error {
   display: inline-block;
   margin-bottom: 3px;
 }
+#spinner {
+  margin-left: 15px;
+}
 </style>
 
 <script type="text/javascript" src="/pig/static/js/jquery.validate.min.js"></script>
@@ -269,7 +300,9 @@ label.error {
 <script src="/pig/static/js/pig.js"></script>
 <script src="/pig/static/js/python.js"></script>
 <script src="/pig/static/js/simple-hint.js"></script>
+<script src="/pig/static/js/show-hint.js"></script>
 <script src="/pig/static/js/pig-hint.js"></script>
+<script src="/pig/static/js/hcat-helper.js"></script>
 <script src="/pig/static/js/jquery.pagination.js"></script>
 <script src="/pig/static/js/searchcursor.js"></script>
 <script src="/pig/static/js/match-highlighter.js"></script>
@@ -277,6 +310,7 @@ label.error {
 <script src="/pig/static/js/pig_scripts.js"></script>
 <script src="/pig/static/js/bootstrap-fileupload.min.js"></script>
 <script src="/pig/static/js/bootstrap-tagmanager.js"></script>
+<script src="/static/ext/js/knockout-min.js" type="text/javascript"></script>
 <script type="text/javascript">
 var percent = 0;
 var globalTimer = null;
@@ -314,31 +348,26 @@ function get_job_result(job_id)
 
 }
 
+<%
+  arguments = ''
+  if result.get("arguments"):
+    for arg in result["arguments"].split("\t"):
+      arguments += '\'' + arg + '\','
+  elif 'id' not in result:
+    arguments = '\'-useHCatalog\''
+  endif
+%>
 
 
 $(document).ready(function(){
 
-var prefilledArgs = [\
-% if result.get("arguments"):
-% for arg in result["arguments"].split("\t"):
-'${arg}',\
-% endfor
-% elif 'id' not in result:
-'-useHCatalog',\
-% endif
-];
-
   $("#help").popover({
-    'title': "${'Did you know?'}" +'<i class="icon-remove"></i>',
-    'content': $("#help-content").html(),
-    'html': true,
+    title: "${'Did you know?'}" +'<i class="icon-remove"></i>',
+    content: $("#help-content").html(),
+    html: true,
     delay: { hide: 500 },
     placement: 'bottom'
   });
-
-  $(document).on('click','.popover i',function () {
-    $("#help").popover('hide');
-  })
 
   $('.script_label').tooltip({
     placement: 'bottom',
@@ -346,13 +375,17 @@ var prefilledArgs = [\
     delay: 200
   });
 
+  $(document).on('click','.popover i',function () {
+    $("#help").popover('hide');
+  })
+
   % if result.get("job_id") and result.get("JOB_SUBMITTED"):
   percent = 10;
   ping_job("${result['job_id']}");
   % endif
 
   $(".pigArgument").tagsManager({
-    prefilled: prefilledArgs,
+    prefilled: [${arguments|n}],
     separateHiddenName: 'pigParams',
     hiddenTagListId:'fakeArgs',
     tagClass: 'pigArg',
@@ -396,6 +429,7 @@ var prefilledArgs = [\
       $(".bar").attr("class", "bar");
       if (!$("#pig_script_form").valid()) return false;
       $(".action_btn").hide();
+      $("#spinner").removeClass('hide');
       percent = 0;
       $(".bar").css("width", percent+"%");
       pig_editor.save();
@@ -406,6 +440,7 @@ var prefilledArgs = [\
           type: "POST",
           data: $("#pig_script_form").serialize(),
           success: function(data){
+              $("#spinner").addClass('hide');
               $("#kill_job").show();
               $("#job_info_outer").removeClass('hide').prepend(data.text);
               job_id = data.job_id;

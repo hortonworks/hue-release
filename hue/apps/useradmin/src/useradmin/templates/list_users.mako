@@ -97,7 +97,7 @@ ${layout.menubar(section='users', _=_)}
     <div id="syncLdap" class="modal hide fade"></div>
 
     <div id="deleteUser" class="modal hide fade">
-        <form id="dropTableForm" class="form form-inline" action="${ url('useradmin.views.delete_user') }" method="POST">  ${ csrf_token_field | n }
+        <form id="dropTableForm" class="form form-inline" action="${ url('useradmin.views.delete_user') }" method="POST"> ${ csrf_token_field | n }
             <div class="modal-header">
                 <a href="#" class="close" data-dismiss="modal">&times;</a>
                 <h3 id="deleteUserMessage">${ _("Are you sure you want to delete the selected user(s)?") }</h3>

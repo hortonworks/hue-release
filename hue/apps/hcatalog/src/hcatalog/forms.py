@@ -309,7 +309,8 @@ def _clean_terminator(val):
 
 class PartitionTypeForm(forms.Form):
     column_name = common.HiveIdentifierField(required=True)
-    column_type = forms.ChoiceField(required=True, choices=common.to_choices(HIVE_PRIMITIVE_TYPES))
+    column_type = forms.ChoiceField(required=True, choices=common.to_choices(sorted(HIVE_PRIMITIVE_TYPES)),
+                                    initial=HIVE_PRIMITIVE_TYPES[0])
 
 
 class ColumnTypeForm(DependencyAwareForm):
@@ -323,14 +324,19 @@ class ColumnTypeForm(DependencyAwareForm):
     ]
     column_name = common.HiveIdentifierField(required=True)
     column_type = forms.ChoiceField(required=True,
-                                    choices=common.to_choices(HIVE_TYPES))
+                                    choices=common.to_choices(sorted(HIVE_TYPES)),
+                                    initial=HIVE_TYPES[0])
     array_type = forms.ChoiceField(required=False,
-                                   choices=common.to_choices(HIVE_PRIMITIVE_TYPES), label="Array Value Type")
+                                   choices=common.to_choices(sorted(HIVE_PRIMITIVE_TYPES)),
+                                   initial=HIVE_PRIMITIVE_TYPES[0],
+                                   label="Array Value Type")
     map_key_type = forms.ChoiceField(required=False,
-                                     choices=common.to_choices(HIVE_PRIMITIVE_TYPES),
+                                     choices=common.to_choices(sorted(HIVE_PRIMITIVE_TYPES)),
+                                     initial=HIVE_PRIMITIVE_TYPES[0],
                                      help_text="Specify if column_type is map.")
     map_value_type = forms.ChoiceField(required=False,
-                                       choices=common.to_choices(HIVE_PRIMITIVE_TYPES),
+                                       choices=common.to_choices(sorted(HIVE_PRIMITIVE_TYPES)),
+                                       initial=HIVE_PRIMITIVE_TYPES[0],
                                        help_text="Specify if column_type is map.")
 
 

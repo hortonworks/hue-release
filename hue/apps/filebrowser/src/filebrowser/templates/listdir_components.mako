@@ -1262,7 +1262,7 @@ from django.utils.translation import ugettext as _
             if (response.status !== undefined && response.status != 0) {
               $.jHueNotify.error("${ _('Error: ') }" + (response['data'] ? response['data'] : "${ _('Check file permissions') }"));
             } else if (num_of_pending_uploads == 0) {
-              window.location = "/filebrowser/view" + self.currentPath();
+                window.location = "/filebrowser/view" + self.currentPath();
             }
           },
           onSubmit:function (id, fileName, responseJSON) {

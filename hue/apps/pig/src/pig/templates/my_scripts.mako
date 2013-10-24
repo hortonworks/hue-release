@@ -1,24 +1,28 @@
+<%!
+from django.utils.translation import ugettext as _
+%>
+
 <%def name="my_scripts(pig_scripts)">
-  <h4 class="pull-left">My scripts </h4>
-<div class="nav-header script_list_header" >
-  <a  class="pull-right new_script" data-placement="right" rel="tooltip" title="New script" 
-      href="${url('root_pig')}?new=true"> <i class="icon-plus-sign"></i> New script </a>
+  <h4 class="pull-left"> ${_('My scripts')} </h4>
+<div class="nav-header script_list_header">
+  <a  class="pull-right new_script" data-placement="right" rel="tooltip" title="New script"
+      href="${url('root_pig')}?new=true"> <i class="icon-plus-sign"></i> ${_('New script')}</a>
 </div>
 
 <div class="script_list">
+% if pig_scripts:
   <ul class="nav nav-list">
     % for v in pig_scripts:
     <li id="copy" >
       <p>
         <a href="${url('pig.views.delete', v.id)}" onclick="return confirm('Are you sure, you want to delete this script?');">
-          <img src="/pig/static/art/delete.gif" alt="Delete"
-               title="Delete script" height="12" width="12">
+          <img src="/pig/static/art/delete.gif" alt="Delete" title="Delete script" height="12" width="12">
         </a>
         <a href="${url("clone", v.id)}" class="clone" value="${v.id}">
           <img src="/pig/static/art/clone.png" alt="Clone" title="Clone script" height="14" width="14">
         </a>
         <a href="${url('pig.views.index', obj_id=v.id)}">
-          % if v.title: 
+          % if v.title:
           ${v.title}
           % else:
           no title
@@ -28,6 +32,9 @@
     </li>
     % endfor
   </ul>
+% else:
+  <small><i>${_('No scripts yet')}</i></small>
+% endif
 </div>
 
 <style>
@@ -68,3 +75,40 @@
       <a class="udf_register" href="#" value="${udf.file_name}">${udf.file_name}</a><br />
   % endfor
   </%def>
+
+
+<%def name="modal(items)">
+  <%
+    opt = {
+      'windowId': 'modalConfirm',
+      'cBtnId': '',
+      'cBtnText': '',
+      'cBtnClass': 'btn primary',
+      'cBtnAttr': '',
+      'title': '',
+      'textbody': '',
+      'htmlbody': '',
+      'cancelBtn': True,}
+
+    opt.update(items)
+  %>
+  <div id="${opt['windowId']}" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+      <h3>${_(opt['title'])}</h3>
+    </div>
+    <div class="modal-body">
+    % if opt['htmlbody']:
+      ${opt['htmlbody']|n, unicode}
+    % else:
+      <p>${opt['textbody']}</p>
+    % endif
+    </div>
+    <div class="modal-footer">
+      % if opt['cancelBtn']:
+      <button class="btn" data-dismiss="modal" aria-hidden="true">${_('Cancel')}</button>
+      % endif
+      <button id="${opt['cBtnId']}" class="${opt['cBtnClass']}" ${opt['cBtnAttr']|n,unicode}>${_(opt['cBtnText'])}</button>
+    </div>
+  </div>
+</%def>

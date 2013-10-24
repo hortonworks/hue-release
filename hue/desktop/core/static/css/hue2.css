@@ -992,6 +992,7 @@ div.box {
     width: 400px;
     text-align: center;
     z-index: 8000;
+    word-wrap: break-word;
 }
 
 .jHueNotify .close {

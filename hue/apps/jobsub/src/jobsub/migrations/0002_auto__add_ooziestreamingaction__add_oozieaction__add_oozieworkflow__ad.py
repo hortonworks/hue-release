@@ -105,26 +105,6 @@ class Migration(SchemaMigration):
         # Adding field 'CheckForSetup.setup_level'
         db.add_column('jobsub_checkforsetup', 'setup_level', self.gf('django.db.models.fields.IntegerField')(default=0), keep_default=False)
 
-        # The next sequence may fail... so they should have their own transactions.
-        db.commit_transaction()
-
-        # Delete legacy tables. Note that this only applies to Hue 1.x installations
-        db.start_transaction()
-        try:
-            db.delete_table('jobsub_submission')
-            remove_content_type('jobsub', 'submission')
-            db.commit_transaction()
-        except Exception, ex:
-            db.rollback_transaction()
-
-        db.start_transaction()
-        try:
-            db.delete_table('jobsub_serversubmissionstate')
-            remove_content_type('jobsub', 'serversubmissionstate')
-            db.commit_transaction()
-        except Exception, ex:
-            db.rollback_transaction()
-
         # South commits transaction at end of forward migration.
         db.start_transaction()
 
