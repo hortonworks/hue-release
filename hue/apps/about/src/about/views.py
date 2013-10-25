@@ -52,7 +52,7 @@ def index(request):
     version = conf.SANDBOX_VERSION.get()
   else:
     version = HUE_VERSION
-  RAM = int(os.popen("free -m").readlines()[1].split()[1])/1024.
+  RAM = int(os.popen("free -m").readlines()[1].split()[1])
   return render('index.mako', request, {
     'components': components,
     'hue_title': conf.ABOUT_TITLE.get(),

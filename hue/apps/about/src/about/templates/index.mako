@@ -46,7 +46,7 @@ ${commonheader(_('About ' + hue_title), "about", user, "100px")| n,unicode}
 
         % if RAM_ALERT:
         <div class="alert">
-            The recommended amount of RAM for tolerable usage and using Ambari and HBase is at least 4 GB. Now you have ${RAM} GB.
+            Before enabling Ambari and HBase, it is recommended that Base Memory is set to a minimum of 4096 MB. Base Memory is currently set to ${RAM} MB.
         </div>
         % endif
 
