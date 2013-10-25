@@ -59,7 +59,7 @@ def index(request):
     'hue_version': version,
     'ambari_status': _get_ambari_status(),
     'hbase_status': _get_hbase_status(),
-    'RAM_ALERT': RAM < 3.5,
+    'RAM_ALERT': RAM < 3800,
     'RAM': "%0.1f" % RAM,
   })
 
