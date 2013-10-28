@@ -18,7 +18,7 @@ from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 from about import conf
 %>
-${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
+${commonheader(_('About ' + page_title), "about", user, "100px")| n,unicode}
 
         % if user.is_superuser:
 	<div class="subnav subnav-fixed">
@@ -33,7 +33,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
         % endif
 
 	<div class="container-fluid">
-		<h1 id="describe-header">Hortonworks Hue ${hue_version}</h1>
+        <h1 id="describe-header">${hue_title} ${hue_version}</h1>
 		<div id="update-tutorials-spinner"><h1>Updating tutorials...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 		<h3 id="update-tutorials-msg"></h3>
 		<div class="span-3">
@@ -46,7 +46,7 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 				</ul>
 			</div>
 		</div>
-		<div class="span-9">
+		<div class="components span-9">
 			<table class="table table-bordered">
 			<thead>
     		<tr>
@@ -70,6 +70,23 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 			</tbody>
 			</table>
 		</div>
+        <div class="footer">
+            <div class="container-fluid">
+                <div class="logo">
+                    <img src="/about/static/art/hortonworks_logo_bw.png"/>
+                </div>
+                <div class="copyright">
+                    <p class="pull-right">
+                        Copyright © 2013 The Apache Software Foundation.
+                        <br>
+                        Apache Hadoop, Hadoop, HDFS, HBase, Hive, Mahout, Pig, Zookeeper are trademarks of the Apache Software Foundation.
+                        <br>
+                        Hue and the Hue logo are trademarks of Cloudera, Inc. and licensed under the Apache 2 license. For more information:
+                        gethue.com
+                    </p>
+                </div>
+            </div>
+        </div>
 	</div>
 
 
@@ -77,6 +94,19 @@ ${commonheader(_('About Hue'), "about", user, "100px")| n,unicode}
 	#update-tutorials-spinner {
 		display:none;
 	}
+    .logo {
+        float: left;
+        height: 78px;
+        width: 140px;
+    }
+    .copyright {
+        text-align: right;
+        font-size: 11px;
+        margin-top: 10px;
+    }
+    .components {
+        margin-bottom: 65px;
+    }
 </style>
 
 <script type="text/javascript" charset="utf-8">

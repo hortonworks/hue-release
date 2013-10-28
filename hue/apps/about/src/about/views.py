@@ -42,9 +42,16 @@ def index(request):
     }
     return HttpResponse(json.dumps(result))
   components, HUE_VERSION = _get_components()
+
+  if conf.SANDBOX.get():
+    version = conf.SANDBOX_VERSION.get()
+  else:
+    version = HUE_VERSION
   return render('index.mako', request, {
     'components': components,
-    'hue_version': HUE_VERSION,
+    'page_title': conf.ABOUT_PAGE_TITLE.get(),
+    'hue_title': conf.ABOUT_TITLE.get(),
+    'hue_version': version,
   })
 
 def _get_tutorials_version():

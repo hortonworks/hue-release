@@ -47,3 +47,22 @@ SANDBOX_VERSION = Config(
   private=True,
   default="1.3",
 )
+
+SANDBOX = Config(
+  key="sandbox",
+  help="Is About application installed in Sandbox",
+  default=False,
+  type=bool,
+)
+
+ABOUT_PAGE_TITLE = Config(
+  key="about_page_title",
+  help="Title on about page",
+  default="Hue",
+)
+
+ABOUT_TITLE = Config(
+  key="about_title",
+  help="Title on about page",
+  default="Hue",
+)
