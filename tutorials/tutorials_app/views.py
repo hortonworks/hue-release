@@ -88,7 +88,7 @@ def tutorials(request):
         except UserLocation.DoesNotExist:
             pass
 
-    return render_to_response("lessons.html",
+    return render_to_response("sandbox-tutorials/frames.html",
                     {'content': location,
                      'step_location': step_location})
 

@@ -6,9 +6,11 @@ PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 REQUIRE_REGISTRATION = True
 
-LANDING_PATH = os.path.join('/usr/lib/tutorials', 'sandbox-tutorials')
+TUTORIALS_APP_PATH = '/usr/lib/tutorials'
 
-USERINFO_FILE_PATH = os.path.join('/usr/lib/tutorials', 'user_info.dat')
+LANDING_PATH = os.path.join(TUTORIALS_APP_PATH, 'sandbox-tutorials')
+
+USERINFO_FILE_PATH = os.path.join(TUTORIALS_APP_PATH, 'user_info.dat')
 
 START_SCRIPTS = os.path.join('/usr/lib/hue/tools', 'start_scripts')
 
@@ -87,6 +89,7 @@ STATIC_URL = "/static/"
 
 TEMPLATE_DIRS = (
     os.path.join(PROJECT_PATH, 'templates'),
+    TUTORIALS_APP_PATH,
 )
 
 INSTALLED_APPS = (
