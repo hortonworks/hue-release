@@ -62,6 +62,12 @@ SANDBOX = Config(
   type=bool,
 )
 
+ABOUT_PAGE_TITLE = Config(
+  key="about_page_title",
+  help="Title on about page",
+  default="Hue",
+)
+
 ABOUT_TITLE = Config(
   key="about_title",
   help="Title on about page",
