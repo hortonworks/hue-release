@@ -15,6 +15,7 @@
 ## limitations under the License.
 <%!
 from desktop import conf
+from about.conf import ABOUT_PAGE_TITLE
 import urllib
 from desktop.lib.i18n import smart_unicode
 from django.utils.translation import ugettext as _
@@ -157,7 +158,7 @@ from django.utils.translation import ugettext as _
     <div class="navbar-inner">
       <div class="container-fluid">
         <a class="brand nav-tooltip"
-        title="${_('About<br>Hortonworks<br>Hue')}"
+        title="${_('About<br>' + ABOUT_PAGE_TITLE.get())}"
         href="/about"><img src="/about/static/art/icon_sandbox_logo_24.png"/>
         </a>
         <div id="usernameDropdown" class="btn-group pull-right">

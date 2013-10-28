@@ -55,6 +55,7 @@ def index(request):
   RAM = int(os.popen("free -m").readlines()[1].split()[1])
   return render('index.mako', request, {
     'components': components,
+    'page_title': conf.ABOUT_PAGE_TITLE.get(),
     'hue_title': conf.ABOUT_TITLE.get(),
     'hue_version': version,
     'ambari_status': _get_ambari_status(),
