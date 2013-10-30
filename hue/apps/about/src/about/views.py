@@ -26,7 +26,7 @@ from desktop.lib.paths import get_run_root, get_var_root
 from django.http import HttpResponse
 import simplejson as json
 
-from sh import ErrorReturnCode, bash, sudo, service, chkconfig
+from sh import ErrorReturnCode, bash, sudo, service
 from about import conf
 import subprocess
 
