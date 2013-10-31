@@ -143,10 +143,10 @@ def _disable_ambari(request):
 
 def _get_ambari_status():
   """Returns True if ambari-agent started and False otherwise."""
-  from sh import ambari_agent
   try:
+    from sh import ambari_agent
     ambari_agent("status")
-  except ErrorReturnCode:
+  except (ErrorReturnCode, ImportError):
     return False
   return True
 
