@@ -25,3 +25,10 @@ SHARE_JOBS = Config(
   type=coerce_bool,
   help=_('Share submitted jobs information with all users. If set to false, '
        'submitted jobs are visible only to the owner and administrators.'))
+
+MAX_VISIBLE_TASKS = Config(
+  key='max_visible_tasks',
+  default=10000,
+  type=int,
+  private=True,
+  help=_('Maximum tasks user can get in Task View'))
