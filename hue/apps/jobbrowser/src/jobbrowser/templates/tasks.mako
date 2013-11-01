@@ -62,7 +62,7 @@ ${ commonheader(_('Task View: Job: %(jobId)s') % dict(jobId=job.jobId_short), "j
     </div>
 
 
-    % if not page.object_list:
+    % if not task_list:
          <p>${_('There were no tasks that match your search criteria.')}</p>
     % else:
         <table class="datatables table table-striped table-condensed">
@@ -80,7 +80,7 @@ ${ commonheader(_('Task View: Job: %(jobId)s') % dict(jobId=job.jobId_short), "j
             </tr>
             </thead>
 	        <tbody>
-	            %for t in page.object_list:
+	            %for t in task_list:
 	            <tr>
                     <td data-row-selector-exclude="true">
                         %if t.taskAttemptIds:
@@ -109,10 +109,12 @@ ${ commonheader(_('Task View: Job: %(jobId)s') % dict(jobId=job.jobId_short), "j
     %endif
 </div>
 
+<script src="/static/ext/js/datatables-paging-0.1.js" type="text/javascript" charset="utf-8"></script>
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
         $(".datatables").dataTable({
-            "bPaginate": false,
+            "sPaginationType": "bootstrap",
+            "iDisplayLength": 10,
             "bLengthChange": false,
             "bFilter": false,
             "bInfo": false,
