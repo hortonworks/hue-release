@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import logging
+import sys
 
 from desktop.lib.paginator import Paginator
 from django.utils.functional import wraps
@@ -27,7 +28,7 @@ import hadoop.yarn.mapreduce_api as mapreduce_api
 import hadoop.yarn.resource_manager_api as resource_manager_api
 import hadoop.yarn.node_manager_api as node_manager_api
 
-from jobbrowser.conf import SHARE_JOBS
+from jobbrowser.conf import SHARE_JOBS, MAX_VISIBLE_TASKS
 from jobbrowser.models import Job, JobLinkage, TaskList, Tracker
 from jobbrowser.yarn_models import Application, Job as YarnJob, Container
 from hadoop.cluster import get_next_ha_mrcluster
@@ -165,8 +166,7 @@ class JtApi(JobBrowserApi):
                            filters['task_types'],
                            filters['task_states'],
                            filters['task_text'],
-                           _DEFAULT_OBJ_PER_PAGINATION,
-                           _DEFAULT_OBJ_PER_PAGINATION * (filters['pagenum'] - 1))
+                           MAX_VISIBLE_TASKS.get(), 0)
 
   @jt_ha
   def get_tracker(self, trackerid):
