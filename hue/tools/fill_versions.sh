@@ -17,6 +17,12 @@ function get_version() {
         # SLES
         VERSION=$(zypper search --match-exact -t package --details $1 | grep ' package ' | awk -F'|' '{print $4}')
         VERSION=$(echo $VERSION | cut -d. -f${RANGE}  | sed "s/.[0-9]*-/-/g" | head -n 1)
+    elif which aptitude &>/dev/null; then
+        # Ubuntu
+        VERSION=$(aptitude -F '%p %v#' search "^$1\$" | awk '{print $2}' | cut -d. -f${RANGE} | sed "s/.[0-9]*-/-/g" | head -n 1)
+    elif which apt-cache &>/dev/null; then
+        # Debian
+        VERSION=$(apt-cache show "^$1\$" | grep Version | awk '{print $2}' | cut -d. -f${RANGE} | sed "s/.[0-9]*-/-/g" | head -n 1)
     elif which rpm &>/dev/null; then
         # No yum and zypper => naive check on installed packages (will not work on multi-node deployment)
         VERSION=$(rpm -q --qf "%{VERSION}" $1 | cut -d. -f${RANGE} | sed "s/.[0-9]*-/-/g" | head -n 1)

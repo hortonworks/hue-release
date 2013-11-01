@@ -237,6 +237,8 @@ def _read_versions(filename):
       if len(l) < 2 or line.strip()[:1] == '#':
         continue
       component, version = l
+      if len(version.strip()) == 0:
+        continue
       if component == "HUE_VERSION":
         HUE_VERSION, buildnumber = version.split("-")
         components.append(('Hue', version))
