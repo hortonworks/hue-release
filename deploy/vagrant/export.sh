@@ -116,6 +116,8 @@ echo "	. Uninstalling VBoxGuestAdditions"
 $_SSH "sudo /opt/VBoxGuestAdditions-*/uninstall.sh" >/dev/null
 echo "	. /virtualization"
 $_SSH "echo 'vmware' | sudo tee /virtualization" >/dev/null
+echo "	. setting up vmware-tools"
+$_SSH "sudo bash /usr/libexec/vmware-tools.sh" >/dev/null
 echo -n "	. powering off.."
 poweroff_target
 echo -n "."; sleep 5; echo "."; sleep 5
