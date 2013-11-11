@@ -165,6 +165,11 @@ class sandbox {
     include custom_fixes
     include java_home
 
+    file { 'vmware-tools.sh':
+        path    => "/usr/libexec/vmware-tools.sh",
+        content => template("/vagrant/files/scripts/vmware-tools.sh"),
+    }
+
     file {"/usr/lib/hue/apps/shell/src/shell/build/setuid":
         ensure => file,
         mode => 4755,
