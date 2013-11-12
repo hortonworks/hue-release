@@ -68,4 +68,4 @@ ide0:0.redo = ""
 ethernet0.generatedAddressOffset = "0"
 vmotion.checkpointFBSize = "33554432"
 softPowerOff = "FALSE"
-rtc.diffFromUTC=0
+rtc.diffFromUTC = "0"
