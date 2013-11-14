@@ -148,6 +148,8 @@ echo "	. set static IP"
 $_SSH 'sudo sed -i "s/dhcp/static\nIPADDR=192.168.56.101\nNETMASK=255.255.255.0\nGATEWAY=192.168.56.1/g" /etc/sysconfig/network-scripts/ifcfg-eth0'
 echo "	. disabling DHCP client"
 $_SSH 'sudo sed -i "s/dhclient/#dhclient/g" /etc/init.d/startup_script'
+echo "	. removing vmware-tools"
+$_SSH "sudo bash /usr/libexec/vmware-tools.sh remove" >/dev/null
 echo "	. powering off.."
 poweroff_target
 echo -n "."; sleep 5; echo "."; sleep 5

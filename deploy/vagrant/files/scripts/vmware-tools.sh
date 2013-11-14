@@ -1,5 +1,13 @@
 #!/bin/bash
 
+if [ "z$1" == "zremove" ]; then
+	rm -f /etc/yum.repos.d/vmware-tools.repo
+	yum -y remove vmware-tools-esx-kmods
+	yum -y remove vmware-tools-core vmware-tools-esx-nox
+	rm -rf /usr/lib/vmware-tools
+	exit 0
+fi
+
 yum -y install ntp
 chkconfig ntpd on
 service ntpd stop
