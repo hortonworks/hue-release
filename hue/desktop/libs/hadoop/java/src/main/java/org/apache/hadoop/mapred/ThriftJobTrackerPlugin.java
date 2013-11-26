@@ -807,12 +807,14 @@ public class ThriftJobTrackerPlugin implements org.apache.hadoop.util.ServicePlu
         }
 
         /** Returns a retired job (does not include task info, miss some fields) */
-        public ThriftJobInProgress getRetiredJob(final RequestContext ctx, final ThriftJobID jobID) throws JobNotFoundException {
+        public ThriftJobInProgress getRetiredJob(final RequestContext ctx, final ThriftJobID jobID) throws JobNotFoundException{
             final JobID jid = JTThriftUtils.fromThrift(jobID);
 
             final JobStatus jobStatus = assumeUserContextAndExecute(ctx, new PrivilegedAction<JobStatus>() {
               public JobStatus run() {
+		try{
                 return jobTracker.getJobStatus(jid);
+		}catch(java.io.IOException ex){ return null;}
               }
             });
 
@@ -822,7 +824,9 @@ public class ThriftJobTrackerPlugin implements org.apache.hadoop.util.ServicePlu
 
             return assumeUserContextAndExecute(ctx, new PrivilegedAction<ThriftJobInProgress>() {
               public ThriftJobInProgress run() {
-                return JTThriftUtils.toThrift(jobTracker.getJobProfile(jid), jobStatus);
+                try{
+                   return JTThriftUtils.toThrift(jobTracker.getJobProfile(jid), jobStatus);
+                }catch (java.io.IOException ex){ return null;}
               }
             });
         }
@@ -857,7 +861,9 @@ public class ThriftJobTrackerPlugin implements org.apache.hadoop.util.ServicePlu
                     if (!jobsInProgressId.contains(jobID) &&
                         (state == null || state == JTThriftUtils.jobRunStateToThrift(jobStatus.getRunState()))) {
                         // No need to lock
-                        ret.add(JTThriftUtils.toThrift(jobTracker.getJobProfile(jobID), jobStatus));
+                        try{
+                          ret.add(JTThriftUtils.toThrift(jobTracker.getJobProfile(jobID), jobStatus));
+			}catch(java.io.IOException ex){}
                     }
                 }
                 return new ThriftJobList(ret);
