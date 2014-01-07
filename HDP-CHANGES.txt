@@ -1,0 +1,1 @@
+baikal-GA-2.3.0 is branched from bigwheel-GA-2.3.0 (SHA1 ae2912415bcea89396437a29e5c6fdb9d1912b0f) git@github.com:hortonworks/sandbox-shared.git 
