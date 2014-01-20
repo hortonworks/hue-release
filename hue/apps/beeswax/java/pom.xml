@@ -138,6 +138,14 @@
 
 <repositories>
     <repository>
+      <id>central</id>
+      <url>http://repo1.maven.org/maven2</url>
+      <snapshots>
+          <enabled>false</enabled>
+      </snapshots>
+    </repository>
+
+    <repository>
       <id>org.datanucleus</id>
       <url>http://www.datanucleus.org/downloads/maven2</url>
       <name>DataNucleus for Beeswax</name>
