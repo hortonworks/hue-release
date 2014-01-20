@@ -30,6 +30,7 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.security.PrivilegedAction;
 import java.security.SecureRandom;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,6 +48,7 @@ import javax.net.ssl.SSLContext;
 import javax.security.auth.login.LoginException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -194,7 +196,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
     }
 
     synchronized public void compile()
-    throws BeeswaxException, CommandNeedRetryException {
+    throws BeeswaxException, CommandNeedRetryException, SQLException {
       try {
         assertState(QueryState.INITIALIZED);
         checkedCompile();
@@ -221,7 +223,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
     }
 
     private void checkedCompile()
-    throws BeeswaxException, CommandNeedRetryException {
+    throws BeeswaxException, CommandNeedRetryException, SQLException {
       // Run through configuration commands
       for (String cmd : query.configuration) {
         // This is pretty whacky; SET and ADD get treated differently
@@ -459,7 +461,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
 
       FetchWork work = getFetchWork();
       TableDesc desc = work.getTblDesc();
-      String tabledir = null;
+      Path tabledir = null;
       String tablename = null;
       String sep = null;
       if (work != null) {
@@ -471,7 +473,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
                                         "" + Utilities.ctrlaCode);
         tablename = desc.getTableName();
       }
-      return new ResultsMetadata(schema, tabledir, tablename, sep);
+      return new ResultsMetadata(schema, tabledir.toString(), tablename, sep);
     }
 
     /**
@@ -496,7 +498,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
     }
 
     synchronized public QueryExplanation explain()
-    throws BeeswaxException, CommandNeedRetryException {
+    throws BeeswaxException, CommandNeedRetryException, SQLException {
       assertState(QueryState.INITIALIZED);
       // By manipulating the query, this will make errors harder to find.
       query.query = "EXPLAIN " + query.query;
