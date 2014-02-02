@@ -23,6 +23,7 @@ import time
 from multiprocessing import Process
 from desktop.lib.django_util import render
 from desktop.lib.paths import get_run_root, get_var_root
+from desktop import conf as desktop_conf
 from django.http import HttpResponse
 import simplejson as json
 
@@ -47,7 +48,6 @@ def index(request):
     }
     return HttpResponse(json.dumps(result))
   components, HUE_VERSION = _get_components()
-
   if conf.SANDBOX.get():
     version = conf.SANDBOX_VERSION.get()
   else:
@@ -55,6 +55,7 @@ def index(request):
   RAM = int(os.popen("free -m").readlines()[1].split()[1])
   return render('index.mako', request, {
     'components': components,
+    'about_top_html': desktop_conf.CUSTOM.ABOUT_TOP_HTML.get(),
     'page_title': conf.ABOUT_PAGE_TITLE.get(),
     'hue_title': conf.ABOUT_TITLE.get(),
     'hue_version': version,
