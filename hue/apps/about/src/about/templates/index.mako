@@ -44,6 +44,12 @@ ${commonheader(_('About ' + page_title), "about", user, "100px")| n,unicode}
         <div id="start-hbase-spinner"><h1><span id="start-hbase-caption">Enabling HBase...</span>&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
         <h3 id="start-hbase-msg"></h3>
 
+        % if about_top_html:
+        <div class="alert">
+            ${about_top_html| n,unicode}
+        </div>
+        % endif
+
         % if RAM_ALERT:
         <div class="alert">
             Before enabling Ambari and HBase, it is recommended that Base Memory is set to a minimum of 4096 MB. Base Memory is currently set to ${RAM} MB.

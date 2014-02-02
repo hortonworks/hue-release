@@ -268,6 +268,10 @@ CUSTOM = ConfigSection(
                    help=_("Top banner HTML code. This code will be placed in the navigation bar "
                         "so that it will reside at the top of the page in a fixed position. " +
                         "One common value is `<img src=\"http://www.example.com/example.gif\" />`")),
+    ABOUT_TOP_HTML=Config("about_top_html",
+                   default="",
+                   help=_("Top about page HTML code. This code will be placed in the top of content area of about page. "
+                          "One common value could be '<img src=\"http://www.example.com/example.gif\" />'")),
 ))
 
 AUTH = ConfigSection(
