@@ -432,7 +432,7 @@ def test_user_admin():
 
   # You shouldn't be able to create a user without a password
   response = c_su.post('/useradmin/users/new', dict(username="test"))
-  assert_true("Password field is required" in response.content)
+  assert_true("You must specify a password when creating a new user." in response.content)
 
 
 def test_useradmin_ldap_group_integration():

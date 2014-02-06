@@ -391,7 +391,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
       if (!isUpdating) {
         callJsonData(updateRunning, true);
       }
-    }, 10000);
+    }, 2000);
 
     $("a[data-row-selector='true']").jHueRowSelector();
   });
