@@ -33,7 +33,7 @@ ${commonheader(_('About ' + page_title), "about", user, "100px")| n,unicode}
         % endif
 
 	<div class="container-fluid">
-		<h1 id="describe-header">${hue_title} ${hue_version}</h1>
+		<h1 id="describe-header">${hue_title}</h1>
 
 		<div id="update-tutorials-spinner"><h1>Updating tutorials...&nbsp;<img src="/static/art/spinner.gif" width="16" height="16"/></h1></div>
 		<h3 id="update-tutorials-msg"></h3>

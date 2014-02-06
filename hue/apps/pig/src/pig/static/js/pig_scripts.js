@@ -84,7 +84,10 @@ function call_popup_var_edit(){
 
   var html="";
   var editorContent=pig_editor.getValue();
-  var found_var=editorContent.match(/\%\S+\%/g);
+  var match_var=editorContent.match(/\%\w+\%/g);
+  var found_var=match_var.filter(function(elem, pos) {
+    return match_var.indexOf(elem) == pos;
+  });
 
   if(found_var != null && found_var.length >0){
     found_var.map(function(elem,i){

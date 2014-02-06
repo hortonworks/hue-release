@@ -55,7 +55,7 @@ class UserChangeForm(django.contrib.auth.forms.UserChangeForm):
       min_length=2,
       widget=forms.PasswordInput,
       required=False,
-      error_messages = {'required': _t("Password fields is required") })
+      error_messages = {'required': _t("Password field is required") })
   password2 = forms.CharField(
       label=_t("Password confirmation"),
       max_length=30,
