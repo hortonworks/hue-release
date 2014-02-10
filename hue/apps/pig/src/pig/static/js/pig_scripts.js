@@ -82,14 +82,14 @@ function call_popup_var_edit(){
       return deffer.promise();
   }
 
-  var html="";
+  var html="",found_var;
   var editorContent=pig_editor.getValue();
   var match_var=editorContent.match(/\%\w+\%/g);
-  var found_var=match_var.filter(function(elem, pos) {
-    return match_var.indexOf(elem) == pos;
-  });
 
-  if(found_var != null && found_var.length >0){
+  if(match_var != null && match_var.length >0){
+    found_var=match_var.filter(function(elem, pos) {
+      return match_var.indexOf(elem) == pos;
+    });
     found_var.map(function(elem,i){
       html+='<label>'+elem.slice(1,elem.length-1)+':</label><input name="'+elem+'"  /><br/><br/>';
     })
