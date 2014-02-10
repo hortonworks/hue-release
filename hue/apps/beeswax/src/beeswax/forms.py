@@ -296,6 +296,9 @@ class CreateByImportDelimForm(forms.Form):
   delimiter = ChoiceOrOtherField(label=_t('Delimiter'), required=False, initial=TERMINATOR_CHOICES[0][0],
                                  choices=TERMINATOR_CHOICES)
   file_type = forms.CharField(widget=forms.HiddenInput, required=True)
+  read_column_headers = forms.BooleanField(required=False, initial=False,
+                          label=_t("Read column headers"),
+                          help_text=_t("Read first row of the file as column headers."))
 
   def clean(self):
     # ChoiceOrOtherField doesn't work with required=True
