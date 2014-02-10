@@ -19,6 +19,8 @@
 Views & controls for creating tables
 """
 
+import errno
+import stat
 import logging
 import gzip
 
@@ -31,6 +33,7 @@ from desktop.lib.django_util import render
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.django_forms import MultiForm
 from hadoop.fs import hadoopfs
+from hadoop.conf import UPLOAD_CHUNK_SIZE
 
 from beeswax.common import TERMINATORS
 from beeswax.design import hql_query
@@ -181,7 +184,8 @@ def import_wizard(request, database=None):
                                               s1_file_form,
                                               encoding,
                                               [ reader.TYPE for reader in FILE_READERS ],
-                                              DELIMITERS)
+                                              DELIMITERS,
+                                              False)
 
       if (do_s2_user_delim or do_s3_column_def or cancel_s3_column_def) and s2_delim_form.is_valid():
         # Delimit based on input
@@ -190,7 +194,8 @@ def import_wizard(request, database=None):
                                               s1_file_form,
                                               encoding,
                                               (s2_delim_form.cleaned_data['file_type'],),
-                                              (s2_delim_form.cleaned_data['delimiter'],))
+                                              (s2_delim_form.cleaned_data['delimiter'],),
+                                              s2_delim_form.cleaned_data.get('read_column_headers'))
 
       if do_s2_auto_delim or do_s2_user_delim or cancel_s3_column_def:
         return render('choose_delimiter.mako', request, {
@@ -209,13 +214,23 @@ def import_wizard(request, database=None):
       # Go to step 3: Define column.
       #
       if do_s3_column_def:
-        if s3_col_formset is None:
+        read_column_headers = s2_delim_form.cleaned_data.get('read_column_headers')
+        if s3_col_formset is None or not read_column_headers:
           columns = []
-          for i in range(n_cols):
-            columns.append(dict(
-                column_name='col_%s' % (i,),
-                column_type='string',
-            ))
+          if read_column_headers and fields_list:
+            first_row = fields_list[0]
+            for i in range(n_cols):
+              columns.append(dict(
+                  column_name=first_row[i] if i < len(first_row) else 'col_%s' % (i + 1,),
+                  column_type='string',
+              ))
+            fields_list = fields_list[1:]
+          else:
+            for i in range(n_cols):
+              columns.append(dict(
+                  column_name='col_%s' % (i + 1,),
+                  column_type='string',
+              ))
           s3_col_formset = ColumnTypeFormSet(prefix='cols', initial=columns)
         return render('define_columns.mako', request, {
           'action': reverse(app_name + ':import_wizard', kwargs={'database': database}),
@@ -246,7 +261,22 @@ def import_wizard(request, database=None):
         )
 
         do_load_data = s1_file_form.cleaned_data.get('do_import')
-        path = s1_file_form.cleaned_data['path']
+        path = s1_file_form.cleaned_data.get('path')
+        read_column_headers = s2_delim_form.cleaned_data.get('read_column_headers')
+        if read_column_headers and do_load_data:
+          file_type = s2_delim_form.cleaned_data.get('file_type')
+          file_readers = [ reader for reader in FILE_READERS if reader.TYPE == file_type ]
+          if len(file_readers) == 1:
+            try:
+              file_obj = request.fs.open(path)
+              _skip_first_line_in_file(file_readers[0],
+                                       request.fs,
+                                       path,
+                                       file_readers[0].find(file_obj, '\n') + 1)
+            except Exception, ex:
+              msg = _('Cannot process file: %s' % (ex,))
+              LOG.error(msg)
+              raise PopupException(msg)
         return _submit_create_and_load(request, proposed_query, table_name, path, do_load_data, database=database)
   else:
     s1_file_form = CreateByImportFileForm()
@@ -278,9 +308,9 @@ def _submit_create_and_load(request, create_hql, table_name, path, do_load, data
                           on_success_params=on_success_params)
 
 
-def _delim_preview(fs, file_form, encoding, file_types, delimiters):
+def _delim_preview(fs, file_form, encoding, file_types, delimiters, read_column_headers):
   """
-  _delim_preview(fs, file_form, encoding, file_types, delimiters)
+  _delim_preview(fs, file_form, encoding, file_types, delimiters, read_column_headers)
                               -> (fields_list, n_cols, delim_form)
 
   Look at the beginning of the file and parse it according to the list of
@@ -311,7 +341,8 @@ def _delim_preview(fs, file_form, encoding, file_types, delimiters):
   delim_form = CreateByImportDelimForm(dict(delimiter_0=delimiter_0,
                                             delimiter_1=delimiter_1,
                                             file_type=file_type,
-                                            n_cols=n_cols))
+                                            n_cols=n_cols,
+                                            read_column_headers=read_column_headers))
   if not delim_form.is_valid():
     assert False, _('Internal error when constructing the delimiter form: %(error)s') % {'error': delim_form.errors}
   return fields_list, n_cols, delim_form
@@ -407,6 +438,30 @@ def _peek_file(fs, file_form):
     raise PopupException(msg)
 
 
+def _skip_first_line_in_file(reader, fs, path, path_offset = 0):
+  tmp_path = path + '.tmp'
+  sb = fs._stats(path)
+  if sb is None:
+    raise IOError(errno.ENOENT, _("Copy path '%s' does not exist") % path)
+  if sb.isDir:
+    raise IOError(errno.INVAL, _("Copy path '%s' is a directory") % path)
+  if fs.isdir(tmp_path):
+    raise IOError(errno.INVAL, _("Copy tmp_path '%s' is a directory") % tmp_path)
+
+  offset = path_offset
+
+  for chunk in reader.read_in_chunks(fs, path, path_offset):
+    if offset == path_offset:
+      fs.create(tmp_path,
+                  overwrite=True,
+                  blocksize=sb.blockSize,
+                  replication=sb.replication,
+                  permission=oct(stat.S_IMODE(sb.mode)))
+    offset += len(chunk)
+    reader.append(fs, tmp_path, chunk)
+  fs.remove(path)
+  fs.rename(tmp_path, path)
+
 class GzipFileReader(object):
   """Class for extracting lines from a gzipped file"""
   TYPE = 'gzip'
@@ -424,6 +479,37 @@ class GzipFileReader(object):
     except UnicodeError:
       return None
 
+  @staticmethod
+  def find(fileobj, what):
+    """find(fileobj) -> first occurrence of what"""
+    gz = gzip.GzipFile(fileobj=fileobj, mode='rb')
+    try:
+      data = gz.read(IMPORT_PEEK_SIZE)
+      return data.find(what)
+    except Exception:
+      return -1
+
+  @staticmethod
+  def read_in_chunks(fs, path, offset):
+    src_file_obj = fs.open(path, mode='r')
+    gz = gzip.GzipFile(fileobj=src_file_obj, mode='rb')
+    gz.read(offset)
+    while True:
+      chunk = gz.read(UPLOAD_CHUNK_SIZE.get())
+      if chunk:
+        yield chunk
+      else:
+        src_file_obj.close()
+        return
+    src_file_obj.close()
+
+  @staticmethod
+  def append(fs, path, data):
+    dest_file_obj = fs.open(path, mode='w')
+    gz = gzip.GzipFile(fileobj=dest_file_obj, mode='wb')
+    gz.write(data)
+    dest_file_obj.close()
+
 FILE_READERS.append(GzipFileReader)
 
 
@@ -439,6 +525,29 @@ class TextFileReader(object):
       return unicode(data, encoding, errors='replace').split('\n')[:IMPORT_PEEK_NLINES]
     except UnicodeError:
       return None
+
+  @staticmethod
+  def find(fileobj, what):
+    """find(fileobj) -> first occurrence of what"""
+    try:
+      data = fileobj.read(IMPORT_PEEK_SIZE)
+      return data.find(what)
+    except Exception:
+      return -1
+
+  @staticmethod
+  def read_in_chunks(fs, path, offset=0):
+    while True:
+      chunk = fs.read(path, offset, UPLOAD_CHUNK_SIZE.get())
+      if chunk:
+        offset += len(chunk)
+        yield chunk
+      else:
+        return
+
+  @staticmethod
+  def append(fs, path, data):
+    fs.append(path, data)
 
 FILE_READERS.append(TextFileReader)
 

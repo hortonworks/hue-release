@@ -65,25 +65,49 @@ ${layout.menubar(section='tables')}
                         </div>
                     </div>
                     <div class="control-group">
+                        ${comps.bootstrapLabel(delim_form["read_column_headers"])}
+                        <div class="controls">
+                            ${comps.field(delim_form["read_column_headers"], render_default=True)}
+                            <span class="help-block">
+                        ${_('Check this box if you want to read first row of the file as columns header.')}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="control-group">
                         <label class="control-label">${_('Table preview')}</label>
                         <div class="controls">
                             <div class="scrollable">
                                 <table class="table table-striped table-condensed">
                                     <thead>
-                                    <tr>
+                                    <tr/>
+                                    <tr id="preview-header-1">
                                             % for i in range(n_cols):
                                                 <th>col_${i+1}</th>
                                             % endfor
                                     </tr>
+                                    <tr id="preview-header-2">
+                                            % if fields_list:
+                                                % for val in fields_list[0]:
+                                                    <th>${val}</th>
+                                                % endfor
+                                            % endif
+                                    </tr>
                                     </thead>
                                     <tbody>
-                                            % for row in fields_list:
-                                            <tr>
-                                                % for val in row:
-                                                    <td>${val}</td>
+                                            % if fields_list:
+                                                <tr id="first-data-row">
+                                                    % for val in fields_list[0]:
+                                                        <td>${val}</td>
+                                                    % endfor
+                                                </tr>
+                                                % for row in fields_list[1:]:
+                                                <tr>
+                                                    % for val in row:
+                                                        <td>${val}</td>
+                                                    % endfor
+                                                </tr>
                                                 % endfor
-                                            </tr>
-                                            % endfor
+                                            % endif
                                     </tbody>
                                 </table>
                             </div>
@@ -110,6 +134,20 @@ ${layout.menubar(section='tables')}
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
         $(".scrollable").width($(".form-actions").width());
+
+        $("#id_read_column_headers").change(function(){
+            if ($(this).is(":checked")){
+                $("#preview-header-1").hide();
+                $("#first-data-row").hide();
+                $("#preview-header-2").show();
+            }
+            else {
+                $("#preview-header-2").hide();
+                $("#preview-header-1").show();
+                $("#first-data-row").show();
+            }
+        });
+        $("#id_read_column_headers").change();
 
         $("#id_delimiter_1").css("margin-left","4px").attr("placeholder","${_('Please type your delimiter here')}").hide();
         $("#id_delimiter_0").change(function(){
