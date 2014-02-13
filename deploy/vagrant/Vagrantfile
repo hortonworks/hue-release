@@ -15,15 +15,15 @@
 ##########################################################
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "sandbox-hdp-2.0.6-rc7"
-  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.6-rc7.box"
+  config.vm.box = "SandboxBaikalRC1"
+  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/sandbox/vagrant/SandboxBaikalRC1.box"
 
   config.vm.hostname = "sandbox.hortonworks.com"
 
   config.vm.provider :virtualbox do |vb|
     vb.gui = true
   
-    vb.customize ["modifyvm", :id, "--memory", 2048]
+    vb.customize ["modifyvm", :id, "--memory", 4048]
     vb.customize ["modifyvm", :id, "--cpus", 2]
     vb.customize ["modifyvm", :id, "--rtcuseutc", "on"]
     vb.customize ["modifyvm", :id, "--ostype", "Redhat_64"]
@@ -87,68 +87,14 @@ Vagrant.configure("2") do |config|
 
   ['default', 'qa'].each do |vm|
       config.vm.define vm do |subconf|
-        subconf.vm.network :forwarded_port, guest: 25, host: 42025, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 68, host: 42068, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 80, host: 42080, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 111, host: 42111, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 161, host: 42161, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 199, host: 42199, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 465, host: 42465, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 587, host: 42587, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 631, host: 42631, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 878, host: 42878, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 897, host: 42897, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 2181, host: 2181, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 3306, host: 3307, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 5432, host: 5432, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8000, host: 8000, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8002, host: 8002, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8010, host: 8010, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8020, host: 8020, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8042, host: 8042, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8080, host: 8080, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8088, host: 8088, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8649, host: 8649, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8651, host: 8651, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8652, host: 8652, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 8888, host: 8888, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 9083, host: 9083, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 9290, host: 9290, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 9090, host: 9090, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 10000, host: 10000, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 11000, host: 11000, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 11001, host: 11001, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 19888, host: 19888, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 34450, host: 34450, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 38481, host: 38481, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 39278, host: 39278, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 41021, host: 41021, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 43253, host: 43253, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 43342, host: 43342, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 43535, host: 43535, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 43706, host: 43706, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 46665, host: 46665, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 50010, host: 50010, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 50030, host: 50030, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 50060, host: 50060, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 50070, host: 50070, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 50075, host: 50075, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 50090, host: 50090, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 50111, host: 50111, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 50300, host: 50300, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 51076, host: 51076, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 51111, host: 51111, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 51809, host: 51809, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 53190, host: 53190, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 53302, host: 53302, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 54201, host: 54201, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 59620, host: 59620, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 60000, host: 60000, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 60010, host: 60010, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 60020, host: 60020, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 60030, host: 60030, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 60080, host: 60080, host_ip: "127.0.0.1", auto_correct: false
-        subconf.vm.network :forwarded_port, guest: 60572, host: 60572, host_ip: "127.0.0.1", auto_correct: false
+        subconf.vm.network :forwarded_port, guest: 80, host: 42080, host_ip: "127.0.0.1", auto_correct: true #Apache http
+        subconf.vm.network :forwarded_port, guest: 111, host: 42111, host_ip: "127.0.0.1", auto_correct: true #NFS portmap
+        subconf.vm.network :forwarded_port, guest: 8000, host: 8000, host_ip: "127.0.0.1", auto_correct: true #Hue
+        subconf.vm.network :forwarded_port, guest: 8020, host: 8020, host_ip: "127.0.0.1", auto_correct: true #Hdfs
+        subconf.vm.network :forwarded_port, guest: 8080, host: 8080, host_ip: "127.0.0.1", auto_correct: true #Ambari
+        subconf.vm.network :forwarded_port, guest: 8088, host: 8088, host_ip: "127.0.0.1", auto_correct: true #Yarn RM
+        subconf.vm.network :forwarded_port, guest: 8443, host: 8443, host_ip: "127.0.0.1", auto_correct: true #Knox gateway
+        subconf.vm.network :forwarded_port, guest: 15000, host: 15000, host_ip: "127.0.0.1", auto_correct: true #Falcon
       end
   end
 

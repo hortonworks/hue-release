@@ -83,6 +83,10 @@ class sandbox_rpm {
       ensure => present,
     }
 
+    package { "knox":
+      ensure => present,
+    }
+
     exec { 'yum-cache':
         command => "yum clean all --disablerepo='*' --enablerepo='sandbox' --enablerepo='hue-bigtop'",
     }
@@ -145,18 +149,10 @@ class custom_fixes {
 }
 
 class java_home {
-    file { "/etc/bashrc": ensure => present, }
-
-    line { java_home:
-        file => "/etc/bashrc",
-        line => 'export JAVA_HOME=/usr/jdk64/jdk1.6.0_31',
-    }
-
-    line { java_path:
-        file => "/etc/bashrc",
-        line => 'export PATH="${JAVA_HOME}bin:$PATH"',
-        require => Line[java_home],
-    }
+  file {'java.sh':
+    path => '/etc/profile.d/java.sh',
+    content => template("/vagrant/files/scripts/java.sh"),    
+  }
 }
 
 class sandbox {
@@ -212,22 +208,12 @@ class sandbox {
         command => "/etc/init.d/startup_script restart",
         require => [   Class[sandbox_rpm],
                        Class[custom_fixes],
-                       Exec['hostname'],
                        Service['hadoop-yarn-resourcemanager'],
                        Service['hadoop-yarn-nodemanager'],
                        Service['hadoop-mapreduce-historyserver'],
                     ],
     }
 
-    replace { "/etc/sysconfig/network":
-       file => "/etc/sysconfig/network",
-       pattern => "HOSTNAME=sandbox",
-       replacement => "HOSTNAME=sandbox.hortonworks.com",
-    }
-
-    exec { 'hostname':
-        command => "hostname sandbox.hortonworks.com",
-    }
 
     user { 'guest':
         name => 'guest',

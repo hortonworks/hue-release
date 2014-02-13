@@ -23,18 +23,20 @@ define colorized
 @$(RM) -f "temp $1.errors" "temp $1.log";
 endef
 
-all: Startup Ambari HBase
+all: Startup Ambari
 
-Startup: HDFS YARN Zookeeper Hive_Metastore Tez WebHCat Oozie
+Startup: HDFS YARN Zookeeper Hive_Metastore Tez WebHCat Oozie HBase Falcon Strom Knox
 	@echo "`date`:\tStartup" >> $(LOG)
 Ambari: ambari_server ambari_agent ganglia nagios
 
-HDFS: namenode secondary_namenode datanode
-YARN: resourcemanager historyserver nodemanagers
+HDFS: namenode secondary_namenode datanode nfsportpap hdfsnfs
+YARN: resourcemanager yarnhistoryserver mapredhistoryserver nodemanagers
 HBase: hbase_master hbase_regionservers hbase_stargate hbase_thrift
 Zookeeper: zookeeper
 Hive_Metastore: mysql hive hive2
-Tez: # tez
+Strom: nimbus supervisor stromui stormdrpc stormlogview
+Falcon: falcon
+Knox: knox
 WebHCat: webhcat
 Oozie: oozie
 
@@ -69,26 +71,46 @@ secondary_namenode: postgresql
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-secondarynamenode-*.log)
 
+nfsportpap: namenode datanode
+	$(call colorized,\
+		NFS portmap, \
+		export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start portmap,\
+		sleep 5,\
+		/var/log/hadoop/root/hadoop-root-portmap-sandbox.hortonworks.com.log)
+
+hdfsnfs: nfsportmap
+	$(call colorized,\
+		NFS portmap, \
+		export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start nfs3,\
+		sleep 5,\
+		/var/log/hadoop/root/hadoop-root-nfs3-sandbox.hortonworks.com.log)
+
 
 # ==== YARN ====
 resourcemanager: postgresql HDFS
 	$(call colorized,\
 		resource manager, \
-		/etc/init.d/hadoop-yarn-resourcemanager start,\
+		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager',\
 		sleep 25)
 
 
-historyserver: postgresql HDFS
+yarnhistoryserver: postgresql HDFS
 	$(call colorized,\
-		history server, \
-		/etc/init.d/hadoop-mapreduce-historyserver start,\
+		yarn history server, \
+		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start historyserver',\
+		sleep 5)
+
+mapredhistoryserver: postgresql HDFS
+	$(call colorized,\
+		mapred history server, \
+		su - mapred -c'export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-mapreduce/sbin/mr-jobhistory-daemon.sh --config /etc/hadoop/conf start historyserver',\
 		sleep 5)
 
 
 nodemanagers: postgresql HDFS
 	$(call colorized,\
 		node manager, \
-		/etc/init.d/hadoop-yarn-nodemanager start,\
+		su - yarn -c 'export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager',\
 		sleep 5)
 
 
@@ -97,7 +119,7 @@ nodemanagers: postgresql HDFS
 hbase_master: postgresql zookeeper
 	$(call colorized,\
 		hbase master, \
-		su -l hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master",\
+		su - hbase -c "/usr/lib/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master",\
 		sleep 25,\
 		/var/log/hbase/hbase-hbase-master-*.log)
 
@@ -133,35 +155,57 @@ mysql:
 hive: HDFS postgresql mysql
 	$(call colorized,\
 		hive server, \
-		su -  -c  'env HADOOP_HOME=/usr JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startMetastore.sh /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server ', true,\
+		su - hive -c 'env HADOOP_HOME=/usr JAVA_HOME=/usr/jdk64/jdk1.7.0_45 /tmp/start_metastore_script /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server', true,\
 		/var/log/hive/hive.log)
 
 hive2: HDFS hive
 	$(call colorized,\
 		Hiveserver2, \
-		su -  -c  'env JAVA_HOME=/usr/jdk/jdk1.6.0_31 /tmp/startHiveserver2.sh /var/log/hive/hive-server2.out  /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid /etc/hive/conf.server ',true,\
+		su - hive -c 'env JAVA_HOME=/usr/jdk64/jdk1.7.0_45 /tmp/start_hiveserver2_script /var/log/hive/hive-server2.out /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid /etc/hive/conf.server',true,\
 		/var/log/hive/hive-server2.log)
+
+# ==== Storm ====
+
+nimbus: Zookeeper
+	$(call colorized,\
+		Storm nimbus, \
+		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm nimbus',true)
+
+supervisor: Zookeeper
+	$(call colorized,\
+		Storm supervisor, \
+		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm supervisor',true)
+
+stormui: Zookeeper
+	$(call colorized,\
+		Storm ui, \
+		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm ui',true)
+
+stormdrpc: Zookeeper
+	$(call colorized,\
+		Storm DRPC, \
+		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm drpc',true)
+
+stormlogview: Zookeeper
+	$(call colorized,\
+		Storm Logview, \
+		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm logviewer',true)
+
 
 # ==== Single services ====
 
 zookeeper: namenode
 	$(call colorized,\
 		zookeeper nodes, \
-		su - zookeeper -c "export  ZOOCFGDIR=/etc/zookeeper/conf ; export ZOOCFG=zoo.cfg ; source /etc/zookeeper/conf/zookeeper-env.sh ; /usr/lib/zookeeper/bin/zkServer.sh start",\
+		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/lib/zookeeper/bin/zkServer.sh start",\
 		true)
 
 
-tez: namenode
-	$(call colorized,\
-		tez node, \
-		su - tez -c "/usr/lib/tez/sbin/tez-daemon.sh start ampoolservice",\
-		true)
-	
 
 webhcat: hive HDFS
 	$(call colorized,\
 		webhcat server, \
-		su -l hcat -c "/usr/lib/hcatalog/sbin/webhcat_server.sh start", true\
+		su -l hcat -c "env HADOOP_HOME=/usr /usr/lib/hive-hcatalog/sbin/webhcat_server.sh start", true\
 		, /var/log/webhcat/webhcat.log)
 
 
@@ -184,6 +228,19 @@ nagios:
 		Nagios, \
 		/etc/init.d/nagios start,\
 		sleep 5,)
+
+falcon: HDFS Oozie
+	$(call colorized,\
+		Falcon, \
+		su - falcon -c'env JAVA_HOME=/usr/jdk64/jdk1.7.0_45 FALCON_LOG_DIR=/var/log/falcon FALCON_PID_DIR=/var/run/falcon FALCON_DATA_DIR=/hadoop/falcon/activemq /usr/lib/falcon/bin/falcon-start -port 15000',\
+		sleep 5,)
+
+
+knox: HDFS Webhcat Oozie
+	$(call colorized,\
+		Knox gateway, \
+		su - knox -c'/usr/lib/knox/bin/gateway.sh start',\
+		sleep 2,)
 
 
 # ==== Ambari ====
