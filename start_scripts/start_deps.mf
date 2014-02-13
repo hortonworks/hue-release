@@ -25,7 +25,7 @@ endef
 
 all: Startup Ambari
 
-Startup: HDFS YARN Zookeeper Hive_Metastore Tez WebHCat Oozie HBase Falcon Strom Knox
+Startup: HDFS YARN Zookeeper Hive_Metastore WebHCat Oozie HBase Falcon Strom Knox
 	@echo "`date`:\tStartup" >> $(LOG)
 Ambari: ambari_server ambari_agent ganglia nagios
 
@@ -34,7 +34,7 @@ YARN: resourcemanager yarnhistoryserver mapredhistoryserver nodemanagers
 HBase: hbase_master hbase_regionservers hbase_stargate hbase_thrift
 Zookeeper: zookeeper
 Hive_Metastore: mysql hive hive2
-Strom: nimbus supervisor stromui stormdrpc stormlogview
+Strom: nimbus supervisor stormui stormdrpc stormlogview
 Falcon: falcon
 Knox: knox
 WebHCat: webhcat
@@ -78,9 +78,9 @@ nfsportpap: namenode datanode
 		sleep 5,\
 		/var/log/hadoop/root/hadoop-root-portmap-sandbox.hortonworks.com.log)
 
-hdfsnfs: nfsportmap
+hdfsnfs: namenode datanode
 	$(call colorized,\
-		NFS portmap, \
+		Hdfs nfs, \
 		export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec && /usr/lib/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start nfs3,\
 		sleep 5,\
 		/var/log/hadoop/root/hadoop-root-nfs3-sandbox.hortonworks.com.log)
@@ -169,27 +169,27 @@ hive2: HDFS hive
 nimbus: Zookeeper
 	$(call colorized,\
 		Storm nimbus, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm nimbus',true)
+		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm nimbus &',true)
 
 supervisor: Zookeeper
 	$(call colorized,\
 		Storm supervisor, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm supervisor',true)
+		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm supervisor &',true)
 
 stormui: Zookeeper
 	$(call colorized,\
 		Storm ui, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm ui',true)
+		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm ui &',true)
 
 stormdrpc: Zookeeper
 	$(call colorized,\
 		Storm DRPC, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm drpc',true)
+		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm drpc &',true)
 
 stormlogview: Zookeeper
 	$(call colorized,\
 		Storm Logview, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm logviewer',true)
+		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm logviewer &',true)
 
 
 # ==== Single services ====
@@ -236,7 +236,7 @@ falcon: HDFS Oozie
 		sleep 5,)
 
 
-knox: HDFS Webhcat Oozie
+knox: HDFS WebHCat Oozie
 	$(call colorized,\
 		Knox gateway, \
 		su - knox -c'/usr/lib/knox/bin/gateway.sh start',\
