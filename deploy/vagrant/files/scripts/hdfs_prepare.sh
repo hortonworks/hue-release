@@ -32,6 +32,7 @@ su - hdfs -c"hdfs dfs -chmod -R 755 /apps/tez/"
 su - hdfs -c"hdfs dfs -chown tez:tez -R /apps/tez/"
 su - tez -c"hdfs dfs -put /usr/lib/tez/* /apps/tez"
 sed -i "s|file:///usr/lib/tez/,file:///usr/lib/tez/lib/|hdfs://sandbox.hortonworks.com:8020/apps/tez,hdfs://sandbox.hortonworks.com:8020/apps/tez/lib|g" /etc/tez/conf/tez-site.xml
+ln -s /etc/tez/conf/*.xml /etc/hive/conf/
 
 echo "Adding guest user"
 su - hdfs -c "hadoop dfs -mkdir /user/guest"

@@ -94,7 +94,9 @@ Vagrant.configure("2") do |config|
         subconf.vm.network :forwarded_port, guest: 8080, host: 8080, host_ip: "127.0.0.1", auto_correct: true #Ambari
         subconf.vm.network :forwarded_port, guest: 8088, host: 8088, host_ip: "127.0.0.1", auto_correct: true #Yarn RM
         subconf.vm.network :forwarded_port, guest: 8443, host: 8443, host_ip: "127.0.0.1", auto_correct: true #Knox gateway
+        subconf.vm.network :forwarded_port, guest: 8744, host: 8744, host_ip: "127.0.0.1", auto_correct: true #Storm UI
         subconf.vm.network :forwarded_port, guest: 15000, host: 15000, host_ip: "127.0.0.1", auto_correct: true #Falcon
+        subconf.vm.network :forwarded_port, guest: 19888, host: 19888, host_ip: "127.0.0.1", auto_correct: true #Job history
       end
   end
 

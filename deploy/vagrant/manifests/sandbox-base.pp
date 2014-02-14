@@ -87,16 +87,11 @@ class sandbox_rpm {
       ensure => present,
     }
 
-    exec { 'yum-cache':
-        command => "yum clean all --disablerepo='*' --enablerepo='sandbox' --enablerepo='hue-bigtop'",
-    }
-
     package { ['hue', 'hue-sandbox']:
         ensure => latest,
         require => [ File['sandbox.repo'],
                      Package['libxslt'],
                      Package['python-lxml'],
-                     Exec['yum-cache'],
                      Package['yum-plugin-priorities']
                      
                    ],
