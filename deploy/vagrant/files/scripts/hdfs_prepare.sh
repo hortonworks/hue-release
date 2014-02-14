@@ -26,6 +26,13 @@ su - $USER -c "/usr/lib/hue/build/env/bin/hue beeswax_install_examples"
 rm /tmp/udfs.tar.gz
 rm  -rf /tmp/udfs
 
+echo "Preparing Tez"
+su - hdfs -c"hdfs dfs -mkdir -p /apps/tez/"
+su - hdfs -c"hdfs dfs -chmod -R 755 /apps/tez/"
+su - hdfs -c"hdfs dfs -chown tez:tez -R /apps/tez/"
+su - tez -c"hdfs dfs -put /usr/lib/tez/* /apps/tez"
+sed -i "s|file:///usr/lib/tez/,file:///usr/lib/tez/lib/|hdfs://sandbox.hortonworks.com:8020/apps/tez,hdfs://sandbox.hortonworks.com:8020/apps/tez/lib|g" /etc/tez/conf/tez-site.xml
+
 echo "Adding guest user"
 su - hdfs -c "hadoop dfs -mkdir /user/guest"
 su - hdfs -c "hadoop dfs -chown guest:guest /user/guest"
