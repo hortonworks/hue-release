@@ -235,12 +235,12 @@ falcon: HDFS Oozie
 		su - falcon -c'env JAVA_HOME=/usr/jdk64/jdk1.7.0_45 FALCON_LOG_DIR=/var/log/falcon FALCON_PID_DIR=/var/run/falcon FALCON_DATA_DIR=/hadoop/falcon/activemq /usr/lib/falcon/bin/falcon-start -port 15000',\
 		sleep 5,)
 
-knox-ldap:
-  $(call colorized,\
-    Knox ldap, \
-    /usr/lib/knox/bin/ldap.sh start,\
-    sleep 2,)
 
+knox-ldap:
+	$(call colorized,\
+    	Knox ldap, \
+    	/usr/lib/knox/bin/ldap.sh start,\
+    	sleep 2,)
   
 
 knox-gateway: HDFS WebHCat Oozie knox-ldap
