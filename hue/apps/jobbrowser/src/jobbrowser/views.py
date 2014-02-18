@@ -43,7 +43,7 @@ from hadoop.api.jobtracker.ttypes import ThriftJobPriority, TaskTrackerNotFoundE
 from jobbrowser import conf
 from jobbrowser.api import get_api
 from jobbrowser.models import Job, JobLinkage, Tracker, Cluster
-
+from pig.templeton import Templeton
 
 def check_job_permission(view_func):
   """
@@ -116,7 +116,7 @@ def massage_job_for_json(job, request):
     'finishTimeFormatted': hasattr(job, 'finishTimeFormatted') and job.finishTimeFormatted or '',
     'durationFormatted': hasattr(job, 'durationFormatted') and job.durationFormatted or '',
     'durationMs': hasattr(job, 'durationInMillis') and job.durationInMillis or '',
-    'canKill': (job.status.lower() == 'running' or job.status.lower() == 'pending') and not job.is_mr2 and (request.user.is_superuser or request.user.username == job.user),
+    'canKill': (job.status.lower() in ['running', 'pending']) and (request.user.is_superuser or request.user.username == job.user),
     'killUrl': job.jobId and reverse('jobbrowser.views.kill_job', kwargs={'job': job.jobId}) or ''
   }
   return job
@@ -176,8 +176,19 @@ def kill_job(request, job):
     access_warn(request, _('Insufficient permission'))
     raise MessageException(_("Permission denied.  User %(username)s cannot delete user %(user)s's job.") %
                            dict(username=request.user.username, user=job.user))
-
-  job.kill()
+  if job.is_mr2:
+    t = Templeton(request.user.username)
+    try:
+      t.kill_job(job.jobId)
+    except:
+      #Temp hack due to https://issues.apache.org/jira/browse/HIVE-5835
+      pass
+    if request.REQUEST.get("next"):
+        return HttpResponseRedirect(request.REQUEST.get("next"))
+    elif request.REQUEST.get("format") == "json":
+        return HttpResponse(encode_json_for_js({'status': 0}), mimetype="application/json")
+  else:
+    job.kill()
   cur_time = time.time()
   while time.time() - cur_time < 15:
     job = Job.from_id(jt=request.jt, jobid=job.jobId)
