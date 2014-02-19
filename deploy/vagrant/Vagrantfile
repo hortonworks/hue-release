@@ -32,76 +32,30 @@ Vagrant.configure("2") do |config|
     vb.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
     vb.customize ["modifyvm", :id, "--nic2", "none"]
     vb.customize ["modifyvm", :id, "--mouse", "usbtablet"]
+
+    vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 2.0", "--groups", "/Hortonworks"]
   end
 
-  ['default', 'qa'].each do |vm|
-    config.vm.define vm do |subconf|
-      subconf.vm.provider :virtualbox do |vb|
-        vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 2.0", "--groups", "/Hortonworks"]
-      end
-    end
-  end
-
-  config.vm.define :default do |subconf|
-    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
+  
+  config.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
       puppet.manifests_path = "manifests"
       puppet.manifest_file  = "sandbox_full.pp"
-    end
-  end
-
-
-  config.vm.define :qa do |subconf|
-    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
-      puppet.manifests_path = "manifests"
-      puppet.manifest_file  = "sandbox_qa.pp"
-    end
   end
   
-  config.vm.define :test do |subconf|
-    subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
-      puppet.manifests_path = "manifests"
-      puppet.manifest_file  = "sandbox_test_machine.pp"
-    end
 
-    subconf.vm.provider :virtualbox do |vb|
-      vb.gui = false
-      vb.customize ["modifyvm", :id, "--name", "Sandbox Testbox", "--groups", "/Hortonworks"]
-    end
-  end
-
-
-  # config.vm.define :secure do |subconf|
-  #   config.vm.box = "sandbox-hdp-2.0.5-secure"
-  #   config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/stuff/sandbox-hdp-2.0.5-secure.box"
-
-
-  #   subconf.vm.provision :puppet, :options => "--verbose --debug" do |puppet|
-  #     puppet.manifests_path = "manifests"
-  #     puppet.manifest_file  = "sandbox_secure.pp"
-  #   end
-
-  #   subconf.vm.provider :virtualbox do |vb|
-  #     vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 2.0 Secure", "--groups", "/Hortonworks"]
-  #   end
-  # end
-
-
-  ['default', 'qa'].each do |vm|
-      config.vm.define vm do |subconf|
-        subconf.vm.network :forwarded_port, guest: 80, host: 42080, host_ip: "127.0.0.1", auto_correct: true #Apache http
-        subconf.vm.network :forwarded_port, guest: 111, host: 42111, host_ip: "127.0.0.1", auto_correct: true #NFS portmap
-        subconf.vm.network :forwarded_port, guest: 8000, host: 8000, host_ip: "127.0.0.1", auto_correct: true #Hue
-        subconf.vm.network :forwarded_port, guest: 8020, host: 8020, host_ip: "127.0.0.1", auto_correct: true #Hdfs
-        subconf.vm.network :forwarded_port, guest: 8042, host: 8042, host_ip: "127.0.0.1", auto_correct: true #NodeManager
-        subconf.vm.network :forwarded_port, guest: 8050, host: 8050, host_ip: "127.0.0.1", auto_correct: true #Resource manager
-        subconf.vm.network :forwarded_port, guest: 8080, host: 8080, host_ip: "127.0.0.1", auto_correct: true #Ambari
-        subconf.vm.network :forwarded_port, guest: 8088, host: 8088, host_ip: "127.0.0.1", auto_correct: true #Yarn RM
-        subconf.vm.network :forwarded_port, guest: 8443, host: 8443, host_ip: "127.0.0.1", auto_correct: true #Knox gateway
-        subconf.vm.network :forwarded_port, guest: 8744, host: 8744, host_ip: "127.0.0.1", auto_correct: true #Storm UI
-        subconf.vm.network :forwarded_port, guest: 8888, host: 8888, host_ip: "127.0.0.1", auto_correct: true #Tutorials
-        subconf.vm.network :forwarded_port, guest: 15000, host: 15000, host_ip: "127.0.0.1", auto_correct: true #Falcon
-        subconf.vm.network :forwarded_port, guest: 19888, host: 19888, host_ip: "127.0.0.1", auto_correct: true #Job history
-      end
-  end
+  config.vm.network :forwarded_port, guest: 80, host: 42080, host_ip: "127.0.0.1", auto_correct: true #Apache http
+  config.vm.network :forwarded_port, guest: 111, host: 42111, host_ip: "127.0.0.1", auto_correct: true #NFS portmap
+  config.vm.network :forwarded_port, guest: 8000, host: 8000, host_ip: "127.0.0.1", auto_correct: true #Hue
+  config.vm.network :forwarded_port, guest: 8020, host: 8020, host_ip: "127.0.0.1", auto_correct: true #Hdfs
+  config.vm.network :forwarded_port, guest: 8042, host: 8042, host_ip: "127.0.0.1", auto_correct: true #NodeManager
+  config.vm.network :forwarded_port, guest: 8050, host: 8050, host_ip: "127.0.0.1", auto_correct: true #Resource manager
+  config.vm.network :forwarded_port, guest: 8080, host: 8080, host_ip: "127.0.0.1", auto_correct: true #Ambari
+  config.vm.network :forwarded_port, guest: 8088, host: 8088, host_ip: "127.0.0.1", auto_correct: true #Yarn RM
+  config.vm.network :forwarded_port, guest: 8443, host: 8443, host_ip: "127.0.0.1", auto_correct: true #Knox gateway
+  config.vm.network :forwarded_port, guest: 8744, host: 8744, host_ip: "127.0.0.1", auto_correct: true #Storm UI
+  config.vm.network :forwarded_port, guest: 8888, host: 8888, host_ip: "127.0.0.1", auto_correct: true #Tutorials
+  config.vm.network :forwarded_port, guest: 15000, host: 15000, host_ip: "127.0.0.1", auto_correct: true #Falcon
+  config.vm.network :forwarded_port, guest: 19888, host: 19888, host_ip: "127.0.0.1", auto_correct: true #Job history
+  
 
 end
