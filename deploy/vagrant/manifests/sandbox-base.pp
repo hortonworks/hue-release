@@ -297,6 +297,14 @@ class optimizations {
         ensure => absent,
     }
 
+    file { '/lib/udev/rules.d/75-persistent-net-generator.rules':
+        ensure => absent,
+    }
+
+    file { '/etc/udev/rules.d/70-persistent-net.rules':
+        ensure => absent,
+    }
+
     file { '/etc/cron.monthly/readahead-monthly.cron':
         ensure => absent,
     }
