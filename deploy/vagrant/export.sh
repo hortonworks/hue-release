@@ -98,6 +98,7 @@ echo -n "."; sleep 5; echo "."; sleep 5
 echo "	. Removing shared folders"
 VBoxManage sharedfolder remove "$MACHINE" --name '/vagrant' &>/dev/null || true
 VBoxManage sharedfolder remove "$MACHINE" --name '/tmp/vagrant-puppet/manifests' &>/dev/null || true
+VBoxManage sharedfolder remove "$MACHINE" --name '/tmp/vagrant-puppet-1/manifests' &>/dev/null || true
 echo "	. Customizations [RAM $MEM MB]"
 VBoxManage modifyvm "$MACHINE" --memory $MEM --cpus 2
 echo "	. Exporting..."
