@@ -14,7 +14,7 @@ fi
 
 # memory amount in MB for VirtualBox machine
 MEM=2048
-VERSION="2.0"
+VERSION="2.1"
 
 if [ -z $1 ]; then
 	TARGET=default
