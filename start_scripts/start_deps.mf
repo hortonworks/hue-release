@@ -23,11 +23,12 @@ define colorized
 @$(RM) -f "temp $1.errors" "temp $1.log";
 endef
 
-all: Startup Ambari
+all: Startup Ambari Others
 
-Startup: HDFS YARN Zookeeper Hive_Metastore WebHCat Oozie HBase Falcon Strom Knox
+Startup: HDFS YARN Zookeeper Hive_Metastore WebHCat Oozie 
 	@echo "`date`:\tStartup" >> $(LOG)
 Ambari: ambari_server ambari_agent ganglia nagios
+Others: HBase Falcon Strom Knox
 
 HDFS: namenode secondary_namenode datanode nfsportpap hdfsnfs
 YARN: resourcemanager yarnhistoryserver mapredhistoryserver nodemanagers
