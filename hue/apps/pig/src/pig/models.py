@@ -23,7 +23,7 @@ class PigScript(models.Model):
 
     title = models.CharField('Title', max_length=200)
     pig_script = models.TextField('Pig script', null=True, blank=True)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, related_name='PigScripts')
     python_script = models.TextField(null=True, blank=True)
     date_created = models.DateTimeField('Date', auto_now_add=True, auto_now=True)
     saved = models.BooleanField(default=True)
@@ -78,10 +78,11 @@ class Job(models.Model):
         (SYNTAX_CHECK, "syntax_check")
     )
 
+    user = models.ForeignKey(User, related_name='Jobs', null=True)
     start_time = models.DateTimeField(auto_now_add=True)
     job_id = models.CharField(max_length=50, primary_key=True)
     statusdir = models.CharField(max_length=100)
-    script = models.ForeignKey(PigScript)
+    script_title = models.CharField(max_length=200, default='')
     status = models.SmallIntegerField(choices=JOB_STATUSES, default=1)
     job_type = models.SmallIntegerField(choices=JOB_TYPE, default=EXECUTE)
     email_notification = models.BooleanField(default=True)
