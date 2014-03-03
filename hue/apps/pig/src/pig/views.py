@@ -18,7 +18,6 @@ import re
 import logging
 import simplejson as json
 from datetime import datetime
-from os.path import basename
 import time
 
 from django.core.urlresolvers import reverse
@@ -134,6 +133,7 @@ def udf_get(request):
     udfs = UDF.objects.all()
     return HttpResponse(json.dumps(dict((u.id, u.file_name) for u in udfs)))
 
+
 def udf_create(request):
     response = {'status': -1, 'data': ''}
     try:
@@ -196,9 +196,10 @@ def start_job(request):
     script.python_script = request.POST['python_script']
     script.arguments = "\t".join(args)
     script.save()
-    Job.objects.create(job_id=job['id'],
+    Job.objects.create(user=script.user,
+                       job_id=job['id'],
                        statusdir=statusdir,
-                       script=script,
+                       script_title=script.title,
                        job_type=job_type,
                        email_notification=bool(request.POST.get('email')))
     return HttpResponse(
@@ -263,21 +264,26 @@ def kill_job_by_jt(request):
 
 
 def _job_result(request, job):
-    """
-
-    """
     statusdir = job.statusdir
     result = {}
     try:
         stderr_file = statusdir + "/stderr"
         stdout_file = statusdir + "/stdout"
         exit_code_file = statusdir + "/exit"
+        pig_script_file = statusdir + "/script.pig"
+        python_udf_file = statusdir + "/pythonudf.py"
         error = request.fs.read(stderr_file, 0, request.fs.stats(stderr_file).size)
         stdout = request.fs.read(stdout_file, 0, request.fs.stats(stdout_file).size)
         exit_code = request.fs.read(exit_code_file, 0, request.fs.stats(exit_code_file).size)
+        pig_script = request.fs.read(pig_script_file, 0, request.fs.stats(pig_script_file).size)
+        try:
+            result['python_script'] = mark_safe(request.fs.read(python_udf_file, 0, request.fs.stats(python_udf_file).size))
+        except:
+            pass
         result['error'] = mark_safe(error)
         result['stdout'] = mark_safe(stdout)
         result['exit'] = mark_safe(exit_code)
+        result['pig_script'] = mark_safe(pig_script)
         if job.job_type == job.SYNTAX_CHECK:
             result['stdout'] = result['error']
     except:
@@ -297,8 +303,71 @@ def get_job_result(request):
     return HttpResponse(json.dumps(result))
 
 
+def get_job_result_stderr(request):
+    job = Job.objects.get(job_id=request.POST['job_id'])
+    statusdir = job.statusdir
+    result = {}
+    try:
+        stderr_file = statusdir + "/stderr"
+        error = request.fs.read(stderr_file, 0, request.fs.stats(stderr_file).size)
+        result['stderr'] = mark_safe(error)
+    except:
+        result['stderr'] = ""
+    return HttpResponse(json.dumps(result))
+
+
+def get_job_result_stdout(request):
+    job = Job.objects.get(job_id=request.POST['job_id'])
+    statusdir = job.statusdir
+    result = {}
+    try:
+        stderr_file = statusdir + "/stderr"
+        stdout_file = statusdir + "/stdout"
+        stdout = request.fs.read(stdout_file, 0, request.fs.stats(stdout_file).size)
+        result['stdout'] = mark_safe(stdout)
+        if job.job_type == job.SYNTAX_CHECK:
+            error = request.fs.read(stderr_file, 0, request.fs.stats(stderr_file).size)
+            result['stdout'] = mark_safe(error)
+    except:
+        result['stdout'] = ""
+    return HttpResponse(json.dumps(result))
+
+
+def get_job_result_script(request):
+    job = Job.objects.get(job_id=request.POST['job_id'])
+    statusdir = job.statusdir
+    result = {}
+    try:
+        pig_script_file = statusdir + "/script.pig"
+        pig_script = request.fs.read(pig_script_file, 0, request.fs.stats(pig_script_file).size)
+        result['pig_script'] = mark_safe(pig_script)
+    except:
+        result['pig_script'] = ""
+    return HttpResponse(json.dumps(result))
+
+
 def query_history(request):
-    jobs_list = Job.objects.filter(script__user=request.user).order_by("-start_time").all()
+    jobs_list = Job.objects.filter(user=request.user).order_by("-start_time").all()
+    paginator = Paginator(jobs_list, 20)
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+
+    try:
+        jobs = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        jobs = paginator.page(paginator.num_pages)
+
+    return render(
+        "query_history.mako",
+        request,
+        {"jobs": jobs}
+    )
+
+
+def query_history_job_detail(request, job_id):
+    jobs_list = [get_object_or_404(Job, user=request.user, job_id=job_id)]
     paginator = Paginator(jobs_list, 20)
     try:
         page = int(request.GET.get('page', '1'))
@@ -325,27 +394,26 @@ def show_job_result(request, job_id):
     result['job_id'] = job.job_id
     if job.email_notification:
         result['email_notification'] = True
+    instance = job.script
+    for field in instance._meta.fields:
+        result[field.name] = getattr(instance, field.name)
     if job.status == job.JOB_SUBMITTED:
         result['JOB_SUBMITTED'] = True
     else:
         result.update(_job_result(request, job))
         result['stdout'] = result['stdout'].decode("utf-8")
-    instance = job.script
-    for field in instance._meta.fields:
-        result[field.name] = getattr(instance, field.name)
-
     return render('edit_script.mako', request, dict(result=result))
 
 
-def delete_job_object(request, job_id):
+def delete_job_object(request):
     try:
-        job = Job.objects.get(job_id=job_id)
+        job = Job.objects.get(job_id=request.POST['job_id'])
     except:
-        raise Http404("This job doesn't exist.'")
+        return HttpResponse(json.dumps({"status": -1}))
     else:
         request.fs.rmtree(job.statusdir)
         job.delete()
-    return redirect(reverse("query_history"))
+    return HttpResponse(json.dumps({"status": 0}))
 
 
 def check_running_job(request, job_id):
@@ -392,7 +460,7 @@ def notify_job_completed(request, job_id):
         You can check result at the following link %s" % (
             job.script.title,
             job.start_time.strftime('%d.%m.%Y %H:%M'),
-            "%s%s" % (get_desktop_uri_prefix(), reverse("show_job_result", args=[job_id]))
+            "%s%s" % (get_desktop_uri_prefix(), reverse("query_history_job_detail", args=[job_id]))
         )
         job.script.user.email_user(subject, body)
     return HttpResponse("Done")
