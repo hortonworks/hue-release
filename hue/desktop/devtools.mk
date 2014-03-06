@@ -32,9 +32,7 @@ DEVTOOLS += \
 .PHONY: $(DEVTOOLS)
 $(DEVTOOLS):
 	@echo "--- Installing development tool: $@"
-	@# Force downloads from pypi host - developer sites are sometimes dead!
-	$(ENV_EASY_INSTALL) -f http://archive.cloudera.com/desktop-sdk-python-packages/ \
-	   -H archive.cloudera.com $(SETUPTOOLS_OPTS) $@
+	$(ENV_EASY_INSTALL) $(SETUPTOOLS_OPTS) $@
 
 $(BLD_DIR):
 	@mkdir -p $@
