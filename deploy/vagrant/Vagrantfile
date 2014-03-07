@@ -2,14 +2,7 @@
 # vi: set ft=ruby :
 
 ##########################################################
-# to bring machine up do $ vagrant up <machine name>
-# 
-# Available <Machine name>s:
-#  - default: Unsecure Sandbox
-#  - secure : Secure Sandbox
-#  - test   : Lightweight installation
-#             for running unittests [uses local repo]
-#  - qa     : full sandbox with preloaded TestData
+# to bring machine up do $ vagrant up 
 # 
 #  local repo now at http://10.2.2.239:8142
 ##########################################################
@@ -33,7 +26,7 @@ Vagrant.configure("2") do |config|
     vb.customize ["modifyvm", :id, "--nic2", "none"]
     vb.customize ["modifyvm", :id, "--mouse", "usbtablet"]
 
-    vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 2.0", "--groups", "/Hortonworks"]
+    vb.customize ["modifyvm", :id, "--name", "Hortonworks Sandbox 2.1", "--groups", "/Hortonworks"]
   end
 
   
@@ -54,8 +47,13 @@ Vagrant.configure("2") do |config|
   config.vm.network :forwarded_port, guest: 8443, host: 8443, host_ip: "127.0.0.1", auto_correct: true #Knox gateway
   config.vm.network :forwarded_port, guest: 8744, host: 8744, host_ip: "127.0.0.1", auto_correct: true #Storm UI
   config.vm.network :forwarded_port, guest: 8888, host: 8888, host_ip: "127.0.0.1", auto_correct: true #Tutorials
+  config.vm.network :forwarded_port, guest: 10000, host: 10000, host_ip: "127.0.0.1", auto_correct: true #HiveServer2 thrift
+  config.vm.network :forwarded_port, guest: 10001, host: 10001, host_ip: "127.0.0.1", auto_correct: true #HiveServer2 thrift http
+  config.vm.network :forwarded_port, guest: 11000, host: 11000, host_ip: "127.0.0.1", auto_correct: true #Oozie
   config.vm.network :forwarded_port, guest: 15000, host: 15000, host_ip: "127.0.0.1", auto_correct: true #Falcon
   config.vm.network :forwarded_port, guest: 19888, host: 19888, host_ip: "127.0.0.1", auto_correct: true #Job history
-  
-
+  config.vm.network :forwarded_port, guest: 50070, host: 50070, host_ip: "127.0.0.1", auto_correct: true #WebHdfs`
+  config.vm.network :forwarded_port, guest: 50075, host: 50075, host_ip: "127.0.0.1", auto_correct: true #Datanode
+  config.vm.network :forwarded_port, guest: 50111, host: 50111, host_ip: "127.0.0.1", auto_correct: true #WebHcat
+  config.vm.network :forwarded_port, guest: 60080, host: 60080, host_ip: "127.0.0.1", auto_correct: true #WebHBase
 end
