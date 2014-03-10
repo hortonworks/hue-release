@@ -1,4 +1,6 @@
-echo "# Do not remove the following line, or various programs" > /etc/hosts
+SCRIPT=$(readlink -f "$0")
+echo "# File is generated from ${SCRIPT}" > /etc/hosts
+echo "# Do not remove the following line, or various programs" >> /etc/hosts
 echo "# that require network functionality will fail." >> /etc/hosts
 echo "127.0.0.1		localhost.localdomain localhost" >> /etc/hosts
 
