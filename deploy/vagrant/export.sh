@@ -1,5 +1,38 @@
 #!/bin/bash
 
+if [ "$BUILD_NUMBER" == "" ]; then
+	echo "Please cpecify BUILD_NUMBER env variable"
+	echo "Usage: BUILD_NUMBER=10 RELEASE_NAME=baikal-ga $0"
+	exit
+fi
+
+if [ "$RELEASE_NAME" == "" ]; then
+	echo "Please cpecify RELEASE_NAME env variable"
+	echo "Usage: BUILD_NUMBER=10 RELEASE_NAME=baikal-ga $0"
+	exit
+fi
+
+PWD_DIR=$(pwd)
+DEST_DIR=$PWD_DIR/exported_machines
+VMWARE_DEST_DIR=$DEST_DIR/$RELEASE_NAME-$BUILD_NUMBER/vmware
+VIRTUALBOX_DEST_DIR=$DEST_DIR/$RELEASE_NAME-$BUILD_NUMBER/virtualbox
+HYPERV_DEST_DIR=$DEST_DIR/$RELEASE_NAME-$BUILD_NUMBER/hyper-v
+
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+GIT_HASH=$(git rev-parse HEAD)
+GIT_REPO=$(git config --get remote.origin.url)
+
+function gen_build_id_file() {
+	echo "BUILD_NUMBER: $BUILD_NUMBER" > $1
+	echo "BUILD_ENV: $3" >> $1
+	echo "TIMESTAMP: $(date +%s)" >> $1
+	echo "RELEASE_NAME: $RELEASE_NAME" >> $1
+	echo "GIT_REPO: $GIT_REPO" >> $1
+	echo "GIT_BRANCH: $GIT_BRANCH" >> $1
+	echo "GIT_HASH: $GIT_HASH" >> $1
+	echo "MD5_SUM: `md5sum -b \"$2\" | cut -d ' ' -f 1`" >> $1
+}
+
 set -e
 # Script for exporting machines to VirtualBox, VMware and Hyper-V formats
 # first argument: Vagrant machine target [if not specified, script uses "default"]
@@ -102,11 +135,13 @@ VBoxManage sharedfolder remove "$MACHINE" --name '/tmp/vagrant-puppet-1/manifest
 echo "	. Customizations [RAM $MEM MB]"
 VBoxManage modifyvm "$MACHINE" --memory $MEM --cpus 2
 echo "	. Exporting..."
-FILENAME_VB="Hortonworks Sandbox $VERSION VirtualBox.ova"
+FILENAME_VB="Hortonworks_Sandbox_$VERSION.ova"
 VBoxManage export "$MACHINE" --output "$FILENAME_VB" \
     --vsys 0 --vendor "Hortonworks" --version "$VERSION" --product "Sandbox"
-
-echo "VirtualBox image done! `pwd`/$FILENAME_VB"
+mkdir -p $VIRTUALBOX_DEST_DIR
+gen_build_id_file "$VIRTUALBOX_DEST_DIR/build.id" "$PWD_DIR/$FILENAME_VB" "VirtualBox"
+mv "$PWD_DIR/$FILENAME_VB" "$VIRTUALBOX_DEST_DIR"
+echo "VirtualBox image done! $VIRTUALBOX_DEST_DIR/$FILENAME_VB"
 
 # ======== VMware ========
 echo
@@ -126,10 +161,13 @@ echo -n "."; sleep 5; echo "."; sleep 5
 if which ovftool &>/dev/null; then
 	echo "	. Copying vmdk file...";
 	cp "$HDDFILE" ./vmware/sandbox.vmdk;
-	FILENAME_VW="./Hortonworks Sandbox $VERSION VMware.ova";
+	FILENAME_VW="./Hortonworks_Sandbox_$VERSION.ova";
 	echo "	. Exporting...";
 	ovftool "./vmware/Hortonworks Sandbox 2.0.vmx" "$FILENAME_VW";
-	echo "VMware image done! `pwd`/$FILENAME_VW";
+	mkdir -p $VMWARE_DEST_DIR
+	gen_build_id_file "$VMWARE_DEST_DIR/build.id" "$PWD_DIR/$FILENAME_VW" "VMware"
+	mv "$PWD_DIR/$FILENAME_VW" "$VMWARE_DEST_DIR"
+	echo "VMware image done! $VMWARE_DEST_DIR/$FILENAME_VW";
 else
 	echoerr "WARNING: Skipping VMware exporting due to missing ovftool"
 fi
