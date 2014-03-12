@@ -240,14 +240,14 @@ falcon: HDFS Oozie
 knox-ldap:
 	$(call colorized,\
     	Knox ldap, \
-    	/usr/lib/knox/bin/ldap.sh start,\
+    	su - knox -c "/usr/lib/knox/bin/ldap.sh start",\
     	sleep 2,)
   
 
 knox-gateway: HDFS WebHCat Oozie knox-ldap
 	$(call colorized,\
 		Knox gateway, \
-		/usr/lib/knox/bin/gateway.sh start,\
+		su - knox -c "/usr/lib/knox/bin/gateway.sh start",\
 		sleep 2,)
 
 
