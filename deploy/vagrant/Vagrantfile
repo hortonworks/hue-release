@@ -8,9 +8,9 @@
 ##########################################################
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "SandboxBaikalRC2"
-  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/sandbox/vagrant/SandboxBaikalRC2.box"
-  config.vm.box_download_checksum = "230f9e906395c09abc1026f09ed1e040a33e06b2ebf4b5c6b8f15e4fb0b2ecc2"
+  config.vm.box = "SandboxBaikalEA1"
+  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/sandbox/vagrant/SandboxBaikalEA1.box"
+  config.vm.box_download_checksum = "886391472480335510b745a1ef596a7719566b6d8570af2c7afe985b834c0b7f"
   config.vm.box_download_checksum_type = "sha256"
   config.vm.hostname = "sandbox.hortonworks.com"
 
@@ -52,7 +52,7 @@ Vagrant.configure("2") do |config|
   config.vm.network :forwarded_port, guest: 11000, host: 11000, host_ip: "127.0.0.1", auto_correct: true #Oozie
   config.vm.network :forwarded_port, guest: 15000, host: 15000, host_ip: "127.0.0.1", auto_correct: true #Falcon
   config.vm.network :forwarded_port, guest: 19888, host: 19888, host_ip: "127.0.0.1", auto_correct: true #Job history
-  config.vm.network :forwarded_port, guest: 50070, host: 50070, host_ip: "127.0.0.1", auto_correct: true #WebHdfs`
+  config.vm.network :forwarded_port, guest: 50070, host: 50070, host_ip: "127.0.0.1", auto_correct: true #WebHdfs
   config.vm.network :forwarded_port, guest: 50075, host: 50075, host_ip: "127.0.0.1", auto_correct: true #Datanode
   config.vm.network :forwarded_port, guest: 50111, host: 50111, host_ip: "127.0.0.1", auto_correct: true #WebHcat
   config.vm.network :forwarded_port, guest: 60080, host: 60080, host_ip: "127.0.0.1", auto_correct: true #WebHBase
