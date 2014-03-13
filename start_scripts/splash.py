@@ -15,7 +15,7 @@ def make_greet_window():
     H, W = screen.getmaxyx()
     greet_win = screen.subwin(H / 2 - HINT_WIDTH, W, 0, 0)
     greet_win.box()
-    greet_win.addstr(1, 2, "Hortonworks Sandbox 2.1")
+    greet_win.addstr(1, 2, "Hortonworks Sandbox 2.1 Early Access")
     greet_win.addstr(2, 2, "http://hortonworks.com")
 
 
