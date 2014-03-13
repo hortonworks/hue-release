@@ -207,5 +207,5 @@ def _get_components():
 
   if conf.TUTORIALS_INSTALLED.get():
     components.insert(0, ('Tutorials', _get_tutorials_version()))
-    components.insert(0, ("Sandbox", conf.SANDBOX_VERSION.get()))
+    # components.insert(0, ("Sandbox", conf.SANDBOX_VERSION.get()))
   return components, HUE_VERSION
