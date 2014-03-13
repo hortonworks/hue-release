@@ -37,7 +37,7 @@ function get_version() {
 echo "HUE_VERSION=$(get_version hue-common 1-3,7)" | tee ${hue_dir}/VERSIONS
 echo "HDP=$(get_version hadoop 4-6)" | tee -a ${hue_dir}/VERSIONS
 
-APPS="Hadoop HCatalog Pig Hive Oozie Ambari-server HBase Knox Storm Falcon"
+APPS="Hadoop Pig Hive-Hcatalog Oozie Ambari-server HBase Knox Storm Falcon"
 for app in $APPS ; do
     app_name="$(echo $app | tr '[:upper:]' '[:lower:]')"
     app_version="$(get_version ${app_name})"
