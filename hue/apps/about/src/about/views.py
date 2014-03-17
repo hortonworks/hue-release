@@ -142,8 +142,10 @@ def _disable_ambari(request):
 def _get_ambari_status():
   """Returns True if ambari-agent started and False otherwise."""
   try:
-    from sh import ambari_agent
-    ambari_agent("status")
+    from sh import ambari_server
+    output = ambari_server("status")
+    if "not running" in output.stdout:
+      return False
   except (ErrorReturnCode, ImportError):
     return False
   return True
