@@ -1,6 +1,6 @@
 [sandbox]
 name=Sandbox repo
-baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/repo/dev/baikal-GA-2.3.0/utils/
+baseurl=http://dev2.hortonworks.com.s3.amazonaws.com/repo/dev/baikal-GA-2.3.1/utils/
 path=/
 enabled=1
 gpgcheck=0
