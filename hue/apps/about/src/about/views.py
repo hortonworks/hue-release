@@ -56,7 +56,7 @@ def index(request):
   return render('index.mako', request, {
     'components': components,
     'about_top_html': desktop_conf.CUSTOM.ABOUT_TOP_HTML.get(),
-    'page_title': conf.ABOUT_PAGE_TITLE.get(),
+    'page_title': conf.ABOUT_PAGE_TITLE.get().replace("<br>", " "),
     'hue_title': conf.ABOUT_TITLE.get(),
     'hue_version': version,
     'ambari_status': _get_ambari_status(),
