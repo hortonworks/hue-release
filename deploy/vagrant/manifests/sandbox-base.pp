@@ -141,6 +141,12 @@ class custom_fixes {
         timeout => 0,
         logoutput=> "on_failure",
       }
+
+      exec {'ambari-url-fix.sh':
+        command => '/bin/bash /vagrant/files/scripts/ambari-url-fix.sh',
+        timeout => 0,
+        logoutput=> "on_failure",
+      }
 }
 
 class java_home {

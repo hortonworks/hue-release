@@ -25,10 +25,10 @@ endef
 
 all: Startup Ambari Others
 
-Startup: HDFS YARN Zookeeper Hive_Metastore WebHCat Oozie 
+Startup: HDFS YARN Zookeeper Hive_Metastore WebHCat Oozie Falcon Strom Knox
 	@echo "`date`:\tStartup" >> $(LOG)
 Ambari: ambari_server ambari_agent ganglia nagios
-Others: HBase Falcon Strom Knox
+Others: HBase 
 
 HDFS: namenode secondary_namenode datanode nfsportpap hdfsnfs
 YARN: resourcemanager yarnhistoryserver mapredhistoryserver nodemanagers
