@@ -196,7 +196,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
     }
 
     synchronized public void compile()
-    throws BeeswaxException, CommandNeedRetryException, SQLException {
+    throws BeeswaxException, CommandNeedRetryException {
       try {
         assertState(QueryState.INITIALIZED);
         checkedCompile();
@@ -223,7 +223,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
     }
 
     private void checkedCompile()
-    throws BeeswaxException, CommandNeedRetryException, SQLException {
+    throws BeeswaxException, CommandNeedRetryException {
       // Run through configuration commands
       for (String cmd : query.configuration) {
         // This is pretty whacky; SET and ADD get treated differently
@@ -232,13 +232,16 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
         String cmd_trimmed = cmd.trim();
         String[] tokens = cmd_trimmed.split("\\s+");
         String cmd1 = cmd_trimmed.substring(tokens[0].length()).trim();
-        CommandProcessor p = CommandProcessorFactory.get(tokens[0]);
         int res = -1;
+	try {
+        CommandProcessor p = CommandProcessorFactory.get(tokens[0]);
         if (p instanceof Driver) {
           res = p.run(cmd).getResponseCode();
         } else {
           res = p.run(cmd1).getResponseCode();
-        }
+        }} catch (SQLException ex) {
+	   LOG.error("error processing " + tokens[0]);
+	}
         if (res != 0) {
           throwException(new RuntimeException(getErrorStreamAsString()));
         }
@@ -498,7 +501,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
     }
 
     synchronized public QueryExplanation explain()
-    throws BeeswaxException, CommandNeedRetryException, SQLException {
+    throws BeeswaxException, CommandNeedRetryException {
       assertState(QueryState.INITIALIZED);
       // By manipulating the query, this will make errors harder to find.
       query.query = "EXPLAIN " + query.query;
@@ -779,7 +782,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
           LOG.error("Caught BeeswaxException", (BeeswaxException) bwe);
           throw (BeeswaxException) bwe;
         }
-      }
+      } else if (e.getUndeclaredThrowable() instanceof BeeswaxException) {throw (BeeswaxException) e.getUndeclaredThrowable();}
       LOG.error("Caught unexpected exception.", e);
       throw new BeeswaxException(e.getMessage(), state.handle.log_context, state.handle);
     } catch (IOException e) {
