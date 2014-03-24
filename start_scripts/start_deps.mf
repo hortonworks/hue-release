@@ -35,7 +35,7 @@ YARN: resourcemanager yarnhistoryserver mapredhistoryserver nodemanagers
 HBase: hbase_master hbase_regionservers hbase_stargate hbase_thrift
 Zookeeper: zookeeper
 Hive_Metastore: mysql hive hive2
-Strom: nimbus supervisor stormui stormdrpc stormlogview
+Strom: nimbus supervisor stormui stormdrpc stormlogview stormrest
 Falcon: falcon
 Knox: knox-gateway knox-ldap
 WebHCat: webhcat
@@ -167,30 +167,35 @@ hive2: HDFS hive
 
 # ==== Storm ====
 
-nimbus: Zookeeper
+nimbus: Zookeeper YARN
 	$(call colorized,\
 		Storm nimbus, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm nimbus &',true)
+                su - storm -c '/usr/bin/storm nimbus > /var/log/storm/nimbus.log &'; sleep 15;,true)
 
-supervisor: Zookeeper
+supervisor: Zookeeper stormui YARN
 	$(call colorized,\
 		Storm supervisor, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm supervisor &',true)
+		su - storm -c '/usr/bin/storm supervisor > /var/log/storm/supervisor.log &',true)
 
-stormui: Zookeeper
+stormui: Zookeeper nimbus stormlogview YARN
 	$(call colorized,\
 		Storm ui, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm ui &',true)
+		su - storm -c '/usr/bin/storm ui > /var/log/storm/ui.log &',true)
 
-stormdrpc: Zookeeper
+stormdrpc: Zookeeper nimbus YARN
 	$(call colorized,\
 		Storm DRPC, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm drpc &',true)
+		su - storm -c '/usr/bin/storm drpc > /var/log/storm/drpc.log &',true)
 
-stormlogview: Zookeeper
+stormlogview: Zookeeper stormdrpc YARN
 	$(call colorized,\
 		Storm Logview, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm logviewer &',true)
+                su - storm -c '/usr/bin/storm logviewer > /var/log/storm/logviewer.log &',true)
+
+stormrest: supervisor YARN
+	$(call colorized,\
+               Storm Rest server,\
+               su - storm -c '/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/lib/storm/contrib/storm-rest/`ls /usr/lib/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server /etc/storm/conf/config.yaml > /var/log/storm/restapi.log', true)
 
 
 # ==== Single services ====
@@ -198,7 +203,7 @@ stormlogview: Zookeeper
 zookeeper: namenode
 	$(call colorized,\
 		zookeeper nodes, \
-		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/lib/zookeeper/bin/zkServer.sh start",\
+		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/lib/zookeeper/bin/zkServer.sh start; sleep 10",\
 		true)
 
 
@@ -264,4 +269,5 @@ ambari_agent: ambari_server
 	$(call colorized,\
 		Ambari agent, \
 		ambari-agent start,true)
+
 
