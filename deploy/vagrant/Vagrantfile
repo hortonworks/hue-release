@@ -4,13 +4,12 @@
 ##########################################################
 # to bring machine up do $ vagrant up 
 # 
-#  local repo now at http://10.2.2.239:8142
 ##########################################################
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "SandboxBaikalEA3"
-  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/sandbox/vagrant/SandboxBaikalEA3.box"
-  config.vm.box_download_checksum = "e49222d92b53c4afb71c06e85a03dde870070e98bc1783a1aa74644129b9b7a8"
+  config.vm.box = "SandboxBaikalEA4"
+  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/sandbox/vagrant/SandboxBaikalEA4.box"
+  config.vm.box_download_checksum = "f8f9044e1242bf38eb3f8bebbb635a4afe6b5e0378ad1d2f9f6df2e5f36da8ec"
   config.vm.box_download_checksum_type = "sha256"
   config.vm.hostname = "sandbox.hortonworks.com"
 
