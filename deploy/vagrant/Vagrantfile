@@ -25,7 +25,7 @@ Vagrant.configure("2") do |config|
     vb.customize ["modifyvm", :id, "--nic2", "none"]
     vb.customize ["modifyvm", :id, "--mouse", "usbtablet"]
 
-    vb.customize ["modifyvm", :id, "--name", "Sandbox 2.1 Technical Preview", "--groups", "/Hortonworks"]
+    vb.customize ["modifyvm", :id, "--name", "HDP 2.1 Technical Preview", "--groups", "/Hortonworks"]
   end
 
   
