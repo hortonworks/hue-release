@@ -25,10 +25,10 @@ endef
 
 all: Startup Ambari Others
 
-Startup: HDFS YARN Zookeeper Hive_Metastore WebHCat Oozie Falcon Strom Knox
+Startup: HDFS YARN Zookeeper Hive_Metastore WebHCat Oozie Falcon Knox
 	@echo "`date`:\tStartup" >> $(LOG)
 Ambari: ambari_server ambari_agent ganglia nagios
-Others: HBase 
+Others: HBase Storm
 
 HDFS: namenode secondary_namenode datanode nfsportpap hdfsnfs
 YARN: resourcemanager yarnhistoryserver mapredhistoryserver nodemanagers
@@ -170,32 +170,32 @@ hive2: HDFS hive
 nimbus: Zookeeper YARN
 	$(call colorized,\
 		Storm nimbus, \
-                su - storm -c '/usr/bin/storm nimbus > /var/log/storm/nimbus.log &'; sleep 15; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.nimbus$" && pgrep -f "^java.+backtype.storm.daemon.nimbus$" > /var/run/storm/nimbus.pid',true)
+                su - storm -c '/usr/bin/storm nimbus > /var/log/storm/nimbus.log &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.nimbus$" && pgrep -f "^java.+backtype.storm.daemon.nimbus$" > /var/run/storm/nimbus.pid',true)
 
 supervisor: Zookeeper stormui YARN
 	$(call colorized,\
 		Storm supervisor, \
-		su - storm -c '/usr/bin/storm supervisor > /var/log/storm/supervisor.log &'; sleep 15; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.supervisor$" && pgrep -f "^java.+backtype.storm.daemon.supervisor$" > /var/run/storm/supervisor.pid',true)
+		su - storm -c '/usr/bin/storm supervisor > /var/log/storm/supervisor.log &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.supervisor$" && pgrep -f "^java.+backtype.storm.daemon.supervisor$" > /var/run/storm/supervisor.pid',true)
 
 stormui: Zookeeper nimbus stormlogview YARN
 	$(call colorized,\
 		Storm ui, \
-		su - storm -c '/usr/bin/storm ui > /var/log/storm/ui.log &'; sleep 15; su - storm -c 'pgrep -f "^java.+backtype.storm.ui.core$" && pgrep -f "^java.+backtype.storm.ui.core$" > /var/run/storm/ui.pid',true)
+		su - storm -c '/usr/bin/storm ui > /var/log/storm/ui.log &'; sleep 10; su - storm -c 'pgrep -f "^java.+backtype.storm.ui.core$" && pgrep -f "^java.+backtype.storm.ui.core$" > /var/run/storm/ui.pid',true)
 
 stormdrpc: Zookeeper nimbus YARN
 	$(call colorized,\
 		Storm DRPC, \
-		su - storm -c '/usr/bin/storm drpc > /var/log/storm/drpc.log &'; sleep 15; su - storm -c 'pgrep -f "^java.+backtype.storm.daemon.drpc$" && pgrep -f "^java.+backtype.storm.daemon.drpc$" > /var/run/storm/drpc.pid',true)
+		su - storm -c '/usr/bin/storm drpc > /var/log/storm/drpc.log &'; sleep 10; su - storm -c 'pgrep -f "^java.+backtype.storm.daemon.drpc$" && pgrep -f "^java.+backtype.storm.daemon.drpc$" > /var/run/storm/drpc.pid',true)
 
 stormlogview: Zookeeper stormdrpc YARN
 	$(call colorized,\
 		Storm Logview, \
-                su - storm -c '/usr/bin/storm logviewer > /var/log/storm/logviewer.log &'; sleep 15; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.logviewer$" && pgrep -f "^java.+backtype.storm.daemon.logviewer$" > /var/run/storm/logviewer.pid',true)
+                su - storm -c '/usr/bin/storm logviewer > /var/log/storm/logviewer.log &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.logviewer$" && pgrep -f "^java.+backtype.storm.daemon.logviewer$" > /var/run/storm/logviewer.pid',true)
 
 stormrest: supervisor YARN
 	$(call colorized,\
                Storm Rest server,\
-               su - storm -c '/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/lib/storm/contrib/storm-rest/`ls /usr/lib/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server /etc/storm/conf/config.yaml > /var/log/storm/restapi.log'; sleep 15; su - storm -c 'pgrep -f "/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/lib/storm/contrib/storm-rest/`ls /usr/lib/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server" && pgrep -f "/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/lib/storm/contrib/storm-rest/`ls /usr/lib/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server" > /var/run/storm/restapi.pid', true)
+               su - storm -c '/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/lib/storm/contrib/storm-rest/`ls /usr/lib/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server /etc/storm/conf/config.yaml > /var/log/storm/restapi.log &'; sleep 10; su - storm -c 'pgrep -f "/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/lib/storm/contrib/storm-rest/`ls /usr/lib/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server" && pgrep -f "/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/lib/storm/contrib/storm-rest/`ls /usr/lib/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server" > /var/run/storm/restapi.pid', true)
 
 
 # ==== Single services ====
