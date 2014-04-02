@@ -64,10 +64,10 @@ def make_hint_window():
     hint_win.box()
     if platform == "vmware":
         hint_win.addstr(
-            1, 1, "Log in to this virtual machine: Linux/Windows <Alt+F5>, Mac OS X <Ctrl-Alt-F5>")
+            1, 1, "Log in to this virtual machine: Linux/Windows <Alt+F5>, Mac OS X <Ctrl+Alt+F5>")
     else:
         hint_win.addstr(
-            1, 1, "Log in to this virtual machine: Linux/Windows <Alt+F5>, Mac OS X <Cmd+Alt+F5>")
+            1, 1, "Log in to this virtual machine: Linux/Windows <Alt+F5>, Mac OS X <Fn+Alt+F5>")
 
 
 def init_screen():
