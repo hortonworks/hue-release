@@ -19,7 +19,7 @@
 
 # May require download from PyPI or whereever
 DEVTOOLS += \
-#	ipdb \
+	ipdb \
 	ipython \
 	nose \
 	coverage \
