@@ -20,12 +20,12 @@
 # May require download from PyPI or whereever
 DEVTOOLS += \
 	ipython==0.10 \
-	nose \
-	coverage \
-	nosetty \
-	threadframe \
-	werkzeug \
-	windmill
+	nose==0.11.3 \
+	coverage==3.2 \
+	nosetty==0.4 \
+	threadframe==0.2 \
+	werkzeug==0.6 \
+	windmill==1.3
 
 # Install/download dev tools for SDK into the virtual environment
 .PHONY: $(DEVTOOLS)
