@@ -19,13 +19,13 @@
 
 # May require download from PyPI or whereever
 DEVTOOLS += \
-	http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/ipython-0.10.tar.gz \
-	http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/nose-0.11.3.tar.gz \
-	http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/coverage-3.2.tar.gz \
-	http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/nosetty-0.4.tar.gz \
-	http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/threadframe-0.2.tar.gz \
-	http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/Werkzeug-0.6.tar.gz \
-	http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/windmill-1.3.tar.gz
+	'http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/ipython-0.10.tar.gz' \
+	'http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/nose-0.11.3.tar.gz' \
+	'http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/coverage-3.2.tar.gz' \
+	'http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/nosetty-0.4.tar.gz' \
+	'http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/threadframe-0.2.tar.gz' \
+	'http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/Werkzeug-0.6.tar.gz' \
+	'http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/windmill-1.3.tar.gz'
 
 # Install/download dev tools for SDK into the virtual environment
 .PHONY: $(DEVTOOLS)
