@@ -19,22 +19,19 @@
 
 # May require download from PyPI or whereever
 DEVTOOLS += \
-	ipdb \
-	ipython \
-	nose \
-	coverage \
-	nosetty \
-	threadframe \
-	werkzeug \
-	windmill
+	ipython-0.10.tar.gz \
+	nose-0.11.3.tar.gz \
+	coverage-3.2.tar.gz \
+	nosetty-0.4.tar.gz \
+	threadframe-0.2.tar.gz \
+	Werkzeug-0.6.tar.gz \
+	windmill-1.3.tar.gz
 
 # Install/download dev tools for SDK into the virtual environment
 .PHONY: $(DEVTOOLS)
 $(DEVTOOLS):
 	@echo "--- Installing development tool: $@"
-	@# Force downloads from pypi host - developer sites are sometimes dead!
-	$(ENV_EASY_INSTALL) -f http://archive.cloudera.com/desktop-sdk-python-packages/ \
-	   -H archive.cloudera.com $(SETUPTOOLS_OPTS) $@
+	$(ENV_EASY_INSTALL) $(SETUPTOOLS_OPTS) http://dev2.hortonworks.com.s3.amazonaws.com/hue/build/desktop-sdk-python-packages/$@
 
 $(BLD_DIR):
 	@mkdir -p $@
