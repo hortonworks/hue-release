@@ -76,7 +76,12 @@
         },
         {
             "storm-site" : {
-                "logviewer.port" : "8005"
+                "logviewer.port" : "8005",
+                "nimbus.childopts" : "-Xmx200m -Djava.security.auth.login.config=/etc/storm/storm_jaas.conf -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8649,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
+                "ui.childopts" : "-Xmx200m -Djava.security.auth.login.config=/etc/storm/storm_jaas.conf",
+                "drpc.childopts" : "-Xmx200m",
+                "worker.childopts" : "-Xmx200m -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8650,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Worker_%ID%_JVM",
+                
             }
         },
         {
