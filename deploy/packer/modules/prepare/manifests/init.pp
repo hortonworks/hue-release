@@ -1,10 +1,5 @@
 class prepare{
-
-  ##Redhat bug fix: https://bugzilla.redhat.com/show_bug.cgi?id=805593
-  exec{"redhat_huegpage":
-    command => "echo never > /sys/kernel/mm/redhat_transparent_hugepage/defrag; echo no > /sys/kernel/mm/redhat_transparent_hugepage/khugepaged/defrag"
-  }
-
+  
   exec{'disable_selinux':
     command => 'echo 0 >/selinux/enforce'
   }
@@ -14,13 +9,10 @@ class prepare{
     ensure => installed,
     source => "http://dev2.hortonworks.com.s3.amazonaws.com/ARTIFACTS/jdk-7u51-linux-x64.rpm"
   }
-  
-  service {"iptables":
-    enable => false,
-    ensure => "stopped"
-  }
 
-  service {"ip6tables":
+  $iptable = ["iptables", "ip6tables"]
+  
+  service {$iptables:
     enable => false,
     ensure => "stopped"
   }

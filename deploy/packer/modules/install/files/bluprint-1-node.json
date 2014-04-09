@@ -12,7 +12,9 @@
                 "hive_ambari_database": "hive",
                 "hive_database" : "hive",
                 "hbase_master_heapsize": "250",
-                "hbase_regionserver_heapsize": "250"
+                "hbase_regionserver_heapsize": "250",
+                "namenode_opt_newsize": "50",
+                "namenode_opt_maxnewsize": "100"
             }
         },
         {

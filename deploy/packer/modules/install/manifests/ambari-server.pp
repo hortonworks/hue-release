@@ -6,12 +6,9 @@ class install::ambari-server{
     source => "http://s3.amazonaws.com/dev.hortonworks.com/AMBARI.dev-1.x/repos/centos6/AMBARI.dev-1.x-1.el6.noarch.rpm"
   }
 
-  package {"ambari-server":
-    ensure => installed,
-    require => Package["ambari-repo"]
-  }
+  $ambari = ["ambari-server", "ambari-agent"]
 
-  package {"ambari-agent":
+  package {$ambari:
     ensure => installed,
     require => Package["ambari-repo"]
   }
