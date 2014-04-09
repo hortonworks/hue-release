@@ -129,7 +129,7 @@
                 {"name" : "PIG"},
                 {"name" : "RESOURCEMANAGER"},
                 {"name" : "SECONDARY_NAMENODE"},       
-                {"name" : "SQOOP"}
+                {"name" : "SQOOP"},
                 {"name" : "STORM_REST_API"},
                 {"name" : "STORM_UI_SERVER"},
                 {"name" : "SUPERVISOR"},
@@ -137,7 +137,7 @@
                 {"name" : "WEBHCAT_SERVER"},
                 {"name" : "YARN_CLIENT"},
                 {"name" : "ZOOKEEPER_CLIENT"},
-                {"name" : "ZOOKEEPER_SERVER"},
+                {"name" : "ZOOKEEPER_SERVER"}
             ],
             "cardinality" : "1"
         }
