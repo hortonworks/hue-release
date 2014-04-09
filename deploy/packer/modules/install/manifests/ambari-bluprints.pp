@@ -9,13 +9,15 @@ class install::ambari-bluprints{
   }
 
   exec {"add bluprint":
-    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://127.0.0.1:8080/api/v1/blueprints/single-node-sandbox -d @/tmp/bluprint-1-node.json && sleep 20;",
-    require => [File["/tmp/bluprint-1-node.json"],Class["install::ambari-server"]]
+    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://127.0.0.1:8080/api/v1/blueprints/single-node-sandbox -d @/tmp/bluprint-1-node.json",
+    require => [File["/tmp/bluprint-1-node.json"],Class["install::ambari-server"]],
+    logoutput => true
   }
 
   exec {"add cluster":
-    command => "curl -H 'X-Requested-By: ambari' -u admin:admin http://127.0.0.1:8080/api/v1/clusters/Sandbox -d @/tmp/cluster-bluprint.json",
-    require => [File["/tmp/cluster-bluprint.json"],Exec["add bluprint"]]
+    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://127.0.0.1:8080/api/v1/clusters/Sandbox -d @/tmp/cluster-bluprint.json",
+    require => [File["/tmp/cluster-bluprint.json"],Exec["add bluprint"]],
+    logoutput => true
   }
   
 }

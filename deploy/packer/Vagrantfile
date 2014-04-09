@@ -8,8 +8,8 @@
 
 Vagrant.configure("2") do |config|
   config.vm.box = "CentOS6.5-basebox"
-  config.vm.box_url = "https://s3.amazonaws.com/dev2.hortonworks.com/sandbox/vagrant/centos-6.5-sandbox.box"
-  config.vm.box_download_checksum = "9378ad4927b42aaba7c8792607e9d70da3dff04d3393d8ecb214a0244529c8e7"
+  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/sandbox/vagrant/CentOS6.5-basebox.box"
+  config.vm.box_download_checksum = "985eb79375ee91f8d9c85e237822ca6ce1e9a9e05c2ad1df5dc078815471856e"
   config.vm.box_download_checksum_type = "sha256"
   config.vm.hostname = "sandbox.hortonworks.com"
 
