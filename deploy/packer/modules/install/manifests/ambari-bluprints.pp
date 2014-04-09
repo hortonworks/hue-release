@@ -15,7 +15,7 @@ class install::ambari-bluprints{
   }
 
   exec {"add cluster":
-    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://127.0.0.1:8080/api/v1/clusters/Sandbox -d @/tmp/cluster-bluprint.json",
+    command => "curl -i -H 'X-Requested-By: ambari' -u admin:admin http://127.0.0.1:8080/api/v1/clusters/Sandbox -d @/tmp/cluster-bluprint.json | tee /tmp/curl.log",
     require => [File["/tmp/cluster-bluprint.json"],Exec["add bluprint"]],
     logoutput => true
   }

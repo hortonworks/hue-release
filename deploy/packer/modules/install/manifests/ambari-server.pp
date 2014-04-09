@@ -22,7 +22,7 @@ class install::ambari-server{
   }
 
   exec {"register ambari agent":
-    command => "sed -i.bak '/^hostname/ s/.*/hostname=sandbox.hortonworks.com/' /etc/ambari-agent/conf/ambari-agent.ini",
+    command => "sed -i.bak '/^hostname/ s/.*/hostname=sandbox.hortonworks.com/' /etc/ambari-agent/conf/ambari-agent.ini && sleep 10;",
     require => Package["ambari-agent"]
   }
 
@@ -35,10 +35,14 @@ class install::ambari-server{
     command => "ambari-agent start",
     require => [Exec["ambari-server start"], Exec["register ambari agent"]]
   }
-  
-  exec {"wait for ambari-server":
-    require => Exec["ambari-server start"],
-    command => "/usr/bin/wget --spider --tries 20 --retry-connrefused --no-check-certificate http://127.0.0.1:8080",
+
+  file {"/tmp/check-ambari-hosts.sh":
+    source => "puppet:///modules/install/check-ambari-hosts.sh"
   }
-    
+
+  exec {"wait for ambari register hosts":
+    require => [Exec["ambari-server start"], Exec["ambari-agent start"],File["/tmp/check-ambari-hosts.sh"]],
+    command => "/bin/bash /tmp/check-ambari-hosts.sh"
+  }
+
 }

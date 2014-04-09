@@ -113,8 +113,6 @@
                 {"name" : "FALCON_CLIENT"},
                 {"name" : "FALCON_SERVER"},
                 {"name" : "GANGLIA_SERVER"},
-                {"name" : "HBASE_MASTER"},
-                {"name" : "HBASE_REGION"},
                 {"name" : "HDFS_CLIENT"},
                 {"name" : "HISTORYSERVER"},
                 {"name" : "HIVE_METASTORE"},
