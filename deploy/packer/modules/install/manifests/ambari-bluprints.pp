@@ -23,7 +23,7 @@ class install::ambari-bluprints{
   }
 
   exec {"add cluster":
-    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://127.0.0.1:8080/api/v1/clusters/Sandbox -d @/tmp/cluster-bluprint.json | tee /tmp/curl.log",
+    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://127.0.0.1:8080/api/v1/clusters/Sandbox -d @/tmp/cluster-bluprint.json",
     require => [File["/tmp/cluster-bluprint.json"],Exec["add bluprint"]],
     logoutput => true
   }
@@ -31,6 +31,7 @@ class install::ambari-bluprints{
   exec {"install cluster":
     command => "/bin/bash /tmp/check_status.sh",
     timeout => 0,
+    logoutput => true,
     require => [File["/tmp/check_status.py"], File["/tmp/check_status.sh"], Exec["add cluster"]]
   }
   
