@@ -1,7 +1,7 @@
 class prepare{
   
   exec{'disable_selinux':
-    command => 'echo 0 >/selinux/enforce'
+    command => 'echo 0 >/selinux/enforce; '
   }
 
   package{'java':
@@ -24,6 +24,10 @@ class prepare{
   exec{'set_javahome':
     command => "echo 'export JAVA_HOME=/usr/java/jdk1.7.0_51; export PATH=\$JAVA_HOME/bin:\$PATH' > /etc/profile.d/java.sh;",
     require => Package['java']
+  }
+
+  exec {'fix grub':
+    command => "sed -i 's/rhgb//g' /boot/grub/grub.conf"
   }
   
 }

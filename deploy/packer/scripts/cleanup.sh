@@ -1,7 +1,7 @@
 #!/bin/bash -eux
 # These were only needed for building VMware/Virtualbox extensions:
 yum -y remove gcc cpp kernel-devel kernel-headers perl
-package-cleanup --oldkernels --count=1
+package-cleanup --oldkernels --count=1 -y
 yum -y clean all
 rm -rf VBoxGuestAdditions_*.iso VBoxGuestAdditions_*.iso.?
 rm -f /tmp/chef*rpm

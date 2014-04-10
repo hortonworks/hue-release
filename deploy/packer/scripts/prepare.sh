@@ -1,3 +1,3 @@
 yum update -y
-yum install yum-utils
-reboot
+yum install -y yum-utils wget
+reboot && sleep 150
