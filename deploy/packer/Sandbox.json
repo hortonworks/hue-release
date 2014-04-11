@@ -49,7 +49,6 @@
         "ssh_wait_timeout": "10000s",
         "tools_upload_flavor": "linux",
         "type": "vmware-iso",
-        "vm_name": "packer-centos-6.5-x86_64",
         "vmx_data": {
             "cpuid.coresPerSocket": "2",
             "memsize": "4096",
@@ -60,6 +59,7 @@
     "post-processors": [
     {
         "type": "vagrant",
+        "only": ["virtualbox-iso"],
         "keep_input_artifact": true
     }
     ],
@@ -74,10 +74,19 @@
             "scripts/vagrant.sh",
             "scripts/puppet.sh",
             "scripts/vmtools.sh",
-            "scripts/cleanup.sh",
+            "scripts/cleanup.sh"
+        ],
+        "type": "shell"
+    },{
+        "type": "puppet-masterless",
+        "manifest_file": "manifests/init.pp",
+        "module_paths": ["modules"]
+    },{
+        "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+        "scripts": [
             "scripts/minimize.sh"
         ],
         "type": "shell"
-    }       
+    }
   ]
 }

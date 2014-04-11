@@ -32,4 +32,3 @@ vmware-iso|vmware-ovf)
     ;;
 
 esac
-reboot && sleep 150

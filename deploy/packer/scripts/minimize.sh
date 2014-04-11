@@ -1,5 +1,5 @@
 #!/bin/sh -eux
-
+yum -y clean all
 dd if=/dev/zero of=/EMPTY bs=1M
 rm -f /EMPTY
 # Block until the empty file has been removed, otherwise, Packer

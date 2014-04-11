@@ -9,8 +9,10 @@
                 "dtnode_heapsize" : "250",
                 "hadoop_heapsize" : "250",
                 "namenode_heapsize" : "250",
-                "hive_ambari_database": "hive",
-                "hive_database" : "hive",
+                "hive_ambari_database": "MySQL",
+                "hive_database" : "New MySQL Database",
+                "hive_database_type" : "mysql",
+                "hive_hostname" : "sandbox.hortonworks.com",
                 "hbase_master_heapsize": "250",
                 "hbase_regionserver_heapsize": "250",
                 "namenode_opt_newsize": "50",
@@ -71,9 +73,13 @@
         {
             "hive-site" : {
                 "javax.jdo.option.ConnectionPassword" : "hive",
+                "javax.jdo.option.ConnectionUserName" : "hive",
+                "javax.jdo.option.ConnectionDriverName" : "com.mysql.jdbc.Driver",
+                "javax.jdo.option.ConnectionURL" : "jdbc:mysql://sandbox.hortonworks.com/hive?createDatabaseIfNotExist=true",
                 "javax.jdo.connection.url" : "jdbc:mysql://sandbox.hortonworks.com/hive?createDatabaseIfNotExist=true",
                 "hive.tez.container.size" : "250",
-                "hive.tez.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true"
+                "hive.tez.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true",
+                "ambari.hive.db.schema.name": "hive"
             }
         },
         {
@@ -117,6 +123,7 @@
                 {"name" : "GANGLIA_SERVER"},
                 {"name" : "HDFS_CLIENT"},
                 {"name" : "HISTORYSERVER"},
+                {"name" : "HIVE_CLIENT"},
                 {"name" : "HIVE_METASTORE"},
                 {"name" : "HIVE_SERVER"},
                 {"name" : "MAPREDUCE2_CLIENT"},
