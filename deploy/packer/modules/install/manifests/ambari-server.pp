@@ -32,14 +32,14 @@ class install::ambari-server{
     command => "ambari-agent start",
     require => [Exec["ambari-server start"], Exec["register ambari agent"]]
   }
-
-  file {"/tmp/check-ambari-hosts.sh":
+  
+  file {"/tmp/install/check-ambari-hosts.sh":
     source => "puppet:///modules/install/check-ambari-hosts.sh"
   }
 
   exec {"wait for ambari register hosts":
-    require => [Exec["ambari-server start"], Exec["ambari-agent start"],File["/tmp/check-ambari-hosts.sh"]],
-    command => "/bin/bash /tmp/check-ambari-hosts.sh"
+    require => [Exec["ambari-server start"], Exec["ambari-agent start"],File["/tmp/install/check-ambari-hosts.sh"]],
+    command => "/bin/bash /tmp/install/check-ambari-hosts.sh"
   }
 
 }

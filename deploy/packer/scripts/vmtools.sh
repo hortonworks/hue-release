@@ -11,6 +11,7 @@ virtualbox-iso|virtualbox-ovf)
     umount /tmp/vbox
     rmdir /tmp/vbox
     rm /home/vagrant/*.iso
+    echo "vbox" > /virtualization
     ;;
 
 vmware-iso|vmware-ovf) 
@@ -24,6 +25,7 @@ vmware-iso|vmware-ovf)
     rm -rf  /tmp/vmfusion
     rm -rf  /tmp/vmfusion-archive
     rm /home/vagrant/*.iso
+    echo "vmware" > /virtualization
     ;;
 
 *)
