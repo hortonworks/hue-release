@@ -60,6 +60,7 @@
     {
         "type": "vagrant",
         "only": ["virtualbox-iso"],
+        "output" : "packer_vagrant/packer_{{.BuildName}}_{{.Provider}}.box.",
         "keep_input_artifact": true
     }
     ],

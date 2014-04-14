@@ -1,4 +1,3 @@
 packer_virtualbox/
-packer_vagrant/
 packer_vmware/
 packer_cache/
