@@ -47,9 +47,14 @@ class postinstall::sandbox{
     source => "puppet:///modules/postinstall/hdfs_prepare.sh"
   }
 
+  service{"hue":
+    ensure => running,
+    require => [File["/etc/hue/conf/hue.ini"],Package["hue"]]
+  }
+
   exec {"prepare_hue":
     command => "/bin/bash /tmp/install/hdfs_prepare.sh",
-    require => File["/tmp/install/hdfs_prepare.sh"],
+    require => [File["/tmp/install/hdfs_prepare.sh"],Service["hue"]],
     timeout => 0
   }
 
