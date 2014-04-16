@@ -57,6 +57,7 @@ Vagrant.configure("2") do |config|
   config.vm.network :forwarded_port, guest: 19888, host: 19888, host_ip: "127.0.0.1", auto_correct: true #Job history
   config.vm.network :forwarded_port, guest: 50070, host: 50070, host_ip: "127.0.0.1", auto_correct: true #WebHdfs
   config.vm.network :forwarded_port, guest: 50075, host: 50075, host_ip: "127.0.0.1", auto_correct: true #Datanode
+  config.vm.network :forwarded_port, guest: 50095, host: 50095, host_ip: "127.0.0.1", auto_correct: true #Accumulo
   config.vm.network :forwarded_port, guest: 50111, host: 50111, host_ip: "127.0.0.1", auto_correct: true #WebHcat
   config.vm.network :forwarded_port, guest: 60080, host: 60080, host_ip: "127.0.0.1", auto_correct: true #WebHBase
 end

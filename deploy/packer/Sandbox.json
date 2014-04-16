@@ -43,6 +43,7 @@
             ["modifyvm", "{{.Name}}", "--natpf1", "JobHistory,tcp,127.0.0.1,19888,,19888"],
             ["modifyvm", "{{.Name}}", "--natpf1", "WebHdfs,tcp,127.0.0.1,50070,,50070"],
             ["modifyvm", "{{.Name}}", "--natpf1", "Datanode,tcp,127.0.0.1,50075,,50075"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Accumulo,tcp,127.0.0.1,50095,,50095"],
             ["modifyvm", "{{.Name}}", "--natpf1", "WebHcat,tcp,127.0.0.1,50111,,50111"],
             ["modifyvm", "{{.Name}}", "--natpf1", "WebHBase,tcp,127.0.0.1,60080,,60080"]
       ]
