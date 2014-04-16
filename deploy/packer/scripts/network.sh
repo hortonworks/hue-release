@@ -39,8 +39,6 @@ echo "$HOST	sandbox.hortonworks.com" >> /etc/hosts
 hostname sandbox.hortonworks.com
 
 echo 0 > /proc/sys/kernel/hung_task_timeout_secs
-rm /etc/udev/rules.d/70-persistent-net.rules
-mkdir /etc/udev/rules.d/70-persistent-net.rules
 
 sed -i -e '/NM_CONTROLLED/d' /etc/sysconfig/network-scripts/ifcfg-eth0
 echo 'NM_CONTROLLED=no' >> /etc/sysconfig/network-scripts/ifcfg-eth0

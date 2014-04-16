@@ -9,7 +9,7 @@ class postinstall::sandbox{
   }
 
   exec{"correct /etc/issue":
-    command => "printf 'To login to the the shell, use:\nusername: root\npassword: hadoop' >> /etc/issue"
+    command => "printf 'To login to the the shell, use:\nusername: root\npassword: hadoop\n' >> /etc/issue"
   }
 
   exec { 'issue-credentials':
