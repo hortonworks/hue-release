@@ -1,8 +1,8 @@
 class prepare{
   
-  exec{'disable_selinux':
-    command => 'echo 0 >/selinux/enforce; '
-  }
+  # exec{'disable_selinux':
+  #   command => 'echo 0 >/selinux/enforce; '
+  # }
 
   package{'java':
     provider => rpm, 
@@ -27,7 +27,7 @@ class prepare{
   }
 
   exec {'fix grub':
-    command => "sed -i 's/rhgb//g' /boot/grub/grub.conf"
+    command => "sed -i 's/rhgb/consoleblank=0/g' /boot/grub/grub.conf"
   }
   
 }

@@ -1,5 +1,6 @@
 #!/bin/sh -eux
-reboot && sleep 150
+rm -rf /tmp/packer-puppet-masterless
+rm -rf /tmp/install
 yum -y clean all
 dd if=/dev/zero of=/EMPTY bs=1M
 rm -f /EMPTY

@@ -15,20 +15,36 @@
         "disk_size" : "50000",
         "format" : "ova",
         "output_directory": "packer_virtualbox",
+        "vm_name" : "packer_sandbox",
 	"http_directory": "http",
         "vboxmanage": [
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--memory",
-          "4096"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--cpus",
-          "2"
-        ]
+            ["modifyvm", "{{.Name}}", "--memory", "4096"],
+            ["modifyvm", "{{.Name}}", "--cpus", "2"],
+            ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
+            ["modifyvm", "{{.Name}}", "--nictype1", "Am79C973"],
+            ["modifyvm", "{{.Name}}", "--nic2", "none"],
+            ["modifyvm", "{{.Name}}", "--mouse", "usbtablet"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "ssh,tcp,127.0.0.1,2222,,22"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "apache,tcp,127.0.0.1,80,,42080"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "nfs,tcp,127.0.0.1,111,,42111"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "hue,tcp,127.0.0.1,8000,,8000"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "hdfs,tcp,127.0.0.1,8020,,8020"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "nodemanager,tcp,127.0.0.1,8040,,8040"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "RM,tcp,127.0.0.1,8050,,8050"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "ambari,tcp,127.0.0.1,8080,,8080"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "YarnRM,tcp,127.0.0.1,8088,,8088"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Knox,tcp,127.0.0.1,8443,,8443"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "StormUI,tcp,127.0.0.1,8744,,8744"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Tutorials,tcp,127.0.0.1,8888,,8888"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "HS2,tcp,127.0.0.1,10000,,10000"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "HS2Http,tcp,127.0.0.1,10001,,10001"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Oozie,tcp,127.0.0.1,11000,,11000"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Falcon,tcp,127.0.0.1,15000,,15000"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "JobHistory,tcp,127.0.0.1,19888,,19888"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "WebHdfs,tcp,127.0.0.1,50070,,50070"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Datanode,tcp,127.0.0.1,50075,,50075"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "WebHcat,tcp,127.0.0.1,50111,,50111"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "WebHBase,tcp,127.0.0.1,60080,,60080"]
       ]
     },{
         "boot_command": [
@@ -60,7 +76,7 @@
     {
         "type": "vagrant",
         "only": ["virtualbox-iso"],
-        "output" : "packer_vagrant/packer_{{.BuildName}}_{{.Provider}}.box.",
+        "output" : "packer_vagrant/packer_{{.BuildName}}_{{.Provider}}.box",
         "keep_input_artifact": true
     }
     ],
