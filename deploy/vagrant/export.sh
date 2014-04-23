@@ -189,6 +189,9 @@ echo "	. disabling DHCP client"
 $_SSH 'sudo sed -i "s/dhclient/#dhclient/g" /etc/init.d/startup_script'
 echo "	. removing vmware-tools"
 $_SSH "sudo bash /usr/libexec/vmware-tools.sh remove" >/dev/null
+$_SSH "sudo rm -rf /etc/vmware-tools/" >/dev/null
+$_SSH "sudo rm -f /etc/init/vmci.conf" >/dev/null
+$_SSH "sudo rm -f /etc/init/vsock.conf" >/dev/null
 echo "	. powering off.."
 poweroff_target
 echo -n "."; sleep 5; echo "."; sleep 5
