@@ -1,5 +1,6 @@
 from threading import Lock
 from pprint import pformat
+from urlparse import urlparse
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -76,6 +77,9 @@ class WSGIRequest(http.HttpRequest):
     def __init__(self, environ):
         script_name = base.get_script_name(environ)
         path_info = force_unicode(environ.get('PATH_INFO', u'/'))
+        request_uri = environ.get('REQUEST_URI', '/')
+        if '//' in request_uri:
+            path_info = force_unicode(urlparse(request_uri).path)
         if not path_info or path_info == script_name:
             # Sometimes PATH_INFO exists, but is empty (e.g. accessing
             # the SCRIPT_NAME URL without a trailing slash). We really need to
