@@ -1,0 +1,24 @@
+{
+  "blueprint" : "sandbox",
+  "host_groups" :[
+    {
+      "name" : "master",
+      "hosts" : [
+        {
+          "fqdn" : "ambari.hortonworks.com"
+        }
+      ]
+    },
+      {
+      "name" : "slaves",
+      "hosts" : [
+        {
+          "fqdn" : "host2.hortonworks.com"
+        },
+          {
+          "fqdn" : "host3.hortonworks.com"
+          }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,8 @@ class install::ambari-server{
   package {"ambari-repo":
     provider => rpm, 
     ensure => installed,
-    source => "http://s3.amazonaws.com/dev.hortonworks.com/AMBARI.dev-1.x/repos/centos6/AMBARI.dev-1.x-1.el6.noarch.rpm"
+    source => "http://s3.amazonaws.com/dev.hortonworks.com/AMBARI.dev-1.x/repos/centos6/AMBARI.dev-1.x-1.el6.noarch.rpm",
+    require => Class["prepare"]
   }
 
   $ambari = ["ambari-server", "ambari-agent"]
@@ -14,12 +15,12 @@ class install::ambari-server{
   }
 
   exec {"ambari-server setup":
-    command => "ambari-server setup -j /usr/java/jdk1.7.0_51 -s",
+    command => 'ambari-server setup -j `source /etc/profile.d/java.sh; echo $JAVA_HOME` -s',
     require => [Package["ambari-server"], Class["prepare"]]
   }
 
   exec {"register ambari agent":
-    command => "sed -i.bak '/^hostname/ s/.*/hostname=sandbox.hortonworks.com/' /etc/ambari-agent/conf/ambari-agent.ini && sleep 10;",
+    command => 'sed -i.bak "/^hostname/ s/.*/hostname=ambari.hortonworks.com/" /etc/ambari-agent/conf/ambari-agent.ini',
     require => Package["ambari-agent"]
   }
 
@@ -36,6 +37,11 @@ class install::ambari-server{
   file {"/tmp/install/check-ambari-hosts.sh":
     source => "puppet:///modules/install/check-ambari-hosts.sh"
   }
+
+  file {"/tmp/install/check_hosts.py":
+    source => "puppet:///modules/install/check_hosts.py"
+  }
+
 
   exec {"wait for ambari register hosts":
     require => [Exec["ambari-server start"], Exec["ambari-agent start"],File["/tmp/install/check-ambari-hosts.sh"]],

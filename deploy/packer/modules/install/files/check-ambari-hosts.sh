@@ -1,7 +1,8 @@
 #!/bin/bash
+source /etc/profile.d/nodes.sh
 while [ 1 ]
 do
-    hosts=`curl -i -H 'X-Requested-By: ambari' -u admin:admin '127.0.0.1:8080/api/v1/hosts' |grep sandbox`
+    hosts=`curl -H 'X-Requested-By: ambari' -u admin:admin 'ambari.hortonworks.com:8080/api/v1/hosts' |python /tmp/install/check_hosts.py`
     if [[ $? -eq 0 ]]
     then
         exit
