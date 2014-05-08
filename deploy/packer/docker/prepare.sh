@@ -21,7 +21,7 @@ cd /tmp/images/common
 docker.io build --rm=true -t ambari/common .
 cd ../ambari
 docker.io build --rm=true -t ambari/bluprint .
-docker.io run -d --name ambari -p 8080:8080 -h ambari.hortonworks.com ambari/bluprint
+docker.io run -d --name ambari -p 8080:8080 -p 8000:8000 -p 8088:8088 -h ambari.hortonworks.com ambari/bluprint
 pipework br1 ambari 192.168.1.1/24;
 for i in `seq 2 3`
 do

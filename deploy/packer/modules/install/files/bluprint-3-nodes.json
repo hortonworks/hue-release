@@ -30,7 +30,6 @@
         {
             "hdfs-site" : {
                 "dfs.block.size" : "34217472",
-                "dfs.replication" : "1",
                 "dfs.permissions.enabled" : "false",
                 "dfs.namenode.accesstime.precision" : "3600000",
                 "dfs.nfs3.dump.dir" : "/tmp/.hdfs-nfs",
