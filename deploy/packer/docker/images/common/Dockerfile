@@ -1,4 +1,4 @@
-FROM blalor/centos
+FROM centos:latest
 
 ADD prepare_container.sh /tmp/prepare_container.sh
 ADD hosts                /tmp/hosts

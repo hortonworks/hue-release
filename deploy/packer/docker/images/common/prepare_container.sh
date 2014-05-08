@@ -13,7 +13,6 @@ chmod 600 .ssh/id_rsa
 chmod 700 .ssh
 ln -s /root/.ssh/id_rsa /etc/ssh/ssh_host_rsa_key
 rm -f ssh.tar.gz
-
 #service iptables stop
 #service ip6tables stop
 #setenforce 0

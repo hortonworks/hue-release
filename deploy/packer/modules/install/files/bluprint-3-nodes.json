@@ -142,7 +142,7 @@
             "cardinality" : "1"
         },
         {
-            "name" : "slaves",
+            "name" : "host2",
             "components" : [
                 {"name" : "DATANODE"},
                 {"name" : "FALCON_CLIENT"},
@@ -160,7 +160,27 @@
                 {"name" : "ZOOKEEPER_CLIENT"},
                 {"name" : "ZOOKEEPER_SERVER"}
             ],
-            "cardinality" : "2"
+            "cardinality" : "1"
+        },
+        {
+            "name" : "host3",
+            "components" : [
+                {"name" : "DATANODE"},
+                {"name" : "FALCON_CLIENT"},
+                {"name" : "HBASE_CLIENT"},
+                {"name" : "HBASE_REGIONSERVER"},
+                {"name" : "HDFS_CLIENT"},
+                {"name" : "HIVE_CLIENT"},
+                {"name" : "MAPREDUCE2_CLIENT"},
+                {"name" : "NODEMANAGER"},
+                {"name" : "PIG"},
+                {"name" : "SQOOP"},
+                {"name" : "TEZ_CLIENT"},
+                {"name" : "YARN_CLIENT"},
+                {"name" : "ZOOKEEPER_CLIENT"},
+                {"name" : "ZOOKEEPER_SERVER"}
+            ],
+            "cardinality" : "1"
         }
     ],
     "Blueprints" : {
