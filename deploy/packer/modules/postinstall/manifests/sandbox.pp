@@ -8,12 +8,6 @@ class postinstall::sandbox{
     require => Class["postinstall"]
   }
 
-
-  exec { 'issue-credentials':
-    command => "initctl restart tty TTY=/dev/tty5; initctl restart tty TTY=/dev/tty2; true",
-    require => Exec["correct /etc/issue"],
-  }
-
   $hueSandbox = ["hue", "hue-sandbox", "hue-tutorials"]
 
   package{$hueSandbox:
