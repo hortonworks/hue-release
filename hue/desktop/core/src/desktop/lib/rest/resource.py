@@ -14,10 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-try:
-  import json
-except ImportError:
-  import simplejson as json
 import logging
 import posixpath
 
@@ -28,13 +24,15 @@ class Resource(object):
   """
   Encapsulates a resource, and provides actions to invoke on it.
   """
-  def __init__(self, client, relpath=""):
+  def __init__(self, client, relpath="", urlencode=True):
     """
     @param client: A Client object.
     @param relpath: The relative path of the resource.
+    @param urlencode: percent encode paths.
     """
     self._client = client
     self._path = relpath.strip('/')
+    self._urlencode = urlencode
 
   @property
   def base_url(self):
@@ -45,7 +43,22 @@ class Resource(object):
       return self._path
     return self._path + posixpath.normpath('/' + relpath)
 
-  def invoke(self, method, relpath=None, params=None, data=None, headers=None):
+  def _format_response(self, resp):
+    """
+    Decide whether the body should be a json dict or string
+    """
+
+    if len(resp.content) != 0 and resp.headers.get('content-type') and \
+          'application/json' in resp.headers.get('content-type'):
+      try:
+        return resp.json()
+      except Exception, ex:
+        self._client.logger.exception('JSON decode error: %s' % resp.content)
+        raise ex
+    else:
+      return resp.content
+
+  def invoke(self, method, relpath=None, params=None, data=None, headers=None, allow_redirects=False):
     """
     Invoke an API method.
     @return: Raw body or JSON dictionary (if response content type is JSON).
@@ -55,29 +68,15 @@ class Resource(object):
                                 path,
                                 params=params,
                                 data=data,
-                                headers=headers)
-    try:
-      body = resp.read()
-    except Exception, ex:
-      raise Exception("Command '%s %s' failed: %s" %
-                      (method, path, ex))
+                                headers=headers,
+                                allow_redirects=allow_redirects,
+                                urlencode=self._urlencode)
 
     self._client.logger.debug(
         "%s Got response: %s%s" %
-        (method, body[:32], len(body) > 32 and "..." or ""))
+        (method, resp.content[:32], len(resp.content) > 32 and "..." or ""))
 
-    # Is the response application/json?
-    if len(body) != 0 and \
-          resp.info().getmaintype() == "application" and \
-          resp.info().getsubtype() == "json":
-      try:
-        json_dict = json.loads(body)
-        return json_dict
-      except Exception, ex:
-        self._client.logger.exception('JSON decode error: %s' % (body,))
-        raise ex
-    else:
-      return body
+    return self._format_response(resp)
 
 
   def get(self, relpath=None, params=None, headers=None):
@@ -88,7 +87,7 @@ class Resource(object):
 
     @return: A dictionary of the JSON result.
     """
-    return self.invoke("GET", relpath, params, headers=headers)
+    return self.invoke("GET", relpath, params, headers=headers, allow_redirects=True)
 
 
   def delete(self, relpath=None, params=None):

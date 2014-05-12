@@ -652,10 +652,10 @@ class WebHdfs(Hdfs):
       if http_error is None:
         raise webhdfs_ex
 
-      if http_error.code not in (301, 302, 303, 307):
+      if http_error.response.status_code not in (301, 302, 303, 307):
         LOG.error("Response is not a redirect: %s" % webhdfs_ex)
         raise webhdfs_ex
-      return http_error.headers.getheader('location')
+      return http_error.response.headers['location']
     except Exception, ex:
       LOG.error("Failed to read redirect from response: %s (%s)" %
                 (webhdfs_ex, ex))

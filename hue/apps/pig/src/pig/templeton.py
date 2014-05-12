@@ -27,7 +27,7 @@ class Templeton(object):
 
         data['doAs'] = self.doAs
         response = self.client.execute("GET", url, params=data)
-        return json.loads(response.read())
+        return json.loads(response.content)
 
     def post(self, url, data=None):
         """
@@ -37,7 +37,7 @@ class Templeton(object):
         data = urllib.urlencode([(k, v) for k, vs in data.iteritems()
                                  for v in isinstance(vs, list) and vs or [vs]])
         response = self.client.execute("POST", url, params=params, data=data)
-        return json.loads(response.read())
+        return json.loads(response.content)
 
     def put(self, url, data=None):
         """
@@ -46,10 +46,10 @@ class Templeton(object):
         try:
             params = {"user.name": self.user, "doAs": self.doAs}
             response = self.client.execute("PUT", url, params=params, data=data, headers={'Content-Type': 'application/json'})
-            return json.loads(response.read())
+            return json.loads(response.content)
         except http_client.RestException, error:
             try:
-                return json.loads(error.read())
+                return json.loads(error.content)
             except AttributeError:
                 raise error
 
@@ -63,7 +63,7 @@ class Templeton(object):
         else:
             params = {"user.name": self.user, "doAs": self.doAs}
         response = self.client.execute("DELETE", url, params=params, data=data)
-        return json.loads(response.read())
+        return json.loads(response.content)
 
     def pig_query(self, execute=None, pig_file=None, statusdir=None, callback=None, arg=None):
         """
