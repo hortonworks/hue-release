@@ -24,7 +24,7 @@ from lxml import html
 from desktop.lib.view_util import format_duration_in_millis
 
 from jobbrowser.models import format_unixtime_ms
-
+from django.utils.translation import ugettext_lazy as _
 
 LOGGER = logging.getLogger(__name__)
 
