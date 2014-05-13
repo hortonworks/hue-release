@@ -102,7 +102,7 @@
     },{
         "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
         "scripts": [
-            "scripts/splash.sh"
+            "scripts/splash.sh",
             "scripts/minimize.sh"
         ],
         "type": "shell"

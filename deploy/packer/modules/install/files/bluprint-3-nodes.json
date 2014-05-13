@@ -13,10 +13,15 @@
                 "hive_database" : "New MySQL Database",
                 "hive_database_type" : "mysql",
                 "hive_hostname" : "ambari.hortonworks.com",
+                "hive_metastore_user_passwd" : "hive",
                 "hbase_master_heapsize": "250",
                 "hbase_regionserver_heapsize": "250",
                 "namenode_opt_newsize": "50",
-                "namenode_opt_maxnewsize": "100"
+                "namenode_opt_maxnewsize": "100",
+                "nagios_contact" : "admin@localhost.localdomain",
+                "nagios_web_login" : "nagiosadmin",
+                "nagios_web_password" : "admin",
+                "oozie_metastore_user_passwd" : "oozie"
             }
         },
         {
