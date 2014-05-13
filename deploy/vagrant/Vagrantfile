@@ -7,9 +7,9 @@
 ##########################################################
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "SandboxBaikalRC5"
-  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/sandbox/vagrant/SandboxBaikalRC5.box"
-  config.vm.box_download_checksum = "b846c38567f5fe3be3e9405f9c722ff89221c301c2ab7f8be9ae69fc151bedba"
+  config.vm.box = "SandboxBaikalRelease"
+  config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/sandbox/vagrant/SandboxBaikalRelease.box"
+  config.vm.box_download_checksum = "85279d8564f43eff59f3bc06120ca9ffe1910323eb90e6e5bc7b3f9cede4d23b"
   config.vm.box_download_checksum_type = "sha256"
   config.vm.hostname = "sandbox.hortonworks.com"
 

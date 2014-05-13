@@ -8,15 +8,6 @@ class postinstall::sandbox{
     require => Class["postinstall"]
   }
 
-  exec{"correct /etc/issue":
-    command => "printf 'To login to the the shell, use:\nusername: root\npassword: hadoop\n' >> /etc/issue"
-  }
-
-  exec { 'issue-credentials':
-    command => "initctl restart tty TTY=/dev/tty5; initctl restart tty TTY=/dev/tty2; true",
-    require => Exec["correct /etc/issue"],
-  }
-
   $hueSandbox = ["hue", "hue-sandbox", "hue-tutorials"]
 
   package{$hueSandbox:

@@ -4,7 +4,6 @@ yum -y remove gcc cpp kernel-devel kernel-headers perl
 package-cleanup --oldkernels --count=1 -y
 yum -y clean all
 rm -rf VBoxGuestAdditions_*.iso VBoxGuestAdditions_*.iso.?
-rm -f /tmp/chef*rpm
 
 # clean up redhat interface persistence
 rm -f /etc/udev/rules.d/70-persistent-net.rules

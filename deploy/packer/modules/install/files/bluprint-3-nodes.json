@@ -12,11 +12,16 @@
                 "hive_ambari_database": "MySQL",
                 "hive_database" : "New MySQL Database",
                 "hive_database_type" : "mysql",
-                "hive_hostname" : "sandbox.hortonworks.com",
+                "hive_hostname" : "ambari.hortonworks.com",
+                "hive_metastore_user_passwd" : "hive",
                 "hbase_master_heapsize": "250",
                 "hbase_regionserver_heapsize": "250",
                 "namenode_opt_newsize": "50",
-                "namenode_opt_maxnewsize": "100"
+                "namenode_opt_maxnewsize": "100",
+                "nagios_contact" : "admin@localhost.localdomain",
+                "nagios_web_login" : "nagiosadmin",
+                "nagios_web_password" : "admin",
+                "oozie_metastore_user_passwd" : "oozie"
             }
         },
         {
@@ -30,7 +35,6 @@
         {
             "hdfs-site" : {
                 "dfs.block.size" : "34217472",
-                "dfs.replication" : "1",
                 "dfs.permissions.enabled" : "false",
                 "dfs.namenode.accesstime.precision" : "3600000",
                 "dfs.nfs3.dump.dir" : "/tmp/.hdfs-nfs",
@@ -75,8 +79,8 @@
                 "javax.jdo.option.ConnectionPassword" : "hive",
                 "javax.jdo.option.ConnectionUserName" : "hive",
                 "javax.jdo.option.ConnectionDriverName" : "com.mysql.jdbc.Driver",
-                "javax.jdo.option.ConnectionURL" : "jdbc:mysql://sandbox.hortonworks.com/hive?createDatabaseIfNotExist=true",
-                "javax.jdo.connection.url" : "jdbc:mysql://sandbox.hortonworks.com/hive?createDatabaseIfNotExist=true",
+                "javax.jdo.option.ConnectionURL" : "jdbc:mysql://ambari.hortonworks.com/hive?createDatabaseIfNotExist=true",
+                "javax.jdo.connection.url" : "jdbc:mysql://ambari.hortonworks.com/hive?createDatabaseIfNotExist=true",
                 "hive.tez.container.size" : "250",
                 "hive.tez.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true",
                 "ambari.hive.db.schema.name": "hive"
@@ -114,13 +118,16 @@
     ],
     "host_groups" : [
         {
-            "name" : "host_group_1",
+            "name" : "master",
             "components" : [
                 {"name" : "DATANODE"},
                 {"name" : "DRPC_SERVER"},
                 {"name" : "FALCON_CLIENT"},
                 {"name" : "FALCON_SERVER"},
                 {"name" : "GANGLIA_SERVER"},
+                {"name" : "HBASE_CLIENT"},
+                {"name" : "HBASE_MASTER"},
+                {"name" : "HBASE_REGIONSERVER"},
                 {"name" : "HDFS_CLIENT"},
                 {"name" : "HISTORYSERVER"},
                 {"name" : "HIVE_CLIENT"},
@@ -135,7 +142,6 @@
                 {"name" : "OOZIE_SERVER"},
                 {"name" : "PIG"},
                 {"name" : "RESOURCEMANAGER"},
-                {"name" : "SECONDARY_NAMENODE"},       
                 {"name" : "SQOOP"},
                 {"name" : "STORM_REST_API"},
                 {"name" : "STORM_UI_SERVER"},
@@ -147,10 +153,51 @@
                 {"name" : "ZOOKEEPER_SERVER"}
             ],
             "cardinality" : "1"
+        },
+        {
+            "name" : "host2",
+            "components" : [
+                {"name" : "DATANODE"},
+                {"name" : "FALCON_CLIENT"},
+                {"name" : "HBASE_CLIENT"},
+                {"name" : "HBASE_REGIONSERVER"},
+                {"name" : "HDFS_CLIENT"},
+                {"name" : "HIVE_CLIENT"},
+                {"name" : "MAPREDUCE2_CLIENT"},
+                {"name" : "NODEMANAGER"},
+                {"name" : "PIG"},
+                {"name" : "SECONDARY_NAMENODE"},       
+                {"name" : "SQOOP"},
+                {"name" : "TEZ_CLIENT"},
+                {"name" : "YARN_CLIENT"},
+                {"name" : "ZOOKEEPER_CLIENT"},
+                {"name" : "ZOOKEEPER_SERVER"}
+            ],
+            "cardinality" : "1"
+        },
+        {
+            "name" : "host3",
+            "components" : [
+                {"name" : "DATANODE"},
+                {"name" : "FALCON_CLIENT"},
+                {"name" : "HBASE_CLIENT"},
+                {"name" : "HBASE_REGIONSERVER"},
+                {"name" : "HDFS_CLIENT"},
+                {"name" : "HIVE_CLIENT"},
+                {"name" : "MAPREDUCE2_CLIENT"},
+                {"name" : "NODEMANAGER"},
+                {"name" : "PIG"},
+                {"name" : "SQOOP"},
+                {"name" : "TEZ_CLIENT"},
+                {"name" : "YARN_CLIENT"},
+                {"name" : "ZOOKEEPER_CLIENT"},
+                {"name" : "ZOOKEEPER_SERVER"}
+            ],
+            "cardinality" : "1"
         }
     ],
     "Blueprints" : {
-        "blueprint_name" : "single-node-sandbox",
+        "blueprint_name" : "sandbox",
         "stack_name" : "HDP",
         "stack_version" : "2.1"
     }
