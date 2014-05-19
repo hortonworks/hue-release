@@ -20,6 +20,8 @@ import os.path
 from django.utils.translation import ugettext_lazy as _
 
 from desktop.lib.conf import Config, coerce_bool
+from beeswax.settings import NICE_NAME
+
 
 
 SERVER_INTERFACE = Config(
@@ -115,3 +117,18 @@ SHARE_SAVED_QUERIES = Config(
   default=True,
   type=coerce_bool,
   help=_('Share saved queries with all users. If set to false, saved queries are visible only to the owner and administrators.'))
+
+
+def config_validator():
+  # dbms is dependent on beeswax.conf (this file)
+  # import in method to avoid circular dependency
+  from beeswax.server import dbms
+
+  res = []
+  try:
+    server = dbms.get(user)
+    server.get_databases()
+  except:
+    res.append((NICE_NAME, "The app won't work without a running Beeswax server and Hive Metastore."))
+
+  return res
