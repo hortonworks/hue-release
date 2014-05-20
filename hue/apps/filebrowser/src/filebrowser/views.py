@@ -25,10 +25,10 @@ import logging
 import mimetypes
 import operator
 import posixpath
-import re
 import shutil
 import stat as stat_module
 import os
+from datetime import datetime
 
 try:
   import json
@@ -541,6 +541,7 @@ def _massage_stats(request, stats):
         'path': normalized,
         'name': stats['name'],
         'stats': stats.to_json_dict(),
+        'mtime': datetime.fromtimestamp(stats['mtime']).strftime('%B %d, %Y %I:%M %p'),
         'humansize': filesizeformat(stats['size']),
         'type': filetype(stats['mode']),
         'rwx': rwx(stats['mode']),
