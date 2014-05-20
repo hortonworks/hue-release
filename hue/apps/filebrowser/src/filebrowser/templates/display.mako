@@ -45,7 +45,7 @@ ${ commonheader(_('%(filename)s - File Viewer') % dict(filename=truncate(filenam
         <ul class="nav nav-list">
           <li class="nav-header">${_('Actions')}</li>
           % if view['mode'] == "binary":
-            <li><a href="${base_url}?offset=${view['offset']}&length=${view['length']}&mode=text&compression=${view['compression']}">${_('View As Text')}</a></li>
+          <li><a href="${base_url}?offset=${view['offset']}&length=${view['length']}&mode=text&compression=${view['compression']}"><i class="icon-font"></i> ${_('View as text')}</a></li>
           % endif
 
           % if view['mode'] == "text":

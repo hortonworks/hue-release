@@ -29,6 +29,7 @@ import shutil
 import stat as stat_module
 import os
 from datetime import datetime
+import re
 
 try:
   import json
@@ -38,7 +39,8 @@ except ImportError:
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from django.core import urlresolvers
-from django.template.defaultfilters import stringformat, filesizeformat
+from django.shortcuts import redirect
+from django.template.defaultfilters import stringformat, filesizeformat, urlencode
 from django.http import Http404, HttpResponse, HttpResponseNotModified
 from django.views.decorators.http import require_http_methods
 from django.views.static import was_modified_since
@@ -81,6 +83,10 @@ BYTES_PER_SENTENCE = 2
 
 # The maximum size the file editor will allow you to edit
 MAX_FILEEDITOR_SIZE = 256 * 1024
+
+INLINE_DISPLAY_MIMETYPE = re.compile('video/|image/|audio/|application/pdf|application/msword|application/excel|'
+                                     'application/vnd\.ms|'
+                                     'application/vnd\.openxmlformats')
 
 logger = logging.getLogger(__name__)
 
@@ -580,7 +586,11 @@ def display(request, path):
     """
     if not request.fs.isfile(path):
         raise PopupException(_("Not a file: '%(path)s'") % {'path': path})
-
+      
+    mimetype = mimetypes.guess_type(path)[0]
+    if mimetype is not None and INLINE_DISPLAY_MIMETYPE.search(mimetype):
+      path_enc = urlencode(path)
+      return redirect(urlresolvers.reverse('filebrowser.views.download', args=[path_enc]) + '?disposition=inline')
     stats = request.fs.stats(path)
     encoding = request.GET.get('encoding') or i18n.get_site_encoding()
 
@@ -1181,6 +1191,9 @@ def _upload_file(request):
     if hasattr(request, '_error_message'):
         raise PopupException(request._error_message.split("\n")[0])
     form = UploadFileForm(request.POST, request.FILES)
+
+    if request.META.get('upload_failed'):
+      raise PopupException(request.META.get('upload_failed'))
 
     if form.is_valid():
         uploaded_file = request.FILES['hdfs_file']
