@@ -63,6 +63,17 @@
       {{#archives}}
         {{>archives}}
       {{/archives}}
+
+      <div class="control-group" rel="popover" data-original-title="{{ job_xml.name }}" data-content="{{ job_xml.popover }}" data-bind="attr: {'class': ( errors.job_xml().length > 0 ) ? 'control-group error' : 'control-group'}">
+        <label class="control-label">{{ job_xml.name }}</label>
+        <div class="controls">
+          <input id="hive-script-path" type="text" class="pathFileChooserKo" name="script-path" data-bind="fileChooser: $data, value: job_xml" />
+          <ul class="help-inline" data-bind="foreach: errors.job_xml()">
+            <li class="error" data-bind="html: $data"></li>
+          </ul>
+        </div>
+      </div>
+
     </fieldset>
     <div class="form-actions">
       <button data-bind="click: {{ save.func }}" class="btn btn-primary">{{ save.name }}</button>

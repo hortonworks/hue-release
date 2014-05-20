@@ -36,6 +36,9 @@ from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from useradmin.models import get_profile, get_default_user_group, UserProfile
 from django_auth_ldap.backend import LDAPBackend, ldap_settings
+from django_auth_ldap.config import LDAPSearch
+from useradmin import ldap_access
+from useradmin.views import import_ldap_users
 
 import os
 import subprocess
@@ -258,45 +261,83 @@ class LdapBackend(object):
   """
   def __init__(self):
     # Delegate to django_auth_ldap.LDAPBackend
-    self._backend = LDAPBackend()
+    class _LDAPBackend(LDAPBackend):
+      def get_or_create_user(self, username, ldap_user):
+        username = desktop.conf.LDAP.FORCE_USERNAME_LOWERCASE.get() and username.lower() or username
+        if desktop.conf.LDAP.IGNORE_USERNAME_CASE.get():
+          try:
+            return User.objects.get(username__iexact=username), False
+          except User.DoesNotExist:
+            return User.objects.get_or_create(username=username)
+        else:
+          return User.objects.get_or_create(username=username)
+
+    self._backend = _LDAPBackend()
 
     ldap_settings.AUTH_LDAP_SERVER_URI = desktop.conf.LDAP.LDAP_URL.get()
     if ldap_settings.AUTH_LDAP_SERVER_URI is None:
       LOG.warn("Could not find LDAP URL required for authentication.")
       return None
 
-    nt_domain = desktop.conf.LDAP.NT_DOMAIN.get()
-    if nt_domain is None:
-      pattern = desktop.conf.LDAP.LDAP_USERNAME_PATTERN.get()
-      pattern = pattern.replace('<username>', '%(user)s')
-      ldap_settings.AUTH_LDAP_USER_DN_TEMPLATE = pattern
+    if desktop.conf.LDAP.SEARCH_BIND_AUTHENTICATION.get():
+      # New Search/Bind Auth
+      base_dn = desktop.conf.LDAP.BASE_DN.get()
+      user_name_attr = desktop.conf.LDAP.USERS.USER_NAME_ATTR.get()
+      user_filter = desktop.conf.LDAP.USERS.USER_FILTER.get()
+      if not user_filter.startswith('('):
+        user_filter = '(' + user_filter + ')'
+
+      if desktop.conf.LDAP.BIND_DN.get():
+        bind_dn = desktop.conf.LDAP.BIND_DN.get()
+        ldap_settings.AUTH_LDAP_BIND_DN = bind_dn
+        bind_password = desktop.conf.LDAP.BIND_PASSWORD.get()
+        ldap_settings.AUTH_LDAP_BIND_PASSWORD = bind_password
+
+      if user_filter is None:
+        search_bind_results = LDAPSearch(base_dn,
+            ldap.SCOPE_SUBTREE, "(" + user_name_attr + "=%(user)s)")
+
+      else:
+        search_bind_results = LDAPSearch(base_dn,
+            ldap.SCOPE_SUBTREE, "(&(" + user_name_attr + "=%(user)s)" + user_filter + ")")
+
+      ldap_settings.AUTH_LDAP_USER_SEARCH = search_bind_results
     else:
-      # %(user)s is a special string that will get replaced during the authentication process
-      ldap_settings.AUTH_LDAP_USER_DN_TEMPLATE = "%(user)s@" + nt_domain
+      nt_domain = desktop.conf.LDAP.NT_DOMAIN.get()
+      if nt_domain is None:
+        pattern = desktop.conf.LDAP.LDAP_USERNAME_PATTERN.get()
+        pattern = pattern.replace('<username>', '%(user)s')
+        ldap_settings.AUTH_LDAP_USER_DN_TEMPLATE = pattern
+      else:
+        # %(user)s is a special string that will get replaced during the authentication process
+        ldap_settings.AUTH_LDAP_USER_DN_TEMPLATE = "%(user)s@" + nt_domain
 
     # Certificate-related config settings
     if desktop.conf.LDAP.LDAP_CERT.get():
-      ldap_settings.AUTH_LDAP_START_TLS = True
-      ldap_settings.AUTH_LDAP_GLOBAL_OPTIONS[ldap.OPT_X_TLS_CACERTFILE] = desktop.conf.LDAP.LDAP_CERT.get()
+      ldap_settings.AUTH_LDAP_START_TLS = desktop.conf.LDAP.USE_START_TLS.get()
+      ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_ALLOW)
+      ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, desktop.conf.LDAP.LDAP_CERT.get())
     else:
       ldap_settings.AUTH_LDAP_START_TLS = False
-      ldap_settings.AUTH_LDAP_GLOBAL_OPTIONS[ldap.OPT_X_TLS_REQUIRE_CERT] = ldap.OPT_X_TLS_NEVER
+      ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
 
   def authenticate(self, username=None, password=None):
+    username_filter_kwargs = ldap_access.get_ldap_user_kwargs(username)
+
     # Do this check up here, because the auth call creates a django user upon first login per user
     is_super = False
     if not UserProfile.objects.filter(creation_method=str(UserProfile.CreationMethod.EXTERNAL)).exists():
       # If there are no LDAP users already in the system, the first one will
       # become a superuser
       is_super = True
-    elif User.objects.filter(username=username).exists():
+    elif User.objects.filter(**username_filter_kwargs).exists():
       # If the user already exists, we shouldn't change its superuser
       # privileges. However, if there's a naming conflict with a non-external
       # user, we should do the safe thing and turn off superuser privs.
-      existing_user = User.objects.get(username=username)
+      existing_user = User.objects.get(**username_filter_kwargs)
       existing_profile = get_profile(existing_user)
       if existing_profile.creation_method == str(UserProfile.CreationMethod.EXTERNAL):
-        is_super = User.objects.get(username=username).is_superuser
+        is_super = User.objects.get(**username_filter_kwargs).is_superuser
     elif not desktop.conf.LDAP.CREATE_USERS_ON_LOGIN.get():
       return None
 
@@ -318,9 +359,14 @@ class LdapBackend(object):
         user.groups.add(default_group)
         user.save()
 
+      if desktop.conf.LDAP.SYNC_GROUPS_ON_LOGIN.get():
+        self.import_groups(user)
       return user
 
     return None
+
+  def import_groups(self, user):
+    import_ldap_users(user.username, sync_groups=True, import_by_dn=False)
 
   def get_user(self, user_id):
     user = self._backend.get_user(user_id)
@@ -378,19 +424,22 @@ class SpnegoDjangoBackend(django.contrib.auth.backends.ModelBackend):
     return user
 
 
-
 class RemoteUserDjangoBackend(django.contrib.auth.backends.RemoteUserBackend):
   """
   Delegates to Django's RemoteUserBackend and requires HueRemoteUserMiddleware
   """
   def authenticate(self, remote_user=None):
     username = self.clean_username(remote_user)
+    username = desktop.conf.AUTH.FORCE_USERNAME_LOWERCASE.get() and username.lower() or username
     is_super = False
     if User.objects.count() == 0:
       is_super = True
 
     try:
-      user = User.objects.get(username=username)
+      if desktop.conf.AUTH.IGNORE_USERNAME_CASE.get():
+        user = User.objects.get(username__iexact=username)
+      else:
+        user = User.objects.get(username=username)
     except User.DoesNotExist:
       user = find_or_create_user(username, None)
       if user is not None and user.is_active:
@@ -412,4 +461,3 @@ class RemoteUserDjangoBackend(django.contrib.auth.backends.RemoteUserBackend):
     user = super(RemoteUserDjangoBackend, self).get_user(user_id)
     user = rewrite_user(user)
     return user
-

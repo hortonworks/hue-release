@@ -33,7 +33,7 @@ import subprocess
 
 LOG = logging.getLogger(__name__)
 
-HUE_VERSION = "2.3.0"  # default version if VERSIONS file not exists
+HUE_VERSION = "2.3.2"  # default version if VERSIONS file not exists
 
 def index(request):
   if request.method == 'POST':
@@ -56,11 +56,10 @@ def index(request):
   return render('index.mako', request, {
     'components': components,
     'about_top_html': desktop_conf.CUSTOM.ABOUT_TOP_HTML.get(),
-    'page_title': conf.ABOUT_PAGE_TITLE.get(),
+    'page_title': conf.ABOUT_PAGE_TITLE.get().replace("<br>", " "),
     'hue_title': conf.ABOUT_TITLE.get(),
     'hue_version': version,
     'ambari_status': _get_ambari_status(),
-    'hbase_status': _get_hbase_status(),
     'RAM_ALERT': RAM < 3800,
     'RAM': "%0.1f" % RAM,
   })
@@ -77,10 +76,9 @@ def ambari(request, action):
     elif action == 'status':
       return _ambari_status(request)
 
-
 def _fork(kill_parent=False, do_in_fork=None):
-    try: 
-        pid = os.fork() 
+    try:
+        pid = os.fork()
         if pid == 0:
           if do_in_fork:
             do_in_fork()
@@ -88,9 +86,8 @@ def _fork(kill_parent=False, do_in_fork=None):
           if kill_parent:
             sys.exit(0)
     except OSError, e: 
-        print >>sys.stderr, 'Unable to fork: %d (%s)' % (e.errno, e.strerror) 
+        print >>sys.stderr, 'Unable to fork: %d (%s)' % (e.errno, e.strerror)
         sys.exit(1)
-
 
 def ambari_fork_start():
   def _in_fork():
@@ -145,8 +142,10 @@ def _disable_ambari(request):
 def _get_ambari_status():
   """Returns True if ambari-agent started and False otherwise."""
   try:
-    from sh import ambari_agent
-    ambari_agent("status")
+    from sh import ambari_server
+    output = ambari_server("status")
+    if "not running" in output.stdout:
+      return False
   except (ErrorReturnCode, ImportError):
     return False
   return True
@@ -158,65 +157,6 @@ def _ambari_status(request):
   }
   return HttpResponse(json.dumps(result))
 
-# ====== HBase =======
-
-def hbase(request, action):
-  if request.method == 'POST':
-    action = action.lower()
-    if action == 'enable':
-      return _enable_hbase(request)
-    elif action == 'disable':
-      return _disable_hbase(request)
-    elif action == 'status':
-      return _hbase_status(request)
-
-
-def _enable_hbase(request):
-  error = ''
-  ret = ''
-  try:
-    ret = sudo.chkconfig("hbase-starter", "on").stdout
-    ret += sudo.service("hbase-starter", "start").stdout
-  except Exception, ex:
-    error = unicode(ex)
-  result = {
-    'return': ret,
-    'error': error
-  }
-  return HttpResponse(json.dumps(result))
-
-def _disable_hbase(request):
-  error = ''
-  ret = ''
-  try:
-    ret = sudo.chkconfig("hbase-starter", "off").stdout
-    ret += sudo.service("hbase-starter", "stop").stdout
-  except Exception, ex:
-    error = unicode(ex)
-  result = {
-    'return': ret,
-    'error': error
-  }
-  return HttpResponse(json.dumps(result))
-
-def _get_hbase_status():
-  """Returns True if hbase master started and False otherwise."""
-  try:
-    sudo.kill("-0", file(conf.HBASE_PID_FILE.get()).read().strip())
-  except (ErrorReturnCode, IOError):
-    return False
-  return True
-
-def _hbase_status(request):
-  val = "on" if _get_hbase_status() else "off"
-  result = {
-    'return': val,
-  }
-  return HttpResponse(json.dumps(result))
-
-# ==================
-
-
 def _get_tutorials_version():
   TUTORIAL_VERSION_FILE = os.path.join(conf.TUTORIALS_PATH.get(), 'version')
   try:
@@ -227,7 +167,6 @@ def _get_tutorials_version():
     msg = "Failed to open file '%s': %s" % (TUTORIAL_VERSION_FILE, ex)
     LOG.error(msg)
   return tutorial_version
-
 
 def _read_versions(filename):
   global HUE_VERSION
@@ -251,7 +190,6 @@ def _read_versions(filename):
         components.append((component, version))
   return components
 
-
 def _get_components():
   components = []
   try:
@@ -271,5 +209,5 @@ def _get_components():
 
   if conf.TUTORIALS_INSTALLED.get():
     components.insert(0, ('Tutorials', _get_tutorials_version()))
-    components.insert(0, ("Sandbox", conf.SANDBOX_VERSION.get()))
+    # components.insert(0, ("Sandbox", conf.SANDBOX_VERSION.get()))
   return components, HUE_VERSION

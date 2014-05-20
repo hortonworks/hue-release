@@ -87,16 +87,11 @@ class sandbox_rpm {
       ensure => present,
     }
 
-    exec { 'yum-cache':
-        command => "yum clean all --disablerepo='*' --enablerepo='sandbox' --enablerepo='hue-bigtop'",
-    }
-
     package { ['hue', 'hue-sandbox']:
         ensure => latest,
         require => [ File['sandbox.repo'],
                      Package['libxslt'],
                      Package['python-lxml'],
-                     Exec['yum-cache'],
                      Package['yum-plugin-priorities']
                      
                    ],
@@ -143,6 +138,12 @@ class custom_fixes {
       exec { "custom_fixes.sh":
         command => '/bin/bash /tmp/custom_fixes.sh |tee /var/log/custom_fixes.log',
         require => File['custom_fixes.sh'],
+        timeout => 0,
+        logoutput=> "on_failure",
+      }
+
+      exec {'ambari-url-fix.sh':
+        command => '/bin/bash /vagrant/files/scripts/ambari-url-fix.sh',
         timeout => 0,
         logoutput=> "on_failure",
       }

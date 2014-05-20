@@ -18,6 +18,7 @@
 .idea
 
 .vagrant
+exported_machines
 #virtualenv
 build/
 *.egg

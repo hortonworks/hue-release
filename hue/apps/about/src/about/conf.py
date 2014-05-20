@@ -33,13 +33,6 @@ TUTORIALS_UPDATE_SCRIPT = Config(
   default="/usr/lib/tutorials/tutorials_app/run/run.sh",
 )
 
-HBASE_PID_FILE = Config(
-  key="hbase_pid_file",
-  help="Path to HBase master PID file",
-  private=True,
-  default="/var/run/hbase/hbase-hbase-master.pid",
-)
-
 TUTORIALS_INSTALLED = Config(
   key="tutorials_installed",
   help="Whether tutorials installed on server",
@@ -52,7 +45,7 @@ SANDBOX_VERSION = Config(
   key="sandbox_version",
   help="Version of Sandbox being used",
   private=True,
-  default="2.0.6",
+  default="2.1",
 )
 
 SANDBOX = Config(

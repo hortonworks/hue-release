@@ -1,0 +1,111 @@
+{
+    "builders": [{
+        "boot_command": [
+            "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+        ],
+        "type": "virtualbox-iso",
+        "guest_os_type": "RedHat_64",
+        "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+        "shutdown_command": "echo 'vagrant'|sudo -S /sbin/halt -h -p",
+        "iso_url": "http://centos.mirror.facebook.net/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+        "iso_checksum": "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0",
+        "iso_checksum_type" : "sha256",
+        "ssh_username" : "vagrant",
+        "ssh_password": "vagrant",
+        "disk_size" : "50000",
+        "format" : "ova",
+        "output_directory": "packer_virtualbox",
+        "vm_name" : "packer_sandbox",
+	"http_directory": "http",
+        "vboxmanage": [
+            ["modifyvm", "{{.Name}}", "--memory", "4096"],
+            ["modifyvm", "{{.Name}}", "--cpus", "2"],
+            ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
+            ["modifyvm", "{{.Name}}", "--nictype1", "Am79C973"],
+            ["modifyvm", "{{.Name}}", "--nic2", "none"],
+            ["modifyvm", "{{.Name}}", "--mouse", "usbtablet"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "ssh,tcp,127.0.0.1,2222,,22"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "apache,tcp,127.0.0.1,80,,42080"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "nfs,tcp,127.0.0.1,111,,42111"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "hue,tcp,127.0.0.1,8000,,8000"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "hdfs,tcp,127.0.0.1,8020,,8020"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "nodemanager,tcp,127.0.0.1,8040,,8040"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "RM,tcp,127.0.0.1,8050,,8050"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "ambari,tcp,127.0.0.1,8080,,8080"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "YarnRM,tcp,127.0.0.1,8088,,8088"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Knox,tcp,127.0.0.1,8443,,8443"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "StormUI,tcp,127.0.0.1,8744,,8744"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Tutorials,tcp,127.0.0.1,8888,,8888"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "HS2,tcp,127.0.0.1,10000,,10000"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "HS2Http,tcp,127.0.0.1,10001,,10001"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Oozie,tcp,127.0.0.1,11000,,11000"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Falcon,tcp,127.0.0.1,15000,,15000"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "JobHistory,tcp,127.0.0.1,19888,,19888"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "WebHdfs,tcp,127.0.0.1,50070,,50070"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Datanode,tcp,127.0.0.1,50075,,50075"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Accumulo,tcp,127.0.0.1,50095,,50095"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "WebHcat,tcp,127.0.0.1,50111,,50111"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "WebHBase,tcp,127.0.0.1,60080,,60080"]
+      ]
+    },{
+        "boot_command": [
+            "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+        ],
+        "boot_wait": "10s",
+        "disk_size": 50000,
+        "guest_os_type": "centos-64",
+        "http_directory": "http",
+        "iso_url": "http://centos.mirror.facebook.net/6.5/isos/x86_64/CentOS-6.5-x86_64-minimal.iso",
+        "iso_checksum": "f9d84907d77df62017944cb23cab66305e94ee6ae6c1126415b81cc5e999bdd0",
+        "iso_checksum_type" : "sha256",
+        "output_directory": "packer_vmware",
+        "shutdown_command": "echo 'vagrant'|sudo -S /sbin/halt -h -p",
+        "ssh_password": "vagrant",
+        "ssh_port": 22,
+        "ssh_username": "vagrant",
+        "ssh_wait_timeout": "10000s",
+        "tools_upload_flavor": "linux",
+        "type": "vmware-iso",
+        "vmx_data": {
+            "cpuid.coresPerSocket": "2",
+            "memsize": "4096",
+            "numvcpus": "2"
+        }
+    }
+                ],
+    "post-processors": [
+    {
+        "type": "vagrant",
+        "only": ["virtualbox-iso"],
+        "output" : "packer_vagrant/packer_{{.BuildName}}_{{.Provider}}.box",
+        "keep_input_artifact": true
+    }
+    ],
+    "provisioners": [
+    {
+        "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+        "scripts": [
+            "scripts/prepare.sh",
+            "scripts/network.sh",
+            "scripts/fix-redhat-hugepage.sh",
+            "scripts/sshd.sh",
+            "scripts/vagrant.sh",
+            "scripts/puppet.sh",
+            "scripts/vmtools.sh",
+            "scripts/cleanup.sh"
+        ],
+        "type": "shell"
+    },{
+        "type": "puppet-masterless",
+        "manifest_file": "manifests/init.pp",
+        "module_paths": ["modules"]
+    },{
+        "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+        "scripts": [
+            "scripts/splash.sh",
+            "scripts/minimize.sh"
+        ],
+        "type": "shell"
+    }
+  ]
+}

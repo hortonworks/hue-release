@@ -18,10 +18,16 @@
 import logging
 import re
 import time
+import urlparse
 
 from lxml import html
 
+from django.utils.translation import ugettext as _
+
+from desktop.lib.rest.resource import Resource
 from desktop.lib.view_util import format_duration_in_millis
+
+from hadoop.yarn.clients import get_log_client
 
 from jobbrowser.models import format_unixtime_ms
 
@@ -95,7 +101,11 @@ class Job:
 
   @property
   def counters(self):
-    return self.api.counters(self.id)['jobCounters']
+    counters = self.api.counters(self.id)
+    if counters:
+      return counters['jobCounters']
+    else:
+      return None
 
   @property
   def full_job_conf(self):
@@ -143,14 +153,17 @@ class Task:
     setattr(self, 'mostRecentState', self.state)
     setattr(self, 'execStartTimeFormatted', format_unixtime_ms(self.startTime))
     setattr(self, 'execFinishTimeFormatted', format_unixtime_ms(self.finishTime))
-    setattr(self, 'startTimeFormatted', self.startTime)
-
+    setattr(self, 'startTimeFormatted', format_unixtime_ms(self.startTime))
+    setattr(self, 'progress', self.progress / 100)
   @property
   def attempts(self):
     # We can cache as we deal with history server
     if not hasattr(self, '_attempts'):
-      attempts = self.job.api.task_attempts(self.job.id, self.id)['taskAttempts'] or []
-      self._attempts = [Attempt(self, attempt) for attempt in attempts['taskAttempt']] if attempts else []
+      task_attempts = self.job.api.task_attempts(self.job.id, self.id)['taskAttempts']
+      if task_attempts:
+        self._attempts = [Attempt(self, attempt) for attempt in task_attempts['taskAttempt']]
+      else:
+        self._attempts = []
     return self._attempts
 
   @property
@@ -185,15 +198,18 @@ class Attempt:
     setattr(self, 'attemptId', self.id)
     setattr(self, 'attemptId_short', self.id)
     setattr(self, 'taskTrackerId', getattr(self, 'assignedContainerId', None))
-    setattr(self, 'startTimeFormatted', self.startTime)
-    setattr(self, 'finishTimeFormatted', self.finishTime)
+    setattr(self, 'startTimeFormatted', format_unixtime_ms(self.startTime))
+    setattr(self, 'finishTimeFormatted', format_unixtime_ms(self.finishTime))
     setattr(self, 'outputSize', None)
     setattr(self, 'phase', None)
     setattr(self, 'shuffleFinishTimeFormatted', None)
     setattr(self, 'sortFinishTimeFormatted', None)
     setattr(self, 'mapFinishTimeFormatted', None)
+    setattr(self, 'progress', self.progress / 100)
     if not hasattr(self, 'diagnostics'):
       self.diagnostics = ''
+    if not hasattr(self, 'assignedContainerId'):
+      setattr(self, 'assignedContainerId', '')
 
   @property
   def counters(self):
@@ -203,19 +219,25 @@ class Attempt:
 
   def get_task_log(self, offset=0):
     logs = []
-    attempt = self.task.job.job_attempts['jobAttempt'][0]
+    attempt = self.task.job.job_attempts['jobAttempt'][-1]
     log_link = attempt['logsLink']
     # Get MR task logs
-    log_link = log_link.replace(attempt['containerId'], self.assignedContainerId)
+    if self.assignedContainerId:
+      log_link = log_link.replace(attempt['containerId'], self.assignedContainerId)
+    if hasattr(self, 'nodeHttpAddress'):
+      log_link = log_link.replace(attempt['nodeHttpAddress'].split(':')[0], self.nodeHttpAddress.split(':')[0])
 
     for name in ('stdout', 'stderr', 'syslog'):
       link = '/%s/' % name
+      params = {}
       if int(offset) >= 0:
-        link += '?start=%s' % offset
+        params['start'] = offset
 
       try:
         log_link = re.sub('job_[^/]+', self.id, log_link)
-        log = html.parse(log_link + link).xpath('/html/body/table/tbody/tr/td[2]')[0].text_content()
+        root = Resource(get_log_client(log_link), urlparse.urlsplit(log_link)[2], urlencode=False)
+        response = root.get(link, params=params)
+        log = html.fromstring(response).xpath('/html/body/table/tbody/tr/td[2]')[0].text_content()
       except Exception, e:
         log = _('Failed to retrieve log: %s') % e
 

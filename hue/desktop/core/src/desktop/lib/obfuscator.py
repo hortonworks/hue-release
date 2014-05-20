@@ -33,7 +33,7 @@ class Obfuscator(object):
         if want_to_persist.lower() == "y":
           with open(hue_master_path, "w") as f:
               f.write(encryptor.EncryptWithAES(HARDCODED_SECRET, self.__HUE_MASTER_PASSWORD, encryptor.STATIC_IV))
-          chmod(hue_master_path, stat.S_IREAD)
+          chmod(hue_master_path, stat.S_IREAD|stat.S_IRGRP)
 
 
   def get_value(self, key):
@@ -54,5 +54,8 @@ class Obfuscator(object):
             iv = encryptor.IV()
             f.write(base64.b64encode(("%s::%s::%s" % (key, iv, encryptor.EncryptWithAES(md5.hexdigest(), password, iv)))) + "\n")
             result = password
-    chmod(kredentials_path, stat.S_IREAD|stat.S_IWRITE)
+    try:
+        chmod(kredentials_path, stat.S_IREAD|stat.S_IWRITE|stat.S_IRGRP|stat.S_IWGRP)
+    except Exception as ex:
+      LOG.debug("Exception occurred: %s" % ex)
     return result

@@ -23,20 +23,21 @@ define colorized
 @$(RM) -f "temp $1.errors" "temp $1.log";
 endef
 
-all: Startup Ambari
+all: Startup Ambari Others
 
-Startup: HDFS YARN Zookeeper Hive_Metastore WebHCat Oozie HBase Falcon Strom Knox
+Startup: HDFS YARN Zookeeper Hive_Metastore WebHCat Oozie Falcon Knox
 	@echo "`date`:\tStartup" >> $(LOG)
 Ambari: ambari_server ambari_agent ganglia nagios
+Others: HBase Storm
 
 HDFS: namenode secondary_namenode datanode nfsportpap hdfsnfs
 YARN: resourcemanager yarnhistoryserver mapredhistoryserver nodemanagers
 HBase: hbase_master hbase_regionservers hbase_stargate hbase_thrift
 Zookeeper: zookeeper
 Hive_Metastore: mysql hive hive2
-Strom: nimbus supervisor stormui stormdrpc stormlogview
+Strom: nimbus supervisor stormui stormdrpc stormlogview stormrest
 Falcon: falcon
-Knox: knox
+Knox: knox-gateway knox-ldap
 WebHCat: webhcat
 Tez: # tez
 Oozie: oozie
@@ -167,30 +168,35 @@ hive2: HDFS hive
 
 # ==== Storm ====
 
-nimbus: Zookeeper
+nimbus: Zookeeper YARN
 	$(call colorized,\
 		Storm nimbus, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm nimbus &',true)
+                su - storm -c '/usr/bin/storm nimbus > /var/log/storm/nimbus.log &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.nimbus$" && pgrep -f "^java.+backtype.storm.daemon.nimbus$" > /var/run/storm/nimbus.pid',true)
 
-supervisor: Zookeeper
+supervisor: Zookeeper stormui YARN
 	$(call colorized,\
 		Storm supervisor, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm supervisor &',true)
+		su - storm -c '/usr/bin/storm supervisor > /var/log/storm/supervisor.log &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.supervisor$" && pgrep -f "^java.+backtype.storm.daemon.supervisor$" > /var/run/storm/supervisor.pid',true)
 
-stormui: Zookeeper
+stormui: Zookeeper nimbus stormlogview YARN
 	$(call colorized,\
 		Storm ui, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm ui &',true)
+		su - storm -c '/usr/bin/storm ui > /var/log/storm/ui.log &'; sleep 10; su - storm -c 'pgrep -f "^java.+backtype.storm.ui.core$" && pgrep -f "^java.+backtype.storm.ui.core$" > /var/run/storm/ui.pid',true)
 
-stormdrpc: Zookeeper
+stormdrpc: Zookeeper nimbus YARN
 	$(call colorized,\
 		Storm DRPC, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm drpc &',true)
+		su - storm -c '/usr/bin/storm drpc > /var/log/storm/drpc.log &'; sleep 10; su - storm -c 'pgrep -f "^java.+backtype.storm.daemon.drpc$" && pgrep -f "^java.+backtype.storm.daemon.drpc$" > /var/run/storm/drpc.pid',true)
 
-stormlogview: Zookeeper
+stormlogview: Zookeeper stormdrpc YARN
 	$(call colorized,\
 		Storm Logview, \
-		su - storm -c 'env PATH=$PATH:/usr/jdk64/jdk1.7.0_45/bin /usr/bin/storm logviewer &',true)
+                su - storm -c '/usr/bin/storm logviewer > /var/log/storm/logviewer.log &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.logviewer$" && pgrep -f "^java.+backtype.storm.daemon.logviewer$" > /var/run/storm/logviewer.pid',true)
+
+stormrest: supervisor YARN
+	$(call colorized,\
+               Storm Rest server,\
+               su - storm -c '/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/lib/storm/contrib/storm-rest/`ls /usr/lib/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server /etc/storm/conf/config.yaml > /var/log/storm/restapi.log &'; sleep 10; su - storm -c 'pgrep -f "/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/lib/storm/contrib/storm-rest/`ls /usr/lib/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server" && pgrep -f "/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/lib/storm/contrib/storm-rest/`ls /usr/lib/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server" > /var/run/storm/restapi.pid', true)
 
 
 # ==== Single services ====
@@ -198,7 +204,7 @@ stormlogview: Zookeeper
 zookeeper: namenode
 	$(call colorized,\
 		zookeeper nodes, \
-		su - zookeeper -c "export  ZOOCFGDIR=/etc/zookeeper/conf ; export ZOOCFG=zoo.cfg ; source /etc/zookeeper/conf/zookeeper-env.sh ; /usr/lib/zookeeper/bin/zkServer.sh start",\
+		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/lib/zookeeper/bin/zkServer.sh start; sleep 10",\
 		true)
 
 
@@ -243,10 +249,17 @@ falcon: HDFS Oozie
 		sleep 5,)
 
 
-knox: HDFS WebHCat Oozie
+knox-ldap:
+	$(call colorized,\
+    	Knox ldap, \
+    	su - knox -c "/usr/lib/knox/bin/ldap.sh start",\
+    	sleep 2,)
+  
+
+knox-gateway: HDFS WebHCat Oozie knox-ldap
 	$(call colorized,\
 		Knox gateway, \
-		su - knox -c'/usr/lib/knox/bin/gateway.sh start',\
+		su - knox -c "/usr/lib/knox/bin/gateway.sh start",\
 		sleep 2,)
 
 
@@ -263,4 +276,5 @@ ambari_agent: ambari_server
 	$(call colorized,\
 		Ambari agent, \
 		ambari-agent start,true)
+
 

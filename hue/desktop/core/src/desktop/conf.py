@@ -298,7 +298,15 @@ AUTH = ConfigSection(
                                "The HTTP header in the request is converted to a key by converting "
                                "all characters to uppercase, replacing any hyphens with underscores "
                                "and adding an HTTP_ prefix to the name. So, for example, if the header "
-                               "is called Remote-User that would be configured as HTTP_REMOTE_USER"))
+                               "is called Remote-User that would be configured as HTTP_REMOTE_USER")),
+    IGNORE_USERNAME_CASE = Config("ignore_username_case",
+                                  help=_("Ignore the case of usernames when searching for existing users in Hue."),
+                                  type=coerce_bool,
+                                  default=False),
+    FORCE_USERNAME_LOWERCASE = Config("force_username_lowercase",
+                                      help=_("Force usernames to lowercase when creating new users from LDAP."),
+                                      type=coerce_bool,
+                                      default=False)
 ))
 
 LDAP = ConfigSection(
@@ -314,9 +322,13 @@ LDAP = ConfigSection(
     LDAP_URL=Config("ldap_url",
                      default=None,
                      help=_("The LDAP URL to connect to.")),
+    USE_START_TLS=Config("use_start_tls",
+                         default=True,
+                         type=coerce_bool,
+                         help=_("Use StartTLS when communicating with LDAP server.")),
     LDAP_CERT=Config("ldap_cert",
                      default=None,
-                     help=_("The LDAP certificate for authentication over TLS.")),
+                     help=_("A PEM-format file containing certificates for the CA's that Hue will trust for authentication over TLS. The certificate for the CA that signed the LDAP server certificate must be included among these certificates. See more here http://www.openldap.org/doc/admin24/tls.html.")),
     LDAP_USERNAME_PATTERN=Config("ldap_username_pattern",
                                  default=None,
                                  help=_("A pattern to use for constructing LDAP usernames.")),
@@ -325,11 +337,28 @@ LDAP = ConfigSection(
                    help=_("The distinguished name to bind as, when importing from LDAP.")),
     BIND_PASSWORD=Config("bind_password",
                    default=None,
+                   private=True,
                    help=_("The password for the bind user.")),
+    SEARCH_BIND_AUTHENTICATION=Config("search_bind_authentication",
+                   default=True,
+                   type=coerce_bool,
+                   help=_("Use search bind authentication.")),
     CREATE_USERS_ON_LOGIN = Config("create_users_on_login",
       help=_("Create users when they login with their LDAP credentials."),
       type=coerce_bool,
       default=True),
+    SYNC_GROUPS_ON_LOGIN = Config("sync_groups_on_login",
+      help=_("Synchronize a users groups when they login."),
+      type=coerce_bool,
+      default=False),
+    IGNORE_USERNAME_CASE = Config("ignore_username_case",
+      help=_("Ignore the case of usernames when searching for existing users in Hue."),
+      type=coerce_bool,
+      default=False),
+    FORCE_USERNAME_LOWERCASE = Config("force_username_lowercase",
+      help=_("Force usernames to lowercase when creating new users from LDAP."),
+      type=coerce_bool,
+      default=False),
 
     USERS = ConfigSection(
       key="users",
@@ -364,7 +393,6 @@ LDAP = ConfigSection(
       )
     ),
 ))
-
 
 
 LOCAL_FILESYSTEMS = UnspecifiedConfigSection(

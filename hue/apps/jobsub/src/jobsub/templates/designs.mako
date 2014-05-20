@@ -494,7 +494,10 @@ var contexts = {
     'title': "${ _('Job Design (streaming type)') }"
   },
   'hive': {
-    'title': "${ _('Job Design (hive type)') }"
+    'title': "${ _('Job Design (hive type)') }",
+    'job_xml': {
+      'name': "${ _('Job XML') }",
+    },
   },
   'pig': {
     'title': "${ _('Job Design (pig type)') }",

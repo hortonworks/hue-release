@@ -1,0 +1,14 @@
+Automated sandbox build based on [[https://cwiki.apache.org/confluence/display/AMBARI/Blueprints][Ambari Bluprint]].
+
+To run build on [[http://www.vagrantup.com/][vagrant]] virtualbox run:
+
+#+BEGIN_SRC shell
+$ vagrant plugin install vagrant-cachier
+$ vagrant up
+#+END_SRC
+
+To run build with [[http://packer.io][packer]] for all supported environments (vbox, vmware for now) run:
+
+#+BEGIN_SRC shell
+$ packer build Sandbox.json
+#+END_SRC

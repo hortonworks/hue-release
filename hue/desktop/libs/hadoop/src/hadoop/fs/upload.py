@@ -145,6 +145,7 @@ class HDFSfileUploadHandler(FileUploadHandler):
       except Exception, ex:
         LOG.error("Not using HDFS upload handler: %s" % (ex,))
         self._request._error_message = "%s" % (ex,)
+        self._request.META['upload_failed'] = ex
       else:
         raise StopFutureHandlers()
 

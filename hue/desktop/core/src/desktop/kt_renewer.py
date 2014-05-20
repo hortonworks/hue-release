@@ -18,6 +18,8 @@
 import logging
 import subprocess
 import sys
+import stat
+import os
 import time
 from desktop.supervisor import DjangoCommandSupervisee
 from desktop.conf import KERBEROS as CONF
@@ -28,10 +30,11 @@ SPEC = DjangoCommandSupervisee("kt_renewer")
 NEED_KRB181_WORKAROUND=False
 
 def renew_from_kt():
+  ccache = CONF.CCACHE_PATH.get()
   cmdv = [CONF.KINIT_PATH.get(),
           "-k", # host ticket
           "-t", CONF.HUE_KEYTAB.get(), # specify keytab
-          "-c", CONF.CCACHE_PATH.get(), # specify credentials cache
+          "-c", ccache, # specify credentials cache
           CONF.HUE_PRINCIPAL.get()]
   LOG.info("Reinitting kerberos from keytab: " +
            " ".join(cmdv))
@@ -39,6 +42,10 @@ def renew_from_kt():
   if ret != 0:
     LOG.error("Couldn't reinit from keytab!")
     sys.exit(ret)
+  
+  if os.path.exists(ccache):
+    st = os.stat(ccache)
+    os.chmod(ccache, st.st_mode | stat.S_IRGRP | stat.S_IWGRP)
 
   global NEED_KRB181_WORKAROUND
   if NEED_KRB181_WORKAROUND is None:
