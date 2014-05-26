@@ -119,7 +119,7 @@ SHARE_SAVED_QUERIES = Config(
   help=_('Share saved queries with all users. If set to false, saved queries are visible only to the owner and administrators.'))
 
 
-def config_validator():
+def config_validator(user):
   # dbms is dependent on beeswax.conf (this file)
   # import in method to avoid circular dependency
   from beeswax.server import dbms
