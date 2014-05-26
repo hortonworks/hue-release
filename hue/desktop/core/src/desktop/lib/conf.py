@@ -65,23 +65,30 @@ variables.
 # using it. So instead of breaking compatibility, we make a "pytype" alias.
 pytype = type
 
+from django.utils.encoding import smart_str
+
 from desktop.lib.paths import get_desktop_root, get_build_dir
 
 import configobj
+import json
 import logging
 import os
 import textwrap
+import re
 import sys
 
 # Magical object for use as a "symbol"
 _ANONYMOUS = ("_ANONYMOUS")
+
+# Supported thrift transports
+SUPPORTED_THRIFT_TRANSPORTS = ('buffered', 'framed')
 
 # a BoundContainer(BoundConfig) object which has all of the application's configs as members
 GLOBAL_CONFIG = None
 
 LOG = logging.getLogger(__name__)
 
-__all__ = ["UnspecifiedConfigSection", "ConfigSection", "Config", "load_confs", "coerce_bool"]
+__all__ = ["UnspecifiedConfigSection", "ConfigSection", "Config", "load_confs", "coerce_bool", "coerce_csv", "coerce_json_dict"]
 
 class BoundConfig(object):
   def __init__(self, config, bind_to, grab_key=_ANONYMOUS, prefix=''):
@@ -428,8 +435,7 @@ class ConfigSection(Config):
 
     # We sort the configuration for canonicalization.
     for programmer_key, config in sorted(self.members.iteritems(), key=lambda x: x[1].key):
-      config.print_help(out=out,
-                        indent=new_indent)
+      config.print_help(out=out, indent=new_indent)
 
 class UnspecifiedConfigSection(Config):
   """
@@ -598,6 +604,11 @@ def initialize(modules, config_dir):
 def is_anonymous(key):
   return key == _ANONYMOUS
 
+
+def coerce_str_lowercase(value):
+  return smart_str(value).lower()
+
+
 def coerce_bool(value):
   if isinstance(value, bool):
     return value
@@ -612,6 +623,27 @@ def coerce_bool(value):
     return True
   raise Exception("Could not coerce %r to boolean value" % (value,))
 
+def coerce_csv(value):
+  if isinstance(value, str):
+    return value.split(',')
+  elif isinstance(value, list):
+    return value
+  raise Exception("Could not coerce %r to csv array." % value)
+
+def coerce_json_dict(value):
+  if isinstance(value, basestring):
+    return json.loads(value)
+  elif isinstance(value, dict):
+    return value
+  raise Exception("Could not coerce %r to json dictionary." % value)
+
+def list_of_compiled_res(skip_empty=False):
+  def fn(list_of_strings):
+    if isinstance(list_of_strings, basestring):
+      list_of_strings = list_of_strings.split(',')
+    list_of_strings = filter(lambda string: string if skip_empty else True, list_of_strings)
+    return list(re.compile(x) for x in list_of_strings)
+  return fn
 
 def validate_path(confvar, is_dir=None, fs=os.path, message='Path does not exist on the filesystem.'):
   """
@@ -647,3 +679,16 @@ def validate_port(confvar):
   except ValueError:
     return error_res
   return [ ]
+
+def validate_thrift_transport(confvar):
+  """
+  Validate that the provided thrift transport is supported.
+  Returns [(confvar, error_msg)] or []
+  """
+  transport = confvar.get()
+  error_res = [(confvar, 'Thrift transport %s not supported. Please choose a supported transport: %s' % (transport, ', '.join(SUPPORTED_THRIFT_TRANSPORTS)))]
+
+  if transport not in SUPPORTED_THRIFT_TRANSPORTS:
+    return error_res
+
+  return []
