@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 # Licensed to Cloudera, Inc. under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -17,13 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Tests for "user admin"
-"""
-
+import json
+import ldap
 import re
 import urllib
-import ldap
 
 from nose.plugins.attrib import attr
 from nose.tools import assert_true, assert_equal, assert_false
@@ -33,14 +29,12 @@ from django.contrib.auth.models import User, Group
 from django.utils.encoding import smart_unicode
 from django.core.urlresolvers import reverse
 
-from useradmin.models import HuePermission, GroupPermission, LdapGroup, UserProfile
+from useradmin.models import HuePermission, GroupPermission, UserProfile
 from useradmin.models import get_profile, get_default_user_group
 
 import useradmin.conf
 from hadoop import pseudo_hdfs4
-from views import sync_ldap_users, sync_ldap_groups, import_ldap_users, import_ldap_groups, \
-                  add_ldap_users, add_ldap_groups, sync_ldap_users_groups
-import ldap_access
+
 
 def reset_all_users():
   """Reset to a clean state by deleting all users"""
@@ -54,69 +48,156 @@ def reset_all_groups():
   for grp in Group.objects.all():
     grp.delete()
 
+
 class LdapTestConnection(object):
   """
   Test class which mimics the behaviour of LdapConnection (from ldap_access.py).
   It also includes functionality to fake modifications to an LDAP server.  It is designed
   as a singleton, to allow for changes to persist across discrete connections.
-  """
 
-  _instance = None
+  This class assumes uid is the user_name_attr.
+  """
   def __init__(self):
-    if LdapTestConnection._instance is None:
-      LdapTestConnection._instance = LdapTestConnection._Singleton()
+    self._instance = LdapTestConnection.Data()
 
   def add_user_group_for_test(self, user, group):
-    LdapTestConnection._instance.groups[group]['members'].append(user)
+    self._instance.groups[group]['members'].append(user)
 
   def remove_user_group_for_test(self, user, group):
-    LdapTestConnection._instance.groups[group]['members'].remove(user)
+    self._instance.groups[group]['members'].remove(user)
 
-  def find_users(self, username_pattern, find_by_dn=False, scope=ldap.SCOPE_SUBTREE):
-    """ Returns info for a particular user """
+  def add_posix_user_group_for_test(self, user, group):
+    self._instance.groups[group]['posix_members'].append(user)
+
+  def remove_posix_user_group_for_test(self, user, group):
+    self._instance.groups[group]['posix_members'].remove(user)
+
+  def find_users(self, username_pattern, search_attr=None, user_name_attr=None, find_by_dn=False, scope=ldap.SCOPE_SUBTREE):
+    """ Returns info for a particular user via a case insensitive search """
     if find_by_dn:
-      data = filter(lambda attrs: attrs['dn'] == username_pattern, LdapTestConnection._instance.users.values())
+      data = filter(lambda attrs: attrs['dn'] == username_pattern, self._instance.users.values())
     else:
-      username_pattern = username_pattern.replace('.','\\.').replace('*', '.*')
-      usernames = filter(lambda username: re.match(username_pattern, username), LdapTestConnection._instance.users.keys())
-      data = [LdapTestConnection._instance.users.get(username) for username in usernames]
+      username_pattern = "^%s$" % username_pattern.replace('.','\\.').replace('*', '.*')
+      username_fsm = re.compile(username_pattern, flags=re.I)
+      usernames = filter(lambda username: username_fsm.match(username), self._instance.users.keys())
+      data = [self._instance.users.get(username) for username in usernames]
     return data
 
-  def find_groups(self, groupname_pattern, find_by_dn=False, scope=ldap.SCOPE_SUBTREE):
+  def find_groups(self, groupname_pattern, search_attr=None, group_name_attr=None, find_by_dn=False, scope=ldap.SCOPE_SUBTREE):
     """ Return all groups in the system with parents and children """
     if find_by_dn:
-      data = filter(lambda attrs: attrs['dn'] == groupname_pattern, LdapTestConnection._instance.groups.values())
+      data = filter(lambda attrs: attrs['dn'] == groupname_pattern, self._instance.groups.values())
       # SCOPE_SUBTREE means we return all sub-entries of the desired entry along with the desired entry.
       if data and scope == ldap.SCOPE_SUBTREE:
-        sub_data = filter(lambda attrs: attrs['dn'].endswith(data[0]['dn']), LdapTestConnection._instance.groups.values())
+        sub_data = filter(lambda attrs: attrs['dn'].endswith(data[0]['dn']), self._instance.groups.values())
         data.extend(sub_data)
     else:
-      groupname_pattern = groupname_pattern.replace('.','\\.').replace('*', '.*')
-      groupnames = filter(lambda username: re.match(groupname_pattern, username), LdapTestConnection._instance.groups.keys())
-      data = [LdapTestConnection._instance.groups.get(groupname) for groupname in groupnames]
+      groupname_pattern = "^%s$" % groupname_pattern.replace('.','\\.').replace('*', '.*')
+      groupnames = filter(lambda username: re.match(groupname_pattern, username), self._instance.groups.keys())
+      data = [self._instance.groups.get(groupname) for groupname in groupnames]
     return data
 
-  class _Singleton:
+  def find_members_of_group(self, dn, search_attr, ldap_filter, scope=ldap.SCOPE_SUBTREE):
+    members = []
+    for group_info in self._instance.groups:
+      if group_info['dn'] == dn:
+        members.extend(group_info['members'])
+
+    members = set(members)
+    users = []
+    for user_info in self._instance.users:
+      if user_info['dn'] in members:
+        users.append(user_info)
+
+    groups = []
+    for group_info in self._instance.groups:
+      if group_info['dn'] in members:
+        groups.append(group_info)
+
+    return users + groups
+
+  def find_users_of_group(self, dn):
+    members = []
+    for group_info in self._instance.groups.values():
+      if group_info['dn'] == dn:
+        members.extend(group_info['members'])
+
+    members = set(members)
+    users = []
+    for user_info in self._instance.users.values():
+      if user_info['dn'] in members:
+        users.append(user_info)
+
+    return users
+
+  def find_groups_of_group(self, dn):
+    members = []
+    for group_info in self._instance.groups.values():
+      if group_info['dn'] == dn:
+        members.extend(group_info['members'])
+
+    groups = []
+    for group_info in self._instance.groups.values():
+      if group_info['dn'] in members:
+        groups.append(group_info)
+
+    return groups
+
+  class Data:
     def __init__(self):
-      self.users = {'moe': {'dn': 'uid=moe,ou=People,dc=example,dc=com', 'username':'moe', 'first':'Moe', 'email':'moe@stooges.com'},
-                    'lårry': {'dn': 'uid=lårry,ou=People,dc=example,dc=com', 'username':'lårry', 'first':'Larry', 'last':'Stooge', 'email':'larry@stooges.com'},
-                    'curly': {'dn': 'uid=curly,ou=People,dc=example,dc=com', 'username':'curly', 'first':'Curly', 'last':'Stooge', 'email':'curly@stooges.com'},
-                    'rock': {'dn': 'uid=rock,ou=People,dc=example,dc=com', 'username':'rock', 'first':'rock', 'last':'man', 'email':'rockman@stooges.com'},
-                    'otherguy': {'dn': 'uid=otherguy,ou=People,dc=example,dc=com', 'username':'otherguy', 'first':'Other', 'last':'Guy', 'email':'other@guy.com'}}
+      self.users = {'moe': {'dn': 'uid=moe,ou=People,dc=example,dc=com', 'username':'moe', 'first':'Moe', 'email':'moe@stooges.com', 'groups': ['cn=TestUsers,ou=Groups,dc=example,dc=com']},
+                    'lårry': {'dn': 'uid=lårry,ou=People,dc=example,dc=com', 'username':'lårry', 'first':'Larry', 'last':'Stooge', 'email':'larry@stooges.com', 'groups': ['cn=TestUsers,ou=Groups,dc=example,dc=com', 'cn=Test Administrators,cn=TestUsers,ou=Groups,dc=example,dc=com']},
+                    'curly': {'dn': 'uid=curly,ou=People,dc=example,dc=com', 'username':'curly', 'first':'Curly', 'last':'Stooge', 'email':'curly@stooges.com', 'groups': ['cn=TestUsers,ou=Groups,dc=example,dc=com', 'cn=Test Administrators,cn=TestUsers,ou=Groups,dc=example,dc=com']},
+                    'Rock': {'dn': 'uid=Rock,ou=People,dc=example,dc=com', 'username':'Rock', 'first':'rock', 'last':'man', 'email':'rockman@stooges.com', 'groups': ['cn=Test Administrators,cn=TestUsers,ou=Groups,dc=example,dc=com']},
+                    'nestedguy': {'dn': 'uid=nestedguy,ou=People,dc=example,dc=com', 'username':'nestedguy', 'first':'nested', 'last':'guy', 'email':'nestedguy@stooges.com', 'groups': ['cn=NestedGroup,ou=Groups,dc=example,dc=com']},
+                    'otherguy': {'dn': 'uid=otherguy,ou=People,dc=example,dc=com', 'username':'otherguy', 'first':'Other', 'last':'Guy', 'email':'other@guy.com'},
+                    'posix_person': {'dn': 'uid=posix_person,ou=People,dc=example,dc=com', 'username': 'posix_person', 'first': 'pos', 'last': 'ix', 'email': 'pos@ix.com'},
+                    'posix_person2': {'dn': 'uid=posix_person2,ou=People,dc=example,dc=com', 'username': 'posix_person2', 'first': 'pos', 'last': 'ix', 'email': 'pos@ix.com'}}
 
       self.groups = {'TestUsers': {
                         'dn': 'cn=TestUsers,ou=Groups,dc=example,dc=com',
                         'name':'TestUsers',
-                        'members':['uid=moe,ou=People,dc=example,dc=com','uid=lårry,ou=People,dc=example,dc=com','uid=curly,ou=People,dc=example,dc=com']},
-                     'Test Administrators': {
+                        'members':['uid=moe,ou=People,dc=example,dc=com','uid=lårry,ou=People,dc=example,dc=com','uid=curly,ou=People,dc=example,dc=com'],
+                        'posix_members':[]},
+                      'Test Administrators': {
                         'dn': 'cn=Test Administrators,cn=TestUsers,ou=Groups,dc=example,dc=com',
                         'name':'Test Administrators',
-                        'members':['uid=rock,ou=People,dc=example,dc=com','uid=lårry,ou=People,dc=example,dc=com','uid=curly,ou=People,dc=example,dc=com']},
-                     'OtherGroup': {
+                        'members':['uid=Rock,ou=People,dc=example,dc=com','uid=lårry,ou=People,dc=example,dc=com','uid=curly,ou=People,dc=example,dc=com'],
+                        'posix_members':[]},
+                      'OtherGroup': {
                         'dn': 'cn=OtherGroup,cn=TestUsers,ou=Groups,dc=example,dc=com',
                         'name':'OtherGroup',
-                        'members':[]}}
-
+                        'members':[],
+                        'posix_members':[]},
+                      'NestedGroups': {
+                        'dn': 'cn=NestedGroups,ou=Groups,dc=example,dc=com',
+                        'name':'NestedGroups',
+                        'members':['cn=NestedGroup,ou=Groups,dc=example,dc=com'],
+                        'posix_members':[]
+                      },
+                      'NestedGroup': {
+                        'dn': 'cn=NestedGroup,ou=Groups,dc=example,dc=com',
+                        'name':'NestedGroup',
+                        'members':['uid=nestedguy,ou=People,dc=example,dc=com'],
+                        'posix_members':[]
+                      },
+                      'NestedPosixGroups': {
+                        'dn': 'cn=NestedPosixGroups,ou=Groups,dc=example,dc=com',
+                        'name':'NestedPosixGroups',
+                        'members':['cn=PosixGroup,ou=Groups,dc=example,dc=com'],
+                        'posix_members':[]
+                      },
+                      'PosixGroup': {
+                        'dn': 'cn=PosixGroup,ou=Groups,dc=example,dc=com',
+                        'name':'PosixGroup',
+                        'members':[],
+                        'posix_members':['posix_person','lårry']},
+                      'PosixGroup1': {
+                        'dn': 'cn=PosixGroup1,cn=PosixGroup,ou=Groups,dc=example,dc=com',
+                        'name':'PosixGroup1',
+                        'members':[],
+                        'posix_members':['posix_person2']},
+                     }
 
 
 def test_invalid_username():
@@ -434,232 +515,6 @@ def test_user_admin():
   response = c_su.post('/useradmin/users/new', dict(username="test"))
   assert_true("You must specify a password when creating a new user." in response.content)
 
-
-def test_useradmin_ldap_group_integration():
-  reset_all_users()
-  reset_all_groups()
-
-  # Set up LDAP tests to use a LdapTestConnection instead of an actual LDAP connection
-  ldap_access.CACHED_LDAP_CONN = LdapTestConnection()
-
-  # Import all members of TestUsers
-  import_ldap_groups('TestUsers', import_members=True, import_members_recursive=False, import_by_dn=False)
-  test_users = Group.objects.get(name='TestUsers')
-  assert_true(LdapGroup.objects.filter(group=test_users).exists())
-  assert_equal(len(test_users.user_set.all()), 3)
-
-  # Should import a group, but will only sync already-imported members
-  import_ldap_groups('Test Administrators', import_members=False, import_members_recursive=False, import_by_dn=False)
-  assert_equal(len(User.objects.all()), 3)
-  assert_equal(len(Group.objects.all()), 2)
-  test_admins = Group.objects.get(name='Test Administrators')
-  assert_equal(len(test_admins.user_set.all()), 2)
-  larry = User.objects.get(username='lårry')
-  assert_equal(test_admins.user_set.all()[0].username, larry.username)
-
-  # Only sync already imported
-  ldap_access.CACHED_LDAP_CONN.remove_user_group_for_test('uid=moe,ou=People,dc=example,dc=com', 'TestUsers')
-  import_ldap_groups('TestUsers', import_members=False, import_members_recursive=False, import_by_dn=False)
-  assert_equal(len(test_users.user_set.all()), 2)
-  assert_equal(len(User.objects.get(username='moe').groups.all()), 0)
-
-  # Import missing user
-  ldap_access.CACHED_LDAP_CONN.add_user_group_for_test('uid=moe,ou=People,dc=example,dc=com', 'TestUsers')
-  import_ldap_groups('TestUsers', import_members=True, import_members_recursive=False, import_by_dn=False)
-  assert_equal(len(test_users.user_set.all()), 3)
-  assert_equal(len(User.objects.get(username='moe').groups.all()), 1)
-
-  # Import all members of TestUsers and members of subgroups
-  import_ldap_groups('TestUsers', import_members=True, import_members_recursive=True, import_by_dn=False)
-  test_users = Group.objects.get(name='TestUsers')
-  assert_true(LdapGroup.objects.filter(group=test_users).exists())
-  assert_equal(len(test_users.user_set.all()), 4)
-
-  # Make sure Hue groups with naming collisions don't get marked as LDAP groups
-  hue_user = User.objects.create(username='otherguy', first_name='Different', last_name='Guy')
-  hue_group = Group.objects.create(name='OtherGroup')
-  hue_group.user_set.add(hue_user)
-  hue_group.save()
-  import_ldap_groups('OtherGroup', import_members=False, import_members_recursive=False, import_by_dn=False)
-  assert_false(LdapGroup.objects.filter(group=hue_group).exists())
-  assert_true(hue_group.user_set.filter(username=hue_user.username).exists())
-
-def test_useradmin_ldap_user_integration():
-  reset_all_users()
-  reset_all_groups()
-
-  # Set up LDAP tests to use a LdapTestConnection instead of an actual LDAP connection
-  ldap_access.CACHED_LDAP_CONN = LdapTestConnection()
-
-  # Try importing a user
-  import_ldap_users('lårry', import_by_dn=False)
-  larry = User.objects.get(username='lårry')
-  assert_true(larry.first_name == 'Larry')
-  assert_true(larry.last_name == 'Stooge')
-  assert_true(larry.email == 'larry@stooges.com')
-  assert_true(get_profile(larry).creation_method == str(UserProfile.CreationMethod.EXTERNAL))
-
-  # Should be a noop
-  sync_ldap_users()
-  sync_ldap_groups()
-  assert_equal(len(User.objects.all()), 1)
-  assert_equal(len(Group.objects.all()), 0)
-
-  # Make sure that if a Hue user already exists with a naming collision, we
-  # won't overwrite any of that user's information.
-  hue_user = User.objects.create(username='otherguy', first_name='Different', last_name='Guy')
-  import_ldap_users('otherguy', import_by_dn=False)
-  hue_user = User.objects.get(username='otherguy')
-  assert_equal(get_profile(hue_user).creation_method, str(UserProfile.CreationMethod.HUE))
-  assert_equal(hue_user.first_name, 'Different')
-
-
-def test_add_ldap_users():
-  URL = reverse(add_ldap_users)
-
-  reset_all_users()
-  reset_all_groups()
-
-  # Set up LDAP tests to use a LdapTestConnection instead of an actual LDAP connection
-  ldap_access.CACHED_LDAP_CONN = LdapTestConnection()
-
-  c = make_logged_in_client('test', is_superuser=True)
-
-  assert_true(c.get(URL))
-
-  response = c.post(URL, dict(username_pattern='moe', password1='test', password2='test'))
-  assert_true('Location' in response, response)
-  assert_true('/useradmin/users' in response['Location'], response)
-
-  response = c.post(URL, dict(username_pattern='bad_name', password1='test', password2='test'))
-  assert_true('Could not' in response.context['form'].errors['username_pattern'][0], response)
-
-  # Test wild card
-  response = c.post(URL, dict(username_pattern='*r*', password1='test', password2='test'))
-  assert_true('/useradmin/users' in response['Location'], response)
-
-def test_add_ldap_groups():
-  URL = reverse(add_ldap_groups)
-
-  reset_all_users()
-  reset_all_groups()
-
-  # Set up LDAP tests to use a LdapTestConnection instead of an actual LDAP connection
-  ldap_access.CACHED_LDAP_CONN = LdapTestConnection()
-
-
-  c = make_logged_in_client(username='test', is_superuser=True)
-
-  assert_true(c.get(URL))
-
-  response = c.post(URL, dict(groupname_pattern='TestUsers'))
-  assert_true('Location' in response, response)
-  assert_true('/useradmin/groups' in response['Location'])
-
-  # Test with space
-  response = c.post(URL, dict(groupname_pattern='Test Administrators'))
-  assert_true('Location' in response, response)
-  assert_true('/useradmin/groups' in response['Location'], response)
-
-  response = c.post(URL, dict(groupname_pattern='toolongnametoolongnametoolongnametoolongnametoolongnametoolongnametoolongnametoolongname'))
-  assert_true('Ensure this value has at most 80 characters' in response.context['form'].errors['groupname_pattern'][0], response)
-
-  # Test wild card
-  response = c.post(URL, dict(groupname_pattern='*r*'))
-  assert_true('/useradmin/groups' in response['Location'], response)
-
-def test_sync_ldap_users_groups():
-  URL = reverse(sync_ldap_users_groups)
-
-  reset_all_users()
-  reset_all_groups()
-
-  # Set up LDAP tests to use a LdapTestConnection instead of an actual LDAP connection
-  ldap_access.CACHED_LDAP_CONN = LdapTestConnection()
-
-  c = make_logged_in_client('test', is_superuser=True)
-
-  assert_true(c.get(URL))
-  assert_true(c.post(URL))
-
-def test_ldap_exception_handling():
-  reset_all_users()
-  reset_all_groups()
-
-  # Set up LDAP tests to use a LdapTestConnection instead of an actual LDAP connection
-  class LdapTestConnectionError(LdapTestConnection):
-    def find_users(self, user, find_by_dn=False):
-      raise ldap.LDAPError('No such object')
-  ldap_access.CACHED_LDAP_CONN = LdapTestConnectionError()
-
-  c = make_logged_in_client('test', is_superuser=True)
-
-  response = c.post(reverse(add_ldap_users), dict(username_pattern='moe', password1='test', password2='test'), follow=True)
-  assert_true('There was an error when communicating with LDAP' in response.content, response)
-
-@attr('requires_hadoop')
-def test_ensure_home_directory_add_ldap_users():
-  URL = reverse(add_ldap_users)
-
-  reset_all_users()
-  reset_all_groups()
-
-  # Set up LDAP tests to use a LdapTestConnection instead of an actual LDAP connection
-  ldap_access.CACHED_LDAP_CONN = LdapTestConnection()
-
-  cluster = pseudo_hdfs4.shared_cluster()
-  c = make_logged_in_client(cluster.superuser, is_superuser=True)
-  cluster.fs.setuser(cluster.superuser)
-
-  assert_true(c.get(URL))
-
-  response = c.post(URL, dict(username_pattern='moe', password1='test', password2='test'))
-  assert_true('/useradmin/users' in response['Location'])
-  assert_false(cluster.fs.exists('/user/moe'))
-
-  # Try same thing with home directory creation.
-  response = c.post(URL, dict(username_pattern='curly', password1='test', password2='test', ensure_home_directory=True))
-  assert_true('/useradmin/users' in response['Location'])
-  assert_true(cluster.fs.exists('/user/curly'))
-
-  response = c.post(URL, dict(username_pattern='bad_name', password1='test', password2='test'))
-  assert_true('Could not' in response.context['form'].errors['username_pattern'][0])
-  assert_false(cluster.fs.exists('/user/bad_name'))
-
-  # See if moe, who did not ask for his home directory, has a home directory.
-  assert_false(cluster.fs.exists('/user/moe'))
-
-  # Try wild card now
-  response = c.post(URL, dict(username_pattern='*r*', password1='test', password2='test', ensure_home_directory=True))
-  assert_true('/useradmin/users' in response['Location'])
-  assert_true(cluster.fs.exists('/user/curly'))
-  assert_true(cluster.fs.exists(u'/user/lårry'))
-  assert_true(cluster.fs.exists('/user/otherguy'))
-
-  # Clean up
-  cluster.fs.rmtree('/user/curly')
-  cluster.fs.rmtree(u'/user/lårry')
-  cluster.fs.rmtree('/user/otherguy')
-
-@attr('requires_hadoop')
-def test_ensure_home_directory_sync_ldap_users_groups():
-  URL = reverse(sync_ldap_users_groups)
-
-  reset_all_users()
-  reset_all_groups()
-
-  # Set up LDAP tests to use a LdapTestConnection instead of an actual LDAP connection
-  ldap_access.CACHED_LDAP_CONN = LdapTestConnection()
-
-  cluster = pseudo_hdfs4.shared_cluster()
-  c = make_logged_in_client(cluster.superuser, is_superuser=True)
-  cluster.fs.setuser(cluster.superuser)
-
-  response = c.post(reverse(add_ldap_users), dict(username_pattern='curly', password1='test', password2='test'))
-  assert_false(cluster.fs.exists('/user/curly'))
-  assert_true(c.post(URL, dict(ensure_home_directory=True)))
-  assert_true(cluster.fs.exists('/user/curly'))
-
 @attr('requires_hadoop')
 def test_ensure_home_directory():
   reset_all_users()
@@ -689,3 +544,41 @@ def test_ensure_home_directory():
   assert_equal('test2', dir_stat.user)
   assert_equal('test2', dir_stat.group)
   assert_equal('40755', '%o' % dir_stat.mode)
+
+def test_list_for_autocomplete():
+  c1 = make_logged_in_client('test_list_for_autocomplete', is_superuser=False, groupname='test_list_for_autocomplete')
+  c2_same_group = make_logged_in_client('test_list_for_autocomplete2', is_superuser=False, groupname='test_list_for_autocomplete')
+  c3_other_group = make_logged_in_client('test_list_for_autocomplete3', is_superuser=False, groupname='test_list_for_autocomplete_other_group')
+
+  # c1 is in the same group as c2
+  response = c1.get(reverse('useradmin.views.list_for_autocomplete'), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+  content = json.loads(response.content)
+
+  users = [user['username'] for user in content['users']]
+  groups = [user['name'] for user in content['groups']]
+
+  assert_equal(['test_list_for_autocomplete2'], users)
+  assert_true('test_list_for_autocomplete' in groups, groups)
+  assert_true('test_list_for_autocomplete_other_group' in groups, groups)
+
+  # c2 is in the same group as c1
+  response = c2_same_group.get(reverse('useradmin.views.list_for_autocomplete'), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+  content = json.loads(response.content)
+
+  users = [user['username'] for user in content['users']]
+  groups = [user['name'] for user in content['groups']]
+
+  assert_equal(['test_list_for_autocomplete'], users)
+  assert_true('test_list_for_autocomplete' in groups, groups)
+  assert_true('test_list_for_autocomplete_other_group' in groups, groups)
+
+  # c3 is alone except for groups
+  response = c3_other_group.get(reverse('useradmin.views.list_for_autocomplete'), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+  content = json.loads(response.content)
+
+  users = [user['username'] for user in content['users']]
+  groups = [user['name'] for user in content['groups']]
+
+  assert_equal([], users)
+  assert_true('test_list_for_autocomplete' in groups, groups)
+  assert_true('test_list_for_autocomplete_other_group' in groups, groups)

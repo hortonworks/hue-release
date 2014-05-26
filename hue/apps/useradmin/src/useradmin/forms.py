@@ -24,6 +24,7 @@ from django.contrib.auth.models import User, Group
 from django.forms.util import ErrorList
 from django.utils.translation import ugettext as _, ugettext_lazy as _t
 
+from desktop import conf as desktop_conf
 from desktop.lib.django_util import get_username_re_rule, get_groupname_re_rule
 
 from useradmin.models import GroupPermission, HuePermission
@@ -34,6 +35,13 @@ from useradmin.models import get_default_user_group
 LOG = logging.getLogger(__name__)
 
 
+def get_server_choices():
+  if desktop_conf.LDAP.LDAP_SERVERS.get():
+    return [(ldap_server_record_key, ldap_server_record_key) for ldap_server_record_key in desktop_conf.LDAP.LDAP_SERVERS.get()]
+  else:
+    return []
+
+
 class UserChangeForm(django.contrib.auth.forms.UserChangeForm):
   """
   This is similar, but not quite the same as djagno.contrib.auth.forms.UserChangeForm
@@ -42,32 +50,18 @@ class UserChangeForm(django.contrib.auth.forms.UserChangeForm):
   username = forms.RegexField(
       label=_t("Username"),
       max_length=30,
-      min_length=2,
       regex='^%s$' % (get_username_re_rule(),),
       help_text = _t("Required. 30 characters or fewer. No whitespaces or colons."),
-      error_messages = {
-        'required': _t("Username field is required"),
-        'invalid': _t("Whitespaces and ':' not allowed")
-      })
-  password1 = forms.CharField(
-      label=_t("Password"),
-      max_length=30,
-      min_length=2,
-      widget=forms.PasswordInput,
-      required=False,
-      error_messages = {'required': _t("Password field is required") })
-  password2 = forms.CharField(
-      label=_t("Password confirmation"),
-      max_length=30,
-      min_length=2,
-      widget=forms.PasswordInput,
-      required=False,
-      error_messages = {'invalid': _t("Passwords do not match.") })
-  ensure_home_directory = forms.BooleanField(
-      label=_t("Create home directory"),
-      help_text=_t("Create home directory if one doesn't already exist."),
-      initial=True,
-      required=False)
+      error_messages = {'invalid': _t("Whitespaces and ':' not allowed") })
+  password1 = forms.CharField(label=_t("Password"), widget=forms.PasswordInput, required=False)
+  password2 = forms.CharField(label=_t("Password confirmation"), widget=forms.PasswordInput, required=False)
+  ensure_home_directory = forms.BooleanField(label=_t("Create home directory"),
+                                            help_text=_t("Create home directory if one doesn't already exist."),
+                                            initial=True,
+                                            required=False)
+
+  class Meta(django.contrib.auth.forms.UserChangeForm.Meta):
+    fields = ["username", "first_name", "last_name", "email", "ensure_home_directory"]
 
   def __init__(self, *args, **kwargs):
     super(UserChangeForm, self).__init__(*args, **kwargs)
@@ -75,20 +69,20 @@ class UserChangeForm(django.contrib.auth.forms.UserChangeForm):
     if self.instance.id:
       self.fields['username'].widget.attrs['readonly'] = True
 
-  class Meta(django.contrib.auth.forms.UserChangeForm.Meta):
-    fields = ["username", "first_name", "last_name", "email", "ensure_home_directory"]
+  def clean_password(self):
+    return self.cleaned_data["password"]
 
   def clean_password2(self):
     password1 = self.cleaned_data.get("password1", "")
     password2 = self.cleaned_data["password2"]
     if password1 != password2:
-      raise forms.ValidationError(self.fields.get("password2").error_messages.get('invalid'))
+      raise forms.ValidationError(_t("Passwords do not match."))
     return password2
 
   def clean_password1(self):
     password = self.cleaned_data.get("password1", "")
     if self.instance.id is None and password == "":
-      raise forms.ValidationError(self.fields.get("password1").error_messages.get('required'))
+      raise forms.ValidationError(_("You must specify a password when creating a new user."))
     return self.cleaned_data.get("password1", "")
 
   def save(self, commit=True):
@@ -138,6 +132,11 @@ class AddLdapUsersForm(forms.Form):
                                             initial=True,
                                             required=False)
 
+  def __init__(self, *args, **kwargs):
+    super(AddLdapUsersForm, self).__init__(*args, **kwargs)
+    if get_server_choices():
+      self.fields['server'] = forms.ChoiceField(choices=get_server_choices(), required=True)
+
   def clean(self):
     cleaned_data = super(AddLdapUsersForm, self).clean()
     username_pattern = cleaned_data.get("username_pattern")
@@ -145,13 +144,13 @@ class AddLdapUsersForm(forms.Form):
 
     if dn:
       if username_pattern is not None and len(username_pattern) > 64:
-        msg = _('Too long: 64 characters or fewer and not %s') % username_pattern
+        msg = _('Too long: 64 characters or fewer and not %s.') % username_pattern
         errors = self._errors.setdefault('username_pattern', ErrorList())
         errors.append(msg)
         raise forms.ValidationError(msg)
     else:
       if username_pattern is not None and len(username_pattern) > 30:
-        msg = _('Too long: 30 characters or fewer and not %s') % username_pattern
+        msg = _('Too long: 30 characters or fewer and not %s.') % username_pattern
         errors = self._errors.setdefault('username_pattern', ErrorList())
         errors.append(msg)
         raise forms.ValidationError(msg)
@@ -175,14 +174,19 @@ class AddLdapGroupsForm(forms.Form):
                                       help_text=_t('Import unimported or new users from the group.'),
                                       initial=False,
                                       required=False)
-  import_members_recursive = forms.BooleanField(label=_t('Import new members from all subgroups'),
-                                                help_text=_t('Import unimported or new users from the all subgroups.'),
-                                                initial=False,
-                                                required=False)
   ensure_home_directories = forms.BooleanField(label=_t('Create home directories'),
                                                 help_text=_t('Create home directories for every member imported, if members are being imported.'),
                                                 initial=True,
                                                 required=False)
+  import_members_recursive = forms.BooleanField(label=_t('Import new members from all subgroups'),
+                                                help_text=_t('Import unimported or new users from the all subgroups.'),
+                                                initial=False,
+                                                required=False)
+
+  def __init__(self, *args, **kwargs):
+    super(AddLdapGroupsForm, self).__init__(*args, **kwargs)
+    if get_server_choices():
+      self.fields['server'] = forms.ChoiceField(choices=get_server_choices(), required=True)
 
   def clean(self):
     cleaned_data = super(AddLdapGroupsForm, self).clean()
@@ -190,8 +194,8 @@ class AddLdapGroupsForm(forms.Form):
     dn = cleaned_data.get("dn")
 
     if not dn:
-      if groupname_pattern is not None and len(groupname_pattern) > 30:
-        msg = _('Too long: 30 characters or fewer and not %s') % groupname_pattern
+      if groupname_pattern is not None and len(groupname_pattern) > 80:
+        msg = _('Too long: 80 characters or fewer and not %s') % groupname_pattern
         errors = self._errors.setdefault('groupname_pattern', ErrorList())
         errors.append(msg)
         raise forms.ValidationError(msg)
@@ -311,3 +315,7 @@ class SyncLdapUsersGroupsForm(forms.Form):
                                             help_text=_t("Create home directory for every user, if one doesn't already exist."),
                                             initial=True,
                                             required=False)
+  def __init__(self, *args, **kwargs):
+    super(SyncLdapUsersGroupsForm, self).__init__(*args, **kwargs)
+    if get_server_choices():
+      self.fields['server'] = forms.ChoiceField(choices=get_server_choices(), required=True)
