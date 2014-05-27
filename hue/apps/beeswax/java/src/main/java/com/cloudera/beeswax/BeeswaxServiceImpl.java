@@ -47,6 +47,7 @@ import javax.net.ssl.SSLContext;
 import javax.security.auth.login.LoginException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -230,8 +231,9 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
         String cmd_trimmed = cmd.trim();
         String[] tokens = cmd_trimmed.split("\\s+");
         String cmd1 = cmd_trimmed.substring(tokens[0].length()).trim();
-        CommandProcessor p = CommandProcessorFactory.get(tokens[0]);
         int res = -1;
+
+        CommandProcessor p = CommandProcessorFactory.get(tokens[0]);
         if (p instanceof Driver) {
           res = p.run(cmd).getResponseCode();
         } else {
@@ -471,7 +473,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
                                         "" + Utilities.ctrlaCode);
         tablename = desc.getTableName();
       }
-      return new ResultsMetadata(schema, tabledir, tablename, sep);
+      return new ResultsMetadata(schema, tabledir.toString(), tablename, sep);
     }
 
     /**
@@ -777,7 +779,7 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
           LOG.error("Caught BeeswaxException", (BeeswaxException) bwe);
           throw (BeeswaxException) bwe;
         }
-      }
+      } else if (e.getUndeclaredThrowable() instanceof BeeswaxException) {throw (BeeswaxException) e.getUndeclaredThrowable();}
       LOG.error("Caught unexpected exception.", e);
       throw new BeeswaxException(e.getMessage(), state.handle.log_context, state.handle);
     } catch (IOException e) {

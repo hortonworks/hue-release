@@ -1,0 +1,1 @@
+bigwheel-M10-2.3.0 is branched from hortonworks  bigwheel-GA-2.3.0 SHA1  6bbcfe0e598f90d7ecfc568771c83bb0d715ee44 @  git@github.com:hortonworks/sandbox-shared.git
