@@ -58,6 +58,8 @@ from django.utils.translation import ugettext_lazy as _t
 
 from desktop import appmanager
 from desktop.lib.exceptions_renderable import PopupException
+from desktop.models import SAMPLE_USERNAME
+from hadoop import cluster
 
 import useradmin.conf
 
@@ -272,3 +274,25 @@ def update_app_permissions(**kwargs):
 
 models.signals.post_syncdb.connect(update_app_permissions)
 models.signals.post_syncdb.connect(get_default_user_group)
+
+
+def install_sample_user():
+  """
+  Setup the de-activated sample user with a certain id. Do not create a user profile.
+  """
+
+  try:
+    user = auth_models.User.objects.get(username=SAMPLE_USERNAME)
+  except auth_models.User.DoesNotExist:
+    try:
+      user = auth_models.User.objects.create(username=SAMPLE_USERNAME, password='!', is_active=False, is_superuser=False, id=1100713, pk=1100713)
+      LOG.info('Installed a user called "%s"' % (SAMPLE_USERNAME,))
+    except Exception, e:
+      LOG.info('Sample user race condition: %s' % e)
+      user = auth_models.User.objects.get(username=SAMPLE_USERNAME)
+      LOG.info('Sample user race condition, got: %s' % user)
+
+  fs = cluster.get_hdfs()
+  fs.do_as_user(SAMPLE_USERNAME, fs.create_home_dir)
+
+  return user

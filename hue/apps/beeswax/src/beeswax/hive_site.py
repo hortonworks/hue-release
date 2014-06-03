@@ -14,6 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Helper for reading hive-site.xml
 """
@@ -24,12 +25,11 @@ import os.path
 import re
 import socket
 
-from desktop.conf import KERBEROS
 from desktop.lib import security_util
+from hadoop import confparse
 
 import beeswax.conf
-from hadoop import confparse
-from hadoop import cluster
+
 
 LOG = logging.getLogger(__name__)
 
@@ -40,11 +40,15 @@ _METASTORE_LOC_CACHE = None
 _CNF_METASTORE_SASL = 'hive.metastore.sasl.enabled'
 _CNF_METASTORE_URIS = 'hive.metastore.uris'
 _CNF_METASTORE_KERBEROS_PRINCIPAL = 'hive.metastore.kerberos.principal'
+
 _CNF_HIVESERVER2_KERBEROS_PRINCIPAL = 'hive.server2.authentication.kerberos.principal'
 _CNF_HIVESERVER2_AUTHENTICATION = 'hive.server2.authentication'
+_CNF_HIVESERVER2_IMPERSONATION = 'hive.server2.enable.doAs'
+
 
 # Host is whatever up to the colon. Allow and ignore a trailing slash.
 _THRIFT_URI_RE = re.compile("^thrift://([^:]+):(\d+)[/]?$")
+
 
 class MalformedHiveSiteException(Exception):
   """Parsing error class used internally"""
@@ -89,13 +93,13 @@ def get_metastore():
     else:
       use_sasl = str(get_conf().get(_CNF_METASTORE_SASL, 'false')).lower() == 'true'
       thrift_uri = thrift_uris.split(",")[0]
-      host, port = 'undefined', '0'
+      host, port = socket.getfqdn(), '0'
       match = _THRIFT_URI_RE.match(thrift_uri)
       if not match:
         LOG.fatal('Cannot understand remote metastore uri "%s"' % thrift_uri)
       else:
         host, port = match.groups()
-      kerberos_principal = security_util.get_kerberos_principal(get_conf().get(_CNF_METASTORE_KERBEROS_PRINCIPAL, None), socket.getfqdn())
+      kerberos_principal = security_util.get_kerberos_principal(get_conf().get(_CNF_METASTORE_KERBEROS_PRINCIPAL, None), host)
 
     kerberos_principal_components = security_util.get_components(kerberos_principal)
     if use_sasl and len(kerberos_principal_components) == 3:
@@ -105,11 +109,29 @@ def get_metastore():
   return _METASTORE_LOC_CACHE
 
 
-def get_hiveserver2_kerberos_principal():
-  return security_util.get_kerberos_principal(get_conf().get(_CNF_HIVESERVER2_KERBEROS_PRINCIPAL, None), socket.getfqdn())
+def get_hiveserver2_kerberos_principal(hostname_or_ip):
+  """
+  Retrieves principal for HiveServer 2.
+
+  Raises socket.herror
+  """
+  fqdn = security_util.get_fqdn(hostname_or_ip)
+  # Get kerberos principal and replace host pattern
+  principal = get_conf().get(_CNF_HIVESERVER2_KERBEROS_PRINCIPAL, None)
+  if principal:
+    return security_util.get_kerberos_principal(principal, fqdn)
+  else:
+    return None
 
 def get_hiveserver2_authentication():
   return get_conf().get(_CNF_HIVESERVER2_AUTHENTICATION, 'NONE').upper() # NONE == PLAIN SASL
+
+def hiveserver2_impersonation_enabled():
+  return get_conf().get(_CNF_HIVESERVER2_IMPERSONATION, 'FALSE').upper() == 'TRUE'
+
+def hiveserver2_jdbc_url():
+  return 'jdbc:hive2://%s:%s/default' % (beeswax.conf.HIVE_SERVER_HOST.get(), beeswax.conf.HIVE_SERVER_PORT.get())
+
 
 def _parse_hive_site():
   """
@@ -118,7 +140,7 @@ def _parse_hive_site():
   global _HIVE_SITE_DICT
   global _HIVE_SITE_PATH
 
-  _HIVE_SITE_PATH = os.path.join(beeswax.conf.BEESWAX_HIVE_CONF_DIR.get(), 'hive-site.xml')
+  _HIVE_SITE_PATH = os.path.join(beeswax.conf.HIVE_CONF_DIR.get(), 'hive-site.xml')
   try:
     data = file(_HIVE_SITE_PATH, 'r').read()
   except IOError, err:

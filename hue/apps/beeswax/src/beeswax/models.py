@@ -15,24 +15,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 import base64
 import datetime
 import logging
-import traceback
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.contenttypes import generic
+from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _, ugettext_lazy as _t
 
 from enum import Enum
 
-from desktop.lib.exceptions_renderable import PopupException
 
-from beeswax.design import HQLdesign, hql_query
-from beeswaxd.ttypes import QueryHandle as BeeswaxdQueryHandle, QueryState
+from desktop.lib.exceptions_renderable import PopupException
+from desktop.models import Document
+
 from TCLIService.ttypes import TSessionHandle, THandleIdentifier,\
   TOperationState, TOperationHandle, TOperationType
+
+from beeswax.design import HQLdesign
 
 
 LOG = logging.getLogger(__name__)
@@ -42,7 +44,7 @@ QUERY_SUBMISSION_TIMEOUT = datetime.timedelta(0, 60 * 60)               # 1 hour
 # Constants for DB fields, hue ini
 BEESWAX = 'beeswax'
 HIVE_SERVER2 = 'hiveserver2'
-QUERY_TYPES = (HQL, IMPALA) = range(2)
+QUERY_TYPES = (HQL, IMPALA, RDBMS, SPARK) = range(4)
 
 
 class QueryHistory(models.Model):
@@ -75,39 +77,36 @@ class QueryHistory(models.Model):
   design = models.ForeignKey('SavedQuery', to_field='id', null=True) # Some queries (like read/create table) don't have a design
   notify = models.BooleanField(default=False)                        # Notify on completion
 
+
   class Meta:
     ordering = ['-submission_date']
 
   @staticmethod
   def build(*args, **kwargs):
-    if kwargs['server_type'] == HIVE_SERVER2:
-      return HiveServerQueryHistory(*args, **kwargs)
-    else:
-      return BeeswaxQueryHistory(*args, **kwargs)
+    return HiveServerQueryHistory(*args, **kwargs)
 
   def get_full_object(self):
-    if self.server_type == HiveServerQueryHistory.node_type:
-      return HiveServerQueryHistory.objects.get(id=self.id)
-    else:
-      return BeeswaxQueryHistory.objects.get(id=self.id)
+    return HiveServerQueryHistory.objects.get(id=self.id)
 
   @staticmethod
   def get(id):
-    if QueryHistory.objects.filter(id=id, server_type=BEESWAX).exists():
-      return BeeswaxQueryHistory.objects.get(id=id)
-    else:
-      return HiveServerQueryHistory.objects.get(id=id)
+    return HiveServerQueryHistory.objects.get(id=id)
 
-  def get_type_name(self):
-    if self.query_type == 1:
+  @staticmethod
+  def get_type_name(query_type):
+    if query_type == IMPALA:
       return 'impala'
+    elif query_type == RDBMS:
+      return 'rdbms'
+    elif query_type == SPARK:
+      return 'spark'
     else:
       return 'beeswax'
 
   def get_query_server_config(self):
     from beeswax.server.dbms import get_query_server_config
 
-    query_server = get_query_server_config(self.get_type_name())
+    query_server = get_query_server_config(QueryHistory.get_type_name(self.query_type))
     query_server.update({
         'server_name': self.server_name,
         'server_host': self.server_host,
@@ -125,6 +124,13 @@ class QueryHistory(models.Model):
     else:
       return self.query
 
+  def refresh_design(self, hql_query):
+    # Refresh only HQL query part
+    query = self.design.get_design()
+    query.hql_query = hql_query
+    self.design.data = query.dumps()
+    self.query = hql_query
+ 
   def is_finished(self):
     is_statement_finished = not self.is_running()
 
@@ -143,6 +149,9 @@ class QueryHistory(models.Model):
   def is_failure(self):
     return self.last_state in (QueryHistory.STATE.expired.index, QueryHistory.STATE.failed.index)
 
+  def is_expired(self):
+    return self.last_state in (QueryHistory.STATE.expired.index,)
+
   def set_to_running(self):
     self.last_state = QueryHistory.STATE.running.index
 
@@ -151,6 +160,9 @@ class QueryHistory(models.Model):
 
   def set_to_available(self):
     self.last_state = QueryHistory.STATE.available.index
+
+  def set_to_expired(self):
+    self.last_state = QueryHistory.STATE.expired.index
 
 
 def make_query_context(type, info):
@@ -177,6 +189,7 @@ class HiveServerQueryHistory(QueryHistory):
     TOperationState.CLOSED_STATE         : QueryHistory.STATE.expired,
     TOperationState.ERROR_STATE        : QueryHistory.STATE.failed,
     TOperationState.UKNOWN_STATE        : QueryHistory.STATE.failed,
+    TOperationState.PENDING_STATE        : QueryHistory.STATE.submitted,
   }
 
   node_type = HIVE_SERVER2
@@ -198,65 +211,6 @@ class HiveServerQueryHistory(QueryHistory):
     self.save()
 
 
-class BeeswaxQueryHistory(QueryHistory):
-  # Map from (thrift) server state
-  STATE_MAP = {
-    QueryState.CREATED          : QueryHistory.STATE.submitted,
-    QueryState.INITIALIZED      : QueryHistory.STATE.submitted,
-    QueryState.COMPILED         : QueryHistory.STATE.running,
-    QueryState.RUNNING          : QueryHistory.STATE.running,
-    QueryState.FINISHED         : QueryHistory.STATE.available,
-    QueryState.EXCEPTION        : QueryHistory.STATE.failed
-  }
-
-  node_type = BEESWAX
-
-  class Meta:
-    proxy = True
-
-  def get_handle(self):
-    """
-    get_server_id() ->  (server-side query id)
-
-    The boolean indicates success/failure. The server_id follows, and may be None.
-    Note that the server_id can legally be None when the query is just submitted.
-    This method handles the various cases of the server_id being absent.
-
-    Does not issue RPC.
-    """
-    if self.server_id:
-      return BeeswaxQueryHandle(secret=self.server_id, has_result_set=self.has_results, log_context=self.log_context)
-    else:
-      # Query being submitted have no server_id?
-      if self.last_state == QueryHistory.STATE.submitted.index:
-        # (1) Really? Check the submission date.
-        #     This is possibly due to the server dying when compiling the query
-        if self.submission_date.now() - self.submission_date > QUERY_SUBMISSION_TIMEOUT:
-          LOG.error("Query submission taking too long. Expiring id %s: [%s]..." % (self.id, self.query[:40]))
-          self.save_state(QueryHistory.STATE.expired)
-        else:
-          # (2) It's not an error. Return the current state
-          LOG.debug("Query %s (submitted) has no server id yet" % (self.id,))
-      else:
-        # (3) It has no server_id for no good reason. A case (1) will become this
-        #     after we expire it. Note that we'll never be able to recover this
-        #     query.
-        LOG.error("Query %s (%s) has no server id [%s]..." %
-                  (self.id, QueryHistory.STATE[self.last_state], self.query[:40]))
-        self.save_state(QueryHistory.STATE.expired)
-      return None
-
-  def save_state(self, new_state):
-    """Set the last_state from an enum, and save"""
-    if self.last_state != new_state.index:
-      if new_state.index < self.last_state:
-        backtrace = ''.join(traceback.format_stack(limit=5))
-        LOG.error("Invalid query state transition: %s -> %s\n%s" % (QueryHistory.STATE[self.last_state], new_state, backtrace))
-        return
-      self.last_state = new_state.index
-      self.save()
-
-
 class SavedQuery(models.Model):
   """
   Stores the query that people have save or submitted.
@@ -267,7 +221,7 @@ class SavedQuery(models.Model):
   DEFAULT_NEW_DESIGN_NAME = _('My saved query')
   AUTO_DESIGN_SUFFIX = _(' (new)')
   TYPES = QUERY_TYPES
-  TYPES_MAPPING = {'beeswax': HQL, 'hql': HQL, 'impala': IMPALA}
+  TYPES_MAPPING = {'beeswax': HQL, 'hql': HQL, 'impala': IMPALA, 'rdbms': RDBMS, 'spark': SPARK}
 
   type = models.IntegerField(null=False)
   owner = models.ForeignKey(User, db_index=True)
@@ -282,30 +236,41 @@ class SavedQuery(models.Model):
   is_trashed = models.BooleanField(default=False, db_index=True, verbose_name=_t('Is trashed'),
                                    help_text=_t('If this query is trashed.'))
 
+  doc = generic.GenericRelation(Document, related_name='hql_doc')
+
   class Meta:
     ordering = ['-mtime']
 
   def get_design(self):
-    return HQLdesign.loads(self.data)
+    try:
+      return HQLdesign.loads(self.data)
+    except ValueError:
+      # data is empty
+      pass
 
-  def clone(self):
-    """clone() -> A new SavedQuery with a deep copy of the same data"""
-    design = SavedQuery(type=self.type, owner=self.owner)
-    design.data = copy.deepcopy(self.data)
-    design.name = copy.deepcopy(self.name)
-    design.desc = copy.deepcopy(self.desc)
-    design.is_auto = copy.deepcopy(self.is_auto)
+  def clone(self, new_owner=None):
+    if new_owner is None:
+      new_owner = self.owner
+    design = SavedQuery(type=self.type, owner=new_owner)
+    design.data = self.data
+    design.name = self.name
+    design.desc = self.desc
+    design.is_auto = self.is_auto
     return design
 
   @classmethod
-  def create_empty(cls, app_name, owner):
+  def create_empty(cls, app_name, owner, data):
     query_type = SavedQuery.TYPES_MAPPING[app_name]
     design = SavedQuery(owner=owner, type=query_type)
     design.name = SavedQuery.DEFAULT_NEW_DESIGN_NAME
     design.desc = ''
-    design.data = hql_query('').dumps()
+    design.data = data
     design.is_auto = True
     design.save()
+
+    Document.objects.link(design, owner=design.owner, extra=design.type, name=design.name, description=design.desc)
+    design.doc.get().add_to_history()    
+    
     return design
 
   @staticmethod
@@ -320,16 +285,16 @@ class SavedQuery(models.Model):
     try:
       design = SavedQuery.objects.get(id=id)
     except SavedQuery.DoesNotExist, err:
-      msg = _('Cannot retrieve Beeswax design id %(id)s') % {'id': id}
+      msg = _('Cannot retrieve query id %(id)s.') % {'id': id}
       raise err
 
     if owner is not None and design.owner != owner:
-      msg = _('Design id %(id)s does not belong to user %(user)s') % {'id': id, 'user': owner}
+      msg = _('Query id %(id)s does not belong to user %(user)s.') % {'id': id, 'user': owner}
       LOG.error(msg)
       raise PopupException(msg)
 
     if type is not None and design.type != type:
-      msg = _('Type mismatch for design id %(id)s (owner %(owner)s) - Expected %(expected_type)s got %(real_type)s') % \
+      msg = _('Type mismatch for design id %(id)s (owner %(owner)s) - Expected %(expected_type)s, got %(real_type)s.') % \
             {'id': id, 'owner': owner, 'expected_type': design.type, 'real_type': type}
       LOG.error(msg)
       raise PopupException(msg)
@@ -344,6 +309,9 @@ class SavedQuery(models.Model):
       return make_query_context('design', self.id)
     except:
       return ""
+
+  def get_absolute_url(self):
+    return reverse(QueryHistory.get_type_name(self.type) + ':execute_design', kwargs={'design_id': self.id})
 
 
 class SessionManager(models.Manager):
@@ -419,15 +387,15 @@ class HiveServerQueryHandle(QueryHandle):
                             hasResultSet=self.has_result_set,
                             modifiedRowCount=self.modified_row_count)
 
-  # TODO hide
   @classmethod
   def get_decoded(cls, secret, guid):
     return base64.decodestring(secret), base64.decodestring(guid)
 
-  # TODO hide
   def get_encoded(self):
     return base64.encodestring(self.secret), base64.encodestring(self.guid)
 
+
+# Deprecated. Could be removed.
 
 class BeeswaxQueryHandle(QueryHandle):
   """

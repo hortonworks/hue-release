@@ -38,7 +38,6 @@ APPS := about \
   jobsub \
   oozie \
   proxy \
-  shell \
   useradmin \
   hcatalog \
   pig 

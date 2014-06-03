@@ -366,8 +366,10 @@ def describe_table(request, database, table):
   db = dbms.get(request.user)
   error_message = ''
   table_data = ''
-
-  table = db.get_table(database, table)
+  try:
+    table = db.get_table(database, table)
+  except Exception, e:
+    raise PopupException(_("Hive Error"), detail=e)
 
   try:
     table_data = db.get_sample(database, table)
@@ -395,7 +397,7 @@ def drop_table(request, database=None):
     app_name = get_app_name(request)
     try:
       # Can't be simpler without an important refactoring
-      design = SavedQuery.create_empty(app_name=app_name, owner=request.user)
+      design = SavedQuery.create_empty(app_name='beeswax', owner=request.user, data=hql_query('').dumps())
       query_history = db.drop_tables(database, tables_objects, design)
       url = reverse(app_name + ':watch_query', args=[query_history.id]) + '?on_success_url=' + reverse(app_name + ':show_tables')
       return redirect(url)
@@ -507,11 +509,11 @@ def execute_query(request, design_id=None):
   action = request.path
   log = None
   app_name = get_app_name(request)
-  query_type = SavedQuery.TYPES_MAPPING[app_name]
+  query_type = 0
   design = safe_get_design(request, query_type, design_id)
   on_success_url = request.REQUEST.get('on_success_url')
 
-  query_server = get_query_server_config(app_name, requires_ddl=False)
+  query_server = get_query_server_config(app_name)
   db = dbms.get(request.user, query_server)
   databases = _get_db_choices(request)
 
@@ -546,7 +548,7 @@ def execute_query(request, design_id=None):
           return parameterization
 
         try:
-          query = HQLdesign(form)
+          query = HQLdesign(form, query_type=0)
           if to_explain:
             return explain_directly(request, query, design, query_server)
           else:
@@ -657,7 +659,7 @@ def watch_query_refresh_json(request, id):
 
   try:
     if not query_history.is_finished() and query_history.is_success() and not query_history.has_results:
-      db.execute_next_statement(query_history)
+      db.execute_next_statement(query_history, request.POST.get('query-query'))
       handle, state = _get_query_handle_and_state(query_history)    
   except BeeswaxException, ex:
     handle, state = _get_query_handle_and_state(query_history)
@@ -1055,7 +1057,6 @@ def query_done_cb(request, server_id):
 """
 Utils
 """
-
 def authorized_get_design(request, design_id, owner_only=False, must_exist=False):
   if design_id is None and not must_exist:
     return None
@@ -1069,9 +1070,28 @@ def authorized_get_design(request, design_id, owner_only=False, must_exist=False
 
   if not conf.SHARE_SAVED_QUERIES.get() and (not request.user.is_superuser or owner_only) \
       and design.owner != request.user:
-    raise PopupException(_('Cannot access design %(id)s') % {'id': design_id})
+    raise PopupException(_('Cannot access design %(id)s.') % {'id': design_id})
   else:
     return design
+
+
+def authorized_get_history(request, query_history_id, owner_only=False, must_exist=False):
+  if query_history_id is None and not must_exist:
+    return None
+  try:
+    query_history = models.QueryHistory.get(id=query_history_id)
+  except models.QueryHistory.DoesNotExist:
+    if must_exist:
+      raise PopupException(_('QueryHistory %(id)s does not exist.') % {'id': query_history_id})
+    else:
+      return None
+
+  if not conf.SHARE_SAVED_QUERIES.get() and (not request.user.is_superuser or owner_only) \
+      and query_history.owner != request.user:
+    raise PopupException(_('Cannot access QueryHistory %(id)s.') % {'id': query_history_id})
+  else:
+    return query_history
+
 
 def authorized_get_history(request, query_history_id, owner_only=False, must_exist=False):
   if query_history_id is None and not must_exist:

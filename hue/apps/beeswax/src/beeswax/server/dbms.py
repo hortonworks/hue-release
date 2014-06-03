@@ -16,71 +16,102 @@
 # limitations under the License.
 
 import logging
+import threading
 import time
 
+from django.core.urlresolvers import reverse
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext as _
-from desktop.conf import KERBEROS
+
+from beeswax import hive_site
+from beeswax.conf import HIVE_SERVER_HOST, HIVE_SERVER_PORT,\
+  BROWSE_PARTITIONED_TABLE_LIMIT
+from beeswax.design import hql_query
+from beeswax.models import QueryHistory, HIVE_SERVER2, BEESWAX, QUERY_TYPES
 
 from filebrowser.views import location_to_url
-
-from beeswaxd.ttypes import BeeswaxException
-from beeswax import hive_site
-from beeswax.conf import BEESWAX_SERVER_HOST, BEESWAX_SERVER_PORT,\
-  BROWSE_PARTITIONED_TABLE_LIMIT, SERVER_INTERFACE
-from beeswax.design import hql_query
-from beeswax.models import QueryHistory, HIVE_SERVER2
-from beeswax.conf import SERVER_INTERFACE
+from desktop.lib.django_util import format_preserving_redirect
+from desktop.lib.exceptions_renderable import PopupException
 
 
 LOG = logging.getLogger(__name__)
 
+DBMS_CACHE = {}
+DBMS_CACHE_LOCK = threading.Lock()
+
 
 def get(user, query_server=None):
+  global DBMS_CACHE
+  global DBMS_CACHE_LOCK
+
   # Avoid circular dependency
   from beeswax.server.hive_server2_lib import HiveServerClientCompatible, HiveServerClient
-  from beeswax.server.beeswax_lib import BeeswaxClient
 
   if query_server is None:
-    query_server = get_query_server_config(requires_ddl=True)
+    query_server = get_query_server_config()
 
-  if SERVER_INTERFACE.get() == HIVE_SERVER2:
-    return Dbms(HiveServerClientCompatible(HiveServerClient(query_server, user)), QueryHistory.SERVER_TYPE[1][0])
+  DBMS_CACHE_LOCK.acquire()
+  try:
+    DBMS_CACHE.setdefault(user.username, {})
+
+    if query_server['server_name'] not in DBMS_CACHE[user.username]:
+      DBMS_CACHE[user.username][query_server['server_name']] = HiveServer2Dbms(HiveServerClientCompatible(HiveServerClient(query_server, user)), QueryHistory.SERVER_TYPE[1][0])
+
+    return DBMS_CACHE[user.username][query_server['server_name']]
+  finally:
+    DBMS_CACHE_LOCK.release()
+
+
+def get_query_server_config(name='beeswax', server=None):
+  if name == 'impala':
+    from impala.conf import SERVER_HOST as IMPALA_SERVER_HOST, SERVER_PORT as IMPALA_SERVER_PORT, \
+        IMPALA_PRINCIPAL, IMPERSONATION_ENABLED, QUERYCACHE_ROWS
+
+    query_server = {
+        'server_name': 'impala',
+        'server_host': IMPALA_SERVER_HOST.get(),
+        'server_port': IMPALA_SERVER_PORT.get(),
+        'principal': IMPALA_PRINCIPAL.get(),
+        'impersonation_enabled': IMPERSONATION_ENABLED.get(),
+        'querycache_rows': QUERYCACHE_ROWS.get()
+    }
   else:
-    return Dbms(BeeswaxClient(query_server, user), QueryHistory.SERVER_TYPE[0][0])
+    kerberos_principal = hive_site.get_hiveserver2_kerberos_principal(HIVE_SERVER_HOST.get())
 
+    query_server = {
+        'server_name': 'beeswax', # Aka HiveServer2 now
+        'server_host': HIVE_SERVER_HOST.get(),
+        'server_port': HIVE_SERVER_PORT.get(),
+        'principal': kerberos_principal
+    }
 
+  LOG.debug("Query Server: %s" % query_server)
 
-def get_query_server_config(name='beeswax', requires_ddl=False):
-  if SERVER_INTERFACE.get() == 'hiveserver2':
-    kerberos_principal = hive_site.get_hiveserver2_kerberos_principal()
-  else:
-    # Beeswaxd runs as 'hue'
-    kerberos_principal = KERBEROS.HUE_PRINCIPAL.get()
-  query_server = {
-    'server_name': 'beeswax',
-    'server_host': BEESWAX_SERVER_HOST.get(),
-    'server_port': BEESWAX_SERVER_PORT.get(),
-    'support_ddl': True,
-    'principal': kerberos_principal,
-  }
   return query_server
 
 
-class QueryServerException: pass
+class QueryServerException(Exception):
+  # Ideally the query handle will be stored here too.
+
+  def __init__(self, e, message=''):
+    super(QueryServerException, self).__init__(e)
+    self.message = message
+
 
 class NoSuchObjectException: pass
 
 
-class Dbms:
-  """SQL"""
+class HiveServer2Dbms(object):
 
   def __init__(self, client, server_type):
     self.client = client
     self.server_type = server_type
-
+    self.server_name = self.client.query_server['server_name']
 
   def get_table(self, database, table_name):
+    # DB name not supported in SHOW PARTITIONS required in Table
+    self.use(database)
+
     return self.client.get_table(database, table_name)
 
 
@@ -102,7 +133,10 @@ class Dbms:
 
 
   def execute_statement(self, hql):
-    query = hql_query(hql)
+    if self.server_name == 'impala':
+      query = hql_query(hql, QUERY_TYPES[1])
+    else:
+      query = hql_query(hql, QUERY_TYPES[0])
     return self.execute_and_watch(query)
 
 
@@ -116,17 +150,49 @@ class Dbms:
     return self.client.fetch(query_handle, start_over, rows)
 
 
+  def close_operation(self, query_handle):
+    if self.server_type == BEESWAX:
+      raise PopupException(_('%s interface does not support close_operation. %s interface does.') % (BEESWAX, HIVE_SERVER2))
+
+    return self.client.close_operation(query_handle)
+
+  def open_session(self, user):
+    return self.client.open_session(user)
+
+  def close_session(self, session):
+    return self.client.close_session(session)
+
+  def cancel_operation(self, query_handle):
+    resp = self.client.cancel_operation(query_handle)
+    if self.client.query_server['server_name'] == 'impala':
+      resp = self.client.close_operation(query_handle)
+    return resp
+
+
   def get_sample(self, database, table):
     """No samples if it's a view (HUE-526)"""
     if not table.is_view:
       limit = min(100, BROWSE_PARTITIONED_TABLE_LIMIT.get())
-      hql = "SELECT * FROM `%s.%s` LIMIT %s" % (database, table.name, limit)
+      hql = "SELECT * FROM %s.%s LIMIT %s" % (database, table.name, limit)
       query = hql_query(hql)
       handle = self.execute_and_wait(query, timeout_sec=5.0)
 
       if handle:
-        return self.fetch(handle)
+        result = self.fetch(handle, rows=100)
+        self.close(handle)
+        return result
 
+
+  def analyze_table_table(self, database, table):
+    hql = 'analyze table `%(database)s.%(table_name)` compute statistics' % {'database': database, 'table_name': table.name}
+    query = hql_query(hql, database)
+
+    return self.execute_query(query)
+
+
+  def analyze_table_column(self):
+    # analyze table <table_name> partition <part_name> compute statistics for columns <col_name1>, <col_name2>...
+    pass
 
   def drop_table(self, database, table):
     if table.is_view:
@@ -135,6 +201,28 @@ class Dbms:
       hql = "DROP TABLE `%s.%s`" % (database, table.name,)
 
     return self.execute_statement(hql)
+
+
+  def load_data(self, database, table, form, design):
+    hql = "LOAD DATA INPATH"
+    hql += " '%s'" % form.cleaned_data['path']
+    if form.cleaned_data['overwrite']:
+      hql += " OVERWRITE"
+    hql += " INTO TABLE "
+    hql += "`%s.%s`" % (database, table.name,)
+    if form.partition_columns:
+      hql += " PARTITION ("
+      vals = []
+      for key, column_name in form.partition_columns.iteritems():
+        vals.append("%s='%s'" % (column_name, form.cleaned_data[key]))
+      hql += ", ".join(vals)
+      hql += ")"
+
+    query = hql_query(hql, database)
+    design.data = query.dumps()
+    design.save()
+
+    return self.execute_query(query, design)
 
 
   def drop_tables(self, database, tables, design):
@@ -169,21 +257,23 @@ class Dbms:
 
   def insert_query_into_directory(self, query_history, target_dir):
     design = query_history.design.get_design()
+    database = design.query['database']
+    self.use(database)
 
     hql = "INSERT OVERWRITE DIRECTORY '%s' %s" % (target_dir, design.query['query'])
     return self.execute_statement(hql)
 
 
-  def create_table_as_a_select(self, request, query_history, target_table, result_meta):
+  def create_table_as_a_select(self, request, query_history, target_database, target_table, result_meta):
     design = query_history.design.get_design()
     database = design.query['database']
 
     # Case 1: Hive Server 2 backend or results straight from an existing table
     if result_meta.in_tablename:
-      hql = 'CREATE TABLE `%s.%s` AS %s' % (database, target_table, design.query['query'])
-      #query = hql_query(hql, database=database)
+      self.use(database)
+
+      hql = 'CREATE TABLE %s.%s AS %s' % (target_database, target_table, design.query['query'])
       query_history = self.execute_statement(hql)
-      url = redirect(reverse('beeswax:watch_query', args=[query_history.id]) + '?on_success_url=' + reverse('metastore:describe_table', args=[database, target_table]))
     else:
       # Case 2: The results are in some temporary location
       # Beeswax backward compatibility and optimization
@@ -221,7 +311,7 @@ class Dbms:
         result_dir = request.fs.urlsplit(result_meta.table_dir)[2]
         request.fs.rename_star(result_dir, table_loc)
         LOG.debug("Moved results from %s to %s" % (result_meta.table_dir, table_loc))
-        request.info(request, _('Saved query results as new table %(table)s') % {'table': target_table})
+        request.info(request, _('Saved query results as new table %(table)s.') % {'table': target_table})
         query_history.save_state(QueryHistory.STATE.expired)
       except Exception, ex:
         query = hql_query('DROP TABLE `%s`' % target_table)
@@ -232,14 +322,12 @@ class Dbms:
         raise ex
       url = format_preserving_redirect(request, reverse('metastore:index'))
 
-    return url
+    return query_history
 
 
   def use(self, database):
-    """Beeswax does not support use directly."""
-    if SERVER_INTERFACE.get() == HIVE_SERVER2:
-      query = hql_query('USE %s' % database)
-      return self.execute_and_wait(query)
+    query = hql_query('USE %s' % database)
+    return self.client.use(query)
 
 
   def get_log(self, query_handle):
@@ -250,30 +338,40 @@ class Dbms:
     return self.client.get_state(handle)
 
 
-  def execute_and_wait(self, query, timeout_sec=30.0):
+  def get_operation_status(self, handle):
+    return self.client.get_operation_status(handle)
+
+
+  def execute_and_wait(self, query, timeout_sec=30.0, sleep_interval=0.5):
     """
     Run query and check status until it finishes or timeouts.
-    """
-    SLEEP_INTERVAL = 0.5
 
+    Check status until it finishes or timeouts.
+    """
     handle = self.client.query(query)
     curr = time.time()
     end = curr + timeout_sec
-
     while curr <= end:
       state = self.client.get_state(handle)
       if state not in (QueryHistory.STATE.running, QueryHistory.STATE.submitted):
         return handle
-      time.sleep(SLEEP_INTERVAL)
+      time.sleep(sleep_interval)
       curr = time.time()
     return None
 
 
-  def execute_next_statement(self, query_history):
-    query_history.statement_number += 1
+  def execute_next_statement(self, query_history, hql_query):
+    if query_history.is_success() or query_history.is_expired():
+      # We need to go to the next statement only if the previous one passed
+      query_history.statement_number += 1
+    else:
+      # We need to update the query in case it was fixed
+      query_history.refresh_design(hql_query)
+
     query_history.last_state = QueryHistory.STATE.submitted.index
     query_history.save()
     query = query_history.design.get_design()
+
     return self.execute_and_watch(query, query_history=query_history)
 
 
@@ -284,16 +382,18 @@ class Dbms:
     hql_query = query.hql_query
     if query_history is None:
       query_history = QueryHistory.build(
-                                  owner=self.client.user,
-                                  query=hql_query,
-                                  server_host='%(server_host)s' % self.client.query_server,
-                                  server_port='%(server_port)d' % self.client.query_server,
-                                  server_name='%(server_name)s' % self.client.query_server,
-                                  server_type=self.server_type,
-                                  last_state=QueryHistory.STATE.submitted.index,
-                                  design=design,
-                                  notify=query.query.get('email_notify', False),
-                                  statement_number=0)
+          owner=self.client.user,
+          query=hql_query,
+          server_host='%(server_host)s' % self.client.query_server,
+          server_port='%(server_port)d' % self.client.query_server,
+          server_name='%(server_name)s' % self.client.query_server,
+          server_type=self.server_type,
+          last_state=QueryHistory.STATE.submitted.index,
+          design=design,
+          notify=query.query.get('email_notify', False),
+          query_type=query.query['type'],
+          statement_number=0
+      )
       query_history.save()
 
       LOG.debug("Made new QueryHistory id %s user %s query: %s..." % (query_history.id, self.client.user, query_history.query[:25]))
@@ -301,14 +401,13 @@ class Dbms:
     try:
       handle = self.client.query(query, query_history.statement_number)
       if not handle.is_valid():
-        msg = _("Server returning invalid handle for query id %(id)d [%(query)s]...") % \
-              {'id': query_history.id, 'query': query[:40]}
-        raise BeeswaxException(msg)
-    except BeeswaxException, ex: # TODO HS2
+        msg = _("Server returning invalid handle for query id %(id)d [%(query)s]...") % {'id': query_history.id, 'query': query[:40]}
+        raise QueryServerException(msg)
+    except QueryServerException, ex:
       LOG.exception(ex)
       # Kind of expected (hql compile/syntax error, etc.)
       if hasattr(ex, 'handle') and ex.handle:
-        query_history.server_id = ex.handle.id
+        query_history.server_id, query_history.server_guid = ex.handle.id, ex.handle.id
         query_history.log_context = ex.handle.log_context
       query_history.save_state(QueryHistory.STATE.failed)
       raise ex
@@ -319,7 +418,7 @@ class Dbms:
     query_history.has_results = handle.has_result_set
     query_history.modified_row_count = handle.modified_row_count
     query_history.log_context = handle.log_context
-
+    query_history.query_type = query.query['type']
     query_history.set_to_running()
     query_history.save()
 
@@ -340,15 +439,26 @@ class Dbms:
     if max_parts is None or max_parts > BROWSE_PARTITIONED_TABLE_LIMIT.get():
       max_parts = BROWSE_PARTITIONED_TABLE_LIMIT.get()
 
+    # DB name not supported in SHOW PARTITIONS
+    self.use(db_name)
+
     return self.client.get_partitions(db_name, table.name, max_parts)
 
+  def get_partition(self, db_name, table_name, partition_id):
+    table = self.get_table(db_name, table_name)
+    partitions = self.get_partitions(db_name, table, max_parts=None)
 
-  def explain(self, statement):
-    return self.client.explain(statement)
+    partition_query = ""
+    for idx, key in enumerate(partitions[partition_id].values):
+      partition_query += (idx > 0 and " AND " or "") + table.partition_keys[idx].name + "='%s'" % key
+
+    hql = "SELECT * FROM `%s.%s` WHERE %s" % (db_name, table_name, partition_query)
+
+    return self.execute_statement(hql)
 
 
-  def echo(self, text):
-    return self.client.echo(text)
+  def explain(self, query):
+    return self.client.explain(query)
 
 
   def getStatus(self):
@@ -387,14 +497,19 @@ class DataTable:
 
 
 # TODO decorator?
-def expand_exception(exc, db):
+def expand_exception(exc, db, handle=None):
   try:
-    log = db.get_log(exc)
-  except:
+    if handle is not None:
+      log = db.get_log(handle)
+    elif hasattr(exc, 'get_rpc_handle') or hasattr(exc, 'log_context'):
+      log = db.get_log(exc)
+    else:
+      log = ''
+  except Exception, e:
     # Always show something, even if server has died on the job.
-    log = _("Could not retrieve logs.")
+    log = _("Could not retrieve logs: %s." % e)
 
-  if not exc.message:
+  if not hasattr(exc, 'message') or not exc.message:
     error_message = _("Unknown exception.")
   else:
     error_message = force_unicode(exc.message, strings_only=True, errors='replace')

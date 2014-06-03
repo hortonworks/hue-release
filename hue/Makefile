@@ -118,7 +118,8 @@ docs:
 # Install parent POM
 ###################################
 parent-pom:
-	cd $(ROOT)/maven && mvn install $(MAVEN_OPTIONS)
+	#cd $(ROOT)/maven && mvn install $(MAVEN_OPTIONS)
+	echo "No more java!"
 
 .PHONY: parent-pom
 

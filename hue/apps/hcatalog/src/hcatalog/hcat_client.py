@@ -17,7 +17,6 @@
 
 import time
 from pig.templeton import Templeton
-from beeswax.conf import BEESWAX_HIVE_HOME_DIR
 
 from datetime import datetime
 import simplejson as json

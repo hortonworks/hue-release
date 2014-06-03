@@ -256,14 +256,13 @@ class CreateTableForm(DependencyAwareForm):
     return _clean_tablename(self.db, self.cleaned_data['name'])
 
 
-def _clean_tablename(db, name):
+def _clean_tablename(db, name, database='default'):
   try:
-    table = db.get_table("default", name)
+    table = db.get_table(database, name)
     if table.name:
-      raise forms.ValidationError(_('Table "%(name)s" already exists') % {'name': name})
-  except (hive_metastore.ttypes.NoSuchObjectException, NoSuchObjectException):
+      raise forms.ValidationError(_('Table "%(name)s" already exists.') % {'name': name})
+  except Exception:
     return name
-
 
 def _clean_terminator(val):
   if val is not None and len(val.decode('string_escape')) != 1:

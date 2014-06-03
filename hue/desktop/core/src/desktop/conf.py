@@ -36,6 +36,20 @@ KREDENTIALS_DIR = Config(
   default="/tmp"
 )
 
+LDAP_PASSWORD = Config(
+  key="ldap_password",
+  help=_("LDAP password of the hue user used for LDAP authentications. For example for LDAP Authentication with HiveServer2."),
+  private=True,
+  default=None)
+
+POLL_ENABLED = Config(
+  key="poll_enabled",
+  help=_("Use poll(2) in Hue thrift pool."),
+  type=coerce_bool,
+  private=True,
+  default=True)
+
+
 USE_CHERRYPY_SERVER = Config(
   key="use_cherrypy_server",
   help=_("If set to true, CherryPy will be used. Otherwise, Spawning will be used as the webserver."),
@@ -598,7 +612,7 @@ def validate_ldap(user, config):
 
   return res
 
-def config_validator():
+def config_validator(user):
   """
   config_validator() -> [ (config_variable, error_message) ]
 
