@@ -78,7 +78,6 @@ clean::
 else
 $(DESKTOP_PLUGIN_JAR):
 	@echo "Cannot build hadoop plugin without source"
-	#$(error Cannot build hadoop plugin without source)
 endif
 
 # Build the static group mapping jar iff the source is present
@@ -94,7 +93,7 @@ clean::
 	#cd $(STATIC_GROUP_MAPPING_DIR) && mvn clean $(MAVEN_OPTIONS) ||:
 else
 $(STATIC_GROUP_MAPPING):
-	$(error Cannot build static-group-mapping jar without source)
+	@echo "Cannot build static-group-mapping jar without source"
 endif
 
 # Build the sudo shell jar iff the source is present
@@ -110,7 +109,7 @@ clean::
 	#cd $(SUDO_SHELL_DIR) && mvn clean $(MAVEN_OPTIONS) ||:
 else
 $(SUDO_SHELL):
-	$(error cannot build sudo-shell jar without source)
+	@echo "cannot build sudo-shell jar without source"
 endif
 
 # Build the credentials merger jar iff the source is present
