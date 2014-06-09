@@ -77,7 +77,8 @@ clean::
 	#cd $(PLUGIN_JAVA_DIR) && mvn clean $(MAVEN_OPTIONS) ||:
 else
 $(DESKTOP_PLUGIN_JAR):
-	$(error Cannot build hadoop plugin without source)
+	@echo "Cannot build hadoop plugin without source"
+	#$(error Cannot build hadoop plugin without source)
 endif
 
 # Build the static group mapping jar iff the source is present
