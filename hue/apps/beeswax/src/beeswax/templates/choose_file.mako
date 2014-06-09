@@ -21,7 +21,7 @@ from django.utils.translation import ugettext as _
 <%namespace name="layout" file="layout.mako" />
 <%namespace name="comps" file="beeswax_components.mako" />
 
-${ commonheader(_('Create table from file'), app_name, user, '100px') | n,unicode }
+${ commonheader(_('Create table from file'), 'beeswax', user, '100px') | n,unicode }
 ${layout.menubar(section='tables')}
 
 
@@ -52,7 +52,7 @@ ${layout.menubar(section='tables')}
                             ${comps.field(file_form["name"], placeholder=_('table_name'), show_errors=False)}
                             <span  class="help-inline">${unicode(file_form["name"].errors) | n}</span>
                         <span class="help-block">
-                            ${_('Name of the new table. Table names must be globally unique. Table names tend to correspond as well to the directory where the data will be stored.')}
+                            ${_('Name of the new table. Table names must be globally unique. Table names tend to correspond to the directory where the data will be stored.')}
                         </span>
                         </div>
                     </div>
@@ -66,7 +66,7 @@ ${layout.menubar(section='tables')}
                             )}
                             <span  class="help-inline">${unicode(file_form["comment"].errors) | n}</span>
                         <span class="help-block">
-                        ${_("Use a table comment to describe your table.  For example, you might note the data's provenance and any caveats users need to know.")}
+                        ${_("Use a table comment to describe the table.  For example, note the data's provenance and any caveats users need to know.")}
                         </span>
                         </div>
                     </div>
@@ -81,7 +81,7 @@ ${layout.menubar(section='tables')}
                             )}
                             <span  class="help-inline">${unicode(file_form["path"].errors) | n}</span>
                         <span class="help-block">
-                        ${_('The HDFS path to the file that you would like to base this new table definition on. It can be compressed (gzip) or not.')}
+                        ${_('The HDFS path to the file on which to base this new table definition. It can be compressed (gzip) or not.')}
                         </span>
                         </div>
                     </div>
@@ -90,9 +90,9 @@ ${layout.menubar(section='tables')}
                         <div class="controls">
                             ${comps.field(file_form["do_import"], render_default=True)}
                             <span class="help-block">
-                        ${_('Check this box if you want to import the data in this file after creating the table definition. Leave it unchecked if you want to define an empty table.')}
+                        ${_('Check this box to import the data in this file after creating the table definition. Leave it unchecked to define an empty table.')}
                         <div id="fileWillBeMoved" class="alert">
-                            <strong>${_('Warning!')}</strong> ${_('The selected file is going to be moved during the import.')}
+                            <strong>${_('Warning:')}</strong> ${_('The selected file is going to be moved during the import.')}
                         </div>
                         </span>
                         </div>

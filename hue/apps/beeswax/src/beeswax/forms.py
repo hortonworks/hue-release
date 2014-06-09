@@ -25,7 +25,6 @@ from desktop.lib.django_forms import ChoiceOrOtherField, MultiForm, SubmitButton
 from filebrowser.forms import PathField
 
 from beeswax import common
-from beeswax.server.dbms import NoSuchObjectException
 from beeswax.models import SavedQuery
 
 
@@ -36,7 +35,8 @@ class QueryForm(MultiForm):
       settings=SettingFormSet,
       file_resources=FileResourceFormSet,
       functions=FunctionFormSet,
-      saveform=SaveForm)
+      saveform=SaveForm
+    )
 
 
 class DbForm(forms.Form):
@@ -74,14 +74,16 @@ class SaveForm(forms.Form):
     return self.cleaned_data.get('name', '').strip()
 
   def clean(self):
+    cleaned_data = super(SaveForm, self).clean()
+
     if self.errors:
       return
-    save = self.cleaned_data.get('save')
-    name = self.cleaned_data.get('name')
+    save = cleaned_data.get('save')
+    name = cleaned_data.get('name')
     if save and not name:
       # Bother with name iff we're saving
-      raise forms.ValidationError(_('Please enter a name'))
-    return self.cleaned_data
+      raise forms.ValidationError(_('Enter a name.'))
+    return cleaned_data
 
   def set_data(self, name, desc=''):
     """Set the name and desc programmatically"""
@@ -105,7 +107,7 @@ class SaveResultsForm(DependencyAwareForm):
                                   help_text=_t("Name of the new table"))
   target_dir = PathField(label=_t("Results Location"),
                          required=False,
-                         help_text=_t("Empty directory in HDFS to put the results"))
+                         help_text=_t("Empty directory in HDFS to store results."))
   dependencies = [
     ('save_target', SAVE_TYPE_TBL, 'target_table'),
     ('save_target', SAVE_TYPE_DIR, 'target_dir'),
@@ -113,6 +115,7 @@ class SaveResultsForm(DependencyAwareForm):
 
   def __init__(self, *args, **kwargs):
     self.db = kwargs.pop('db', None)
+    self.fs = kwargs.pop('fs', None)
     super(SaveResultsForm, self).__init__(*args, **kwargs)
 
   def clean(self):
@@ -126,8 +129,14 @@ class SaveResultsForm(DependencyAwareForm):
             self.db.get_table('default', tbl) # Assumes 'default' DB
           self._errors['target_table'] = self.error_class([_('Table already exists')])
           del cleaned_data['target_table']
-        except hive_metastore.ttypes.NoSuchObjectException:
+        except Exception:
           pass
+    elif cleaned_data['save_target'] == SaveResultsForm.SAVE_TYPE_DIR:
+      target_dir = cleaned_data['target_dir']
+      if not target_dir.startswith('/'):
+        self._errors['target_dir'] = self.error_class([_('Directory should start with /')])
+      elif self.fs.exists(target_dir):
+        self._errors['target_dir'] = self.error_class([_('Directory already exists.')]) # Overwrite destination directory content
 
     return cleaned_data
 
@@ -143,7 +152,7 @@ class HQLForm(forms.Form):
                            label='',
                            choices=(('default', 'default'),),
                            initial=0,
-                           widget=forms.widgets.Select(attrs={'class': 'span6'}))
+                           widget=forms.widgets.Select(attrs={'class': 'input-medium'}))
 
 
 class FunctionForm(forms.Form):
@@ -162,8 +171,7 @@ class FileResourceForm(forms.Form):
     ], help_text=_t("Resources to upload with your Hive job." +
        "  Use 'jar' for UDFs.  Use 'file' and 'archive' for "
        "files to be copied and made locally available during MAP/TRANSFORM. " +
-       "Paths are on HDFS."),
-    widget=forms.widgets.Select(attrs={'class': 'span8'})
+       "Paths are on HDFS.")
   )
 
   path = forms.CharField(required=True, help_text=_t("Path to file on HDFS."))
@@ -216,7 +224,7 @@ class CreateTableForm(DependencyAwareForm):
   serde_name = forms.CharField(required=False, label=_t("SerDe Name"))
   serde_properties = forms.CharField(
                         required=False,
-                        help_text=_t("Comma-separated list of key-value pairs, eg., 'p1=v1, p2=v2'"))
+                        help_text=_t("Comma-separated list of key-value pairs. E.g. 'p1=v1, p2=v2'"))
 
   dependencies += [
     ("row_format", "SerDe", "serde_name"),
@@ -236,7 +244,7 @@ class CreateTableForm(DependencyAwareForm):
   ]
 
   # External?
-  use_default_location = forms.BooleanField(required=False, initial=True, label=_t("Use default location"))
+  use_default_location = forms.BooleanField(required=False, initial=True, label=_t("Use default location."))
   external_location = forms.CharField(required=False, help_text=_t("Path to HDFS directory or file of table data."))
 
   dependencies += [
@@ -253,7 +261,7 @@ class CreateTableForm(DependencyAwareForm):
     return _clean_terminator(self.cleaned_data.get('map_key_terminator'))
 
   def clean_name(self):
-    return _clean_tablename(self.db, self.cleaned_data['name'])
+    return _clean_tablename(self.db, self.cleaned_data['name'], self.database)
 
 
 def _clean_tablename(db, name, database='default'):
@@ -316,8 +324,7 @@ class CreateByImportDelimForm(forms.Form):
 
 # Note, struct is not currently supported.  (Because it's recursive, for example.)
 HIVE_TYPES = \
-    ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double", "timestamp", "decimal", "binary",
-      "array", "map")
+    ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double", "timestamp", "decimal", "binary", "array", "map")
 HIVE_PRIMITIVE_TYPES = \
     ("string", "tinyint", "smallint", "int", "bigint", "boolean", "float", "double", "timestamp", "decimal", "binary")
 
@@ -352,9 +359,9 @@ class ColumnTypeForm(DependencyAwareForm):
                                      initial=HIVE_PRIMITIVE_TYPES[0],
                                      help_text=_t("Specify if column_type is map."))
 
-ColumnTypeFormSet = simple_formset_factory(ColumnTypeForm, initial=[{}], add_label=_t("add a column"))
+ColumnTypeFormSet = simple_formset_factory(ColumnTypeForm, initial=[{}], add_label=_t("Add a column"))
 # Default to no partitions
-PartitionTypeFormSet = simple_formset_factory(PartitionTypeForm, add_label=_t("add a partition"))
+PartitionTypeFormSet = simple_formset_factory(PartitionTypeForm, add_label=_t("Add a partition"))
 
 
 class LoadDataForm(forms.Form):

@@ -28,7 +28,7 @@ from hadoop import cluster
 
 import beeswax.conf
 
-from beeswax.models import SavedQuery, IMPALA
+from beeswax.models import SavedQuery
 from beeswax.design import hql_query
 from beeswax.server import dbms
 from beeswax.server.dbms import get_query_server_config, QueryServerException
@@ -52,7 +52,7 @@ class Command(NoArgsCommand):
     # Documents will belong to this user but we run the install as the current user
     try:
       sample_user = install_sample_user()
-      self._install_tables(sample_user, 'beeswax')
+      self._install_tables(options['user'], 'beeswax')
     except Exception, ex:
       exception = ex
 
@@ -85,8 +85,6 @@ class Command(NoArgsCommand):
     design_file.close()
 
     for design_dict in design_list:
-      if app_name == 'impala':
-        design_dict['type'] = IMPALA
       design = SampleDesign(design_dict)
       try:
         design.install(django_user)
@@ -151,19 +149,8 @@ class SampleTable(object):
       LOAD DATA INPATH
       '%(filename)s' OVERWRITE INTO TABLE %(tablename)s
       """
-
     fs = cluster.get_hdfs()
-
-    if self.app_name == 'impala':
-      # Because Impala does not have impersonation on by default, we use a public destination for the upload.
-      from impala.conf import IMPERSONATION_ENABLED
-      if not IMPERSONATION_ENABLED.get():
-        tmp_public = '/tmp/public_hue_examples'
-        fs.do_as_user(django_user, fs.mkdir, tmp_public, '0777')
-        hdfs_root_destination = tmp_public
-    else:
-      hdfs_root_destination = fs.do_as_user(django_user, fs.get_home_dir)
-
+    hdfs_root_destination = fs.do_as_user(django_user, fs.get_home_dir)
     hdfs_destination = os.path.join(hdfs_root_destination, self.name)
 
     LOG.info('Uploading local data %s to HDFS table "%s"' % (self.name, hdfs_destination))

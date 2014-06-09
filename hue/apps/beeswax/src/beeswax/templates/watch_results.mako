@@ -14,6 +14,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 <%!
+from desktop.lib.i18n import smart_unicode
 from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 %>
@@ -59,7 +60,6 @@ ${layout.menubar(section='query')}
   .noLeftMargin {
     margin-left: 0!important;
   }
-
 </style>
 
 <div class="container-fluid">
@@ -94,6 +94,10 @@ ${layout.menubar(section='query')}
                         % for jobid in hadoop_jobs:
                             <li><a href="${url("jobbrowser.views.single_job", job=jobid.replace('application', 'job'))}">${ jobid.replace("application_", "") }</a></li>
                         % endfor
+                    % else:
+                        <li class="nav-header">${mr_jobs}</li>
+                        <li>${_('No Hadoop jobs were launched in running this query.')}</li>
+                    % endif
                     % endif
                 </ul>
             </div>
@@ -104,18 +108,20 @@ ${layout.menubar(section='query')}
               <strong>${_('Multi-statement query')}</strong></br>
               ${_('Hue stopped as one of your query contains some results.') }
               ${_('Click on') }
-              <form action="${ url(app_name + ':watch_query', query.id) }?context=${ query.design.get_query_context() }" method="POST"> ${ csrf_token_field | n } 
-                <input type="submit" value="${ _("next") }"/ class="btn btn-danger">
+              <form action="${ url(app_name + ':watch_query', query.id) }?context=${ query.design.get_query_context() }" method="POST">
+                <input type="submit" value="${ _("next") }"/ class="btn btn-primary">
               </form>
-              ${_('for continuing the execution of the remaining statements.') }
+              ${_('to continue execution of the remaining statements.') }
             </div>
           % endif
 
           <div id="jumpToColumnAlert" class="alert hide">
             <button type="button" class="close" data-dismiss="alert">&times;</button>
             <strong>${_('Did you know?')}</strong>
-            ${_('If the result contains a large number of columns, click a row to select a column to jump to.') }
-            ${ _('As you type into the field, a drop-down list displays column names that match the string.')}
+            <ul>
+              <li>${ _('If the result contains a large number of columns, click a row to select a column to jump to') }</li>
+              <li>${ _('Save huge results on HDFS and download them with FileBrowser') }</li>
+            </ul>
           </div>
         </div>
 
@@ -142,7 +148,7 @@ ${layout.menubar(section='query')}
         <div class="active tab-pane" id="results">
             % if error:
               <div class="alert alert-error">
-                <h3>${_('Error!')}</h3>
+                <h3>${_('Error')}</h3>
                 <pre>${ error_message }</pre>
                 % if expired and query_context:
                     <div class="well">
@@ -160,31 +166,29 @@ ${layout.menubar(section='query')}
             <tr>
               <th>&nbsp;</th>
               % for col in columns:
-                <th>${col}</th>
+                <th>${ col }</th>
               % endfor
             </tr>
             </thead>
             <tbody>
               % for i, row in enumerate(results):
               <tr>
-                <td>${start_row + i}</td>
+                <td>${ start_row + i }</td>
                 % for item in row:
-                  <td>${ item }</td>
+                  <td>${ smart_unicode(item, errors='ignore') }</td>
                 % endfor
               </tr>
               % endfor
             </tbody>
             </table>
-            <div class="pagination pull-right">
-              <ul>
-              % if start_row != 0:
-                      <li class="prev"><a title="${_('Beginning of List')}" href="${ url(app_name + ':view_results', query.id, 0) }${'?context=' + context_param or '' | n}">&larr; ${_('Beginning of List')}</a></li>
-              % endif
-              % if has_more and len(results) == 100:
-                  <li><a title="${_('Next page')}" href= "${ url(app_name + ':view_results', query.id, next_row) }${'?context=' + context_param or '' | n }">${_('Next Page')} &rarr;</a></li>
-              % endif
-              </ul>
-            </div>
+
+             <div style="text-align: center; padding: 5px; height: 30px">
+               <span class="noMore hide"
+                     style="color:#999999">${ _('You have reached the last record for this query.') }</span><img
+                     src="/static/art/spinner.gif"
+                     class="spinner"
+                     style="display: none;"/>
+             </div>
             % endif
         </div>
 
@@ -312,20 +316,26 @@ ${layout.menubar(section='query')}
       </label>
       ${comps.field(save_form['target_table'], notitle=True, placeholder=_('Table Name'))}
       <br/>
+
       <label class="radio">
         <input id="id_save_target_1" type="radio" name="save_target" value="to HDFS directory">
         &nbsp;${_('In an HDFS directory')}
       </label>
-      ${comps.field(save_form['target_dir'], notitle=True, hidden=True, placeholder=_('Results location'), klass="pathChooser")}
-      <br/>
-      <br/>
+      <span id="hdfs" class="hide">
+        ${comps.field(save_form['target_dir'], notitle=True, hidden=False, placeholder=_('Results location'), klass="pathChooser input-xlarge")}
+        <br/>
+        <br/>
+        <div class="alert alert-warn">
+          ${ _('In text with columns separated by ^A and rows separated by newlines. JSON for non-primitive type columns.') }
+        </div>
+      </span>
       <div id="fileChooserModal" class="smallModal well hide">
         <a href="#" class="close" data-dismiss="modal">&times;</a>
       </div>
     </div>
     <div class="modal-footer">
       <div id="fieldRequired" class="hide" style="position: absolute; left: 10;">
-        <span class="label label-important">${_('Sorry, name is required.')}</span>
+        <span class="label label-important">${_('Name or directory required.')}</span>
       </div>
       <a class="btn" data-dismiss="modal">${_('Cancel')}</a>
       <a id="saveBtn" class="btn btn-primary">${_('Save')}</a>
@@ -336,120 +346,150 @@ ${layout.menubar(section='query')}
 %endif.resultTable
 
 
-
 <script type="text/javascript" charset="utf-8">
-    $(document).ready(function () {
-      $(".resultTable").dataTable({
-        "bPaginate": false,
-        "bLengthChange": false,
-        "bInfo": false,
-        "oLanguage": {
-            "sEmptyTable": "${_('No data available')}",
-            "sZeroRecords": "${_('No matching records')}",
+$(document).ready(function () {
+
+  var dataTable = $(".resultTable").dataTable({
+    "bPaginate": false,
+    "bLengthChange": false,
+    "bInfo": false,
+    "oLanguage": {
+        "sEmptyTable": "${_('No data available')}",
+        "sZeroRecords": "${_('No matching records')}",
+    },
+    "fnDrawCallback": function( oSettings ) {
+      $(".resultTable").jHueTableExtender({
+        hintElement: "#jumpToColumnAlert",
+        fixedHeader: true,
+        firstColumnTooltip: true
+      });
+    }
+  });
+
+  $(".dataTables_wrapper").css("min-height", "0");
+  $(".dataTables_filter").hide();
+
+  $("input[name='save_target']").change(function () {
+    $("#fieldRequired").addClass("hide");
+    $("input[name='target_dir']").removeClass("fieldError");
+    $("input[name='target_table']").removeClass("fieldError");
+    if ($(this).val().indexOf("HDFS") > -1) {
+      $("input[name='target_table']").addClass("hide");
+      $("#hdfs").removeClass("hide");
+      $(".fileChooserBtn").removeClass("hide");
+    }
+    else {
+      $("input[name='target_table']").removeClass("hide");
+      $("#hdfs").addClass("hide");
+      $(".fileChooserBtn").addClass("hide");
+    }
+  });
+
+  $("#saveBtn").click(function () {
+    if ($("input[name='save_target']:checked").val().indexOf("HDFS") > -1) {
+      if ($.trim($("input[name='target_dir']").val()) == "") {
+        $("#fieldRequired").removeClass("hide");
+        $("input[name='target_dir']").addClass("fieldError");
+        return false;
+      }
+    }
+    else {
+      if ($.trim($("input[name='target_table']").val()) == "") {
+        $("#fieldRequired").removeClass("hide");
+        $("input[name='target_table']").addClass("fieldError");
+        return false;
+      }
+    }
+    $("#saveForm").submit();
+  });
+
+
+  $("input[name='target_dir']").after(getFileBrowseButton($("input[name='target_dir']")));
+
+  function getFileBrowseButton(inputElement) {
+    return $("<a>").addClass("btn").addClass("fileChooserBtn").addClass("hide").text("..").click(function (e) {
+      e.preventDefault();
+      $("#fileChooserModal").jHueFileChooser({
+        onFolderChange:function (filePath) {
+          inputElement.val(filePath);
         },
-        "fnDrawCallback": function( oSettings ) {
-          $(".resultTable").jHueTableExtender({
-            hintElement: "#jumpToColumnAlert",
-            fixedHeader: true,
-            firstColumnTooltip: true
-          });
-        }
+        onFolderChoose:function (filePath) {
+          inputElement.val(filePath);
+          $("#fileChooserModal").slideUp();
+        },
+        createFolder:false,
+        uploadFile:false,
+        selectFolder:true,
+        initialPath:$.trim(inputElement.val())
       });
-      $(".dataTables_wrapper").css("min-height", "0");
-      $(".dataTables_filter").hide();
-      $("input[name='save_target']").change(function () {
-        $("#fieldRequired").addClass("hide");
-        $("input[name='target_dir']").removeClass("fieldError");
-        $("input[name='target_table']").removeClass("fieldError");
-        if ($(this).val().indexOf("HDFS") > -1) {
-          $("input[name='target_table']").addClass("hide");
-          $("input[name='target_dir']").removeClass("hide");
-          $(".fileChooserBtn").removeClass("hide");
-        }
-        else {
-          $("input[name='target_table']").removeClass("hide");
-          $("input[name='target_dir']").addClass("hide");
-          $(".fileChooserBtn").addClass("hide");
-        }
-      });
-
-      $("#saveBtn").click(function () {
-        if ($("input[name='save_target']:checked").val().indexOf("HDFS") > -1) {
-          if ($.trim($("input[name='target_dir']").val()) == "") {
-            $("#fieldRequired").removeClass("hide");
-            $("input[name='target_dir']").addClass("fieldError");
-            return false;
-          }
-        }
-        else {
-          if ($.trim($("input[name='target_table']").val()) == "") {
-            $("#fieldRequired").removeClass("hide");
-            $("input[name='target_table']").addClass("fieldError");
-            return false;
-          }
-        }
-        $("#saveForm").submit();
-      });
-
-
-      $("input[name='target_dir']").after(getFileBrowseButton($("input[name='target_dir']")));
-
-      function getFileBrowseButton(inputElement) {
-        return $("<a>").addClass("btn").addClass("fileChooserBtn").addClass("hide").text("..").click(function (e) {
-          e.preventDefault();
-          $("#fileChooserModal").jHueFileChooser({
-            onFolderChange:function (filePath) {
-              inputElement.val(filePath);
-            },
-            onFolderChoose:function (filePath) {
-              inputElement.val(filePath);
-              $("#fileChooserModal").slideUp();
-            },
-            createFolder:false,
-            uploadFile:false,
-            selectFolder:true,
-            initialPath:$.trim(inputElement.val())
-          });
-          $("#fileChooserModal").slideDown();
-        });
-      }
-
-      $("#collapse").click(function () {
-        $(".sidebar-nav").parent().css("margin-left", "-31%");
-        $("#expand").show().css("top", $(".sidebar-nav i").position().top + "px");
-        $(".sidebar-nav").parent().next().removeClass("span9").addClass("span12").addClass("noLeftMargin");
-      });
-      $("#expand").click(function () {
-        $(this).hide();
-        $(".sidebar-nav").parent().next().removeClass("span12").addClass("span9").removeClass("noLeftMargin");
-        $(".sidebar-nav").parent().css("margin-left", "0");
-      });
-
-
-
-      resizeLogs();
-
-      $(window).resize(function () {
-        resizeLogs();
-      });
-
-      $("a[href='#log']").on("shown", function () {
-        resizeLogs();
-      });
-
-      function resizeLogs() {
-        $("#log pre").css("overflow", "auto").height($(window).height() - $("#log pre").position().top - 40);
-      }
-
-      $('.vn-enable').change(function () {
-        if ($(this).attr('checked')) {
-          $('a[href="#visualizations"]').show();
-        } else {
-          $('a[href="#visualizations"]').hide();
-        }
-      });
-
+      $("#fileChooserModal").slideDown();
     });
+  }
+
+  $("#collapse").click(function () {
+    $(".sidebar-nav").parent().css("margin-left", "-31%");
+    $("#expand").show().css("top", $(".sidebar-nav i").position().top + "px");
+    $(".sidebar-nav").parent().next().removeClass("span9").addClass("span12").addClass("noLeftMargin");
+  });
+  $("#expand").click(function () {
+    $(this).hide();
+    $(".sidebar-nav").parent().next().removeClass("span12").addClass("span9").removeClass("noLeftMargin");
+    $(".sidebar-nav").parent().css("margin-left", "0");
+  });
+
+  resizeLogs();
+
+  $(window).resize(function () {
+    resizeLogs();
+  });
+
+  $("a[href='#log']").on("shown", function () {
+    resizeLogs();
+  });
+
+  function resizeLogs() {
+    $("#log pre").css("overflow", "auto").height($(window).height() - $("#log pre").position().top - 40);
+  }
+
+  // enable infinite scroll instead of pagination
+  var _nextJsonSet = "${ next_json_set }";
+  var _hasMore = ${ has_more and 'true' or 'false' };
+  var _dt = $("div.dataTables_wrapper");
+  _dt.on("scroll", function (e) {
+    if (_dt.scrollTop() + _dt.outerHeight() + 20 > _dt[0].scrollHeight && !_dt.data("isLoading") && _hasMore) {
+      _dt.data("isLoading", true);
+      _dt.animate({opacity: '0.55'}, 200);
+      $(".spinner").show();
+      $.getJSON(_nextJsonSet, function (data) {
+        _hasMore = data.has_more;
+        if (!_hasMore) {
+          $(".noMore").removeClass("hide");
+        }
+        _nextJsonSet = data.next_json_set;
+        var _cnt = 0;
+        for (var i = 0; i < data.results.length; i++) {
+          var row = data.results[i];
+          row.unshift(data.start_row + _cnt);
+          dataTable.fnAddData(row);
+          _cnt++;
+        }
+        _dt.data("isLoading", false);
+        _dt.animate({opacity: '1'}, 50);
+        $(".spinner").hide();
+      });
+    }
+  });
+
+  $('.vn-enable').change(function () {
+    if ($(this).attr('checked')) {
+      $('a[href="#visualizations"]').show();
+    } else {
+      $('a[href="#visualizations"]').hide();
+    }
+  });
+
+  _dt.jHueScrollUp();
+});
 </script>
 
 ${ commonfooter(messages) | n,unicode }

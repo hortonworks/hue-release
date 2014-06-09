@@ -47,16 +47,16 @@ def download(handle, format, db):
   elif format == 'xls':
     mimetype = 'application/xls'
 
-  gen = data_generator(handle, format, db)
+  gen = data_generator(handle, formatter, db)
   resp = HttpResponse(gen, mimetype=mimetype)
   resp['Content-Disposition'] = 'attachment; filename=query_result.%s' % (format,)
 
   return resp
 
 
-def data_generator(handle, format, db, cut=None):
+def data_generator(handle, formatter, db, cut=None):
   """
-  data_generator(query_model, format) -> generator object
+  data_generator(query_model, formatter) -> generator object
 
   Return a generator object for a csv. The first line is the column names.
 

@@ -20,6 +20,7 @@ import re
 
 from operator import itemgetter
 
+from desktop.conf import KERBEROS
 from desktop.lib import thrift_util
 from desktop.conf import LDAP_PASSWORD
 from hadoop import cluster
@@ -311,6 +312,7 @@ class HiveServerClient:
       ssl_enabled = beeswax_conf.SSL.ENABLED.get()
       timeout = beeswax_conf.SERVER_CONN_TIMEOUT.get()
 
+    self.hiveserver2_impersonation_enabled = hiveserver2_impersonation_enabled
     self._client = thrift_util.get_client(TCLIService.Client,
                                           query_server['server_host'],
                                           query_server['server_port'],

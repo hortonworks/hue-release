@@ -14,10 +14,12 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 <%!
+from desktop.lib.i18n import smart_unicode
 from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 %>
 
+<%namespace name="components" file="components.mako" />
 <%namespace name="layout" file="layout.mako" />
 <%namespace name="comps" file="beeswax_components.mako" />
 
@@ -53,22 +55,32 @@ ${layout.menubar(section='tables')}
 </%def>
 
 <div class="container-fluid">
-    <h1>${_('Table Metadata:')} ${table.name}</h1>
+    <h1>${_('Table')} ${table.name}</h1>
+
+    ${ components.breadcrumbs(breadcrumbs) }
+
     <div class="row-fluid">
-        <div class="span3">
+        <div class="span2">
             <div class="well sidebar-nav">
                 <ul class="nav nav-list">
                     <li class="nav-header">${_('Actions')}</li>
-                    <li><a href="#importData" data-toggle="modal">${_('Import Data')}</a></li>
-                    <li><a href="${ url(app_name + ':read_table', database=database, table=table.name) }">${_('Browse Data')}</a></li>
+                    % if has_write_access:
+                    <li><a href="#" id="import-data-btn">${_('Import Data')}</a></li>
+                    % endif
+                    <li><a href="${ url('beeswax:read_table', database=database, table=table.name) }">${_('Browse Data')}</a></li>
+                    % if has_write_access:
                     <li><a href="#dropTable" data-toggle="modal">${_('Drop')} ${view_or_table_noun}</a></li>
+                    % endif
                     <li><a href="${ table.hdfs_link }" rel="${ table.path_location }">${_('View File Location')}</a></li>
+                    % if table.partition_keys:
+                      <li><a href="${ url('beeswax:describe_partitions', database=database, table=table.name) }">${_('Show Partitions')} (${ len(partitions) })</a></li>
+                    % endif
                 </ul>
             </div>
         </div>
-        <div class="span9">
-            % if table.comment is not None:
-                <h5>${ table.comment }</h5>
+        <div class="span10">
+            % if table.comment:
+                <div class="alert alert-info">${ _('Comment:') } ${ table.comment }</div>
             % endif
 
             <ul class="nav nav-tabs">
@@ -89,7 +101,6 @@ ${layout.menubar(section='tables')}
                 % if table.partition_keys:
                   <div class="tab-pane" id="partitionColumns">
                     ${column_table(table.partition_keys)}
-                    <a href="${ url(app_name + ':describe_partitions', database=database, table=table.name) }">${_('Show Partitions')}</a>
                   </div>
                 % endif
 
@@ -107,18 +118,13 @@ ${layout.menubar(section='tables')}
                               % for col in table.cols:
                                 <th>${col.name}</th>
                               % endfor
-                              % if table.partition_keys:
-                                % for col in table.partition_keys:
-                                  <th>${col.name}</th>
-                                % endfor
-                              % endif
                             </tr>
                           </thead>
                           <tbody>
                             % for i, row in enumerate(sample):
                               <tr>
                                 % for item in row:
-                                  <td>${ item }</td>
+                                  <td>${ smart_unicode(item, errors='ignore') }</td>
                                 % endfor
                               </tr>
                             % endfor
@@ -136,7 +142,7 @@ ${layout.menubar(section='tables')}
 
 
 <div id="dropTable" class="modal hide fade">
-    <form id="dropTableForm" method="POST" action="${ url(app_name + ':drop_table', database=database) }"> ${ csrf_token_field | n } 
+    <form id="dropTableForm" method="POST" action="${ url('beeswax:drop_table', database=database) }"> ${ csrf_token_field | n } 
     <div class="modal-header">
         <a href="#" class="close" data-dismiss="modal">&times;</a>
         <h3>${_('Drop Table')}</h3>
@@ -158,97 +164,20 @@ ${layout.menubar(section='tables')}
 </div>
 
 
+<div id="import-data-modal" class="modal hide fade"></div>
 
-<div id="importData" class="modal hide fade">
-    <form method="POST" action="${ url(app_name + ':load_table', database=database, table=table.name) }" class="form-horizontal"> ${ csrf_token_field | n } 
-        <div class="modal-header">
-            <a href="#" class="close" data-dismiss="modal">&times;</a>
-            <h3>${_('Import data')}</h3>
-        </div>
-        <div class="modal-body">
-
-            <div class="control-group">
-                ${comps.bootstrapLabel(load_form["path"])}
-                <div class="controls">
-                    ${comps.field(load_form["path"],
-                    placeholder="/user/user_name/data_dir/file",
-                    klass="pathChooser input-xlarge",
-                    file_chooser=True,
-                    show_errors=False
-                    )}
-                </div>
-            </div>
-
-            <div id="filechooser"></div>
-
-            % for pf in load_form.partition_columns:
-                <div class="control-group">
-                     ${comps.bootstrapLabel(load_form[pf])}
-                     <div class="controls">
-                       ${comps.field(load_form[pf], render_default=True, attrs={'klass': 'input-xlarge'})}
-                    </div>
-                </div>
-            % endfor
-
-            <div class="control-group">
-              <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" name="overwrite"/> ${_('Overwrite existing data')}
-                  </label>
-                </div>
-            </div>
-
-            <p class="muted"><em>${_("Note that loading data will move data from its location into the table's storage location.")}</em></p>
-        </div>
-
-        <div class="modal-footer">
-            <a href="#" class="btn" data-dismiss="modal">${_('Cancel')}</a>
-            <input type="submit" class="btn btn-primary" value="${_('Submit')}"/>
-        </div>
-    </form>
-</div>
 </div>
 
- <style>
-   #filechooser {
-     display: none;
-     min-height: 100px;
-     height: 250px;
-     overflow-y: scroll;
-     margin-top: 10px;
-   }
-
+<style>
    .sampleTable td, .sampleTable th {
      white-space: nowrap;
    }
+</style>
 
-   .form-horizontal .controls {
-     margin-left: 0;
-   }
+<link rel="stylesheet" href="/beeswax/static/css/beeswax-tables.css" type="text/css">
 
-   .form-horizontal .control-label {
-     width: auto;
-     padding-right: 10px;
-   }
- </style>
-
- <script type="text/javascript" charset="utf-8">
+<script type="text/javascript" charset="utf-8">
    $(document).ready(function () {
-
-     $(".fileChooserBtn").click(function(e){
-       e.preventDefault();
-       var _destination = $(this).attr("data-filechooser-destination");
-       $("#filechooser").jHueFileChooser({
-         initialPath: $("input[name='"+_destination+"']").val(),
-         onFileChoose: function(filePath){
-           $("input[name='"+_destination+"']").val(filePath);
-           $("#filechooser").slideUp();
-         },
-         createFolder: false
-       });
-       $("#filechooser").slideDown();
-     });
-
      $(".datatables").dataTable({
        "bPaginate": false,
        "bLengthChange": false,
@@ -260,9 +189,11 @@ ${layout.menubar(section='tables')}
        }
      });
 
-     $.getJSON("${ url(app_name + ':drop_table', database=database) }", function(data) {
+     % if has_write_access:
+     $.getJSON("${ url('beeswax:drop_table', database=database) }", function(data) {
        $("#dropTableMessage").text(data.title);
      });
+     % endif
 
      $('a[data-toggle="tab"]').on('shown', function() {
        $(".sampleTable").not('.initialized').addClass('initialized').dataTable({
@@ -284,7 +215,15 @@ ${layout.menubar(section='tables')}
        });
      })
 
-   });
- </script>
+    $("#import-data-btn").click(function () {
+      $.get("${ url('metastore:load_table', database=database, table=table.name) }", function (response) {
+          $("#import-data-modal").html(response['data']);
+          $("#import-data-modal").modal("show");
+        }
+      );
+    });
 
- ${ commonfooter(messages) | n,unicode }
+   });
+</script>
+
+${ commonfooter(messages) | n,unicode }

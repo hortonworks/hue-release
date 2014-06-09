@@ -22,7 +22,7 @@ from django.utils.translation import ugettext as _
 <%namespace name="comps" file="beeswax_components.mako" />
 <%namespace name="util" file="util.mako" />
 
-${ commonheader(_('Create table from file'), app_name, user, '100px') | n,unicode }
+${ commonheader(_('Create table from file'), 'beeswax', user, '100px') | n,unicode }
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
@@ -60,7 +60,7 @@ ${layout.menubar(section='tables')}
                             ${comps.field(delim_form["delimiter"], render_default=True)}
                             <input id="submit_preview" class="btn btn-info" type="submit" value="${_('Preview')}" name="submit_preview"/>
                             <span class="help-block">
-                            ${_('Enter the column delimiter. Must be a single character. Use syntax like "\\001" or "\\t" for special characters.')}
+                            ${_('Enter the column delimiter which must be a single character. Use syntax like "\\001" or "\\t" for special characters.')}
                             </span>
                         </div>
                     </div>
@@ -94,20 +94,20 @@ ${layout.menubar(section='tables')}
                                     </tr>
                                     </thead>
                                     <tbody>
-                                            % if fields_list:
-                                                <tr id="first-data-row">
-                                                    % for val in fields_list[0]:
-                                                        <td>${val}</td>
-                                                    % endfor
-                                                </tr>
-                                                % for row in fields_list[1:]:
-                                                <tr>
-                                                    % for val in row:
-                                                        <td>${val}</td>
-                                                    % endfor
-                                                </tr>
+                                        % if fields_list:
+                                            <tr id="first-data-row">
+                                                % for val in fields_list[0]:
+                                                    <td>${val}</td>
                                                 % endfor
-                                            % endif
+                                            </tr>
+                                            % for row in fields_list[1:]:
+                                            <tr>
+                                                % for val in row:
+                                                    ${ comps.getEllipsifiedCell(val, "left")}
+                                                % endfor
+                                            </tr>
+                                            % endfor
+                                        % endif
                                     </tbody>
                                 </table>
                             </div>
@@ -124,16 +124,18 @@ ${layout.menubar(section='tables')}
     </div>
 </div>
 
-<style>
-    .scrollable {
-        width: 100%;
-        overflow-x: auto;
-    }
+<style type="text/css">
+  .scrollable {
+    width: 100%;
+    overflow-x: auto;
+  }
 </style>
 
 <script type="text/javascript" charset="utf-8">
-    $(document).ready(function(){
-        $(".scrollable").width($(".form-actions").width());
+  $(document).ready(function () {
+    $("[rel='tooltip']").tooltip();
+
+    $(".scrollable").width($(".form-actions").width());
 
         $("#id_read_column_headers").change(function(){
             if ($(this).is(":checked")){
@@ -149,34 +151,34 @@ ${layout.menubar(section='tables')}
         });
         $("#id_read_column_headers").change();
 
-        $("#id_delimiter_1").css("margin-left","4px").attr("placeholder","${_('Please type your delimiter here')}").hide();
-        $("#id_delimiter_0").change(function(){
-            if ($(this).val() == "__other__"){
-                $("#id_delimiter_1").show();
-            }
-            else {
-                $("#id_delimiter_1").hide();
-                $("#id_delimiter_1").val('');
-            }
-        });
-
-        $("#id_delimiter_0").change();
-
-        $("#step1").click(function(e){
-            e.preventDefault();
-            $("input[name='cancel_delim']").click();
-        });
-        $("#step3").click(function(e){
-            e.preventDefault();
-            $("input[name='submit_delim']").click();
-        });
-        $("body").keypress(function(e){
-            if(e.which == 13){
-                e.preventDefault();
-                $("input[name='submit_delim']").click();
-            }
-        });
+    $("#id_delimiter_1").css("margin-left", "4px").attr("placeholder", "${_('Type your delimiter here')}").hide();
+    $("#id_delimiter_0").change(function () {
+      if ($(this).val() == "__other__") {
+        $("#id_delimiter_1").show();
+      }
+      else {
+        $("#id_delimiter_1").hide();
+        $("#id_delimiter_1").val('');
+      }
     });
+
+    $("#id_delimiter_0").change();
+
+    $("#step1").click(function (e) {
+      e.preventDefault();
+      $("input[name='cancel_delim']").click();
+    });
+    $("#step3").click(function (e) {
+      e.preventDefault();
+      $("input[name='submit_delim']").click();
+    });
+    $("body").keypress(function (e) {
+      if (e.which == 13) {
+        e.preventDefault();
+        $("input[name='submit_delim']").click();
+      }
+    });
+  });
 </script>
 
 ${ commonfooter(messages) | n,unicode }

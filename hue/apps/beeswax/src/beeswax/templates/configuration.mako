@@ -29,7 +29,7 @@ ${layout.menubar(section='configuration')}
 	<div class="well">
 		<form class="form-search" method="POST"> ${ csrf_token_field | n } 
 		    <span class="pull-left">
-                ${_('Filter:')} <input type="text" id="filterInput" class="input-xlarge search-query" placeholder="${_('Search for key, value, etc...')}">
+                <input type="text" id="filterInput" class="input-xlarge search-query" placeholder="${_('Search for key, value, etc.')}">
 		        <a href="#" id="clearFilterBtn" class="btn">${_('Clear')}</a>
 		    </span>
 		</form>
@@ -50,6 +50,7 @@ ${layout.menubar(section='configuration')}
 	    % endfor
 		</tbody>
 	</table>
+  <br/>
 </div>
 
 <script type="text/javascript" charset="utf-8">

@@ -22,7 +22,7 @@ from django.utils.translation import ugettext as _
 <%namespace name="actionbar" file="actionbar.mako" />
 <%namespace name="layout" file="layout.mako" />
 
-${ commonheader(_('Create database'), app_name, user, '100px') | n,unicode }
+${ commonheader(_('Create database'), 'beeswax', user, '100px') | n,unicode }
 ${layout.menubar(section='databases')}
 
 
