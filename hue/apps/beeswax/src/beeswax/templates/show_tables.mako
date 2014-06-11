@@ -17,17 +17,14 @@
 from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 %>
-
 <%namespace name="actionbar" file="actionbar.mako" />
-<%namespace name="components" file="components.mako" />
 <%namespace name="layout" file="layout.mako" />
 
-${ commonheader(_('Tables'), 'beeswax', user, '100px') | n,unicode }
+${ commonheader(_('Tables'), app_name, user, '100px') | n,unicode }
 ${layout.menubar(section='tables')}
 
-<div class="container-fluid" id="tables">
-    <h1>${_('Database %s') % database}</h1>
-    ${ components.breadcrumbs(breadcrumbs) }
+<div class="container-fluid">
+    <h1>${_('Tables')}</h1>
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
@@ -35,34 +32,26 @@ ${layout.menubar(section='tables')}
                     <span>
                     <li class="nav-header">${_('database')}</li>
                     <li>
-                       <form action="${ url('beeswax:show_tables') }" id="db_form" method="POST"> ${ csrf_token_field | n } 
+                       <form action="${ url(app_name + ':show_tables') }" id="db_form" method="POST"> ${ csrf_token_field | n } 
                          ${ db_form | n,unicode }
                        </form>
                     </li>
                     </span>
-                    % if has_write_access:
                     <li class="nav-header">${_('Actions')}</li>
-                      % if not examples_installed:
-                        <!--<li><a href="#installSamples" data-toggle="modal">${_('Install samples')}</a></li>-->
+                    % if not examples_installed:
+                    <!--<li><a href="#installSamples" data-toggle="modal">${_('Install samples')}</a></li>-->
                       % endif
-                      <li><a href="${ url('beeswax:import_wizard', database=database) }">${_('Create a new table from a file')}</a></li>
-                    <li><a href="${ url('beeswax:create_table', database=database) }">${_('Create a new table manually')}</a></li>
-                    % endif
+                      <li><a href="${ url(app_name + ':import_wizard', database=database) }">${_('Create a new table from a file')}</a></li>
+                    <li><a href="${ url(app_name + ':create_table', database=database) }">${_('Create a new table manually')}</a></li>
                 </ul>
             </div>
         </div>
         <div class="span9">
           <%actionbar:render>
-            <%def name="search()">
-              <input id="filterInput" type="text" class="input-xlarge search-query" placeholder="${_('Search for table name')}">
-            </%def>
-
             <%def name="actions()">
                 <button id="viewBtn" class="btn toolbarBtn" title="${_('Browse the selected table')}" disabled="disabled"><i class="icon-eye-open"></i> ${_('View')}</button>
                 <button id="browseBtn" class="btn toolbarBtn" title="${_('Browse the selected table')}" disabled="disabled"><i class="icon-list"></i> ${_('Browse Data')}</button>
-                % if has_write_access:
                 <button id="dropBtn" class="btn toolbarBtn" title="${_('Delete the selected tables')}" disabled="disabled"><i class="icon-trash"></i>  ${_('Drop')}</button>
-                % endif
             </%def>
           </%actionbar:render>
             <table class="table table-condensed table-striped datatables">
@@ -77,12 +66,12 @@ ${layout.menubar(section='tables')}
                   <tr>
                     <td data-row-selector-exclude="true" width="1%">
                       <div class="hueCheckbox tableCheck"
-                           data-view-url="${ url('beeswax:describe_table', database=database, table=table) }"
-                           data-browse-url="${ url('beeswax:read_table', database=database, table=table) }"
+                           data-view-url="${ url(app_name + ':describe_table', database=database, table=table) }"
+                           data-browse-url="${ url(app_name + ':read_table', database=database, table=table) }"
                            data-drop-name="${ table }" data-row-selector-exclude="true"></div>
                     </td>
                     <td>
-                      <a href="${ url('beeswax:describe_table', database=database, table=table) }" data-row-selector="true">${ table }</a>
+                      <a href="${ url(app_name + ':describe_table', database=database, table=table) }" data-row-selector="true">${ table }</a>
                     </td>
                   </tr>
                 % endfor
@@ -111,7 +100,7 @@ ${layout.menubar(section='tables')}
 % endif
 
 <div id="dropTable" class="modal hide fade">
-  <form id="dropTableForm" action="${ url('beeswax:drop_table', database=database) }" method="POST"> ${ csrf_token_field | n } 
+  <form id="dropTableForm" action="${ url(app_name + ':drop_table', database=database) }" method="POST"> ${ csrf_token_field | n } 
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
       <h3 id="dropTableMessage">${_('Confirm action')}</h3>
@@ -126,10 +115,8 @@ ${layout.menubar(section='tables')}
   </form>
 </div>
 
-<link rel="stylesheet" href="/beeswax/static/css/beeswax-tables.css" type="text/css">
-
 <script src="/static/ext/js/jquery/plugins/jquery.cookie.js"></script>
-<script src="/static/ext/js/knockout-min.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/ext/js/knockout-2.1.0.js" type="text/javascript" charset="utf-8"></script>
 
 <script type="text/javascript" charset="utf-8">
   $(document).ready(function () {
@@ -164,7 +151,7 @@ ${layout.menubar(section='tables')}
     $("a[data-row-selector='true']").jHueRowSelector();
 
     $("#id_database").change(function () {
-      $.cookie("hueBeeswaxLastDatabase", $(this).val(), {path: "/", expires:90});
+      $.cookie("hueBeeswaxLastDatabase", $(this).val(), {path: "/", expires: 90});
       $('#db_form').submit();
     });
 
@@ -234,7 +221,7 @@ ${layout.menubar(section='tables')}
     }
 
     $("#dropBtn").click(function () {
-      $.getJSON("${ url('beeswax:drop_table', database=database) }", function(data) {
+      $.getJSON("${ url(app_name + ':drop_table', database=database) }", function(data) {
         $("#dropTableMessage").text(data.title);
       });
       viewModel.chosenTables.removeAll();

@@ -14,14 +14,14 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 <%!
-from desktop.views import commonheader, commonfooter
-from django.utils.translation import ugettext as _
+    from desktop.views import commonheader, commonfooter
+    from django.utils.translation import ugettext as _
 %>
 
 <%namespace name="comps" file="beeswax_components.mako" />
 <%namespace name="layout" file="layout.mako" />
 
-${ commonheader(_("Create table manually"), 'beeswax', user, '100px') | n,unicode }
+${ commonheader(_("Create table manually"), app_name, user, '100px') | n,unicode }
 ${layout.menubar(section='tables')}
 
 <div class="container-fluid">
@@ -62,7 +62,7 @@ ${layout.menubar(section='tables')}
                   )}
                   <span  class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed.')}</span>
                   <p class="help-block">
-                      ${_('Name of the new table. Table names must be globally unique. Table names tend to correspond to the directory where the data will be stored.')}
+                      ${_('Name of the new table. Table names must be globally unique. Table names tend to correspond as well to the directory where the data will be stored.')}
                   </p>
               </div>
           </div>
@@ -74,7 +74,7 @@ ${layout.menubar(section='tables')}
                     )
                   )}
                   <p class="help-block">
-                      ${_("Use a table comment to describe your table.  For example, note the data's provenance and any caveats users need to know.")}
+                      ${_("Use a table comment to describe your table.  For example, you might note the data's provenance and any caveats users need to know.")}
                   </p>
               </div>
           </div>
@@ -84,7 +84,7 @@ ${layout.menubar(section='tables')}
   <div id="step2" class="stepDetails hide">
       <fieldset>
           <div class="alert alert-info"><h3>${_('Choose Your Record Format')}</h3>
-              ${_("Individual records are broken up into columns either with delimiters (e.g., CSV or TSV) or using a specific serialization/deserialization (SerDe) implementation. (One common specialized SerDe is for parsing out columns with a regular expression.)")}
+              ${_("Individual records are broken up into columns either with delimiters (e.g., CSV or TSV) or using a specific serialization / deserialization (SerDe) implementation. (One common specialized SerDe is for parsing out columns with a regular expression.)")}
           </div>
           <%
               selected = table_form["row_format"].data or table_form["row_format"].field.initial
@@ -218,7 +218,7 @@ ${layout.menubar(section='tables')}
                       )}
                       <span  class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed.')}</span>
                       <span class="help-block">
-                          ${_('Java class used to read data.')}
+                          ${_('Java class used to read data')}
                       </span>
                   </div>
               </div>
@@ -231,7 +231,7 @@ ${layout.menubar(section='tables')}
                       )}
                       <span  class="help-inline error-inline hide">${_('This field is required. Spaces are not allowed.')}</span>
                       <span class="help-block">
-                          ${_('Java class used to write data.')}
+                          ${_('Java class used to write data')}
                       </span>
                   </div>
               </div>

@@ -131,7 +131,7 @@ def get_shared_beeswax_server():
       sleep = 0.001
       make_logged_in_client()
       user = User.objects.get(username='test')
-      query_server = get_query_server_config()
+      query_server = get_query_server_config(requires_ddl=True)
       db = dbms.get(user, query_server)
 
       while not started and time.time() - start < 20.0:
@@ -242,14 +242,14 @@ def make_query(client, query, submission_type="Execute",
   parameters["settings-next_form_id"] = str(len(settings))
   for i, settings_pair in enumerate(settings or []):
     key, value = settings_pair
-    parameters["settings-%d-key" % i] = str(key)
-    parameters["settings-%d-value" % i] = str(value)
+    parameters["settings-%d-key" % i] = key
+    parameters["settings-%d-value" % i] = value
     parameters["settings-%d-_exists" % i] = 'True'
   parameters["file_resources-next_form_id"] = str(len(resources or []))
   for i, resources_pair in enumerate(resources or []):
     type, path = resources_pair
-    parameters["file_resources-%d-type" % i] = str(type)
-    parameters["file_resources-%d-path" % i] = str(path)
+    parameters["file_resources-%d-type" % i] = type
+    parameters["file_resources-%d-path" % i] = path
     parameters["file_resources-%d-_exists" % i] = 'True'
 
   kwargs.setdefault('follow', True)

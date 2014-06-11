@@ -20,7 +20,6 @@ import re
 
 from operator import itemgetter
 
-from desktop.conf import KERBEROS
 from desktop.lib import thrift_util
 from desktop.conf import LDAP_PASSWORD
 from hadoop import cluster

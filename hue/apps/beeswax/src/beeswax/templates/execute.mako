@@ -28,27 +28,27 @@
             <p><strong>${_('Your query has the following error(s):')}</strong></p>
             <p class="queryErrorMessage">${error_message}</p>
             % if log:
-                <small>${_('click the')} <b>${_('Error Log')}</b> ${_('tab above for details')}</small>
+                <small>${_('click the')} <b>${_('Error Log')}</b> ${_('tab below for details')}</small>
             % endif
         </div>
     % endif
 
-    <textarea class="hide" tabindex="1" name="${form.query["query"].html_name}" id="queryField">${extract_field_data(form.query["query"]) or ''}</textarea>
+    <textarea class="span9" rows="35" name="${form.query["query"].html_name}" id="queryField">${extract_field_data(form.query["query"]) or ''}</textarea>
 
     <div id="validationResults">
     % if len(form.query["query"].errors):
         ${ unicode(form.query["query"].errors) | n,unicode }
      % endif
     </div>
-
+    <br>
     <div class="actions">
-        <button type="button" id="executeQuery" class="btn btn-primary" tabindex="2">${_('Execute')}</button>
+        <a id="executeQuery" class="btn btn-primary" tabindex="0">${_('Execute')}</a>
         % if design and not design.is_auto and design.name:
-        <button type="button" id="saveQuery" class="btn">${_('Save')}</button>
+        <a id="saveQuery" class="btn">${_('Save')}</a>
         % endif
-        <button type="button" id="saveQueryAs" class="btn">${_('Save as...')}</button>
-        <button type="button" id="explainQuery" class="btn">${_('Explain')}</button>
-        &nbsp; ${_('or create a')} &nbsp;<a type="button" class="btn" href="${ url(app_name + ':execute_query') }">${_('New query')}</a>
+        <a id="saveQueryAs" class="btn">${_('Save as...')}</a>
+        <a id="explainQuery" class="btn">${_('Explain')}</a>
+        &nbsp; ${_('or create a')} &nbsp;<a class="btn" href="${ url(app_name + ':execute_query') }">${_('New query')}</a>
     </div>
 </%def>
 
@@ -116,9 +116,7 @@ ${layout.menubar(section='query')}
 
                                 <div class="control-group">
                                     ${comps.label(f['type'])}
-                                    ${comps.field(f['type'], render_default=True, attrs=dict(
-                                        klass="span8"
-                                    ))}
+                                    ${comps.field(f['type'], render_default=True)}
                                 </div>
 
                                 <div class="control-group">
@@ -185,59 +183,39 @@ ${layout.menubar(section='query')}
                           <li>
                             <label class="checkbox" rel="tooltip" data-original-title="${_("If checked, you will receive an email notification when the query completes.")}">
                                 <input type="checkbox" id="id_${form.query["email_notify"].html_name | n}" name="${form.query["email_notify"].html_name | n}" ${extract_field_data(form.query["email_notify"]) and "CHECKED" or ""}/>
-                                ${_("Email me on completion.")}
+                                ${_("Email me on completion")}
                             </label>
-                          </li>
-                          <li class="nav-header"></li>
-                          <li>
-                            <div class="control-group">
-                              <i class="icon-question-sign" id="help"></i>
-                              <div id="help-content" class="hide">
-                                <ul style="text-align: left;">
-                                  <li>${ _('Press CTRL + Space to autocomplete') }</li>
-                                  <li>${ _("You can execute queries with multiple SQL statements delimited by a semicolon ';'") }</li>
-                                  <li>To see table fields helper type table_name + "." (e.g. sample_07.)</li>
-                                  <li>${ _('You can highlight and run a fragment of a query') }</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </li>
-                       </ul>
+                          </li>                          
+                        </ul>
+                    </ul>
                     <input type="hidden" name="${form.query["query"].html_name | n}" class="query" value="" />
                 </form>
             </div>
-        </div>
 
-        <div id="querySide" class="span9">
+        </div>
+        <div class="span9">
             % if on_success_url:
               <input type="hidden" name="on_success_url" value="${on_success_url}"/>
             % endif
-            <div style="margin-bottom: 30px">
-              <h1>
-                ${ _('Query Editor') }
-                % if can_edit_name:
-                  :
-                  <a href="#" id="query-name" data-type="text" data-pk="${ design.id }"
-                     data-name="name"
-                     data-url="${ url(app_name + ':save_design_properties') }"
-                     data-original-title="${ _('Query name') }"
-                     data-value="${ design.name }"
-                     data-placement="left">
-                  </a>
-                %endif
-              </h1>
-              % if can_edit_name:
-                <p>
-                  <a href="#" id="query-description" data-type="textarea" data-pk="${ design.id }"
-                     data-name="description"
-                     data-url="${ url(app_name + ':save_design_properties') }"
-                     data-original-title="${ _('Query description') }"
-                     data-value="${ design.desc }"
-                     data-placement="bottom">
-                  </a>
-                </p>
+
+            % if design and not design.is_auto and design.name:
+              <h1>${_('Query Editor')} : ${design.name}</h1>
+              % if design.desc:
+                <p>${design.desc}</p>
               % endif
-            </div>
+            % else:
+              <h1>${_('Query Editor')}</h1>
+            % endif 
+            <div class="control-group">
+                              <a href="javascript:void(0);" class="alert-success" ><i class="icon-question-sign" id="help"></i></a>
+                              <div id="help-content" class="hide">
+                                <ul class="text-success">
+                                  <li>${ _("You can execute queries with multiple SQL statements delimited by a semicolon ';'.") }</li>
+                                  <li>Press ctrl+space for autocompletion</li>
+                                  <li>To see table fields helper type table_name + "." (e.g. sample_07.)</li>
+                                </ul>
+                              </div>
+            </div>         
             % if error_messages or log:
                 <ul class="nav nav-tabs">
                     <li class="active">
@@ -269,11 +247,7 @@ ${layout.menubar(section='query')}
                     % endif
                 </div>
             % else:
-              <div class="tab-content">
-                <div id="queryPane">
-                  ${query()}
-                </div>
-              </div>
+                ${query()}
             % endif
             <br/>
         </div>
@@ -326,8 +300,6 @@ ${layout.menubar(section='query')}
 
 <link href="/pig/static/css/codemirror.css" rel="stylesheet">
 <link href="/pig/static/css/show-hint.css" rel="stylesheet">
-<link href="/static/ext/css/bootstrap-editable.css" rel="stylesheet">
-<script src="/static/ext/js/bootstrap-editable.min.js"></script>
 
 <style>
   h1 {
@@ -423,179 +395,164 @@ ${layout.menubar(section='query')}
 
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
-      $("*[rel=tooltip]").tooltip({
-        placement: 'bottom'
-      });
-      $("#help").popover({'title': "${'Did you know?'}", 'content': $("#help-content").html(), 'html': true, 'placement': 'bottom'});
-      $("a[data-form-prefix]").each(function () {
-        var _prefix = $(this).attr("data-form-prefix");
-        var _nextID = 0;
-        if ($("." + _prefix + "Field").length) {
-          _nextID = ($("." + _prefix + "Field").last().attr("name").substr(_prefix.length + 1).split("-")[0] * 1) + 1;
-        }
-        $("<input>").attr("type", "hidden").attr("name", _prefix + "-next_form_id").attr("value", _nextID).appendTo($("#advancedSettingsForm"));
-        $("." + _prefix + "Delete").click(function (e) {
-          e.preventDefault();
-          $("input[name=" + _prefix + "-add]").attr("value", "");
-          $("<input>").attr("type", "hidden").attr("name", $(this).attr("name")).attr("value", "True").appendTo($("#advancedSettingsForm"));
-          checkAndSubmit();
+        $("*[rel=tooltip]").tooltip({
+            placement: 'bottom'
         });
-      });
+        $("#help").popover({'title': "${'Did you know?'}", 'content': $("#help-content").html(), 'html': true, 'placement': 'bottom'});
+        $("a[data-form-prefix]").each(function(){
+            var _prefix = $(this).attr("data-form-prefix");
+            var _nextID = 0;
+            if ($("."+_prefix+"Field").length){
+                _nextID= ($("."+_prefix+"Field").last().attr("name").substr(_prefix.length+1).split("-")[0]*1)+1;
+            }
+            $("<input>").attr("type","hidden").attr("name",_prefix+"-next_form_id").attr("value",_nextID).appendTo($("#advancedSettingsForm"));
+            $("."+_prefix+"Delete").click(function(e){
+                e.preventDefault();
+                $("input[name="+_prefix+"-add]").attr("value","");
+                $("<input>").attr("type","hidden").attr("name", $(this).attr("name")).attr("value","True").appendTo($("#advancedSettingsForm"));
+                checkAndSubmit();
+            });
+        });
 
-      $("a[data-form-prefix]").click(function () {
-        var _prefix = $(this).attr("data-form-prefix");
-        $("<input>").attr("type", "hidden").attr("name", _prefix + "-add").attr("value", "True").appendTo($("#advancedSettingsForm"));
-        checkAndSubmit();
-      });
+        $("a[data-form-prefix]").click(function(){
+            var _prefix = $(this).attr("data-form-prefix");
+            $("<input>").attr("type","hidden").attr("name",_prefix+"-add").attr("value","True").appendTo($("#advancedSettingsForm"));
+            checkAndSubmit();
+        });
 
-      $(".file_resourcesField").each(function () {
-        var self = $(this);
-        self.after(getFileBrowseButton(self));
-      });
+        $(".file_resourcesField").each(function(){
+            var self = $(this);
+            self.after(getFileBrowseButton(self));
+        });
 
-      function getFileBrowseButton(inputElement) {
-        return $("<button>").addClass("btn").addClass("fileChooserBtn").text("..").click(function (e) {
-          e.preventDefault();
-          $("#filechooser").jHueFileChooser({
-            initialPath: inputElement.val(),
-            onFileChoose: function (filePath) {
-              inputElement.val(filePath);
-              $("#chooseFile").modal("hide");
-            },
-            createFolder: false
+        function getFileBrowseButton(inputElement) {
+            return $("<button>").addClass("btn").addClass("fileChooserBtn").text("..").click(function(e){
+                e.preventDefault();
+                $("#filechooser").jHueFileChooser({
+                    initialPath: inputElement.val(),
+                    onFileChoose: function(filePath) {
+                        inputElement.val(filePath);
+                        $("#chooseFile").modal("hide");
+                    },
+                    createFolder: false
+                });
+                $("#chooseFile").modal("show");
+            })
+        }
+
+        $("#id_query-database").change(function(){
+             $.cookie("hueBeeswaxLastDatabase", $(this).val(), {path: "/", expires: 90});
+        });
+
+        ## If no particular query is loaded
+        % if design is None or design.id is None:
+            if ($.cookie("hueBeeswaxLastDatabase") != null) {
+                $("#id_query-database").val($.cookie("hueBeeswaxLastDatabase"));
+            }
+        % endif
+
+        var executeQuery = function(){
+            $("<input>").attr("type","hidden").attr("name","button-submit").attr("value","Execute").appendTo($("#advancedSettingsForm"));
+            checkAndSubmit();
+        }
+
+        $("#executeQuery").click(executeQuery);
+        $("#executeQuery").keyup(function(event){
+            if(event.keyCode == 13){
+                executeQuery();
+            }
+        });
+
+        $("#saveQuery").click(function(){
+            $("<input>").attr("type","hidden").attr("name","saveform-name")
+                .attr("value", "${extract_field_data(form.saveform["name"])}").appendTo($("#advancedSettingsForm"));
+            $("<input>").attr("type","hidden").attr("name","saveform-desc")
+                .attr("value", "${extract_field_data(form.saveform["desc"])}").appendTo($("#advancedSettingsForm"));
+            $("<input>").attr("type","hidden").attr("name","saveform-save").attr("value","Save").appendTo($("#advancedSettingsForm"));
+            checkAndSubmit();
+        });
+
+        var checkSaveAsName = function (field, callback){
+            $.post(
+                '/beeswax/list_designs',
+                {name:field.val()},
+                function(data){
+                    if (data.thisname) {
+                        field.next('.alert').removeClass('hide');
+                        $("#saveAsNameBtn").attr("disabled", "disabled");
+                    } else {
+                        field.next('.alert').addClass('hide');
+                        $("#saveAsNameBtn").removeAttr("disabled");
+                    }
+                    if (typeof callback=='function'){
+                        callback(data)
+                    }
+                },
+                'json'
+            );
+        }
+
+        $("#saveQueryAs").click(function(){
+            $("<input>").attr("type","hidden").attr("name","saveform-saveas").attr("value","Save As...").appendTo($("#advancedSettingsForm"));
+            $("#saveAs").find("input[name=saveform-name]").keyup(function(){checkSaveAsName($(this));}).trigger('keyup');
+            $("#saveAs").modal("show");
+        });
+
+        $("#saveAsNameBtn").click(function(){
+            checkSaveAsName(
+                $("input[name=saveform-name]"),
+                function (data){
+                    var org_name = $("input[name=saveform-name]").val();
+                    var saveasname = (data.thisname) ? org_name + ' (copy)' : org_name;
+                    $("<input>").attr("type","hidden").attr("name","saveform-name")
+                        .attr("value", saveasname).appendTo($("#advancedSettingsForm"));
+                    $("<input>").attr("type","hidden").attr("name","saveform-desc")
+                        .attr("value", $("textarea[name=saveform-desc]").val()).appendTo($("#advancedSettingsForm"));
+                    checkAndSubmit();
+                }
+            )
+        });
+
+        $("#explainQuery").click(function(){
+            $("<input>").attr("type","hidden").attr("name","button-explain").attr("value","Explain").appendTo($("#advancedSettingsForm"));
+            checkAndSubmit();
+        });
+
+        $("#queryField").change(function(){
+            $(".query").val($(this).val());
+        });
+
+        $("#queryField").focus(function(){
+            $(this).removeClass("fieldError");
+            $("#validationResults").empty();
+        });
+
+        var selectedLine = -1;
+        if ($(".queryErrorMessage")){
+          var err = $(".queryErrorMessage").text().toLowerCase();
+          var firstPos = err.indexOf("line");
+          selectedLine = $.trim(err.substring(err.indexOf(" ", firstPos), err.indexOf(":", firstPos)))*1;
+        }
+
+		/*if (selectedLine > -1){
+          $("#queryField").linedtextarea({
+            selectedLine: selectedLine
           });
-          $("#chooseFile").modal("show");
-        })
-      }
-
-      $("#id_query-database").change(function(){
-        $.cookie("hueBeeswaxLastDatabase", $(this).val(), {path: "/", expires: 90});
-      });
-
-      ## If no particular query is loaded
-      % if design is None or design.id is None:
-        if ($.cookie("hueBeeswaxLastDatabase") != null) {
-          $("#id_query-database").val($.cookie("hueBeeswaxLastDatabase"));
         }
-      % endif
+        else {
+          $("#queryField").linedtextarea();
+        }*/
 
-      var executeQuery = function () {
-        $("<input>").attr("type","hidden").attr("name","button-submit").attr("value","Execute").appendTo($("#advancedSettingsForm"));
-        checkAndSubmit();
-      }
-
-      $("#executeQuery").click(executeQuery);
-      $("#executeQuery").keyup(function (event) {
-        if (event.keyCode == 13) {
-          executeQuery();
-        }
-      });
-
-      $("#saveQuery").click(function () {
-        $("<input>").attr("type","hidden").attr("name","saveform-name")
-          .attr("value", "${extract_field_data(form.saveform["name"])}").appendTo($("#advancedSettingsForm"));
-        $("<input>").attr("type","hidden").attr("name","saveform-desc")
-          .attr("value", "${extract_field_data(form.saveform["desc"])}").appendTo($("#advancedSettingsForm"));
-        $("<input>").attr("type","hidden").attr("name","saveform-save").attr("value","Save").appendTo($("#advancedSettingsForm"));
-        checkAndSubmit();
-      });
-
-      var checkSaveAsName = function (field, callback){
-        $.post(
-          '/beeswax/list_designs',
-          {name:field.val()},
-          function(data){
-            if (data.thisname) {
-              field.next('.alert').removeClass('hide');
-              $("#saveAsNameBtn").attr("disabled", "disabled");
-            } else {
-              field.next('.alert').addClass('hide');
-              $("#saveAsNameBtn").removeAttr("disabled");
+        function checkAndSubmit(){
+            if(editor != undefined)
+            {
+                editor.save();
             }
-            if (typeof callback=='function'){
-              callback(data)
-            }
-          },
-          'json'
-        );
-      }
-
-      $("#saveQueryAs").click(function () {
-        $("<input>").attr("type","hidden").attr("name","saveform-saveas").attr("value","Save As...").appendTo($("#advancedSettingsForm"));
-        $("#saveAs").find("input[name=saveform-name]").keyup(function(){checkSaveAsName($(this));}).trigger('keyup');
-        $("#saveAs").modal("show");
-      });
-
-      $("#saveAsNameBtn").click(function () {
-        checkSaveAsName(
-          $("input[name=saveform-name]"),
-          function (data){
-            var org_name = $("input[name=saveform-name]").val();
-              var saveasname = (data.thisname) ? org_name + ' (copy)' : org_name;
-              $("<input>").attr("type","hidden").attr("name","saveform-name")
-                .attr("value", saveasname).appendTo($("#advancedSettingsForm"));
-              $("<input>").attr("type","hidden").attr("name","saveform-desc")
-                .attr("value", $("textarea[name=saveform-desc]").val()).appendTo($("#advancedSettingsForm"));
-              checkAndSubmit();
-          }
-        )
-      });
-
-      $("#explainQuery").click(function () {
-        $("input[name='button-execute']").remove();
-        $("<input>").attr("type", "hidden").attr("name", "button-explain").attr("value", "Explain").appendTo($("#advancedSettingsForm"));
-        checkAndSubmit();
-      });
-
-      $("#queryField").change(function(){
-        $(".query").val($(this).val());
-      });
-
-      $("#queryField").focus(function(){
-        $(this).removeClass("fieldError");
-        $("#validationResults").empty();
-      });
-
-      var selectedLine = -1;
-      if ($(".queryErrorMessage")){
-        var err = $(".queryErrorMessage").text().toLowerCase();
-        var firstPos = err.indexOf("line");
-        selectedLine = $.trim(err.substring(err.indexOf(" ", firstPos), err.indexOf(":", firstPos)))*1;
-      }
-
-	  /*if (selectedLine > -1){
-        $("#queryField").linedtextarea({
-          selectedLine: selectedLine
-        });
-      }
-      else {
-        $("#queryField").linedtextarea();
-      }*/
-
-      function checkAndSubmit() {
-        if(editor != undefined)
-        {
-           editor.save();
+            $(".query").val($("#queryField").val());
+            $("#advancedSettingsForm").submit();
         }
-        $(".query").val($("#queryField").val());
-        $("#advancedSettingsForm").submit();
-      }
-    });
-
-    $.getJSON("${ url(app_name + ':configuration') }", function(data) {
-      $(".settingsField").typeahead({
-        source: $.map(data.config_values, function(value, key) {
-          return value.key;
-        })
-      });
-    });
-
-    $("#help").popover({
-        'title': "${_('Did you know?')}",
-        'content': $("#help-content").html(),
-        'trigger': 'hover',
-        'html': true
     });
 </script>
+
 
 ${ commonfooter(messages) | n,unicode }

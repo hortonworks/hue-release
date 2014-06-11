@@ -28,47 +28,47 @@ ${layout.menubar(section='query')}
 <!-- <meta http-equiv="refresh" content="3;${url(app_name + ':watch_query', query.id)}?${fwd_params}" /> -->
 
 <div class="container-fluid">
-    <h1>${_('Waiting for query...')} ${util.render_query_context(query_context)}</h1>
-    <div class="row-fluid">
-        <div class="span3">
-            <div class="well sidebar-nav
-            ">
-                <ul class="nav nav-list">
-                    <%
-                      n_jobs = hadoop_jobs and len(hadoop_jobs) or 0
-                      mr_jobs = (n_jobs == 1) and _('MR Job') or _('MR Jobs')
-                    %>
-                     % if n_jobs > 0:
-                        <li id="jobsHeader" class="nav-header">${mr_jobs} (${n_jobs})</li>
-                        % for jobid in hadoop_jobs:
-                            <li><a class="jobLink" href="${url("jobbrowser.views.single_job", job=jobid)}">${jobid.replace("job_", "")}</a></li>
-                        % endfor
-                    % else:
-                        <li id="jobsHeader" class="nav-header">${mr_jobs}</li>
-                        <li class="jobLink">${_('No Hadoop jobs were launched in running this query.')}</li>
-                    % endif
-                </ul>
-            </div>
-        </div>
-        <div class="span9">
-            <ul class="nav nav-tabs">
-                <li class="active"><a href="#log" data-toggle="tab">${_('Log')}</a></li>
-                <li><a href="#query" data-toggle="tab">${_('Query')}</a></li>
-            </ul>
+	<h1>${_('Waiting for query...')} ${util.render_query_context(query_context)}</h1>
+	<div class="row-fluid">
+		<div class="span3">
+			<div class="well sidebar-nav">
+				<ul class="nav nav-list">
+					<%
+			          n_jobs = hadoop_jobs and len(hadoop_jobs) or 0
+			          mr_jobs = (n_jobs == 1) and _('MR Job') or _('MR Jobs')
+			        %>
+				 	% if n_jobs > 0:
+						<li id="jobsHeader" class="nav-header">${mr_jobs} (${n_jobs})</li>
+						% for jobid in hadoop_jobs:
+						    <li><a class="jobLink wordbreak" href="${url("jobbrowser.views.single_job", job=jobid)}">${jobid.replace("job_", "")}</a></li>
+						% endfor
+					% else:
+						<li id="jobsHeader" class="nav-header">${mr_jobs}</li>
+						<li class="jobLink wordbreak">${_('No Hadoop jobs were launched in running this query.')}</li>
+					% endif
+				</ul>
+			</div>
+		</div>
+		<div class="span9">
+			<ul class="nav nav-tabs">
+				<li class="active"><a href="#log" data-toggle="tab">${_('Log')}</a></li>
+				<li><a href="#query" data-toggle="tab">${_('Query')}</a></li>
+			</ul>
 
-               <div class="tab-content">
-                <div class="active tab-pane" id="log">
-                    <pre>${ log }</pre>
-                </div>
-                <div class="tab-pane" id="query">
-                    <pre>${ query.get_current_statement() }</pre>
-                </div>
-            </div>
-        </div>
-    </div>
+		   	<div class="tab-content">
+				<div class="active tab-pane" id="log">
+					<pre>${ log }</pre>
+				</div>
+				<div class="tab-pane" id="query">
+					<pre>${ query.get_current_statement() }</pre>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 
 <script>
+
   $(document).ready(function(){
     var fwdUrl = "${url(app_name + ':watch_query', query.id)}?${fwd_params}";
     var labels = {
@@ -81,7 +81,7 @@ ${layout.menubar(section='query')}
     var logsAtEnd = true;
 
     function refreshView() {
-      $.getJSON("${url('beeswax:watch_query_refresh_json', query.id)}", function (data) {
+      $.getJSON("${url('beeswax' + ':watch_query_refresh_json', query.id)}", function (data) {
         if (data.isSuccess || data.isFailure) {
           location.href = fwdUrl;
         }
@@ -89,7 +89,7 @@ ${layout.menubar(section='query')}
           $(".jobLink").remove();
           $("#jobsHeader").text((data.jobs.length > 1 ? labels.MRJOBS : labels.MRJOB) + " (" + data.jobs.length + ")");
           for (var i = 0; i < data.jobs.length; i++) {
-            $("#jobsHeader").after($("<li>").addClass("jobLink").html("<a href=\"" + data.jobUrls[data.jobs[i]] + "\">" + data.jobs[i].replace("job_", "") + "</a>"));
+            $("#jobsHeader").after($("<li>").addClass("jobLink wordbreak").html("<a href=\"" + data.jobUrls[data.jobs[i]] + "\">" + data.jobs[i].replace("job_", "") + "</a>"));
           }
         }
         var _logsEl = $("#log pre");
@@ -124,6 +124,8 @@ ${layout.menubar(section='query')}
     }
 
   });
+
 </script>
+
 
 ${ commonfooter(messages) | n,unicode }

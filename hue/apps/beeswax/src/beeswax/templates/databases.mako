@@ -18,24 +18,19 @@ from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 %>
 <%namespace name="actionbar" file="actionbar.mako" />
-<%namespace name="components" file="components.mako" />
 <%namespace name="layout" file="layout.mako" />
 
-${ commonheader(_('Databases'), 'beeswax', user, '100px') | n,unicode }
+${ commonheader(_('Databases'), app_name, user, '100px') | n,unicode }
 ${layout.menubar(section='databases')}
 
 <div class="container-fluid" id="databases">
     <h1>${_('Databases')}</h1>
-    ${ components.breadcrumbs(breadcrumbs) }
-
     <div class="row-fluid">
         <div class="span3">
             <div class="well sidebar-nav">
-              % if has_write_access:
                 <ul class="nav nav-list">
                     <li><a href="${ url('beeswax:create_database') }">${_('Create a new database')}</a></li>
                 </ul>
-              % endif
             </div>
         </div>
         <div class="span9">
@@ -45,9 +40,7 @@ ${layout.menubar(section='databases')}
             </%def>
 
             <%def name="actions()">
-              % if has_write_access:
                 <button id="dropBtn" class="btn toolbarBtn" title="${_('Drop the selected databases')}" disabled="disabled"><i class="icon-trash"></i>  ${_('Drop')}</button>
-              % endif
             </%def>
           </%actionbar:render>
             <table class="table table-condensed table-striped datatables">
@@ -62,12 +55,12 @@ ${layout.menubar(section='databases')}
                   <tr>
                     <td data-row-selector-exclude="true" width="1%">
                       <div class="hueCheckbox databaseCheck"
-                           data-view-url="${ url('beeswax:show_tables', database=database) }"
+                           data-view-url="${ url(app_name + ':show_tables', database=database) }"
                            data-drop-name="${ database }"
                            data-row-selector-exclude="true"></div>
                     </td>
                     <td>
-                      <a href="${ url('beeswax:show_tables', database=database) }" data-row-selector="true">${ database }</a>
+                      <a href="${ url(app_name + ':show_tables', database=database) }" data-row-selector="true">${ database }</a>
                     </td>
                   </tr>
                 % endfor
@@ -78,7 +71,7 @@ ${layout.menubar(section='databases')}
 </div>
 
 <div id="dropDatabase" class="modal hide fade">
-  <form id="dropDatabaseForm" action="${ url('beeswax:drop_database') }" method="POST">  ${ csrf_token_field | n }
+  <form id="dropDatabaseForm" action="${ url(app_name + ':drop_database') }" method="POST">  ${ csrf_token_field | n }
     <div class="modal-header">
       <a href="#" class="close" data-dismiss="modal">&times;</a>
       <h3 id="dropDatabaseMessage">${_('Confirm action')}</h3>
@@ -93,9 +86,7 @@ ${layout.menubar(section='databases')}
   </form>
 </div>
 
-<link rel="stylesheet" href="/beeswax/static/css/beeswax-tables.css" type="text/css">
-
-<script src="/static/ext/js/knockout-min.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/ext/js/knockout-2.1.0.js" type="text/javascript" charset="utf-8"></script>
 
 <script type="text/javascript" charset="utf-8">
   $(document).ready(function () {
@@ -160,7 +151,7 @@ ${layout.menubar(section='databases')}
     }
 
     $("#dropBtn").click(function () {
-      $.getJSON("${ url('beeswax:drop_database') }", function(data) {
+      $.getJSON("${ url(app_name + ':drop_database') }", function(data) {
         $("#dropDatabaseMessage").text(data.title);
       });
       viewModel.chosenDatabases.removeAll();
