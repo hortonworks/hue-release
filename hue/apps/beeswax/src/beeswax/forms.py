@@ -105,7 +105,7 @@ class SaveResultsForm(DependencyAwareForm):
                                   help_text=_t("Name of the new table"))
   target_dir = PathField(label=_t("Results Location"),
                          required=False,
-                         help_text=_t("Empty directory in HDFS to put the results"))
+                         help_text=_t("Empty directory in HDFS to store results."))
   dependencies = [
     ('save_target', SAVE_TYPE_TBL, 'target_table'),
     ('save_target', SAVE_TYPE_DIR, 'target_dir'),
@@ -113,6 +113,7 @@ class SaveResultsForm(DependencyAwareForm):
 
   def __init__(self, *args, **kwargs):
     self.db = kwargs.pop('db', None)
+    self.fs = kwargs.pop('fs', None)
     super(SaveResultsForm, self).__init__(*args, **kwargs)
 
   def clean(self):
@@ -126,10 +127,18 @@ class SaveResultsForm(DependencyAwareForm):
             self.db.get_table('default', tbl) # Assumes 'default' DB
           self._errors['target_table'] = self.error_class([_('Table already exists')])
           del cleaned_data['target_table']
-        except hive_metastore.ttypes.NoSuchObjectException:
+        except Exception:
           pass
+    elif cleaned_data['save_target'] == SaveResultsForm.SAVE_TYPE_DIR:
+      target_dir = cleaned_data['target_dir']
+      if not target_dir.startswith('/'):
+        self._errors['target_dir'] = self.error_class([_('Directory should start with /')])
+      elif self.fs.exists(target_dir):
+        self._errors['target_dir'] = self.error_class([_('Directory already exists.')]) # Overwrite destination directory content
 
     return cleaned_data
+
+
 
 
 class HQLForm(forms.Form):

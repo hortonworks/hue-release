@@ -780,94 +780,60 @@ def view_results(request, id, first_row=0):
 
   return render('watch_results.mako', request, context)
 
-
 def save_results(request, id):
   """
-  Save the results of a query to an HDFS directory
+  Save the results of a query to an HDFS directory or Hive table.
   """
   query_history = authorized_get_history(request, id, must_exist=True)
 
+  app_name = get_app_name(request)
   server_id, state = _get_query_handle_and_state(query_history)
   query_history.save_state(state)
   error_msg, log = None, None
 
   if request.method == 'POST':
-    # Make sure the result is available.
-    # Note that we may still hit errors during the actual save
     if not query_history.is_success():
-      if query_history.is_failure():
-        msg = _('This query has %(state)s. Results unavailable.') % {'state': state}
-      else:
-        msg = _('The result of this query is not available yet.')
+      msg = _('This query is %(state)s. Results unavailable.') % {'state': state}
       raise PopupException(msg)
 
     db = dbms.get(request.user, query_history.get_query_server_config())
-    form = beeswax.forms.SaveResultsForm(request.POST, db=db)
+    form = beeswax.forms.SaveResultsForm(request.POST, db=db, fs=request.fs)
 
-    # Cancel goes back to results
     if request.POST.get('cancel'):
-      return format_preserving_redirect(request, '/beeswax/watch/%s' % (id,))
+      return format_preserving_redirect(request, '/%s/watch/%s' % (app_name, id))
 
     if form.is_valid():
-      # Do save
-      # 1. Get the results metadata
-      assert request.POST.get('save')
       try:
         handle, state = _get_query_handle_and_state(query_history)
         result_meta = db.get_results_metadata(handle)
-      except QueryNotFoundException, ex:
-        LOG.exception(ex)
-        raise PopupException(_('Cannot find query.'))
-      except StructuredException, ex:
-        LOG.exception(ex)
-        raise PopupException(_('There is no data to be saved.'))
-      if result_meta.table_dir:
-        result_meta.table_dir = request.fs.urlsplit(result_meta.table_dir)[2]
+      except Exception, ex:
+        raise PopupException(_('Cannot find query: %s') % ex)
 
-      # 2. Check for partitioned tables
-      if result_meta.table_dir is None:
-        raise PopupException(_('Saving results from a partitioned table is not supported. You may copy from the HDFS location manually.'))
-
-      # 3. Actual saving of results
       try:
         if form.cleaned_data['save_target'] == form.SAVE_TYPE_DIR:
-          # To dir
-          if result_meta.in_tablename:
-            raise PopupException(_('Saving results from a query with no MapReduce jobs is not supported. '
-                                   'You may copy manually from the HDFS location %(path)s.') % {'path': result_meta.table_dir})
           target_dir = form.cleaned_data['target_dir']
-          sources = result_meta.table_dir
-          sources = sources[0 if sources.find('/') == -1 else sources.find('/') : ]
-          if request.fs.exists(sources):
-            request.fs.rename_star(result_meta.table_dir, target_dir)
-          elif not request.fs.exists(sources) and os.path.exists(sources):
-            request.fs.copyFromLocal(sources, target_dir)
-          LOG.debug("Moved results from %s to %s" % (result_meta.table_dir, target_dir))
-          query_history.save_state(models.QueryHistory.STATE.expired)
-          return redirect(reverse('filebrowser.views.view', kwargs={'path': target_dir}))
+          query_history = db.insert_query_into_directory(query_history, target_dir)
+          redirected = redirect(reverse('beeswax:watch_query', args=[query_history.id]) \
+                                + '?on_success_url=' + reverse('filebrowser.views.view', kwargs={'path': target_dir}))
         elif form.cleaned_data['save_target'] == form.SAVE_TYPE_TBL:
-          # To new table
-          try:
-            return _save_results_ctas(request, query_history, form.cleaned_data['target_table'], result_meta)
-          except BeeswaxException, bex:
-            LOG.exception(bex)
-            error_msg, log = expand_exception(bex, db)
-      except WebHdfsException, ex:
-        raise PopupException(_('The table could not be saved.'), detail=ex)
-      except IOError, ex:
-        LOG.exception(ex)
-        error_msg = str(ex)
+          redirected = db.create_table_as_a_select(request, query_history, form.cleaned_data['target_table'], result_meta)
+      except Exception, ex:
+        error_msg, log = expand_exception(ex, db)
+        raise PopupException(_('The result could not be saved: %s.') % log, detail=ex)
+
+      return redirected
   else:
     form = beeswax.forms.SaveResultsForm()
 
   if error_msg:
-    error_msg = _('Failed to save results from query: %(error)s') % {'error': error_msg}
-  return render('save_results.mako', request, dict(
-    action=reverse(get_app_name(request) + ':save_results', kwargs={'id': str(id)}),
-    form=form,
-    error_msg=error_msg,
-    log=log,
-  ))
+    error_msg = _('Failed to save results from query: %(error)s.') % {'error': error_msg}
+
+  return render('save_results.mako', request, {
+    'action': reverse(get_app_name(request) + ':save_results', kwargs={'id': str(id)}),
+    'form': form,
+    'error_msg': error_msg,
+    'log': log,
+  })
 
 
 def _save_results_ctas(request, query_history, target_table, result_meta):
