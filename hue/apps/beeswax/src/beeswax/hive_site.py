@@ -102,8 +102,8 @@ def get_metastore():
       kerberos_principal = security_util.get_kerberos_principal(get_conf().get(_CNF_METASTORE_KERBEROS_PRINCIPAL, None), host)
 
     kerberos_principal_components = security_util.get_components(kerberos_principal)
-    if use_sasl and len(kerberos_principal_components) == 3:
-      host = kerberos_principal_components[1]
+    #if use_sasl and len(kerberos_principal_components) == 3:
+    #  host = kerberos_principal_components[1]
 
     _METASTORE_LOC_CACHE = (is_local, host, int(port), kerberos_principal)
   return _METASTORE_LOC_CACHE

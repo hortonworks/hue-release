@@ -51,7 +51,7 @@ from beeswax.forms import LoadDataForm, QueryForm, DbForm
 from beeswax.design import HQLdesign, hql_query
 from beeswax.models import SavedQuery, make_query_context
 from beeswax.server import dbms
-from beeswax.server.dbms import expand_exception, get_query_server_config
+from beeswax.server.dbms import expand_exception, get_query_server_config, QueryServerException
 
 
 LOG = logging.getLogger(__name__)
@@ -554,10 +554,8 @@ def execute_query(request, design_id=None):
           else:
             download = request.POST.has_key('download')
             return execute_directly(request, query, query_server, design, on_success_url=on_success_url, download=download)
-        except BeeswaxException, ex:
-          print ex.errorCode
-          print ex.SQLState
-          error_message, log = expand_exception(ex, db)
+        except QueryServerException, e:
+          error_message, log = expand_exception(e, db)
   else:
     if design.id is not None:
       data = HQLdesign.loads(design.data).get_query_dict()
