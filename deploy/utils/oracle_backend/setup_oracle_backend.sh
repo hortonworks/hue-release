@@ -74,10 +74,10 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ORACLE_HOME"
 case "$1" in
     "centos5.9" )
         # it assumes that python2.6 is already installed
-        yum install -y python26-devel python-devel unzip
+        yum install -y python26-devel python-devel unzip gcc
         ;;
     "centos6.4" )
-        yum install -y python-devel unzip
+        yum install -y python-devel unzip gcc
         ;;
     "suse11" )
         zypper install -y python-devel unzip
