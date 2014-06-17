@@ -40,7 +40,7 @@ from desktop.lib.exceptions import StructuredException
 
 from hadoop.fs.exceptions import WebHdfsException
 from jobsub.parameterization import find_variables, substitute_variables
-from beeswaxd.ttypes import BeeswaxException, QueryNotFoundException
+from beeswaxd.ttypes import QueryNotFoundException
 
 import beeswax.forms
 import beeswax.design
@@ -373,7 +373,7 @@ def describe_table(request, database, table):
 
   try:
     table_data = db.get_sample(database, table)
-  except BeeswaxException, ex:
+  except Exception, ex:
     error_message, logs = expand_exception(ex, db)
 
   load_form = LoadDataForm(table)
@@ -393,15 +393,15 @@ def drop_table(request, database=None):
 
   if request.method == 'POST':
     tables = request.POST.getlist('table_selection')
-    tables_objects = [db.get_table(database, table) for table in tables]
-    app_name = get_app_name(request)
     try:
+      tables_objects = [db.get_table(database, table) for table in tables]
+      app_name = get_app_name(request)
       # Can't be simpler without an important refactoring
       design = SavedQuery.create_empty(app_name='beeswax', owner=request.user, data=hql_query('').dumps())
       query_history = db.drop_tables(database, tables_objects, design)
       url = reverse(app_name + ':watch_query', args=[query_history.id]) + '?on_success_url=' + reverse(app_name + ':show_tables')
       return redirect(url)
-    except BeeswaxException, ex:
+    except Exception, ex:
       error_message, log = expand_exception(ex, db)
       error = _("Failed to remove %(tables)s.  Error: %(error)s") % {'tables': ','.join(tables), 'error': error_message}
       raise PopupException(error, title=_("Beeswax Error"), detail=log)
@@ -620,7 +620,7 @@ def watch_query(request, id):
   if request.method == 'POST' or (not query_history.is_finished() and query_history.is_success() and not query_history.has_results):
     try:
       query_history = db.execute_next_statement(query_history)
-    except BeeswaxException, ex:
+    except Exception, ex:
       pass
 
   # Check query state
@@ -659,7 +659,7 @@ def watch_query_refresh_json(request, id):
     if not query_history.is_finished() and query_history.is_success() and not query_history.has_results:
       db.execute_next_statement(query_history, request.POST.get('query-query'))
       handle, state = _get_query_handle_and_state(query_history)    
-  except BeeswaxException, ex:
+  except Exception, ex:
     handle, state = _get_query_handle_and_state(query_history)
   
   log = db.get_log(handle)
@@ -1165,7 +1165,7 @@ def _run_parameterized_query(request, design_id, explain):
         return explain_directly(request, query, design, query_server)
       else:
         return execute_directly(request, query, query_server, design)
-    except BeeswaxException, ex:
+    except Exception, ex:
       db = dbms.get(request.user, query_server)
       error_message, log = expand_exception(ex, db)
       return render('execute.mako', request, {
@@ -1221,7 +1221,7 @@ def execute_directly(request, query, query_server=None, design=None, tablename=N
     db.use(database)
 
     history_obj = db.execute_query(query, design)
-  except BeeswaxException, ex:
+  except Exception, ex:
       error_message, logs = expand_exception(ex, db)
       raise PopupException(_('Error occurred executing hive query: ' + error_message))
 
