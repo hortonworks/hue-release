@@ -27,7 +27,12 @@ from desktop import conf as desktop_conf
 from django.http import HttpResponse
 import simplejson as json
 
-from sh import ErrorReturnCode, bash, sudo, service
+from sh import ErrorReturnCode
+try:
+  from sh import bash, sudo
+except ImportError:
+  pass
+
 from about import conf
 import subprocess
 
