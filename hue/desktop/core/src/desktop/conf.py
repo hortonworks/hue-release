@@ -327,27 +327,6 @@ LDAP = ConfigSection(
   key="ldap",
   help=_("Configuration options for LDAP connectivity."),
   members=dict(
-    BASE_DN=Config("base_dn",
-                   default=None,
-                   help=_("The base LDAP distinguished name to use for LDAP search.")),
-    NT_DOMAIN=Config("nt_domain",
-                     default=None,
-                     help=_("The NT domain used for LDAP authentication.")),
-    LDAP_URL=Config("ldap_url",
-                     default=None,
-                     help=_("The LDAP URL to connect to.")),
-    LDAP_CERT=Config("ldap_cert",
-                     default=None,
-                     help=_("The LDAP certificate for authentication over TLS.")),
-    LDAP_USERNAME_PATTERN=Config("ldap_username_pattern",
-                                 default=None,
-                                 help=_("A pattern to use for constructing LDAP usernames.")),
-    BIND_DN=Config("bind_dn",
-                   default=None,
-                   help=_("The distinguished name to bind as, when importing from LDAP.")),
-    BIND_PASSWORD=Config("bind_password",
-                   default=None,
-                   help=_("The password for the bind user.")),
     CREATE_USERS_ON_LOGIN = Config("create_users_on_login",
       help=_("Create users when they login with their LDAP credentials."),
       type=coerce_bool,
@@ -406,7 +385,6 @@ LDAP = ConfigSection(
                                       "members of a group.")),
       )
     ),
-))
 
     LDAP_SERVERS = UnspecifiedConfigSection(
       key="ldap_servers",
@@ -634,7 +612,7 @@ def validate_ldap(user, config):
 
   return res
 
-def config_validator():
+def config_validator(user):
   """
   config_validator() -> [ (config_variable, error_message) ]
 
