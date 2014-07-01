@@ -161,6 +161,7 @@ from django.utils.translation import ugettext as _
         title="${_('About<br>' + ABOUT_PAGE_TITLE.get())}"
         href="/about"><img src="/about/static/art/icon_sandbox_logo_24.png"/>
         </a>
+        % if user.is_authenticated():
         <div id="usernameDropdown" class="btn-group pull-right">
           <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
             <i class="icon-user"></i> ${user.username}
@@ -172,6 +173,7 @@ from django.utils.translation import ugettext as _
             <li><a href="/accounts/logout/">${_('Sign Out')}</a></li>
           </ul>
         </div>
+        % endif
 
         <div class="nav-collapse">
           <ul class="nav">
