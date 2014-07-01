@@ -46,13 +46,6 @@ ${commonheader(_('About ' + page_title), "about", user, "100px")| n,unicode}
             ${about_top_html| n,unicode}
         </div>
         % endif
-
-        % if RAM_ALERT:
-        <div class="alert">
-            Before enabling Ambari, it is recommended that Base Memory is set to a minimum of 4096 MB. Base Memory is currently set to ${RAM} MB.
-        </div>
-        % endif
-
 		<div class="span-3">
 			<div class="well sidebar-nav">
 				<ul class="nav nav-list">
