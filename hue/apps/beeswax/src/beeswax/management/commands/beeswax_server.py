@@ -86,12 +86,17 @@ class Command(NoArgsCommand):
         desktop.conf.KERBEROS.HUE_KEYTAB.get(),
         '--principalConf',
         desktop.conf.KERBEROS.HUE_PRINCIPAL.get(),
+	'--refresh',
+        str(desktop.conf.KERBEROS.KEYTAB_REINIT_FREQUENCY.get()/60)
       ]
 
     # Running on HTTPS?
     if desktop.conf.is_https_enabled():
       args.append('--desktop-https')
       args.append('true')
+
+    if beeswax.conf.MAX_WORKER_THREADS.get() != 0:
+      args += ['--max-worker-threads', str(beeswax.conf.MAX_WORKER_THREADS.get())]
 
     # Start metastore as well?
     is_local, host, port, kerberos_principal = beeswax.hive_site.get_metastore()

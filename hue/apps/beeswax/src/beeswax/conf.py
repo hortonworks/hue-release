@@ -46,6 +46,12 @@ BEESWAX_SERVER_PORT = Config(
   type=int)
 
 
+MAX_WORKER_THREADS = Config(
+  key="max_worker_threads",
+  help=_("Maximum of worker threads for thrift's TThreadPoolServer"),
+  default=0,
+  type=int)
+
 BEESWAX_META_SERVER_HOST = Config(
   key="beeswax_meta_server_host",
   help=_("Host where internal metastore Thrift daemon is running."),

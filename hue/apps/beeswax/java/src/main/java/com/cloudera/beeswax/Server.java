@@ -75,6 +75,7 @@ public class Server {
   private static Integer refreshInterval = DEFAULT_KRB_REFRESH_INTERVAL;
   private static String kerberosName;
   private static UserGroupInformation bwUgi;
+  private static int maxWorkerThreadsNum = Integer.MAX_VALUE;
 
   public static class KbrSaslTransportFactory extends TTransportFactory {
     UserGroupInformation ugi;
@@ -129,6 +130,10 @@ public class Server {
     Option dtPortOpt = new Option("p", "desktop-port", true, "port used by desktop");
     dtPortOpt.setRequired(false);
     dtOptions.addOption(dtPortOpt);
+    
+    Option maxWorkerThreads = new Option("w", "max-worker-threads", true, "maximum of worker threads for thrift's TThreadPoolServer");
+    maxWorkerThreads.setRequired(false);
+    options.addOption(maxWorkerThreads);
 
     Option noDesktopOpt = new Option("n", "no-desktop", false, "no desktop used");
     dtOptions.addOption(noDesktopOpt);
@@ -170,6 +175,8 @@ public class Server {
         principalConf = opt.getValue();
       } else if (opt.getOpt().equals("r")) {
         refreshInterval = Integer.valueOf(opt.getValue()) * 1000 * 60; // minutes
+      } else if (opt.getOpt().equals("w")) {
+        maxWorkerThreadsNum = Integer.valueOf(opt.getValue());
       }
 
     }
@@ -273,7 +280,9 @@ public class Server {
     TThreadPoolServer.Args args = new TThreadPoolServer.Args(serverTransport)
         .processor(processor)
         .protocolFactory(new TBinaryProtocol.Factory())
-        .transportFactory(transFactory);
+        .transportFactory(transFactory)
+        .maxWorkerThreads(maxWorkerThreadsNum);
+    
     TServer server = new TThreadPoolServer(args);
 
     if (dtPort != -1) {
