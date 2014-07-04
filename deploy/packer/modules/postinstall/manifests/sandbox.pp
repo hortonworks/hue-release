@@ -8,45 +8,43 @@ class postinstall::sandbox{
     require => Class["postinstall"]
   }
 
-  $hueSandbox = ["hue", "hue-sandbox", "hue-tutorials"]
+  $services = ["ambari-agent", "ambari-server", "auditd", "cups", "gmetad", "gmond", "hadoop-mapreduce-historyserver", "hadoop-yarn-nodemanager", "hadoop-yarn-proxyserver", "hadoop-yarn-resourcemanager", "hdp-gmetad", "hdp-gmond", "nagios", "nfs", "nfslock", "rpcbind", "rpcidmapd", "rpcgssd", "rpcsvcgssd"]
+
+  $postInstallPackages = ["yum-plugin-priorities", "epel-release", "libxslt", "python-lxml"]
+
+  package{$postInstallPackages:
+    ensure => installed,
+    require => Class["install::ambari-bluprints"]
+  }
+
+  exec{"install nfs":
+    command => "yum install -y nfs*",
+  }
+
+  service {$services:
+    enable => false,
+    require => [Package[$postInstallPackages],Exec["install nfs"]]
+  }
+
+  $hueSandbox = ["hue-sandbox", "hue-tutorials"]
 
   package{$hueSandbox:
     ensure => installed,
-    require => Yumrepo["sandbox"]
+    require => [Yumrepo["sandbox"],Class["postinstall::hue"]]
   }
 
   exec { 'hue_password':
     command => "echo 'hue:hadoop' | chpasswd",
-    require => Package['hue']
+    require => Class['postinstall::hue']
   }
 
   exec { 'hue_sudoers':
     command => "echo -e 'hue ALL=(ALL) ALL\nhue ALL=(ALL) NOPASSWD: /sbin/chkconfig\nhue ALL=(ALL) NOPASSWD: /sbin/service\nhue ALL=(ALL) NOPASSWD: /bin/kill' >> /etc/sudoers",
-    require => Package['hue']
-  }
-
-  file { "/etc/hue/conf/hue.ini":
-    source => "puppet:///modules/postinstall/hue.ini",
-    require => Package['hue']
+    require => Class['postinstall::hue']
   }
 
   file { "/tmp/install/ambari-url-fix.sh":
     source => "puppet:///modules/postinstall/ambari-url-fix.sh"
-  }
-
-  file { "/tmp/install/hdfs_prepare.sh":
-    source => "puppet:///modules/postinstall/hdfs_prepare.sh"
-  }
-
-  service{"hue":
-    ensure => running,
-    require => [File["/etc/hue/conf/hue.ini"],Package["hue"]]
-  }
-
-  exec {"prepare_hue":
-    command => "/bin/bash /tmp/install/hdfs_prepare.sh",
-    require => [File["/tmp/install/hdfs_prepare.sh"],Service["hue"]],
-    timeout => 0
   }
 
   exec {'ambari-url-fix.sh':
@@ -54,11 +52,16 @@ class postinstall::sandbox{
     require => [File["/tmp/install/ambari-url-fix.sh"], Class["install::ambari-server"]]
   }
 
-  file { '/etc/httpd/conf.d/hue.conf':
-    source => "puppet:///modules/postinstall/apache-hue.conf",
-    ensure  => file,
-    require => Package["hue"]
+  package { 'python-pip':
+    ensure => present,
+    require => Package["epel-release"],
   }
 
-  include postinstall::splash
+  exec { 'python-sh':
+    command => "pip-python install sh",
+    require => Package["python-pip"],
+    cwd     => "/root",
+  }
+
+
 }

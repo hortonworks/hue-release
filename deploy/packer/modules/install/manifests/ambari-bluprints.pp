@@ -1,8 +1,20 @@
 class install::ambari-bluprints{
 
   if $nodecount==3{
-    file{"/tmp/install/bluprint.json":
-      source => "puppet:///modules/install/bluprint-3-nodes.json"
+    if $stack == 'gluster' {
+      exec{"register correct stack":
+        command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin  -X PUT -d @/tmp/puppet/modules/install/files/2.1.repo.json 'http://ambari.hortonworks.com:8080/api/v1/stacks/HDP/versions/2.1.GlusterFS/operating_systems/centos6/repositories/HDP-2.1.GlusterFS' && wget -O /etc/yum.repos.d/hdp-util.repo http://public-repo-1.hortonworks.com.s3.amazonaws.com/HDP-UTILS-1.1.0.17/repos/centos6/hdp-util.repo",
+        require => Class["install::ambari-server"]
+      }      
+      file{"/tmp/install/bluprint.json":
+        source => "puppet:///modules/install/bluprint-gluster-3-nodes.json",
+        require => Exec["register correct stack"]
+      }
+    }
+    else {
+      file{"/tmp/install/bluprint.json":
+        source => "puppet:///modules/install/bluprint-3-nodes.json"
+      }
     }
     file{"/tmp/install/cluster.json":
       source => "puppet:///modules/install/3-nodes-bluprint-cluster.json"
@@ -26,13 +38,13 @@ class install::ambari-bluprints{
   }
 
   exec {"add bluprint":
-    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://127.0.0.1:8080/api/v1/blueprints/sandbox -d @/tmp/install/bluprint.json",
+    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://ambari.hortonworks.com:8080/api/v1/blueprints/sandbox -d @/tmp/install/bluprint.json",
     require => [File["/tmp/install/bluprint.json"],Class["install::ambari-server"]],
     logoutput => true
   }
 
   exec {"add cluster":
-    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://127.0.0.1:8080/api/v1/clusters/Sandbox -d @/tmp/install/cluster.json",
+    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://ambari.hortonworks.com:8080/api/v1/clusters/Sandbox -d @/tmp/install/cluster.json",
     require => [File["/tmp/install/cluster.json"],Exec["add bluprint"]],
     logoutput => true
   }

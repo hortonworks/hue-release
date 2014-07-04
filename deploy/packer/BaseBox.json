@@ -46,7 +46,7 @@
             ["modifyvm", "{{.Name}}", "--natpf1", "Accumulo,tcp,127.0.0.1,50095,,50095"],
             ["modifyvm", "{{.Name}}", "--natpf1", "WebHcat,tcp,127.0.0.1,50111,,50111"],
             ["modifyvm", "{{.Name}}", "--natpf1", "WebHBase,tcp,127.0.0.1,60080,,60080"]
-        ]
+      ]
     },{
         "boot_command": [
             "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
@@ -74,47 +74,27 @@
     }
                 ],
     "post-processors": [
-        {
-            "type": "vagrant",
-            "only": ["virtualbox-iso"],
-            "output" : "packer_vagrant/packer_{{.BuildName}}_{{.Provider}}.box",
-            "keep_input_artifact": true
-        }
+    {
+        "type": "vagrant",
+        "only": ["virtualbox-iso"],
+        "output" : "packer_vagrant/CentOS6-5BaseBox.box",
+        "keep_input_artifact": true
+    }
     ],
     "provisioners": [
-        {
-            "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
-            "scripts": [
-                "scripts/prepare.sh",
-                "scripts/network.sh",
-                "scripts/fix-redhat-hugepage.sh",
-                "scripts/sshd.sh",
-                "scripts/vagrant.sh",
-                "scripts/puppet.sh",
-                "scripts/vmtools.sh",
-                "scripts/cleanup.sh"
-            ],
-            "type": "shell"
-        },{
-            "type": "puppet-masterless",
-            "manifest_file": "manifests/init.pp",
-            "module_paths": ["modules"],
-            "facter": {"role": "ambari","nodecount": "1", "sandbox": "true"}
-        },{
-            "type": "file",
-            "source": "scripts/files/start-ttys.override",
-            "destination": "/tmp/start-ttys.override"
-        },{
-            "type": "file",
-            "source": "scripts/files/tty-splash.conf",
-            "destination": "/tmp/tty-splash.conf"
-        },{
-            "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
-            "scripts": [
-                "scripts/splash.sh",
-                "scripts/minimize.sh"
-            ],
-            "type": "shell"
-        }
-    ]
+    {
+        "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+        "scripts": [
+            "scripts/prepare.sh",
+            "scripts/network.sh",
+            "scripts/fix-redhat-hugepage.sh",
+            "scripts/sshd.sh",
+            "scripts/vagrant.sh",
+            "scripts/puppet.sh",
+            "scripts/vmtools.sh",
+            "scripts/cleanup.sh",
+            "scripts/minimize.sh"
+        ],
+        "type": "shell"
+    }  ]
 }
