@@ -740,6 +740,7 @@ def view_results(request, id, first_row=0):
   error = fetch_error or results is None or expired
 
   context = {
+    'go_to_column':conf.GO_TO_COLUMN.get(),
     'error': error,
     'error_message': error_message,
     'query': query_history,

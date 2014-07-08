@@ -76,6 +76,13 @@ DOWNLOAD_ROW_LIMIT = Config(
   type=int,
   help=_t('A limit to the number of rows that can be downloaded from a query. A value of -1 means there will be no limit. A maximum of 65,000 is applied to XLS downloads.'))
 
+GO_TO_COLUMN = Config(
+  key="go_to_column",
+  help=_("Disable 'go to column' popup."),
+  type=coerce_bool,
+  default=True
+)
+
 CLOSE_QUERIES = Config(
   key="close_queries",
   help=_t("Hue will try to close the Hive query when the user leaves the editor page. "

@@ -338,6 +338,13 @@ ${layout.menubar(section='query')}
 
 
 <script type="text/javascript" charset="utf-8">
+
+%if go_to_column:
+    var enable_popup = true;
+% else:
+    var enable_popup = false;
+% endif
+
     $(document).ready(function () {
       $(".resultTable").dataTable({
         "bPaginate": false,
@@ -348,11 +355,13 @@ ${layout.menubar(section='query')}
             "sZeroRecords": "${_('No matching records')}",
         },
         "fnDrawCallback": function( oSettings ) {
-          $(".resultTable").jHueTableExtender({
-            hintElement: "#jumpToColumnAlert",
-            fixedHeader: true,
-            firstColumnTooltip: true
-          });
+          if (enable_popup) {
+            $(".resultTable").jHueTableExtender({
+              hintElement: "#jumpToColumnAlert",
+              fixedHeader: true,
+              firstColumnTooltip: true
+            });
+          };
         }
       });
       $(".dataTables_wrapper").css("min-height", "0");
