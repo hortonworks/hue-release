@@ -78,7 +78,7 @@ DOWNLOAD_ROW_LIMIT = Config(
 
 GO_TO_COLUMN = Config(
   key="go_to_column",
-  help=_("Disable 'go to column' popup."),
+  help=_t("Disable 'go to column' popup."),
   type=coerce_bool,
   default=True
 )
