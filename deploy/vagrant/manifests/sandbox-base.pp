@@ -167,12 +167,12 @@ class sandbox {
         content => template("/vagrant/files/scripts/vmware-tools.sh"),
     }
 
-    file {"/usr/lib/hue/apps/shell/src/shell/build/setuid":
+/*    file {"/usr/lib/hue/apps/shell/src/shell/build/setuid":
         ensure => file,
         mode => 4755,
         require => Class[sandbox_rpm],
       }
-
+*/
     service { 'iptables':
         ensure => stopped,
         enable => false,
