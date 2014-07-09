@@ -530,6 +530,10 @@ def execute_query(request, design_id=None):
       to_save = form.saveform.cleaned_data['save']
       to_saveas = form.saveform.cleaned_data['saveas']
 
+      if to_save or to_saveas:
+        if 'beeswax-autosave' in request.session:
+          del request.session['beeswax-autosave']
+
       if to_saveas and not design.is_auto:
         # Save As only affects a previously saved query
         design = design.clone()
@@ -564,6 +568,9 @@ def execute_query(request, design_id=None):
     else:
       # New design
       form.bind()
+      if 'beeswax-autosave' in request.session:
+        form.query.fields['query'].initial = request.session['beeswax-autosave']['query']
+
     form.query.fields['database'].choices = databases # Could not do it in the form
 
   return render('execute.mako', request, {
@@ -1500,3 +1507,11 @@ def _get_last_database(request, database=None):
     database = request.COOKIES.get('hueBeeswaxLastDatabase', 'default')
     LOG.debug("Getting database name from cookies")
   return database
+
+
+def autosave_design(request):
+  request.session['beeswax-autosave'] = {
+    "query": request.POST['query-query'],
+    "database": request.POST.get('query-database')
+  }
+  return HttpResponse(json.dumps("Done"))

@@ -391,7 +391,7 @@ ${layout.menubar(section='query')}
 <script src="/hcatalog/static/js/hive-hint.js"></script>
 <script src="/pig/static/js/hcat-helper.js"></script>
 <script src="/hcatalog/static/js/hive-script.js"></script>
-
+<script src="/beeswax/static/js/autosave.js"></script>
 
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){

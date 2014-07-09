@@ -48,6 +48,8 @@ urlpatterns = patterns('beeswax.views',
   url(r'^configuration$', 'configuration', name='configuration'),
   url(r'^install_examples$', 'install_examples', name='install_examples'),
   url(r'^query_cb/done/(?P<server_id>\S+)$', 'query_done_cb', name='query_done_cb'),
+
+  url(r'autosave_design/$', 'autosave_design', name='autosave_design'),
 )
 
 urlpatterns += patterns(
