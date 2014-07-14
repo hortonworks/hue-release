@@ -98,6 +98,7 @@ from django.utils.translation import ugettext as _
   <script src="/static/js/Source/jHue/jquery.datatables.sorting.js"></script>
   <script src="/static/ext/js/bootstrap.min.js"></script>
   <script src="/static/ext/js/fileuploader.js"></script>
+  <script src="/static/ext/js/jquery/plugins/jquery.total-storage.min.js"></script>
 
   <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){

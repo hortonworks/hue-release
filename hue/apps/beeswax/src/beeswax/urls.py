@@ -29,6 +29,10 @@ urlpatterns = patterns('beeswax.views',
   url(r'^table/(?P<database>\w+)/(?P<table>\w+)/load$', 'load_table', name='load_table'),
   url(r'^table/(?P<database>\w+)/(?P<table>\w+)/read$', 'read_table', name='read_table'),
 
+  url(r'^autocomplete/$', 'autocomplete', name='autocomplete'),
+  url(r'^autocomplete/(?P<database>\w+)/$', 'autocomplete', name='autocomplete'),
+  url(r'^autocomplete/(?P<database>\w+)/(?P<table>\w+)$', 'autocomplete', name='autocomplete'),
+
   url(r'^execute/(?P<design_id>\d+)?$', 'execute_query', name='execute_query'),
   url(r'^explain_parameterized/(?P<design_id>\d+)$', 'explain_parameterized_query', name='explain_parameterized_query'),
   url(r'^execute_parameterized/(?P<design_id>\d+)$', 'execute_parameterized_query', name='execute_parameterized_query'),
