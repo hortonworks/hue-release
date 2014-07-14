@@ -385,13 +385,9 @@ ${layout.menubar(section='query')}
 
 <script src="/static/ext/js/jquery/plugins/jquery.cookie.js"></script>
 <script src="/pig/static/js/codemirror.js"></script>
-<script src="/pig/static/js/simple-hint.js"></script>
-<script src="/pig/static/js/show-hint.js"></script>
-<script src="/hcatalog/static/js/hive.js"></script>
-<script src="/hcatalog/static/js/hive-hint.js"></script>
-<script src="/pig/static/js/hcat-helper.js"></script>
-<script src="/hcatalog/static/js/hive-script.js"></script>
-<script src="/beeswax/static/js/autosave.js"></script>
+<script src="/beeswax/static/js/code-mirror/codemirror-hql.js"></script>
+<script src="/beeswax/static/js/code-mirror/codemirror-hql-hint.js"></script>
+<script src="/beeswax/static/js/code-mirror/codemirror-show-hint.js"></script>
 
 <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
@@ -544,13 +540,389 @@ ${layout.menubar(section='query')}
         }*/
 
         function checkAndSubmit(){
-            if(editor != undefined)
+            if(codeMirror != undefined)
             {
-                editor.save();
+                codeMirror.save();
             }
             $(".query").val($("#queryField").val());
             $("#advancedSettingsForm").submit();
         }
+
+        function autosave(){
+          if(codeMirror != undefined)
+          {
+              codeMirror.save();
+          }
+          $(".query").val($("#queryField").val());
+          $.post("/beeswax/autosave_design/", $("#advancedSettingsForm").serialize());
+          return true;
+        }
+
+      // =============== CODE-MIRROR ===============
+      
+      var resizeTimeout = -1;
+      var winWidth = $(window).width();
+      var winHeight = $(window).height();
+      var resizeHeight = function () {
+        return $(window).height() - 300 - $('#validationResults').outerHeight() - $("#queryPane .alert-error").outerHeight() - $(".nav-tabs").outerHeight();
+      };
+
+      $(window).on("resize", function () {
+        window.clearTimeout(resizeTimeout);
+        resizeTimeout = window.setTimeout(function () {
+          // prevents endless loop in IE8
+          if (winWidth != $(window).width() || winHeight != $(window).height()) {
+            codeMirror.setSize("95%", resizeHeight());
+            winWidth = $(window).width();
+            winHeight = $(window).height();
+          }
+        }, 200);
+      });
+       
+      var currentDBName = $("#id_query-database").val() 
+      
+      var AUTOCOMPLETE_BASE_URL = "/beeswax/autocomplete/";
+
+      function autocomplete(options) {
+        var _dbbefore = ""
+        if (codeMirror != null){
+          _dbbefore = codeMirror.getRange({line: 0, ch: 0}, {line: codeMirror.getCursor().line, ch: codeMirror.getCursor().ch}).replace(/(\r\n|\n|\r)/gm, " ");
+
+          if ( _dbbefore.toUpperCase().indexOf("FROM") > -1 && _dbbefore.charAt(_dbbefore.length-1) == '.') {
+           currentDBName = getDBName(currentDBName);
+           options.database = currentDBName
+          }
+          else {
+           if ( _dbbefore.toUpperCase().indexOf("FROM") > -1 && _dbbefore.charAt(_dbbefore.length-1) != '.') {
+            CodeMirror.possibleDatabase = false;
+            currentDBName =  $("#id_query-database").val();
+            options.database = currentDBName
+           }
+          }
+        }
+        if (options.database == null) {
+          $.getJSON(AUTOCOMPLETE_BASE_URL, options.onDataReceived);
+        }
+        if (options.database != null) {
+          if (_dbbefore.charAt(_dbbefore.length-1) == '.' && CodeMirror.possibleSoloField == false &&  _dbbefore.toUpperCase().indexOf("FROM") > -1 ) {
+              $.getJSON(AUTOCOMPLETE_BASE_URL + options.database + "/", options.onDataReceived);
+          }
+          else {
+            CodeMirror.possibleDatabase = false;
+            if (options.table != null) {
+              $.getJSON(AUTOCOMPLETE_BASE_URL + options.database + "/" + options.table, options.onDataReceived);
+            }
+            else {
+              $.getJSON(AUTOCOMPLETE_BASE_URL + options.database + "/", options.onDataReceived);
+            }
+           }
+         }
+      }
+
+      function getDBName(currentDBName) {
+               if(codeMirror!=null) {
+                 var _dbefore = codeMirror.getRange({line: 0, ch: 0}, {line: codeMirror.getCursor().line, ch: codeMirror.getCursor().ch}).replace(/(\r\n|\n|\r)/gm, " ");
+                 if(_dbefore.charAt(_dbefore.length-1)=='.') {
+                  idxFrom = _dbefore.toUpperCase().lastIndexOf(" FROM ");
+                  var idxComma = "";
+                  var idxDot = "";
+                  idxComma = _dbefore.lastIndexOf(",");
+                  idxDot = _dbefore.lastIndexOf(".");
+                  idxJoin = _dbefore.toUpperCase().lastIndexOf(" JOIN ");
+                  idx = Math.max(idxFrom,idxJoin);
+                  if(idxComma > idxFrom ) {
+                    if(idxJoin > idxComma ) {
+                    currentDBName = _dbefore.substring(idxJoin+ 6,idxDot);
+                    }
+                    else {
+                    currentDBName = _dbefore.substring(idxComma+ 1,idxDot);
+                    }
+                  currentDBName = currentDBName.trim();
+                  }
+                  else {
+                  currentDBName = _dbefore.substr(idx + 6, _dbefore.length-(idx+7) );
+                  }
+                 }     
+                }
+                return currentDBName;
+      }
+      
+      function get_DB_Name(table_name) {
+              var db_table_name = " ";
+              var checking_table_dot1 = " ";
+              var checking_table_dot2 = " ";
+              db_table_name = table_name;
+              checking_table_dot1 = db_table_name.indexOf(".") + 1;
+              checking_table_dot2 = db_table_name.indexOf(".");
+              table_name = db_table_name.substr(checking_table_dot1);
+              currentDBName = db_table_name.substr(0,checking_table_dot2);
+              return table_name;
+      }
+
+      function getTableAliases() {
+        var _aliases = {};
+        var _val = codeMirror.getValue();
+        var _from = _val.toUpperCase().indexOf("FROM");
+        if (_from > -1) {
+          var _match = _val.toUpperCase().substring(_from).match(/ON|WHERE|GROUP|SORT/);
+          var _to = _val.length;
+          if (_match) {
+            _to = _match.index;
+          }
+          var _found = _val.substr(_from, _to).replace(/(\r\n|\n|\r)/gm, "").replace(/from/gi, "").replace(/join/gi, ",").split(",");
+          for (var i = 0; i < _found.length; i++) {
+            var _tablealias = $.trim(_found[i]).split(" ");
+            if (_tablealias.length > 1) {
+              _aliases[_tablealias[1]] = _tablealias[0];
+            }
+          }
+        }
+        return _aliases;
+      }
+      
+
+      function getTableColumns(tableName, callback) {
+        if (tableName.indexOf("(") > -1) {
+            tableName = tableName.substr(tableName.indexOf("(") + 1);
+           }
+           var _aliases = getTableAliases();
+           if (_aliases[tableName]) {
+             tableName = _aliases[tableName];
+           }
+           tableName = get_DB_Name(tableName);
+           if (currentDBName == " " || currentDBName == "") {
+            currentDBName =  $("#id_query-database").val();
+           }      
+        if ($.totalStorage('columns_' + currentDBName + '_' + tableName) != null) {
+          callback($.totalStorage('columns_' + currentDBName + '_' + tableName));
+          autocomplete({
+            database: currentDBName,
+            table: tableName,
+            onDataReceived: function (data) {
+              if (data.error) {
+                $.jHueNotify.error(data.error);
+              }
+              else {
+                $.totalStorage('columns_' + currentDBName + '_' + tableName, (data.columns ? data.columns.join(" ") : ""));
+              }
+            }
+          });
+        }
+        else {
+          autocomplete({
+            database: currentDBName,
+            table: tableName,
+            onDataReceived: function (data) {
+              if (data.error) {
+                $.jHueNotify.error(data.error);
+              }
+              else {
+                $.totalStorage('columns_' + currentDBName + '_' + tableName, (data.columns ? data.columns.join(" ") : ""));
+                callback($.totalStorage('columns_' + currentDBName + '_' + tableName));
+              }
+            }
+          });
+        }
+      }
+
+      function tableHasAlias(tableName) {
+        var _aliases = getTableAliases();
+        for (var alias in _aliases) {
+          if (_aliases[alias] == tableName) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function getTables(callback) {
+        if ($.totalStorage('tables_' + currentDBName) != null) {
+          callback($.totalStorage('tables_' + currentDBName));
+          autocomplete({
+            database: currentDBName,
+            onDataReceived: function (data) {
+              if (data.error) {
+                $.jHueNotify.error(data.error);
+              }
+              else {
+                $.totalStorage('tables_' + currentDBName, data.tables.join(" "));
+              }
+            }
+          });
+        }
+        else {
+          autocomplete({
+            database:  currentDBName,
+            onDataReceived: function (data) {
+              if (data.error) {
+                $.jHueNotify.error(data.error);
+              }
+              else {
+                $.totalStorage('tables_' + currentDBName, data.tables.join(" "));
+                callback($.totalStorage('tables_' + currentDBName));
+              }
+            }
+          });
+        }
+      }
+
+      var queryEditor = $("#queryField")[0];
+
+      getTables(function(){});
+       
+      var AUTOCOMPLETE_SET = CodeMirror.hiveQLHint;
+
+      CodeMirror.onAutocomplete = function (data, from, to) {
+        if (CodeMirror.tableFieldMagic) {
+          codeMirror.replaceRange(" ", from, from);
+          codeMirror.setCursor(from);
+          codeMirror.execCommand("autocomplete");
+        }
+      };
+
+      CodeMirror.commands.autocomplete = function (cm) {
+        tableMagic = false;
+        if ($.totalStorage('tables_' + currentDBName) == null) {
+          CodeMirror.showHint(cm, AUTOCOMPLETE_SET);        
+          getTables(function () {}); // if preload didn't work, tries again
+        }
+        else {
+         var _query_ends = codeMirror.getRange({line: 0, ch: 0}, {line: codeMirror.getCursor().line, ch: codeMirror.getCursor().ch}).replace(/(\r\n|\n|\r)/gm, " ");
+         var idx_of_select = "";
+         var idx_of_pselect = "";
+         var idx_for_select = "";
+         idx_of_select = _query_ends.toUpperCase().lastIndexOf(" SELECT ")
+         idx_of_pselect = _query_ends.toUpperCase().lastIndexOf("\(SELECT ")
+         idx_for_select = Math.max(idx_of_select,idx_of_pselect);
+         if (_query_ends.charAt(codeMirror.getCursor().ch - 1) == " " && (_query_ends.toUpperCase().lastIndexOf("FROM") > idx_for_select) ) { 
+          currentDBName =  $("#id_query-database").val();
+         }
+          getTables(function (tables) {
+            CodeMirror.catalogTables = tables;
+            var _before = codeMirror.getRange({line: 0, ch: 0}, {line: codeMirror.getCursor().line, ch: codeMirror.getCursor().ch}).replace(/(\r\n|\n|\r)/gm, " ");
+            CodeMirror.possibleTable = false;
+            CodeMirror.tableFieldMagic = false;
+            if (_before.toUpperCase().indexOf(" FROM ") > -1 && _before.toUpperCase().indexOf(" ON ") == -1 && _before.toUpperCase().indexOf(" WHERE ") == -1 ) {
+             CodeMirror.possibleTable = true;
+             CodeMirror.possibleDatabase = false;
+             if(_before.charAt(_before.length-1) == ".") {
+              if (_before.toUpperCase().lastIndexOf("FROM") < idx_for_select) {
+                 CodeMirror.possibleDatabase = false;
+                 }
+              else{   
+                 CodeMirror.possibleDatabase = true;
+                 }
+             }
+            }
+            CodeMirror.possibleSoloField = false;
+            
+            if (_before.toUpperCase().indexOf("SELECT ") > -1 && _before.toUpperCase().indexOf(" FROM ") == -1 && !CodeMirror.fromDot) {
+              if (codeMirror.getValue().toUpperCase().indexOf("FROM") > -1) {
+                CodeMirror.possibleSoloField = true;
+                if(_before.toUpperCase().indexOf("SELECT ") > -1 && _before.toUpperCase().indexOf(" FROM ") == -1 ) {
+                  CodeMirror.possibleDatabase = false;
+                }
+                try {
+                  var _possibleTables = $.trim(codeMirror.getValue().substr(codeMirror.getValue().toUpperCase().indexOf("FROM") + 4)).split(" "); 
+                  var _foundTable = "";
+                  for (var i = 0; i < _possibleTables.length; i++) {
+                    if ($.trim(_possibleTables[i]) != "" && _foundTable == "") {
+                      _foundTable = _possibleTables[i];
+                    }
+                  }
+                  if (_foundTable != "") {
+                    if (tableHasAlias(_foundTable)) {
+                      CodeMirror.possibleSoloField = false;
+                      CodeMirror.showHint(cm, AUTOCOMPLETE_SET);
+                    }
+                    else {
+                      getTableColumns(_foundTable,
+                              function (columns) {
+                                CodeMirror.catalogFields = columns;
+                                CodeMirror.showHint(cm, AUTOCOMPLETE_SET);
+                              });        
+                    }
+                  }
+                }
+                catch (e) {
+                }
+              }
+              else {
+                CodeMirror.tableFieldMagic = true;
+                CodeMirror.showHint(cm, AUTOCOMPLETE_SET);
+              }
+            }
+            else {
+              if (CodeMirror.possibleDatabase == false) {
+              currentDBName =  $("#id_query-database").val();
+              }
+              CodeMirror.showHint(cm, AUTOCOMPLETE_SET);
+            }
+          });
+        }
+      }
+
+            CodeMirror.fromDot = false;
+
+      var codeMirror = CodeMirror.fromTextArea(document.getElementById("queryField"), {
+        value: queryEditor.value,
+        readOnly: false,
+        lineNumbers: true,
+        mode: "text/x-hiveql",
+        extraKeys: {
+
+
+         "Ctrl-Space": function () {
+            CodeMirror.fromDot = false;
+            codeMirror.execCommand("autocomplete");
+          },
+          Tab: function (cm) {
+            $("#executeQuery").focus();
+          }
+        },
+        onKeyEvent: function (e, s) {
+          if (s.type == "keyup") {
+            if (s.keyCode == 190) {
+
+
+              var _line = codeMirror.getLine(codeMirror.getCursor().line);
+              var _partial = _line.substring(0, codeMirror.getCursor().ch);
+              var _table = "";
+              var idxofselect = "";
+              var idxofpselect = "";
+              var idxforselect = "";
+              idxofselect = _partial.toUpperCase().lastIndexOf(" SELECT ")
+              idxofpselect = _partial.toUpperCase().lastIndexOf("\(SELECT ")
+              idxforselect = Math.max(idxofselect,idxofpselect);
+              _table = _partial.substring(_partial.lastIndexOf(" ") + 1, _partial.length -1 );
+              if (_partial.toUpperCase().indexOf("FROM") > -1 && (_partial.toUpperCase().indexOf(" ON ") == -1 && _partial.toUpperCase().indexOf(" WHERE ") == -1)) { 
+                 _table = _partial.substring(_partial.lastIndexOf(" ") + 1, _partial.length);
+                 if (_partial.toUpperCase().lastIndexOf("FROM") < idxforselect) {
+                 _table = _partial.substring(_partial.lastIndexOf(" ") + 1, _partial.length -1 );
+                 }
+              } 
+               if (codeMirror.getValue().toUpperCase().indexOf("FROM") > -1) {
+                 getTableColumns(_table, function (columns) {
+                  var _cols = columns.split(" ");
+                  for (var col in _cols){
+                    _cols[col] = "." + _cols[col];
+                  }
+                 CodeMirror.catalogFields = _cols.join(" ");
+                 CodeMirror.fromDot = true;
+                 window.setTimeout(function () { // Commenting it to avoid show hint pop to user on tying just "."
+                   codeMirror.execCommand("autocomplete");
+                 }, 100);  // timeout for IE8
+              });
+             }
+            }
+           }
+          }
+        });
+
+      codeMirror.on('change',autosave);
+
+      codeMirror.setSize("95%", resizeHeight());
+
     });
 </script>
 

@@ -1515,3 +1515,23 @@ def autosave_design(request):
     "database": request.POST.get('query-database')
   }
   return HttpResponse(json.dumps("Done"))
+def autocomplete(request, database=None, table=None):
+  app_name = get_app_name(request)
+  query_server = get_query_server_config(app_name)
+  db = dbms.get(request.user, query_server)
+  response = {}
+
+  try:
+    if database is None:
+      response['databases'] = db.get_databases()
+    elif table is None:
+      response['tables'] = db.get_tables(database=database)
+    else:
+      t = db.get_table(database, table)
+      response['columns'] = [column.name for column in t.cols]
+  except Exception, e:
+    LOG.warn('Autocomplete data fetching error %s.%s: %s' % (database, table, e))
+    response['error'] = e.message
+
+
+  return HttpResponse(json.dumps(response), mimetype="application/json")
