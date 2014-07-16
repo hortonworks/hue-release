@@ -254,6 +254,7 @@ ${layout.menubar(section='tables')}
        "bLengthChange": false,
        "bInfo": false,
        "bFilter": false,
+       "aaSorting": [],
        "oLanguage": {
             "sEmptyTable": "${_('No data available')}",
            "sZeroRecords": "${_('No matching records')}",
