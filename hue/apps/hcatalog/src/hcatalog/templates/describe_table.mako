@@ -261,6 +261,7 @@ ${layout.menubar(section='tables')}
 			"bPaginate": false,
 		    "bLengthChange": false,
 			"bInfo": false,
+      "aaSorting": [],
 			"bFilter": false
 		});
 		
@@ -311,6 +312,7 @@ ${layout.menubar(section='tables')}
 			"bInfo": false,
 			"bFilter": false,
 			"bAutoWidth": false,
+      "aaSorting": [],
 			"aoColumns": [
 				{ "sWidth": "80%", "bSortable" : false },
              % if has_partitions:
