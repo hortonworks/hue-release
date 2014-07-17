@@ -127,8 +127,9 @@ class HiveServer2Dbms(object):
     return self.execute_and_watch(query, design=design)
 
 
-  def select_star_from(self, database, table):
-    hql = "SELECT * FROM `%s.%s` %s" % (database, table.name, self._get_browse_limit_clause(table))
+  def select_star_from(self, database, table, partitions=None):
+    where_clause = self.get_browse_partition_clause(table, partitions) or ''
+    hql = "SELECT * FROM `%s.%s` %s %s" % (database, table.name, where_clause, self._get_browse_limit_clause(table))
     return self.execute_statement(hql)
 
 

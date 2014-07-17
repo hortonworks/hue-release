@@ -399,7 +399,8 @@ def read_table(request, database, table):
     db = dbms.get(request.user)
     table = db.get_table(database, table)
     try:
-        history = db.select_star_from(database, table)
+        partitions = db.get_partitions(database, table, max_parts=1) if table.partition_keys else None
+        history = db.select_star_from(database, table, partitions)
         get = request.GET.copy()
         get['context'] = 'table:%s:%s' % (table.name, database)
         request.GET = get
