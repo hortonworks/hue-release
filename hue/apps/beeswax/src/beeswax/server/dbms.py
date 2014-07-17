@@ -479,6 +479,23 @@ class HiveServer2Dbms(object):
     return ""
 
 
+  def get_browse_partition_clause(self, table, partitions):
+    """Get the where clause to limit reading data in the first available partitions"""
+    if partitions and BROWSE_PARTITIONED_TABLE_LIMIT.get() > 0:
+      partition_values = partitions[0].values
+      partition_keys = table.partition_keys
+      partition_dict = zip(partition_keys, partition_values)
+
+      fields = []
+      for key, value in partition_dict:
+          if key.type == "string":
+            fields.append("`%s` = '%s'" % (key.name, value))
+          else:
+            fields.append("`%s` = %s" % (key.name, value))
+
+      return "WHERE " + " AND ".join(fields)
+
+
 class Table:
   """
   Represents the metadata of a Hive Table.
