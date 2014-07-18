@@ -22,6 +22,16 @@ from django.utils.translation import ugettext as _
 <%namespace name="util" file="util.mako" />
 
 ${ commonheader(_('Waiting for query...'), app_name, user, '100px') | n,unicode }
+
+<style>
+	.ri_header {
+		display: inline;
+		font-size: 14px;
+
+	}
+</style>
+
+
 ${layout.menubar(section='query')}
 
 ## Required for unit tests
@@ -31,6 +41,13 @@ ${layout.menubar(section='query')}
 	<h1>${_('Waiting for query...')} ${util.render_query_context(query_context)}</h1>
 	<div class="row-fluid">
 		<div class="span3">
+						<li class="nav">
+							<div class="control-group">
+								<button id="cancel-btn" class="btn btn-small" data-loading-text="${ _('Canceling...') }" rel="tooltip" data-placement="right" data-original-title="${ _('Cancel the query') }">
+									${ _('Cancel') }
+								</button>
+							</div>
+						</li>
 			<div class="well sidebar-nav">
 				<ul class="nav nav-list">
 					<%
@@ -46,6 +63,18 @@ ${layout.menubar(section='query')}
 						<li id="jobsHeader" class="nav-header">${mr_jobs}</li>
 						<li class="jobLink wordbreak">${_('No Hadoop jobs were launched in running this query.')}</li>
 					% endif
+					<li class="nav-header">${_('Total Jobs to Run')| n,unicode}</li>
+					<li id="total">&nbsp;</li>
+					<li class="nav-header">${_('Job Running')| n,unicode}</li>
+					<li id="runningJob">&nbsp;</li>
+					<li class="nav-header">${_('User')}</li>
+					<li id="user">&nbsp;</li>
+					<li class="nav-header">${_('Status')}</li>
+					<li id="jobStatus">&nbsp;</li>
+					<li class="nav-header">${_('Maps:')}</li>
+					<li id="jobMaps">&nbsp;</li>
+					<li class="nav-header">${_('Reduces:')}</li>
+					<li id="jobReduces">&nbsp;</li>
 				</ul>
 			</div>
 		</div>
@@ -67,6 +96,8 @@ ${layout.menubar(section='query')}
 	</div>
 </div>
 
+<script src="/jobbrowser/static/js/utils.js" type="text/javascript" charset="utf-8"></script>
+
 <script>
 
   $(document).ready(function(){
@@ -85,6 +116,15 @@ ${layout.menubar(section='query')}
         if (data.isSuccess || data.isFailure) {
           location.href = fwdUrl;
         }
+        if (data.job )
+        {
+          updateStatus(data.job, data.total, data.current, data.jobs);
+        }
+        else{
+          updateStatus(null, null, null, null);
+        }
+
+
         if (data.jobs && data.jobs.length > 0) {
           $(".jobLink").remove();
           $("#jobsHeader").text((data.jobs.length > 1 ? labels.MRJOBS : labels.MRJOB) + " (" + data.jobs.length + ")");
@@ -98,7 +138,7 @@ ${layout.menubar(section='query')}
         if (logsAtEnd) {
           _logsEl.scrollTop(_logsEl[0].scrollHeight - _logsEl.height());
         }
-        window.setTimeout(refreshView, 1000);
+        window.setTimeout(refreshView, 5000);
       });
     }
 
@@ -123,7 +163,68 @@ ${layout.menubar(section='query')}
       $("#log pre").css("overflow", "auto").height($(window).height() - $("#log pre").position().top - 40);
     }
 
+    $("#cancel-btn").click(function() {
+      var _this = this;
+      $(_this).button('loading');
+      $.post("${ url(app_name + ':cancel_operation', query.id) }",
+        function(response) {
+          if (response['status'] != 0) {
+            $.jHueNotify.error("${ _('Problem: ') }" + response['message']);
+          } else {
+            $.jHueNotify.info("${ _('Query canceled!') }")
+          }
+        }
+      );
+      return false;
+    });
+
   });
+
+	function updateStatus(job, total, current, jobs) {
+		if (total){
+		$("#total").html((total ? '<i title="${ _('Total Jobs to Run') }"></i> ' : '') + '<div class="ri_header">' +total + '</div>');
+	}
+	else{
+		$("#total").html("${_('N/A')}");
+	}
+
+	if (current){
+		$("#runningJob").html( (current ? '<i title="${ _('Running Job') }"></i> ' : '') + '<div class="ri_header">' +current + '</div>');
+	}
+	else{
+		$("#runningJob").html("${_('N/A')}");
+	}
+
+	if (job && job.user){
+		$("#user").html((job.user ? '<i title="${ _('User') }"></i> ' : '') + '<div class="ri_header">' + job.user + '</div>');
+	}
+	else{
+		$("#user").html("${_('N/A')}");
+	}
+	if (job && jobs.length==current){
+			$("#jobStatus").html('<span class="label ' + getStatusClass(job.status) + '">' + (job.isRetired && !job.isMR2 ? '<i class="icon-briefcase icon-white" title="${ _('Retired') }"></i> ' : '') + job.status + '</span>');
+		}
+		else if(job && jobs && current>jobs.length){
+			$("#jobStatus").html("${_('Preparing Job: ')}" + (jobs.length+1));
+		}
+		else{
+			$("#jobStatus").html("${_('N/A')}");
+		}
+		if (job && job.desiredMaps > 0 && jobs.length==current) {
+			$("#jobMaps").html((job.isRetired ? '${_('N/A')}' : '<div class="progress" style="width:200px" title="' + (job.isMR2 ? job.mapsPercentComplete : job.finishedMaps + '/' + job.desiredMaps) + '"><div class="bar-label">' + job.finishedMaps + '/' + job.desiredMaps + '</div><div class="' + 'bar ' + getStatusClass(job.status, "bar-") + '" style="margin-top:-20px;width:' + job.mapsPercentComplete + '%"></div></div>'));
+		}
+		else {
+			$("#jobMaps").html("${_('N/A')}");
+		}
+		if (job && job.desiredReduces > 0 && jobs.length==current) {
+			$("#jobReduces").html((job.isRetired ? '${_('N/A')}' : '<div class="progress" style="width:200px" title="' + (job.isMR2 ? job.reducesPercentComplete : job.finishedReduces + '/' + job.desiredReduces) + '"><div class="bar-label">' + job.finishedReduces + '/' + job.desiredReduces + '</div><div class="' + 'bar ' + getStatusClass(job.status, "bar-") + '" style="margin-top:-20px;width:' + job.reducesPercentComplete + '%"></div></div>'));
+		}
+		else {
+			$("#jobReduces").html("${_('N/A')}");
+		}
+
+
+	}
 
 </script>
 
