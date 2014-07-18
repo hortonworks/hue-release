@@ -336,6 +336,8 @@ def _submit_workflow(user, fs, workflow, mapping):
     if 'urlopen error' in str(detail):
       detail = '%s: %s' % (_('The Oozie server is not running'), detail)
     raise PopupException(_("Error submitting workflow %s") % (workflow,), detail=detail)
+  except IOError, ex:
+    raise PopupException(_("Error submitting workflow %s") % (workflow,), detail=str(ex))
 
   return redirect(reverse('oozie:list_oozie_workflow', kwargs={'job_id': job_id}))
 
