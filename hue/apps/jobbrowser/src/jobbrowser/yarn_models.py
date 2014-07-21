@@ -85,19 +85,19 @@ class Job:
   def _fixup(self):
     jobid = self.id
 
-    setattr(self, 'status', self.state)
+    setattr(self, 'status', getattr(self, 'state', None))
     setattr(self, 'jobId', jobid)
     setattr(self, 'jobId_short', self.jobId.replace('job_', ''))
-    setattr(self, 'is_retired', True)
-    setattr(self, 'maps_percent_complete', None)
-    setattr(self, 'reduces_percent_complete', None)
+    setattr(self, 'is_retired', False)
+    setattr(self, 'maps_percent_complete', getattr(self, 'mapProgress', None))
+    setattr(self, 'reduces_percent_complete', getattr(self, 'reduceProgress', None))
     setattr(self, 'duration', self.finishTime - self.startTime)
     setattr(self, 'finishTimeFormatted', format_unixtime_ms(self.finishTime))
     setattr(self, 'startTimeFormatted', format_unixtime_ms(self.startTime))
-    setattr(self, 'finishedMaps', self.mapsCompleted)
-    setattr(self, 'desiredMaps', None)
-    setattr(self, 'finishedReduces', self.reducesCompleted)
-    setattr(self, 'desiredReduces', None)
+    setattr(self, 'finishedMaps', getattr(self, 'mapsCompleted', None))
+    setattr(self, 'desiredMaps', getattr(self, 'mapsTotal', None))
+    setattr(self, 'finishedReduces', getattr(self, 'reducesCompleted', None))
+    setattr(self, 'desiredReduces', getattr(self, 'reducesTotal', None))
 
   @property
   def counters(self):

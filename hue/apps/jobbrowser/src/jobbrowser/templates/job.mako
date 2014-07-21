@@ -212,7 +212,7 @@ ${ commonheader(_('Job: %(jobId)s') % dict(jobId=job.jobId_short), "jobbrowser",
                 % else:
                     <div class="tab-pane active" id="tasks">
                 % endif
-                    % if job.is_retired and not job.is_mr2:
+                    % if job.is_retired:
                        ${ _('This jobs is ')} <span class="label label-warning">${ _('retired') }</span> ${ _(' and so has little information available.') }
                        <br/>
                        <br/>

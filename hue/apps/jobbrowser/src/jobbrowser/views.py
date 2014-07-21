@@ -133,6 +133,28 @@ def massage_task_for_json(task):
   return task
 
 
+def check_job_permission_get_job(view_func):
+  """
+  Ensure that the user has access to the job.
+  Assumes that the wrapped function takes a 'jobid' param.
+  """
+  def decorate(request, *args, **kwargs):
+    jobid = kwargs['job']
+    try:
+      job = get_api(request.user, request.jt).get_job(jobid=jobid)
+    except Exception, e:
+      raise PopupException(_('Could not find job %s. The job might not be running yet.') % jobid, detail=e)
+    if not conf.SHARE_JOBS.get() and not request.user.is_superuser \
+      and job.user != request.user.username:
+      raise PopupException(_("You don't have permission to access job %(id)s.") % {'id': jobid})
+    kwargs['job'] = job
+    return view_func(request, *args, **kwargs)
+  return wraps(view_func)(decorate)
+
+@check_job_permission_get_job
+def _getjob(request, job):
+    return job
+
 @check_job_permission
 def single_job(request, job):
   def cmp_exec_time(task1, task2):
