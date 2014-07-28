@@ -87,7 +87,10 @@ def get_or_create_ldap_user(username):
   if users.exists():
     return User.objects.get(**username_kwargs), False
   else:
-    username = desktop.conf.LDAP.FORCE_USERNAME_LOWERCASE.get() and username.lower() or username
+    if desktop.conf.LDAP.FORCE_USERNAME_LOWERCASE.get():
+      username = username.lower()
+    elif desktop.conf.LDAP.FORCE_USERNAME_UPPERCASE.get():
+      username = username.upper()
     return User.objects.create(username=username), True
 
 
