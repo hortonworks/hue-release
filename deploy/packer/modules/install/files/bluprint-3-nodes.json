@@ -2,6 +2,14 @@
     "configurations" : [
         {
             "global" : {
+                "hive_metastore_user_passwd" : "hive",
+                "hbase_master_heapsize": "250",
+                "hbase_regionserver_heapsize": "250",
+                "oozie_metastore_user_passwd" : "oozie"
+            }
+        },
+        {
+            "hadoop-env": {
                 "nodemanager_heapsize" : "250",
                 "apptimelineserver_heapsize" : "250",
                 "resourcemanager_heapsize" : "250",
@@ -9,20 +17,16 @@
                 "dtnode_heapsize" : "250",
                 "hadoop_heapsize" : "250",
                 "namenode_heapsize" : "250",
-                "hive_ambari_database": "MySQL",
-                "hive_database" : "New MySQL Database",
-                "hive_database_type" : "mysql",
-                "hive_hostname" : "ambari.hortonworks.com",
-                "hive_metastore_user_passwd" : "hive",
-                "hbase_master_heapsize": "250",
-                "hbase_regionserver_heapsize": "250",
                 "namenode_opt_newsize": "50",
-                "namenode_opt_maxnewsize": "100",
+                "namenode_opt_maxnewsize": "100"
+            }  
+        },
+        {
+            "nagios-env":{
                 "nagios_contact" : "admin@localhost.localdomain",
                 "nagios_web_login" : "nagiosadmin",
-                "nagios_web_password" : "admin",
-                "oozie_metastore_user_passwd" : "oozie"
-            }
+                "nagios_web_password" : "admin"
+            }  
         },
         {
             "core-site" : {
@@ -77,13 +81,13 @@
         {
             "hive-site" : {
                 "javax.jdo.option.ConnectionPassword" : "hive",
-                "javax.jdo.option.ConnectionUserName" : "hive",
-                "javax.jdo.option.ConnectionDriverName" : "com.mysql.jdbc.Driver",
-                "javax.jdo.option.ConnectionURL" : "jdbc:mysql://ambari.hortonworks.com/hive?createDatabaseIfNotExist=true",
-                "javax.jdo.connection.url" : "jdbc:mysql://ambari.hortonworks.com/hive?createDatabaseIfNotExist=true",
                 "hive.tez.container.size" : "250",
                 "hive.tez.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true",
-                "ambari.hive.db.schema.name": "hive"
+                "hive.heapsize" : "250",
+                "hive.server2.enable.impersonation": "true",
+                "hive.server2.enable.doAs": "true",
+                "hive.users.in.admin.role" : "hue,hive",
+                "hive.server2.authentication": "NOSASL"
             }
         },
         {
@@ -120,6 +124,7 @@
         {
             "name" : "master",
             "components" : [
+                {"name": "APP_TIMELINE_SERVER"},
                 {"name" : "DATANODE"},
                 {"name" : "DRPC_SERVER"},
                 {"name" : "FALCON_CLIENT"},
@@ -140,6 +145,7 @@
                 {"name" : "NIMBUS"},
                 {"name" : "NODEMANAGER"},
                 {"name" : "OOZIE_SERVER"},
+                {"name" : "OOZIE_CLIENT"},
                 {"name" : "PIG"},
                 {"name" : "RESOURCEMANAGER"},
                 {"name" : "SQOOP"},
@@ -170,8 +176,7 @@
                 {"name" : "SQOOP"},
                 {"name" : "TEZ_CLIENT"},
                 {"name" : "YARN_CLIENT"},
-                {"name" : "ZOOKEEPER_CLIENT"},
-                {"name" : "ZOOKEEPER_SERVER"}
+                {"name" : "ZOOKEEPER_CLIENT"}
             ],
             "cardinality" : "1"
         },
@@ -190,8 +195,7 @@
                 {"name" : "SQOOP"},
                 {"name" : "TEZ_CLIENT"},
                 {"name" : "YARN_CLIENT"},
-                {"name" : "ZOOKEEPER_CLIENT"},
-                {"name" : "ZOOKEEPER_SERVER"}
+                {"name" : "ZOOKEEPER_CLIENT"}
             ],
             "cardinality" : "1"
         }

@@ -1,17 +1,10 @@
 class install::ambari-server{
 
-  package {"ambari-repo":
-    provider => rpm, 
-    ensure => installed,
-    source => "http://s3.amazonaws.com/dev.hortonworks.com/AMBARI.dev-1.x/repos/centos6/AMBARI.dev-1.x-1.el6.noarch.rpm",
-    require => Class["prepare"]
-  }
+  include install::ambari-agent
 
-  $ambari = ["ambari-server", "ambari-agent"]
-
-  package {$ambari:
+  package {"ambari-server":
     ensure => installed,
-    require => Package["ambari-repo"]
+    require => Exec["ambari-repo"]
   }
 
   exec {"ambari-server setup":
@@ -19,20 +12,12 @@ class install::ambari-server{
     require => [Package["ambari-server"], Class["prepare"]]
   }
 
-  exec {"register ambari agent":
-    command => 'sed -i.bak "/^hostname/ s/.*/hostname=ambari.hortonworks.com/" /etc/ambari-agent/conf/ambari-agent.ini',
-    require => Package["ambari-agent"]
-  }
-
+  
   exec {"ambari-server start":
     command => "ambari-server start",
-    require => Exec["ambari-server setup"]
+    require => [Exec["ambari-server setup"]]
   }
 
-  exec {"ambari-agent start":
-    command => "ambari-agent start",
-    require => [Exec["ambari-server start"], Exec["register ambari agent"]]
-  }
   
   file {"/tmp/install/check-ambari-hosts.sh":
     source => "puppet:///modules/install/check-ambari-hosts.sh"
@@ -44,8 +29,9 @@ class install::ambari-server{
 
 
   exec {"wait for ambari register hosts":
-    require => [Exec["ambari-server start"], Exec["ambari-agent start"],File["/tmp/install/check-ambari-hosts.sh"]],
+    require => [Exec["ambari-server start"], Class["install::ambari-agent"],File["/tmp/install/check-ambari-hosts.sh"]],
     command => "/bin/bash /tmp/install/check-ambari-hosts.sh"
   }
+
 
 }

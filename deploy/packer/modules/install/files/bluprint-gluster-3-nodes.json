@@ -2,54 +2,23 @@
     "configurations" : [
         {
             "global" : {
-                 "dtnode_heapsize" : "250",
-                "hadoop_heapsize" : "250",
-                "namenode_heapsize" : "250",
-                "namenode_opt_newsize": "50",
-                "namenode_opt_maxnewsize": "100",
-              "hive_metastore_user_passwd" : "hive",
-                "hbase_master_heapsize": "250",
-                "nagios_contact" : "admin@localhost.localdomain",
-                 "jobhistory_heapsize" : "250",
-             "nagios_web_login" : "nagiosadmin",
-                "nagios_web_password" : "admin",
-                 "apptimelineserver_heapsize" : "250",
-                "resourcemanager_heapsize" : "250",
                 "nodemanager_heapsize" : "250",
+                "apptimelineserver_heapsize" : "250",
+                "resourcemanager_heapsize" : "250",
                 "yarn_heapsize" : "250",
-           "hbase_regionserver_heapsize": "250",
-                "oozie_metastore_user_passwd" : "oozie"
-            }
-        },
-        {
-            "hadoop-env": {
                 "dtnode_heapsize" : "250",
                 "hadoop_heapsize" : "250",
                 "namenode_heapsize" : "250",
+                "hive_metastore_user_passwd" : "hive",
+                "hbase_master_heapsize": "250",
+                "hbase_regionserver_heapsize": "250",
                 "namenode_opt_newsize": "50",
-                "namenode_opt_maxnewsize": "100"
-            }  
-        },
-        {
-            "mapred-env": {
-                "jobhistory_heapsize" : "250"
-            }
-        },
-        {
-            "yarn-env": {
-                "apptimelineserver_heapsize" : "250",
-                "resourcemanager_heapsize" : "250",
-                "nodemanager_heapsize" : "250",
-                "yarn_heapsize" : "250"
-            }
-            
-        },
-        {
-            "nagios-env":{
+                "namenode_opt_maxnewsize": "100",
                 "nagios_contact" : "admin@localhost.localdomain",
                 "nagios_web_login" : "nagiosadmin",
-                "nagios_web_password" : "admin"
-            }  
+                "nagios_web_password" : "admin",
+                "oozie_metastore_user_passwd" : "oozie"
+            }
         },
         {
             "core-site" : {
@@ -62,7 +31,6 @@
         {
             "hdfs-site" : {
                 "dfs.block.size" : "34217472",
-                "dfs.replication" : "1",
                 "dfs.permissions.enabled" : "false",
                 "dfs.namenode.accesstime.precision" : "3600000",
                 "dfs.nfs3.dump.dir" : "/tmp/.hdfs-nfs",
@@ -106,12 +74,7 @@
             "hive-site" : {
                 "javax.jdo.option.ConnectionPassword" : "hive",
                 "hive.tez.container.size" : "250",
-                "hive.tez.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true",
-                "hive.heapsize" : "250",
-                "hive.server2.enable.impersonation": "true",
-                "hive.users.in.admin.role" : "hue,hive",
-                "hive.server2.enable.doAs": "true",
-                "hive.server2.authentication": "NOSASL"
+                "hive.tez.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true"
             }
         },
         {
@@ -146,22 +109,22 @@
     ],
     "host_groups" : [
         {
-            "name" : "host_group_1",
+            "name" : "master",
             "components" : [
-                {"name": "APP_TIMELINE_SERVER"},
                 {"name" : "DATANODE"},
                 {"name" : "DRPC_SERVER"},
                 {"name" : "FALCON_CLIENT"},
                 {"name" : "FALCON_SERVER"},
                 {"name" : "GANGLIA_SERVER"},
+                {"name" : "GLUSTERFS_CLIENT"},
+                {"name" : "HIVE_CLIENT"},
+                {"name" : "HIVE_METASTORE"},
+                {"name" : "HIVE_SERVER"},
                 {"name" : "HBASE_CLIENT"},
                 {"name" : "HBASE_MASTER"},
                 {"name" : "HBASE_REGIONSERVER"},
                 {"name" : "HDFS_CLIENT"},
                 {"name" : "HISTORYSERVER"},
-                {"name" : "HIVE_CLIENT"},
-                {"name" : "HIVE_METASTORE"},
-                {"name" : "HIVE_SERVER"},
                 {"name" : "MAPREDUCE2_CLIENT"},
                 {"name" : "MYSQL_SERVER"},
                 {"name" : "NAGIOS_SERVER"},
@@ -169,10 +132,8 @@
                 {"name" : "NIMBUS"},
                 {"name" : "NODEMANAGER"},
                 {"name" : "OOZIE_SERVER"},
-                {"name" : "OOZIE_CLIENT"},
                 {"name" : "PIG"},
                 {"name" : "RESOURCEMANAGER"},
-                {"name" : "SECONDARY_NAMENODE"},       
                 {"name" : "SQOOP"},
                 {"name" : "STORM_REST_API"},
                 {"name" : "STORM_UI_SERVER"},
@@ -184,11 +145,54 @@
                 {"name" : "ZOOKEEPER_SERVER"}
             ],
             "cardinality" : "1"
+        },
+        {
+            "name" : "host2",
+            "components" : [
+                {"name" : "DATANODE"},
+                {"name" : "FALCON_CLIENT"},
+                {"name" : "GLUSTERFS_CLIENT"},
+                {"name" : "HIVE_CLIENT"},
+                {"name" : "HBASE_CLIENT"},
+                {"name" : "HBASE_REGIONSERVER"},
+                {"name" : "HDFS_CLIENT"},
+                {"name" : "MAPREDUCE2_CLIENT"},
+                {"name" : "NODEMANAGER"},
+                {"name" : "PIG"},
+                {"name" : "SECONDARY_NAMENODE"},       
+                {"name" : "SQOOP"},
+                {"name" : "TEZ_CLIENT"},
+                {"name" : "YARN_CLIENT"},
+                {"name" : "ZOOKEEPER_CLIENT"},
+                {"name" : "ZOOKEEPER_SERVER"}
+            ],
+            "cardinality" : "1"
+        },
+        {
+            "name" : "host3",
+            "components" : [
+                {"name" : "DATANODE"},
+                {"name" : "FALCON_CLIENT"},
+                {"name" : "GLUSTERFS_CLIENT"},
+                {"name" : "HIVE_CLIENT"},
+                {"name" : "HBASE_CLIENT"},
+                {"name" : "HBASE_REGIONSERVER"},
+                {"name" : "HDFS_CLIENT"},
+                {"name" : "MAPREDUCE2_CLIENT"},
+                {"name" : "NODEMANAGER"},
+                {"name" : "PIG"},
+                {"name" : "SQOOP"},
+                {"name" : "TEZ_CLIENT"},
+                {"name" : "YARN_CLIENT"},
+                {"name" : "ZOOKEEPER_CLIENT"},
+                {"name" : "ZOOKEEPER_SERVER"}
+            ],
+            "cardinality" : "1"
         }
     ],
     "Blueprints" : {
         "blueprint_name" : "sandbox",
         "stack_name" : "HDP",
-        "stack_version" : "2.1"
+        "stack_version" : "2.1.GlusterFS"
     }
 }

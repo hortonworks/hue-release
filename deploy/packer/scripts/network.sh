@@ -35,8 +35,7 @@ while [ -z "$HOST" ]; do
 	break
     fi
 done
-echo "$HOST	sandbox.hortonworks.com" >> /etc/hosts
-echo "$HOST	ambari.hortonworks.com" >> /etc/hosts
+echo "$HOST	sandbox.hortonworks.com ambari.hortonworks.com" >> /etc/hosts
 hostname sandbox.hortonworks.com
 
 echo 0 > /proc/sys/kernel/hung_task_timeout_secs
