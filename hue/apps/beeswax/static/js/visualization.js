@@ -127,16 +127,16 @@ $(document).ready(function () {
 					for(var j = 0; j < i; j++) {
 						for(var m = 0; m < 3; m++) {
 							if(isNaN(csvdata[m][yAxis[j]]) && csvdata[m][yAxis[j]].toLowerCase() != 'null')	{
-								$('input[value='+yAxis[j]+']').attr('disabled',true).attr('checked',false);
+								$(['input[value=',yAxis[j],']'].join('"')).attr('disabled',true).attr('checked',false);
 							} else {
-								$('input[value='+yAxis[j]+']').removeAttr('disabled');
+								$(['input[value=',yAxis[j],']'].join('"')).removeAttr('disabled');
 							}
 						}
 					}
 					$('.y_axis input:enabled').attr('checked',true).each(function(t){
 				    	$('#graph_sort').append($("<option></option>").attr("value",$(this).val()).text($(this).val()));
 					});
-					$('.y_axis input[value='+$('select[name=xAxis]').find(":selected").text()+']').attr('checked',false);
+					$(['.y_axis input[value=',$('select[name=xAxis]').find(":selected").text(),']'].join('"')).attr('checked',false);
 					updatePreview();
 				}
 		    });
@@ -162,7 +162,7 @@ $(document).ready(function () {
 	$('input[name=yAxis]').click(function(){updatePreview()});
 	$('select[name=xAxis]').change(function(){
 		$('.y_axis input:enabled').attr('checked',true);
-		$('.y_axis input[value='+$('select[name=xAxis]').find(":selected").text()+']').attr('checked',false);
+		$(['.y_axis input[value=',$('select[name=xAxis]').find(":selected").text(),']'].join('"')).attr('checked',false);
 		$('#graph_sort').val('');
 		updatePreview();
 	});
