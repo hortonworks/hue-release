@@ -5,6 +5,17 @@ class postinstall::solr{
     cwd => "/opt",
     timeout => 0
   }
+
+  exec{"download lucidworks":
+    command => "wget -O /opt/lucidworks-hadoop-lws-job.jar http://dev2.hortonworks.com.s3.amazonaws.com/stuff/lucidworks-hadoop-lws-job-1.3.0.jar",
+    timeout => 0
+  }
+
+  user {"solr":
+    name => "solr",
+    ensure => "present",
+    password => "solr"
+  }
   
   
 }

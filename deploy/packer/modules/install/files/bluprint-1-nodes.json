@@ -2,22 +2,22 @@
     "configurations" : [
         {
             "global" : {
-                 "dtnode_heapsize" : "250",
+                "dtnode_heapsize" : "250",
                 "hadoop_heapsize" : "250",
                 "namenode_heapsize" : "250",
                 "namenode_opt_newsize": "50",
                 "namenode_opt_maxnewsize": "100",
-              "hive_metastore_user_passwd" : "hive",
+                "hive_metastore_user_passwd" : "hive",
                 "hbase_master_heapsize": "250",
                 "nagios_contact" : "admin@localhost.localdomain",
-                 "jobhistory_heapsize" : "250",
-             "nagios_web_login" : "nagiosadmin",
+                "jobhistory_heapsize" : "250",
+                "nagios_web_login" : "nagiosadmin",
                 "nagios_web_password" : "admin",
                  "apptimelineserver_heapsize" : "250",
                 "resourcemanager_heapsize" : "250",
                 "nodemanager_heapsize" : "250",
                 "yarn_heapsize" : "250",
-           "hbase_regionserver_heapsize": "250",
+                "hbase_regionserver_heapsize": "250",
                 "oozie_metastore_user_passwd" : "oozie"
             }
         },

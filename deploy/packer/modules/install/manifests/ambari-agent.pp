@@ -12,9 +12,18 @@ class install::ambari-agent {
     require => Exec["ambari-repo"]
   }
 
-  exec {"register ambari agent":
-    command => 'sed -i.bak "/^hostname/ s/.*/hostname=ambari.hortonworks.com/" /etc/ambari-agent/conf/ambari-agent.ini',
-    require => Package["ambari-agent"]
+  if $sandbox=='true'{
+    exec {"register ambari agent":
+      command => 'sed -i.bak "/^hostname/ s/.*/hostname=sandbox.hortonworks.com/" /etc/ambari-agent/conf/ambari-agent.ini',
+      require => Package["ambari-agent"]
+    }
+  }
+  else
+  {
+    exec {"register ambari agent":
+      command => 'sed -i.bak "/^hostname/ s/.*/hostname=ambari.hortonworks.com/" /etc/ambari-agent/conf/ambari-agent.ini',
+      require => Package["ambari-agent"]
+    }
   }
 
   ###Because of ambari fails due to timeout need to preinstall all the software.
