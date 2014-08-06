@@ -229,7 +229,10 @@ def load_apps():
   DESKTOP_APPS = []
 
   for sdk_app in pkg_resources.iter_entry_points("desktop.sdk.application"):
-    m = sdk_app.load()
+    try:
+      m = sdk_app.load()
+    except pkg_resources.DistributionNotFound:
+      pass
     dmi = DesktopModuleInfo(m)
     DESKTOP_APPS.append(dmi)
 
