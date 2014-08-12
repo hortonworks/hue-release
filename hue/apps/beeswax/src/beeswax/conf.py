@@ -68,7 +68,14 @@ BROWSE_PARTITIONED_TABLE_LIMIT = Config(
   key='browse_partitioned_table_limit',
   default=250,
   type=int,
-  help=_t('Set a LIMIT clause when browsing a partitioned table. A positive value will be set as the LIMIT. If 0 or negative, do not set any limit.'))
+  help=_t('Set a LIMIT clause when browsing a partitioned table. A positive value will be set as the LIMIT and WHERE clause with only first partition. If 0 or negative, do not set any limit.'))
+
+BROWSE_UNPARTITIONED_TABLE_LIMIT = Config(
+  key='browse_unpartitioned_table_limit',
+  default=250,
+  type=int,
+  help=_t('Set a LIMIT clause when browsing a not partitioned table. A positive value will be set as the LIMIT. If 0 or negative, do not set any limit.'))
+
 
 DOWNLOAD_ROW_LIMIT = Config(
   key='download_row_limit',
