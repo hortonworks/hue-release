@@ -25,7 +25,7 @@ from django.utils.translation import ugettext as _
 
 from beeswax import hive_site
 from beeswax.conf import HIVE_SERVER_HOST, HIVE_SERVER_PORT,\
-  BROWSE_PARTITIONED_TABLE_LIMIT
+  BROWSE_PARTITIONED_TABLE_LIMIT, BROWSE_UNPARTITIONED_TABLE_LIMIT
 from beeswax.design import hql_query
 from beeswax.models import QueryHistory, HIVE_SERVER2, BEESWAX, QUERY_TYPES
 
@@ -474,6 +474,10 @@ class HiveServer2Dbms(object):
     """Get the limit clause when browsing a partitioned table"""
     if table.partition_keys:
       limit = BROWSE_PARTITIONED_TABLE_LIMIT.get()
+      if limit > 0:
+        return "LIMIT %d" % (limit,)
+    else:
+      limit = BROWSE_UNPARTITIONED_TABLE_LIMIT.get()
       if limit > 0:
         return "LIMIT %d" % (limit,)
     return ""
