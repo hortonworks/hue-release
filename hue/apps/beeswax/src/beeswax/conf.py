@@ -177,4 +177,3 @@ def config_validator(user):
     res.append((NICE_NAME, _("The application won't work without a running HiveServer2.")))
 
   return res
-create_empty
