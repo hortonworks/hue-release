@@ -189,11 +189,12 @@ def split_statements(hql):
   """
   statements = []
   current = ''
+  prev = ''
   between_quotes = None
 
   for c in hql:
     current += c
-    if c in ('"', "'"):
+    if c in ('"', "'") and prev != '\\':
       if between_quotes == c:
         between_quotes = None
       elif between_quotes is None:
@@ -202,6 +203,7 @@ def split_statements(hql):
       if between_quotes is None:
         statements.append(current)
         current = ''
+    prev = c
 
   if current and current != ';':
     statements.append(current)

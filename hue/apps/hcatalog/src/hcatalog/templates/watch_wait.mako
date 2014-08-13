@@ -70,7 +70,7 @@ ${layout.menubar(section='tables')}
 <script>
 
   $(document).ready(function(){
-    var fwdUrl = "${url(app_name + ':watch_query', query.id)}?${fwd_params}";
+    var fwdUrl = "${url(app_name + ':watch_query', query.id, download_format)}?${fwd_params}";
     var labels = {
       MRJOB: "${_('MR Job')}",
       MRJOBS: "${_('MR Jobs')}"
@@ -81,7 +81,7 @@ ${layout.menubar(section='tables')}
     var logsAtEnd = true;
 
     function refreshView() {
-      $.getJSON("${url('beeswax' + ':watch_query_refresh_json', query.id)}", function (data) {
+      $.getJSON("${url('beeswax' + ':watch_query_refresh_json', query.id, download_format)}", function (data) {
         if (data.isSuccess || data.isFailure) {
           location.href = fwdUrl;
         }

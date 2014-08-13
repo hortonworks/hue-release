@@ -35,7 +35,8 @@ def is_selected(section, matcher):
 			<li class="${is_selected(section, 'my queries')}"><a href="${ url('beeswax' + ':my_queries') }">${_('My Queries')}</a></li>
 			<li class="${is_selected(section, 'saved queries')}"><a href="${ url('beeswax' + ':list_designs') }">${_('Saved Queries')}</a></li>
 			<li class="${is_selected(section, 'history')}"><a href="${ url('beeswax' + ':list_query_history') }">${_('History')}</a></li>
-            <li class="${is_selected(section, 'databases')}"><a href="${ url('beeswax' + ':databases') }">${_('Databases')}</a></li>
+			<li class="${is_selected(section, 'result')}"><a href="${ url('beeswax' + ':last_result') }">${_('Result')}</a></li>
+			<li class="${is_selected(section, 'databases')}"><a href="${ url('beeswax' + ':databases') }">${_('Databases')}</a></li>
 			<li class="${is_selected(section, 'tables')}"><a href="${ url('beeswax' + ':show_tables') }">${_('Tables')}</a></li>
 			<li class="${is_selected(section, 'configuration')}"><a href="${ url('beeswax' + ':configuration') }">${_('Settings')}</a></li>
 		</ul>

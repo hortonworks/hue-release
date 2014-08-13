@@ -102,6 +102,7 @@ class Job:
   @property
   def counters(self):
     counters = self.api.counters(self.id)
+    LOGGER.debug("Counters for %s: %s" % (self.id, str(counters)))
     if counters:
       return counters['jobCounters']
     else:

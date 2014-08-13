@@ -35,7 +35,8 @@ from hcat_client import HCatClient
 from beeswax.views import (authorized_get_design, safe_get_design, save_design,
                            get_parameterization, _get_query_handle_and_state,
                            authorized_get_history, confirm_query,
-                           _parse_query_context, _parse_out_hadoop_jobs)
+                           _parse_query_context, _parse_out_hadoop_jobs,
+                           _get_current_db, _get_db_choices, download as beeswax_download, _clean_session)
 from beeswax.forms import QueryForm, SaveResultsForm
 from beeswax.models import SavedQuery, QueryHistory, make_query_context
 from beeswax.design import HQLdesign
@@ -49,7 +50,7 @@ LOG = logging.getLogger(__name__)
 
 
 def index(request):
-    database = _get_last_database(request)
+    database = _get_current_db(request, _get_last_database(request))
     return show_tables(request, database=database)
 
 def show_databases(request):
@@ -91,10 +92,12 @@ def show_tables(request, database=None):
     db = dbms.get(request.user)
     databases = db.get_databases()
     db_form = hcatalog.forms.DbForm(initial={'database': database}, databases=databases)
-    return render("show_tables.mako", request, {
+    response = render("show_tables.mako", request, {
         'database': database,
         'db_form': db_form,
     })
+    response.set_cookie("hueHcatalogLastDatabase", database, expires=90)
+    return response
 
 
 def create_database(request):
@@ -330,7 +333,7 @@ def execute_query(request, design_id=None, query_msg=''):
 
     query_server = get_query_server_config(app_name, requires_ddl=False)
     db = dbms.get(request.user, query_server)
-    databases = ((db, db) for db in db.get_databases())
+    databases = _get_db_choices(request)
 
     if request.method == 'POST':
         form.bind(request.POST)
@@ -362,16 +365,19 @@ def execute_query(request, design_id=None, query_msg=''):
                     return parameterization
 
                 try:
-                    query = HQLdesign(form)
+                    query = HQLdesign(form, query_type=query_type)
                     if to_explain:
                         return explain_directly(request, query, design, query_server)
                     else:
-                        download = 'download' in request.POST
+                        download = request.POST.has_key('download')
+
+                        download_format = form.query.cleaned_data.get('download_format', None)
+                        if not download_format: download_format = None
+                        request.session['dl_status'] = download_format in common.DL_FORMATS
+
                         return execute_directly(request, query, query_server, design, on_success_url=on_success_url,
-                                                download=download)
-                except BeeswaxException as ex:
-                    print ex.errorCode
-                    print ex.SQLState
+                                                download=download, download_format=download_format)
+                except Exception as ex:
                     error_message, log = expand_exception(ex, db)
     else:
         if design.id is not None:
@@ -383,15 +389,22 @@ def execute_query(request, design_id=None, query_msg=''):
             form.bind()
         form.query.fields['database'].choices = databases  # Could not do it in the form
 
-    return render('execute.mako', request, {
-        'action': action,
-        'design': design,
-        'error_message': error_message,
-        'form': form,
-        'log': log,
-        'on_success_url': on_success_url,
-        'query_msg': query_msg,
+    database = _get_current_db(request)
+    response = render('execute.mako', request, {
+      'action': action,
+      'design': design,
+      'error_message': error_message,
+      'form': form,
+      'log': log,
+      'on_success_url': on_success_url,
+      'query_msg': query_msg,
     })
+    response.set_cookie("hueHcatalogLastDatabase", database, expires=90)
+    return response
+
+
+def hive_view_download(request, id, format):
+  return beeswax_download(request, id, format)
 
 
 def read_table(request, database, table):
@@ -410,7 +423,7 @@ def read_table(request, database, table):
 
 
 def execute_directly(request, query, query_server=None, design=None, tablename=None,
-                     on_success_url=None, on_success_params=None, **kwargs):
+                     on_success_url=None, on_success_params=None, download_format=None, **kwargs):
     """
     execute_directly(request, query_msg, tablename, design) -> HTTP response for execution
 
@@ -453,7 +466,7 @@ def execute_directly(request, query, query_server=None, design=None, tablename=N
 
     history_obj = db.execute_query(query, design)
 
-    watch_url = urlresolvers.reverse(get_app_name(request) + ':watch_query', kwargs={'id': history_obj.id})
+    watch_url = urlresolvers.reverse(get_app_name(request) + ':watch_query', kwargs={'id': history_obj.id, 'download_format':download_format})
     if 'download' in kwargs and kwargs['download']:
         watch_url += '?download=true'
 
@@ -503,7 +516,10 @@ def watch_query(request, id):
     context_param = request.GET.get('context', '')
 
     # GET param: on_success_url. Default to view_results
-    results_url = urlresolvers.reverse('hcatalog' + ':view_results', kwargs={'id': id, 'first_row': 0})
+    if request.session.get('dl_status', False)==False and download_format in common.DL_FORMATS:
+      results_url = urlresolvers.reverse(get_app_name(request) + ':execute_query')
+    else:
+      results_url = urlresolvers.reverse(get_app_name(request) + ':view_results', kwargs={'id': id, 'first_row': 0})
     if request.GET.get('download', ''):
         results_url += '?download=true'
     on_success_url = request.GET.get('on_success_url')
@@ -527,6 +543,9 @@ def watch_query(request, id):
         # log we want to display.
         return format_preserving_redirect(request, results_url, request.GET)
     elif query_history.is_finished() or (query_history.is_success() and query_history.has_results):
+        if request.session.get('dl_status', False):  # BUG-20020
+          on_success_url = urlresolvers.reverse(get_app_name(request) + ':download', kwargs=dict(id=str(id), format=download_format))
+        _clean_session(request)
         return format_preserving_redirect(request, on_success_url, request.GET)
 
     # Still running
@@ -540,8 +559,9 @@ def watch_query(request, id):
         'query': query_history,
         'fwd_params': request.GET.urlencode(),
         'log': log,
-        'hadoop_jobs': _parse_out_hadoop_jobs(log),
+        'hadoop_jobs': _parse_out_hadoop_jobs(log)[0],
         'query_context': query_context,
+        'download_format': download_format, ## ExpV
     })
 
 
@@ -615,7 +635,7 @@ def view_results(request, id, first_row=0):
         'results': data,
         'expected_first_row': first_row,
         'log': log,
-        'hadoop_jobs': _parse_out_hadoop_jobs(log),
+        'hadoop_jobs': _parse_out_hadoop_jobs(log)[0],
         'query_context': query_context,
         'can_save': False,
         'context_param': context_param,
@@ -678,6 +698,7 @@ def _get_table_list(request, database=None):
 
 
 def _get_last_database(request, database=None):
+    dbs = dbms.get(request.user).get_databases()
     if database is not None:
         LOG.debug("Getting database name from argument")
     elif request and request.method == 'POST' and request.POST.get('database'):
@@ -685,7 +706,10 @@ def _get_last_database(request, database=None):
         LOG.debug("Getting database name from request")
     elif request:
         database = request.COOKIES.get('hueHcatalogLastDatabase', 'default')
-        LOG.debug("Getting database name from cookies")
+        if database in dbs:
+            LOG.debug("Getting database name from cookies")
+        else:
+            database = 'default'
     return database
 
 

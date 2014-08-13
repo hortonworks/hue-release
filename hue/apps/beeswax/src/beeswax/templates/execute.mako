@@ -185,7 +185,11 @@ ${layout.menubar(section='query')}
                                 <input type="checkbox" id="id_${form.query["email_notify"].html_name | n}" name="${form.query["email_notify"].html_name | n}" ${extract_field_data(form.query["email_notify"]) and "CHECKED" or ""}/>
                                 ${_("Email me on completion")}
                             </label>
-                          </li>                          
+                          </li>
+                          <li class="nav-header">${_('DIRECT DOWNLOAD')}</li>
+                          <li>
+                            ${ form.query['download_format'] | n,unicode }
+                          </li>
                         </ul>
                     </ul>
                     <input type="hidden" name="${form.query["query"].html_name | n}" class="query" value="" />
@@ -390,6 +394,7 @@ ${layout.menubar(section='query')}
 <script src="/beeswax/static/js/code-mirror/codemirror-show-hint.js"></script>
 
 <script type="text/javascript" charset="utf-8">
+    var codeMirror;
     $(document).ready(function(){
         $("*[rel=tooltip]").tooltip({
             placement: 'bottom'
@@ -437,13 +442,13 @@ ${layout.menubar(section='query')}
         }
 
         $("#id_query-database").change(function(){
-             $.cookie("hueBeeswaxLastDatabase", $(this).val(), {path: "/", expires: 90});
+             $.cookie("hue${ app_name.capitalize() }LastDatabase", $(this).val(), {path: "/", expires: 90});
         });
 
         ## If no particular query is loaded
         % if design is None or design.id is None:
-            if ($.cookie("hueBeeswaxLastDatabase") != null) {
-                $("#id_query-database").val($.cookie("hueBeeswaxLastDatabase"));
+            if ($.cookie("hue${ app_name.capitalize() }LastDatabase") != null) {
+                $("#id_query-database").val($.cookie("hue${ app_name.capitalize() }LastDatabase"));
             }
         % endif
 
@@ -864,7 +869,7 @@ ${layout.menubar(section='query')}
 
             CodeMirror.fromDot = false;
 
-      var codeMirror = CodeMirror.fromTextArea(document.getElementById("queryField"), {
+      codeMirror = CodeMirror.fromTextArea(document.getElementById("queryField"), {
         value: queryEditor.value,
         readOnly: false,
         lineNumbers: true,

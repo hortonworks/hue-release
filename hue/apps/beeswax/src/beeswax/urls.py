@@ -37,8 +37,13 @@ urlpatterns = patterns('beeswax.views',
   url(r'^execute/(?P<design_id>\d+)?$', 'execute_query', name='execute_query'),
   url(r'^explain_parameterized/(?P<design_id>\d+)$', 'explain_parameterized_query', name='explain_parameterized_query'),
   url(r'^execute_parameterized/(?P<design_id>\d+)$', 'execute_parameterized_query', name='execute_parameterized_query'),
-  url(r'^watch/(?P<id>\d+)$', 'watch_query', name='watch_query'),
+
+  url(r'^watch/(?P<id>\d+)/(?P<download_format>\w+)$', 'watch_query', name='watch_query'),  # BUG-20020
+  url(r'^watch/json/(?P<id>\d+)/(?P<download_format>\w+)$', 'watch_query_refresh_json', name='watch_query_refresh_json'),
+  url(r'^watch/(?P<id>\d+)$', 'watch_query', name='watch_query'),  # BUG-20020
   url(r'^watch/json/(?P<id>\d+)$', 'watch_query_refresh_json', name='watch_query_refresh_json'),
+
+  url(r'^cancel_operation/(?P<query_id>\d+)?$', 'cancel_operation', name='cancel_operation'),
   url(r'^results/(?P<id>\d+)/(?P<first_row>\d+)$', 'view_results', name='view_results'),
   url(r'^download/(?P<id>\d+)/(?P<format>\w+)$', 'download', name='download'),
   url(r'^visualize/(?P<id>\d+)/(?P<cut>\d+)?$', 'visualize', name='visualize'),
@@ -54,6 +59,7 @@ urlpatterns = patterns('beeswax.views',
   url(r'^install_examples$', 'install_examples', name='install_examples'),
   url(r'^query_cb/done/(?P<server_id>\S+)$', 'query_done_cb', name='query_done_cb'),
 
+  url(r'^last_result$', 'last_result', name='last_result'),
   url(r'autosave_design/$', 'autosave_design', name='autosave_design'),
 )
 
