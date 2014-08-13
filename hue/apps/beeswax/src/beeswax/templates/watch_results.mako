@@ -61,6 +61,11 @@ ${layout.menubar(section='query')}
     margin-left: 0!important;
   }
 
+  .ri_header {
+    display: inline;
+    font-size: 12px;
+  }
+
 </style>
 
 <div class="container-fluid">

@@ -237,6 +237,7 @@ class YarnApi(JobBrowserApi):
 
       # MR id
       jobid = jobid.replace('application', 'job')
+      LOG.debug("%s state: %s" % (jobid, job['state']))
       if job['state'] in ('NEW', 'SUBMITTED', 'ACCEPTED', 'RUNNING'):
         json = self.mapreduce_api.job(self.user, jobid)
         job = YarnJob(self.mapreduce_api, json['job'])

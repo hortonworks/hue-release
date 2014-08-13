@@ -101,7 +101,7 @@ class BeeswaxDataTable(DataTable):
 
 
 class BeeswaxClient:
-  NO_RESULT_SET_RE = re.compile('DROP|CREATE|ALTER|LOAD', re.IGNORECASE)
+  NO_RESULT_SET_RE = re.compile('DROP|CREATE|ALTER|LOAD|USE|SET', re.IGNORECASE)
 
   def __init__(self, query_server, user):
     self.user = user
@@ -152,6 +152,10 @@ class BeeswaxClient:
       return BeeswaxDataTable(results)
 
 
+  def cancel_operation(self, handle):
+    raise Exception(_('Query cancelation is not supported by the Beeswax interface. Please use the Hive Server 2 interface instead.'))
+
+
   def get_log(self, handle):
     return self.db_client.get_log(handle.log_context)
 
@@ -195,10 +199,20 @@ class BeeswaxClient:
     return self.db_client.get_default_configuration(*args, **kwargs)
 
   @classmethod
-  def get_security(cls):
+  def get_security(cls, query_server=None):
     cluster_conf = hadoop.cluster.get_cluster_conf_for_job_submission()
     use_sasl = cluster_conf is not None and cluster_conf.SECURITY_ENABLED.get()
-    kerberos_principal_short_name = KERBEROS.HUE_PRINCIPAL.get().split('/', 1)[0]
+
+    if query_server is not None:
+      principal = query_server['principal']
+    else:
+      principal = KERBEROS.HUE_PRINCIPAL.get()
+
+    # We should integrate hive_site.get_metastore() here in the future
+    if principal:
+      kerberos_principal_short_name = principal.split('/', 1)[0]
+    else:
+      kerberos_principal_short_name = None
 
     return use_sasl, kerberos_principal_short_name
 
@@ -275,7 +289,7 @@ class BeeswaxClient:
         res = self._client.get_results_metadata(*args, **kwargs)
         return _decode_struct_attr(res, 'table_dir')
 
-    use_sasl, kerberos_principal_short_name = BeeswaxClient.get_security()
+    use_sasl, kerberos_principal_short_name = BeeswaxClient.get_security(query_server)
 
     client = thrift_util.get_client(BeeswaxService.Client,
                                     query_server['server_host'],

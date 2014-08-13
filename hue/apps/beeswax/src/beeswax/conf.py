@@ -94,6 +94,26 @@ GO_TO_COLUMN = Config(
   default=True
 )
 
+DISABLE_SAMPLE_DATA_TAB = Config(
+  key='disable_sample_data_tab',
+  default=False,
+  type=coerce_bool,
+  help=_t('Option to disable the sample data tab in hue.')
+)
+
+CHECK_PARTITION_CLAUSE_IN_QUERY = Config(
+  key="enable_partition_query_check",
+  default=False,
+  type=coerce_bool,
+  help=_t("If a select query on partitioned table without partition keys, raise an error."),
+  private=True)
+
+DEFAULT_DB_PER_GROUP_REGEX = Config(
+  key="default_db_per_group_regex",
+  default="",
+  help=_t("Regex to turn group name to default db name: e.g. 's/^hdp_(.*)$/\\1/' removes hdp_ from group name. If property is empty, no default DB will be assigned to user"),
+  private=True)
+
 CLOSE_QUERIES = Config(
   key="close_queries",
   help=_t("Hue will try to close the Hive query when the user leaves the editor page. "
@@ -157,3 +177,4 @@ def config_validator(user):
     res.append((NICE_NAME, _("The application won't work without a running HiveServer2.")))
 
   return res
+create_empty

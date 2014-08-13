@@ -22,6 +22,7 @@ except ImportError:
 import logging
 import re
 import os
+import urllib
 
 from django import forms
 from django.contrib import messages
@@ -46,12 +47,17 @@ import beeswax.forms
 import beeswax.design
 import beeswax.management.commands.beeswax_install_examples
 
-from beeswax import common, data_export, models, conf
+from beeswax import common, data_export, models, conf, query_result
+
+from beeswax import query_helper
 from beeswax.forms import LoadDataForm, QueryForm, DbForm
 from beeswax.design import HQLdesign, hql_query
 from beeswax.models import SavedQuery, make_query_context
 from beeswax.server import dbms
 from beeswax.server.dbms import expand_exception, get_query_server_config, QueryServerException
+from beeswax.counters import Counters
+from beeswax.utils import human_size, human_number, human_time
+from jobbrowser.views import _getjob, massage_job_for_json
 
 
 LOG = logging.getLogger(__name__)
@@ -365,16 +371,15 @@ def show_tables(request, database=None):
 def describe_table(request, database, table):
   db = dbms.get(request.user)
   error_message = ''
-  table_data = ''
-  try:
-    table = db.get_table(database, table)
-  except Exception, e:
-    raise PopupException(_("Hive Error"), detail=e)
+  table_data = None
 
-  try:
-    table_data = db.get_sample(database, table)
-  except Exception, ex:
-    error_message, logs = expand_exception(ex, db)
+  table = db.get_table(database, table)
+
+  if not conf.DISABLE_SAMPLE_DATA_TAB.get():
+    try:
+      table_data = db.get_sample(database, table)
+    except Exception, ex:
+      error_message, logs = expand_exception(ex, db)
 
   load_form = LoadDataForm(table)
 
@@ -397,7 +402,7 @@ def drop_table(request, database=None):
       tables_objects = [db.get_table(database, table) for table in tables]
       app_name = get_app_name(request)
       # Can't be simpler without an important refactoring
-      design = SavedQuery.create_empty(app_name='beeswax', owner=request.user, data=hql_query('').dumps())
+      design = SavedQuery.create_empty(app_name=app_name, owner=request.user, data=hql_query('').dumps())
       query_history = db.drop_tables(database, tables_objects, design)
       url = reverse(app_name + ':watch_query', args=[query_history.id]) + '?on_success_url=' + reverse(app_name + ':show_tables')
       return redirect(url)
@@ -477,6 +482,15 @@ def download(request, id, format):
   return data_export.download(query_history.get_handle(), format, db)
 
 
+def _clean_session(request):
+  """ cleanup session variables """  #TODO: review every session variable
+  request.session.pop('dl_status', None)
+  request.session.pop('jobs', None)
+  request.session.pop('total', None)
+  request.session.pop('current', None)
+  request.session.pop('start_time', None)  # store job start time to calculate duration
+
+
 def visualize(request, id, cut=None):
 
   query_history = authorized_get_history(request, id, must_exist=True)
@@ -504,12 +518,13 @@ def execute_query(request, design_id=None):
   """
   authorized_get_design(request, design_id)
 
+  request.session['start_time'] = time.time()  # FIXME: add job id to not intersect simultaneous jobs
   error_message = None
   form = QueryForm()
   action = request.path
   log = None
   app_name = get_app_name(request)
-  query_type = 0
+  query_type = SavedQuery.TYPES_MAPPING[app_name]
   design = safe_get_design(request, query_type, design_id)
   on_success_url = request.REQUEST.get('on_success_url')
 
@@ -546,20 +561,32 @@ def execute_query(request, design_id=None):
       if to_explain or to_submit:
         query_str = form.query.cleaned_data["query"]
 
+        if conf.CHECK_PARTITION_CLAUSE_IN_QUERY.get():
+          query_str = _strip_trailing_semicolon(query_str)
+          # check query. if a select query on partitioned table without partition keys,
+          # intercept it and raise a PopupException.
+          _check_partition_clause_in_query(form.query.cleaned_data.get('database', None), query_str, db)
+
         # (Optional) Parameterization.
         parameterization = get_parameterization(request, query_str, form, design, to_explain)
         if parameterization:
           return parameterization
 
         try:
-          query = HQLdesign(form, query_type=0)
+          query = HQLdesign(form, query_type=query_type)
           if to_explain:
             return explain_directly(request, query, design, query_server)
           else:
             download = request.POST.has_key('download')
-            return execute_directly(request, query, query_server, design, on_success_url=on_success_url, download=download)
-        except QueryServerException, e:
-          error_message, log = expand_exception(e, db)
+
+            download_format = form.query.cleaned_data.get('download_format', None)
+            if not download_format: download_format = None
+            if download_format in common.DL_FORMATS:
+              request.session['dl_status'] = True
+
+            return execute_directly(request, query, query_server, design, on_success_url=on_success_url, download_format=download_format, download=download)
+        except QueryServerException, ex:
+          error_message, log = expand_exception(ex, db)
   else:
     if design.id is not None:
       data = HQLdesign.loads(design.data).get_query_dict()
@@ -573,7 +600,8 @@ def execute_query(request, design_id=None):
 
     form.query.fields['database'].choices = databases # Could not do it in the form
 
-  return render('execute.mako', request, {
+  database = _get_current_db(request)
+  response = render('execute.mako', request, {
     'action': action,
     'design': design,
     'error_message': error_message,
@@ -581,7 +609,8 @@ def execute_query(request, design_id=None):
     'log': log,
     'on_success_url': on_success_url,
   })
-
+  response.set_cookie("hueBeeswaxLastDatabase", database, expires=90)
+  return response
 
 def execute_parameterized_query(request, design_id):
   return _run_parameterized_query(request, design_id, False)
@@ -591,7 +620,7 @@ def explain_parameterized_query(request, design_id):
   return _run_parameterized_query(request, design_id, True)
 
 
-def watch_query(request, id):
+def watch_query(request, id, download_format=None):
   """
   Wait for the query to finish and (by default) displays the results of query id.
   It understands the optional GET params:
@@ -616,7 +645,13 @@ def watch_query(request, id):
   context_param = request.GET.get('context', '')
 
   # GET param: on_success_url. Default to view_results
-  results_url = reverse(get_app_name(request) + ':view_results', kwargs={'id': id, 'first_row': 0})
+
+  # BUG-20020
+  if request.session.get('dl_status', False)==False and download_format in common.DL_FORMATS:
+    results_url = reverse(get_app_name(request) + ':execute_query')
+  else:
+    results_url = reverse(get_app_name(request) + ':view_results', kwargs=dict(id=str(id), first_row=0))
+
   if request.GET.get('download', ''):
     results_url += '?download=true'
   on_success_url = request.GET.get('on_success_url')
@@ -625,20 +660,41 @@ def watch_query(request, id):
 
   # Go to next statement if asked to continue or when a statement with no dataset finished.
   if request.method == 'POST' or (not query_history.is_finished() and query_history.is_success() and not query_history.has_results):
+    request.session['start_time'] = time.time()
     try:
       query_history = db.execute_next_statement(query_history)
+      return redirect(request.get_full_path())
     except Exception, ex:
       pass
 
-  # Check query state
-  handle, state = _get_query_handle_and_state(query_history)
-  query_history.save_state(state)
+#   Still running
+  try:
+  # Get the server handle
+    handle, state = query_result._get_query_handle_and_state(query_history)
+    query_history.save_state(state)
+    LOG.info(query_history.is_finished() or (query_history.is_success() and query_history.has_results and download_format in ("None", None)))  # BUG-20020
+    LOG.info(str(query_history.is_finished())+  str(query_history.is_success()) + str( query_history.has_results) + str(download_format))
+    log = db.get_log(handle)
+    jobids, current, total = _parse_out_hadoop_jobs(log)
+  except Exception, e:
+    LOG.exception(e)
+    log = str(e)
+    jobids=[]
+    query_history.set_to_failed()
+    query_history.save()
+    _clean_session(request)
 
   if query_history.is_failure():
     # When we fetch, Beeswax server will throw us a BeeswaxException, which has the
     # log we want to display.
     return format_preserving_redirect(request, results_url, request.GET)
   elif query_history.is_finished() or (query_history.is_success() and query_history.has_results):
+    if query_history.has_results and request.session.get("jobs", None):
+      _stat_result_info(request, query_history, jobids)
+      _log_total_query_time(request, query_history)
+    if request.session.get('dl_status', False)==True:  # BUG-20020
+      on_success_url = reverse(get_app_name(request) + ':download', kwargs=dict(id=str(id), format=download_format))
+    _clean_session(request)
     return format_preserving_redirect(request, on_success_url, request.GET)
 
   # Still running
@@ -652,11 +708,13 @@ def watch_query(request, id):
                 'query': query_history,
                 'fwd_params': request.GET.urlencode(),
                 'log': log,
-                'hadoop_jobs': _parse_out_hadoop_jobs(log),
+                'hadoop_jobs': jobids,
                 'query_context': query_context,
+                'download_format': download_format, ## ExpV
               })
 
-def watch_query_refresh_json(request, id):
+def watch_query_refresh_json(request, id, download_format=None):
+
   query_history = authorized_get_history(request, id, must_exist=True)
   db = dbms.get(request.user, query_history.get_query_server_config())
   handle, state = _get_query_handle_and_state(query_history)
@@ -670,18 +728,229 @@ def watch_query_refresh_json(request, id):
     handle, state = _get_query_handle_and_state(query_history)
   
   log = db.get_log(handle)
-  jobs = _parse_out_hadoop_jobs(log)
+  jobs, current, total = _parse_out_hadoop_jobs(log)
+  if len(jobs) >= 1 and not (query_history.is_finished() or (query_history.is_success() and query_history.has_results)):
+    request.session['total'] = total
+    request.session['current'] = current
+    request.session['jobs'] = jobs
+  else:
+    jobs = request.session.get("jobs", jobs)
+    current = request.session.get("current", current)
+    total = request.session.get("total", total)
+  LOG.info("jobs:%s, current: %s, total: %s"%(str(jobs), current, total))
   job_urls = dict([(job, reverse('jobbrowser.views.single_job', kwargs=dict(job=job))) for job in jobs])
+  job = None
+  try:
+    if len(jobs)>=1:
+      jobid = jobs[-1]
+      j = None
+      if _getjob(request, job=jobid) is not None:
+        j = _getjob(request, job=jobid)
+        job = massage_job_for_json(j, request)
+      current = len(jobs)+1 if (j and (j and j.is_retired or j.status.lower() == 'succeeded') and len(jobs) < total) else len(jobs)
+  except Exception, e:
+    LOG.error(str(e))
+
 
   result = {
     'log': log,
     'jobs': jobs,
     'jobUrls': job_urls,
     'isSuccess': query_history.is_finished() or (query_history.is_success() and query_history.has_results),
-    'isFailure': query_history.is_failure()
+    'isFailure': query_history.is_failure(),
+    'download_format':download_format,
+    'current': current,
+    'total':total,
+    'job': job
   }
 
   return HttpResponse(json.dumps(result), mimetype="application/json")
+
+# ==================================================================================
+
+import time
+
+def _log_total_query_time(request, query_history):
+  """ total query execution time """
+  if query_history.query_stats:
+    if type(query_history.query_stats) is not dict:
+      query_history.query_stats = _get_dic(query_history.query_stats)
+    prev_time = query_history.query_stats.get('total_time', 0)
+    query_history.query_stats.update({'total_time': (prev_time + (time.time() - request.session.get('start_time', 0)))})
+  else:
+    query_history.query_stats = {'total_time': (time.time() - request.session.get('start_time', 0))}
+  query_history.save()
+
+def _stat_result_info(request, query_history, jobs):
+  """ compute and persist result info """
+  beeswaxQueryHistory = models.BeeswaxQueryHistory.objects.get(id=query_history.id)
+  query_history.result_size = query_result.create(beeswaxQueryHistory, request.fs).size()
+  try:
+    job = _getjob(request, job = jobs[-1])
+    if job:
+      result_rows = _estimate_row_number(request, job)
+      query_history.result_rows = result_rows if ((query_history.result_rows and query_history.result_rows<result_rows) or (result_rows and not query_history.result_rows) ) else query_history.result_rows
+      query_history.save()
+      _get_job_counters(query_history, job, jobs[-1])
+  except Exception, ex:
+    LOG.error(str(ex))
+
+def _estimate_row_number(request, job):
+  """
+Guess the row number from the map reduce counters
+"""
+  counters = Counters(job.counters)
+  row_counts = [counters['reduce_input_records'] if counters['reduce_input_records'] else 0, \
+             counters['map_input_records'] if counters['map_input_records'] else 0, \
+             counters['reduce_input_groups'] if counters['reduce_input_groups'] else 0, \
+             counters['hive_filter_passed'] if counters['hive_filter_passed'] else 0]
+  try:
+    return min(i for i in row_counts if i!=0)
+  except Exception, e:
+    LOG.error(str(e))
+    return None
+
+import ast
+def _get_job_counters(query_history, job, jobid):
+  """ log query stats from job counter"""
+  counters = Counters(job.counters)
+  record_dict = _get_stats_dic(counters, jobid)
+  if not query_history.query_stats:
+    query_history.query_stats = record_dict
+  else:
+    if type(query_history.query_stats) is dict:
+      query_history.query_stats = _internal_dict_update(query_history.query_stats, record_dict)
+    else:
+      query_history.query_stats = _get_dic(query_history.query_stats)
+      query_history.query_stats = _internal_dict_update(query_history.query_stats, record_dict)
+  query_history.save()
+
+
+def _get_stats_dic(counters, jobid):
+  """ create dictionary from counters """
+  return {"cpu_reduce" : {jobid : counters['CPU_MILLISECONDS_REDUCE']},
+          "cpu_map" : { jobid : counters['CPU_MILLISECONDS_MAP']},
+          "physical_memory_reduce" : {jobid : counters['PHYSICAL_MEMORY_SNAPSHOT_REDUCE']},
+          "physical_memory_map" : {jobid : counters['PHYSICAL_MEMORY_SNAPSHOT_MAP']},
+          "committed_memory_reduce" : {jobid: counters['TOTAL_COMMITTED_HEAP_USAGE_REDUCE']},
+          "committed_memory_map" : {jobid: counters['TOTAL_COMMITTED_HEAP_USAGE_MAP']},
+          "virtual_memory_reduce" : {jobid : counters['VIRTUAL_MEMORY_SNAPSHOT_REDUCE']},
+          "virtual_memory_map" : {jobid : counters['VIRTUAL_MEMORY_SNAPSHOT_MAP']},
+          }
+
+
+def _internal_dict_update(query_stats, record_dic):
+  """ two level dictionary update """
+  record = {}
+  for k in query_stats.keys():
+    if query_stats[k] and type(query_stats[k]) is dict:
+      query_stats[k].update(record_dic[k])
+      record.update({k : query_stats[k]})
+    elif query_stats[k]:
+      _get_dic(query_stats[k]).update(record_dic[k])
+      record.update({k : query_stats[k]})
+    else:
+      record.update({k : record_dic[k]})
+  return record
+
+def _get_dic(record_dic):
+  """ get dictionary from malformed """
+  if type(record_dic) is not dict:
+    try:
+      record_dic = ast.literal_eval(record_dic)
+    except ValueError, e:
+      LOG.error(str(e))
+  return record_dic
+
+
+
+
+def cancel_operation(request, query_id):
+  response = {'status': -1, 'message': ''}
+
+  if request.method != 'POST':
+    response['message'] = _('A POST request is required.')
+  else:
+    try:
+      query_history = authorized_get_history(request, query_id, must_exist=True)
+      db = dbms.get(request.user, query_history.get_query_server_config())
+      db.cancel_operation(query_history.get_handle())
+      query_result._get_query_handle_and_state(query_history)
+      response = {'status': 0}
+    except Exception, e:
+      response = {'message': unicode(e)}
+
+  return HttpResponse(json.dumps(response), mimetype="application/json")
+
+def _get_result_info(query_history):
+  """ get hue results info"""
+  if query_history.result_size==-1:
+    size = None
+  else:
+    size = query_history.result_size
+  if query_history.query_stats:
+    query_stats = _get_dic(query_history.query_stats)
+    return {'size': _coerce(human_size(size)),
+            'rows': _coerce(_estimate(query_history.result_rows)),
+            'query_time':_estimate_time(query_stats),
+            'committed_memory':_estimate_memory(query_stats.get('committed_memory_reduce', None), query_stats.get('committed_memory_map', None)),
+            'physical_memory':_estimate_memory(query_stats.get('physical_memory_reduce', None), query_stats.get('physical_memory_map'), None),
+            'virtual_memory':_estimate_memory(query_stats.get('virtual_memory_reduce', None), query_stats.get('virtual_memory_map'), None),
+            'total_time':human_time(query_stats.get('total_time', 0)*1000) if query_stats.get('total_time', None) else 'unknown'}
+
+  return {'size': _coerce(human_size(size)),
+          'rows': _coerce(_estimate(query_history.result_rows)),
+          'query_time': 'unknown',
+          'committed_memory': 'unknown',
+          'physical_memory': 'unknown',
+          'virtual_memory': 'unknown',
+          'total_time': 'unknown'}
+
+def _estimate(value):
+  return ("~" + human_number(value)) if value>0 else None
+
+def _coerce(value, default="unknown"):
+  return value or default
+
+def _estimate_time(query_stats, default="unknown"):
+  """ estimate query time """
+  if query_stats.get('cpu_map', None) and not query_stats.get('cpu_reduce', None):
+    return human_time(_dict_sum(query_stats.get('cpu_map', None)))
+  elif query_stats.get('cpu_reduce', None) and not query_stats.get('cpu_map', None):
+    return human_time(_dict_sum(query_stats.get('cpu_reduce', None)))
+  elif query_stats.get('cpu_reduce', None) and query_stats.get('cpu_map', None):
+    return human_time(_dict_sum(query_stats.get('cpu_map', None)) + _dict_sum(query_stats.get('cpu_reduce', None)))
+  else:
+    return default
+
+def _dict_sum(stats):
+  """ dictionary sum"""
+  total=0
+  for key in stats.keys():
+    if stats[key]:
+      total = total + stats[key]
+  return total
+
+def _estimate_memory(memory_reduce, memory_map, default="unknown"):
+  """ calculate used memory """
+  if memory_map and not memory_reduce:
+    return human_size(_max_memory_utilized(memory_map))
+  elif memory_reduce and not memory_map:
+    return human_size(_max_memory_utilized(memory_reduce))
+  elif memory_reduce and memory_map:
+    return human_size(max(_max_memory_utilized(memory_reduce) , _max_memory_utilized(memory_map)))
+  else:
+    return default
+
+def _max_memory_utilized(stats):
+  """ maximum memory utilized during query execution"""
+  max = 0
+  for key in stats.keys():
+    if stats[key] and stats[key]>max:
+      max = stats[key]
+  return max
+
+# ========================================================================================================
 
 
 def view_results(request, id, first_row=0):
@@ -699,21 +968,35 @@ def view_results(request, id, first_row=0):
   """
   first_row = long(first_row)
   start_over = (first_row == 0)
-  results = None
-  data = None
+  results = type('Result', (object,), {
+                'rows': 0,
+                'columns': [],
+                'has_more': False,
+                'start_row': 0, })
+  data = []
   fetch_error = False
   error_message = ''
   log = ''
   app_name = get_app_name(request)
 
   query_history = authorized_get_history(request, id, must_exist=True)
-  db = dbms.get(request.user, query_history.get_query_server_config())
+  query_server = query_history.get_query_server_config()
+  db = dbms.get(request.user, query_server)
 
   handle, state = _get_query_handle_and_state(query_history)
   context_param = request.GET.get('context', '')
   query_context = _parse_query_context(context_param)
+  if not query_context:
+    try:
+      query_context = _parse_query_context(("%s:%d"%("design", query_history.design.id)))
+    except Exception,e :
+      LOG.error("Error getting query context")
+      pass
+  # Cleanup the session after multi-part jobs
+  if request.session.get('jobs') is not None:
+    _clean_session(request)
 
-  # To remove in Hue 2.3
+  # To remove in Hue 2.4
   download  = request.GET.get('download', '')
 
   # Update the status as expired should not be accessible
@@ -722,26 +1005,25 @@ def view_results(request, id, first_row=0):
     state = models.QueryHistory.STATE.expired
     query_history.save_state(state)
 
-  # Retrieve query results
+  # Retrieve query results or use empty result if no result set
+  jobs=[]
   try:
-    if not download:
+    if expired:
+      error_message, log, jobs="Query has expired, Please rerun your query to get results", None, []
+    elif not download:
       results = db.fetch(handle, start_over, 100)
       data = list(results.rows()) # Materialize results
 
       # We display the "Download" button only when we know that there are results:
       downloadable = first_row > 0 or data
+      jobs = _parse_out_hadoop_jobs(log)[0]
     else:
       downloadable = True
-      data = []
-      results = type('Result', (object,), {
-                    'rows': 0,
-                    'columns': [],
-                    'has_more': False,
-                    'start_row': 0, })
+
     log = db.get_log(handle)
   except Exception, ex:
     fetch_error = True
-    error_message, log = expand_exception(ex, db)
+    error_message, log = expand_exception(ex, db, handle)
 
   # Handle errors
   error = fetch_error or results is None or expired
@@ -754,13 +1036,15 @@ def view_results(request, id, first_row=0):
     'results': data,
     'expected_first_row': first_row,
     'log': log,
-    'hadoop_jobs': _parse_out_hadoop_jobs(log),
+    'hadoop_jobs': jobs,
     'query_context': query_context,
     'can_save': False,
     'context_param': context_param,
     'expired': expired,
     'app_name': app_name,
-    'download': download
+    'download': download,
+    'result_info': _get_result_info(query_history),
+    'next_json_set': None
   }
 
   if not error:
@@ -784,9 +1068,26 @@ def view_results(request, id, first_row=0):
       'visualize_url': visualize_url,
       'save_form': save_form,
       'can_save': query_history.owner == request.user and not download,
+      'next_json_set': reverse(get_app_name(request) + ':view_results', kwargs={
+        'id': str(id),
+        'first_row': results.start_row + len(data)
+      }) + ('?context=' + context_param or '') + '&format=json'
     })
 
+  if request.GET.get('format') == 'json':
+    context = {
+      'results': data,
+      'has_more': results.has_more,
+      'next_row': results.start_row + len(data),
+      'start_row': results.start_row,
+      'next_json_set': reverse(get_app_name(request) + ':view_results', kwargs={
+        'id': str(id),
+        'first_row': results.start_row + len(data)
+      }) + ('?context=' + context_param or '') + '&format=json'
+    }
+    return HttpResponse(json.dumps(context), mimetype="application/json")
   return render('watch_results.mako', request, context)
+
 
 def save_results(request, id):
   """
@@ -801,12 +1102,16 @@ def save_results(request, id):
 
   if request.method == 'POST':
     if not query_history.is_success():
-      msg = _('This query is %(state)s. Results unavailable.') % {'state': state}
+      if query_history.is_failure():
+        msg = _('This query has %(state)s. Results unavailable.') % {'state': state}
+      else:
+        msg = _('The result of this query is not available yet.')
       raise PopupException(msg)
 
     db = dbms.get(request.user, query_history.get_query_server_config())
     form = beeswax.forms.SaveResultsForm(request.POST, db=db, fs=request.fs)
 
+    # Cancel goes back to results
     if request.POST.get('cancel'):
       return format_preserving_redirect(request, '/%s/watch/%s' % (app_name, id))
 
@@ -924,15 +1229,21 @@ def confirm_query(request, query, on_success_url=None):
   mform = QueryForm()
   mform.bind()
   mform.query.initial = dict(query=query)
+  databases = _get_db_choices(request)
+  mform.query.fields['database'].choices = databases  # Could not do it in the form
 
-  return render('execute.mako', request, {
+  response = render('execute.mako', request, {
     'form': mform,
-    'action': reverse('beeswax' + ':execute_query'),
+    'action': reverse(get_app_name(request) + ':execute_query'),
     'error_message': None,
     'design': None,
     'on_success_url': on_success_url,
     'design': None,
   })
+
+  database = _get_current_db(request)
+  response.set_cookie(str('hue%sLastDatabase' % get_app_name(request).capitalize()), database, expires=90)
+  return response
 
 
 def explain_directly(request, query, design, query_server):
@@ -1011,7 +1322,7 @@ def query_done_cb(request, server_id):
 
     link = "%s%s" % \
               (get_desktop_uri_prefix(),
-               reverse(get_app_name(request) + ':watch_query', kwargs={'id': query_history.id}))
+               reverse(get_app_name(request) + ':watch_query', kwargs={'id': query_history.id, 'download_format':None}))
     body = _("%(subject)s. You may see the results here: %(link)s\n\nQuery:\n%(query)s") % {
                'subject': subject, 'link': link, 'query': query_history.query
              }
@@ -1029,6 +1340,7 @@ def query_done_cb(request, server_id):
 """
 Utils
 """
+
 def authorized_get_design(request, design_id, owner_only=False, must_exist=False):
   if design_id is None and not must_exist:
     return None
@@ -1156,7 +1468,9 @@ def _run_parameterized_query(request, design_id, explain):
     raise PopupException(_("Query form is invalid: %s") % query_form.errors)
 
   query_str = query_form.query.cleaned_data["query"]
-  query_server = get_query_server_config(get_app_name(request))
+  app_name = get_app_name(request)
+  query_server = get_query_server_config(app_name)  
+  query_type = SavedQuery.TYPES_MAPPING[app_name]
 
   parameterization_form_cls = make_parameterization_form(query_str)
   if not parameterization_form_cls:
@@ -1166,7 +1480,7 @@ def _run_parameterized_query(request, design_id, explain):
 
   if parameterization_form.is_valid():
     real_query = substitute_variables(query_str, parameterization_form.cleaned_data)
-    query = HQLdesign(query_form)
+    query = HQLdesign(query_form, query_type=query_type)
     query._data_dict['query']['query'] = real_query
     try:
       if explain:
@@ -1188,7 +1502,7 @@ def _run_parameterized_query(request, design_id, explain):
 
 
 def execute_directly(request, query, query_server=None, design=None, tablename=None,
-                     on_success_url=None, on_success_params=None, **kwargs):
+                     on_success_url=None, on_success_params=None, download_format=None, **kwargs):
   """
   execute_directly(request, query_msg, tablename, design) -> HTTP response for execution
 
@@ -1233,7 +1547,8 @@ def execute_directly(request, query, query_server=None, design=None, tablename=N
       error_message, logs = expand_exception(ex, db)
       raise PopupException(_('Error occurred executing hive query: ' + error_message))
 
-  watch_url = reverse(get_app_name(request) + ':watch_query', kwargs={'id': history_obj.id})
+  watch_url = reverse(get_app_name(request) + ':watch_query', kwargs={'id': history_obj.id, 'download_format':download_format})
+  request.session['last_design_id'] = history_obj.id
   if 'download' in kwargs and kwargs['download']:
     watch_url += '?download=true'
 
@@ -1241,9 +1556,9 @@ def execute_directly(request, query, query_server=None, design=None, tablename=N
   get_dict = QueryDict(None, mutable=True)
   # (1) context
   if design:
-    get_dict['context'] = make_query_context('design', design.id)
+    get_dict['context'] = request.session['last_context'] = make_query_context('design', design.id)
   elif tablename:
-    get_dict['context'] = make_query_context('table', '%s:%s' % (tablename, database))
+    get_dict['context'] = request.session['last_context'] = make_query_context('table', '%s:%s' % (tablename, database))
 
   # (2) on_success_url
   if on_success_url:
@@ -1256,6 +1571,21 @@ def execute_directly(request, query, query_server=None, design=None, tablename=N
     get_dict.update(on_success_params)
 
   return format_preserving_redirect(request, watch_url, get_dict)
+
+
+#returns result handle for the last successful query executed in current session : ExpV
+def last_result(request):
+  """
+  view function for result tab
+  get the last submitted design's result.
+  """
+  last_design_id = request.session.get('last_design_id')
+  last_context = request.session.get('last_context')
+  if last_design_id:
+    url = reverse(get_app_name(request)+":watch_query" , kwargs={'id':last_design_id})+'?context=' + urllib.quote(last_context)
+    return redirect(url)
+  else:
+    raise PopupException("No result available in this session.")
 
 
 def _list_designs(querydict, page_size, prefix=""):
@@ -1356,6 +1686,8 @@ def _parse_query_context(context):
 
 HADOOP_JOBS_RE = re.compile("(http[^\s]*/jobdetails.jsp\?jobid=([a-z0-9_]*))")
 HADOOP_YARN_JOBS_RE = re.compile("(http[^\s]*/proxy/([a-z0-9_]+?)/)")
+HADOOP_YARN_TEZ_JOBS_RE = re.compile("Submitting dag to TezSession, sessionName=(HIVE-[a-z0-9_-]+?), applicationId=([a-z0-9_]*)")
+HADOOP_JOBS_COUNT = re.compile("Launching\sJob\s([0-9])\sout\sof\s([0-9]*)")
 
 def _parse_out_hadoop_jobs(log):
   """
@@ -1364,6 +1696,14 @@ def _parse_out_hadoop_jobs(log):
   to look for URLs to those jobs.
   """
   ret = []
+  current = -1
+  total = 0
+
+  for match in HADOOP_JOBS_COUNT.finditer(log):
+    currentJob, totalJobs = match.groups()
+    total = totalJobs
+    if currentJob > current:
+      current=currentJob
 
   for match in HADOOP_JOBS_RE.finditer(log):
     full_job_url, job_id = match.groups()
@@ -1377,10 +1717,21 @@ def _parse_out_hadoop_jobs(log):
 
   for match in HADOOP_YARN_JOBS_RE.finditer(log):
     full_job_url, job_id = match.groups()
+    if job_id > current:
+        current = job_id
+
     if job_id not in ret:
       ret.append(job_id)
 
-  return ret
+  for match in HADOOP_YARN_TEZ_JOBS_RE.finditer(log):
+    session_name, job_id = match.groups()
+    if job_id > current:
+        current = job_id
+
+    if job_id not in ret:
+      ret.append(job_id)
+
+  return (ret, current, int(total))
 
 
 def _copy_prefix(prefix, base_dict):
@@ -1485,12 +1836,18 @@ def _update_query_state(query_history):
   return True
 
 
-def _get_db_choices(request):
+def _get_databases(request):
   app_name = get_app_name(request)
   query_server = get_query_server_config(app_name)
   db = dbms.get(request.user, query_server)
   dbs = db.get_databases()
+  return dbs
+
+
+def _get_db_choices(request):
+  dbs = _get_databases(request)
   return ((db, db) for db in dbs)
+
 
 WHITESPACE = re.compile("\s+", re.MULTILINE)
 def collapse_whitespace(s):
@@ -1507,6 +1864,30 @@ def _get_last_database(request, database=None):
     database = request.COOKIES.get('hueBeeswaxLastDatabase', 'default')
     LOG.debug("Getting database name from cookies")
   return database
+
+
+def _get_current_db(request, default_db=None):
+  # read from cache firstly
+  app_name = get_app_name(request)
+  if not default_db:
+    default_db = request.COOKIES.get('hue%sLastDatabase' % app_name.capitalize(), None)
+
+  if default_db and default_db != "default":
+    return default_db
+
+  regex = conf.DEFAULT_DB_PER_GROUP_REGEX.get()
+  if regex:
+    s, pattern, repl, flags = regex.split('/')  # format "s/pattern/repl/"
+    if s == "s":  # substitute
+      my_groups = request.user.groups
+      databases = _get_databases(request)
+
+      for group in my_groups.all():
+        dbname = re.sub(pattern, repl, group.name)
+        if dbname in databases and dbname != "default":
+          return dbname
+
+  return "default"
 
 
 def autosave_design(request):
@@ -1535,3 +1916,53 @@ def autocomplete(request, database=None, table=None):
 
 
   return HttpResponse(json.dumps(response), mimetype="application/json")
+
+
+def _check_partition_clause_in_query(database, query_str, db):
+  """
+  if a select query on partitioned table without partition keys,
+  intercept it and raise a PopupException. Exp
+  """
+  if not database:
+    dbname = 'default'
+  else:
+    dbname = database
+  # replace new line to a space.
+  query_str = query_helper.clean(query_str)
+
+  for query in query_str.split(';'):
+    if query.strip().upper().startswith('USE'):
+      dbname = query_helper.get_dbname(query)
+      continue
+    elif query.strip().upper().startswith('SELECT'):
+      dbname, table = query_helper.get_table(query, dbname)
+
+      if table:
+        try:
+          table_obj = db.get_table(dbname, table)
+        except Exception, e:
+            LOG.error(str(e))
+            raise PopupException(message=_('Table Not Found'),
+                                 title=_('Query Error'),
+                                 detail=_('table %s.%s not found'  % (dbname, table)))
+        if table_obj.is_view: continue
+        if len(table_obj.partition_keys):
+          partition_cols_mis = []
+          where_clause = query_helper.get_where(query)
+          for key in table_obj.partition_keys:
+            if key.name.upper() not in where_clause.upper():
+              partition_cols_mis.append(key.name)
+          if len(partition_cols_mis) == len(table_obj.partition_keys):
+            raise PopupException(message=_('No partition keys are specified.'),
+                                 title=_('Query Error'),
+                                 detail=_('Table "%s.%s" is partitioned by (%s)'  % (dbname, table, ', '.join(partition_cols_mis)))
+            )
+
+_SEMICOLON_WHITESPACE = re.compile(";\s*$")
+def _strip_trailing_semicolon(query):
+  """As a convenience, we remove trailing semicolons from queries."""
+  s = _SEMICOLON_WHITESPACE.split(query, 2)
+  if len(s) > 1:
+    assert len(s) == 2
+    assert s[1] == ''
+  return s[0]

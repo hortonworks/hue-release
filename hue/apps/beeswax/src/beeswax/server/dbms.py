@@ -170,13 +170,13 @@ class HiveServer2Dbms(object):
     return resp
 
 
-  def get_sample(self, database, table):
+  def get_sample(self, database, table, partitions=None):
     """No samples if it's a view (HUE-526)"""
     if not table.is_view:
       limit = min(100, BROWSE_PARTITIONED_TABLE_LIMIT.get())
-      hql = "SELECT * FROM %s.%s LIMIT %s" % (database, table.name, limit)
+      hql = "SELECT * FROM `%s.%s` LIMIT %s" % (database, table.name, limit)
       query = hql_query(hql)
-      handle = self.execute_and_wait(query, timeout_sec=5.0)
+      handle = self.execute_and_wait(query, timeout_sec=20.0)
 
       if handle:
         result = self.fetch(handle, rows=100)
@@ -458,8 +458,12 @@ class HiveServer2Dbms(object):
     return self.execute_statement(hql)
 
 
-  def explain(self, query):
-    return self.client.explain(query)
+  def explain(self, statement):
+    return self.client.explain(statement)
+
+
+  def echo(self, text):
+    return self.client.echo(text)
 
 
   def getStatus(self):
@@ -526,7 +530,7 @@ def expand_exception(exc, db, handle=None):
     elif hasattr(exc, 'get_rpc_handle') or hasattr(exc, 'log_context'):
       log = db.get_log(exc)
     else:
-      log = ''
+      log = _("No server logs for this query")
   except Exception, e:
     # Always show something, even if server has died on the job.
     log = _("Could not retrieve logs: %s." % e)
