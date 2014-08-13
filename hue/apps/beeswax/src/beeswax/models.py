@@ -33,6 +33,8 @@ from enum import Enum
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.models import Document
 
+from beeswax.design import HQLdesign, hql_query
+from beeswaxd.ttypes import QueryHandle as BeeswaxdQueryHandle, QueryState
 from TCLIService.ttypes import TSessionHandle, THandleIdentifier,\
   TOperationState, TOperationHandle, TOperationType
 
