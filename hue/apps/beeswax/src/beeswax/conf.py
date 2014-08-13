@@ -14,10 +14,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Configuration for the beeswax application"""
 
 import os.path
 import sys
-
+try:
+  from db2_export.conf import *
+except ImportError:
+  pass
 from django.utils.translation import ugettext_lazy as _t, ugettext as _
 
 from desktop.lib.conf import ConfigSection, Config, coerce_bool

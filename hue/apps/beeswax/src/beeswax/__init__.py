@@ -17,5 +17,7 @@
 
 import sys
 import os
+from desktop.supervisor import DjangoCommandSupervisee
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'gen-py'))
+CELERYD_SUPERVISOR_SPEC = DjangoCommandSupervisee("celeryd")

@@ -22,7 +22,7 @@ import time
 
 from django.http import HttpResponse
 
-from desktop.lib.export_csvxls import CSVformatter, TooBigToDownloadException
+from desktop.lib.export_csvxls import CSVformatter, XLSformatter, TooBigToDownloadException
 
 from beeswax import common
 
@@ -44,8 +44,8 @@ def download(handle, format, db):
 
   if format == 'csv':
     mimetype = 'application/csv'
-  elif format == 'xls':
-    mimetype = 'application/xls'
+  elif format == 'xlsx':
+    mimetype = 'application/xlsx'
 
   gen = data_generator(handle, format, db)
   resp = HttpResponse(gen, mimetype=mimetype)
@@ -68,9 +68,8 @@ def data_generator(handle, format, db, cut=None):
   rows_to_fetch = FETCH_ROWS if cut is None else int(cut)
   if format == 'csv':
     formatter = CSVformatter()
-  elif format == 'xls':
-    # We 'fool' the user by sending back CSV as XSL as it supports streaming and won't freeze Hue
-    formatter = CSVformatter()
+  elif format == 'xlsx':
+    formatter = XLSformatter()
 
   yield formatter.init_doc()
 
@@ -91,6 +90,8 @@ def data_generator(handle, format, db, cut=None):
         yield formatter.format_row(row)
       except TooBigToDownloadException, ex:
         LOG.error(ex)
+        results.has_more = False
+        break
 
     if results.has_more and cut is None:
       results = db.fetch(handle, start_over=is_first_row, rows=rows_to_fetch)

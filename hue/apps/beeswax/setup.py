@@ -26,6 +26,9 @@ setup(
       package_dir = {'hive_metastore': 'gen-py', 'beeswaxd': 'gen-py', 'fb303': 'gen-py', 'TCLIService': 'gen-py', '': 'src'},
       install_requires = ['setuptools', 'desktop'],
       entry_points = {
-        'desktop.sdk.application': 'beeswax=beeswax'
+        'desktop.sdk.application': 'beeswax=beeswax',
+        'desktop.supervisor.specs': [
+        'celeryd = beeswax:CELERYD_SUPERVISOR_SPEC'
+         ],
       }
 )

@@ -15,7 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.conf.urls.defaults import patterns, url
+from django.conf import settings
+from django.conf.urls.defaults import patterns, url, include
 
 urlpatterns = patterns('beeswax.views',
   url(r'^$', 'index', name='index'),
@@ -68,3 +69,8 @@ urlpatterns += patterns(
     'beeswax.create_database',
     url(r'^create/database$', 'create_database', name='create_database'),
 )
+
+if 'db2_export' in settings.INSTALLED_APPS:
+  urlpatterns += patterns('',
+      (r'^export/', include('db2_export.urls')),
+  )

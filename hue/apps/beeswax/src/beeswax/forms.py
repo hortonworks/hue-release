@@ -138,15 +138,23 @@ class SaveResultsForm(DependencyAwareForm):
 
     return cleaned_data
 
-
-
-
+download_format = (
+     ("None", _("FORMAT")),
+     ("csv", _("CSV")),
+     ("xlsx", _("XLSX")),
+ )
+   
 class HQLForm(forms.Form):
   query = forms.CharField(label=_t("Query Editor"),
                           required=True,
                           widget=forms.Textarea(attrs={'class': 'beeswax_query'}))
   is_parameterized = forms.BooleanField(required=False, initial=True)
   email_notify = forms.BooleanField(required=False, initial=False)
+  download_format = forms.ChoiceField( required=False,
+                                       label='',
+                                       choices=download_format,
+                                       initial=0,
+                                       widget=forms.widgets.Select(attrs={'class': 'input-medium'}))
   type = forms.IntegerField(required=False, initial=0)
   database = forms.ChoiceField(required=False,
                            label='',
