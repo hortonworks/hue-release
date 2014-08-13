@@ -17,16 +17,18 @@
 """
 Common library to export either CSV or XLS.
 """
+from openpyxl import Workbook
 import cStringIO
 import csv
 import logging
 
 from django.http import HttpResponse
-from django.utils.encoding import smart_str
+from django.utils.encoding import smart_str, force_unicode
 from desktop.lib import i18n
 
 LOG = logging.getLogger(__name__)
-XLS_SIZE_LIMIT = 200 * 1024 * 1024      # 200MB
+XLS_SIZE_LIMIT = 100 * 1024 * 1024      # 100MB
+XLS_ROWS_LIMIT = 200000
 
 class TooBigToDownloadException(Exception):
   pass
@@ -136,3 +138,52 @@ class CSVformatter(Formatter):
 
   def fini_doc(self):
     return ""
+
+class XLSformatter(Formatter):
+  """Unfortunately, openpyxl can't stream."""
+  def __init__(self, encoding=None):
+    super(XLSformatter, self).__init__()
+    self._encoding = encoding or i18n.get_site_encoding()
+    self._book = Workbook(optimized_write = True, encoding = 'utf-8')
+    self._sheet = self._book.create_sheet(title='RESULT')
+    self._row = 0
+    self._size = 0
+
+  def init_doc(self):
+    return ''
+
+  def _decode_cell(self, cell):
+    """openpyxl works with unicode. So first decode binary data."""
+    return force_unicode(cell, self._encoding, strings_only=True, errors='replace')
+
+  def format_header(self, header):
+    self._sheet.append([self._decode_cell(cell) for cell in header])
+    self._row += 1
+    return ''
+
+  def format_row(self, row):
+    self._sheet.append([self._decode_cell(cell) for cell in row])
+    self._limit_size(row)
+    self._row += 1
+    return ''
+
+  def fini_doc(self):
+    string_io = cStringIO.StringIO()
+    self._book.save(string_io)
+    res = string_io.getvalue()
+    string_io.close()
+    return res
+
+  def _limit_size(self, row):
+    # Coerce cell to a string
+    for cell in row:
+        if not isinstance(cell, basestring):
+          cell = str(cell)
+        self._size += len(cell)
+    if self._size > XLS_SIZE_LIMIT or self._row > XLS_ROWS_LIMIT:
+      self._book.remove_sheet(self._sheet)
+      self._sheet = self._book.create_sheet(title='ERROR')
+      msg = 'ERROR: Data too large to be downloaded as xlsx file. Please try downloading as CSV file.'
+      self._row += 1
+      self._sheet.append([msg])
+      raise TooBigToDownloadException(msg)

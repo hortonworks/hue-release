@@ -149,7 +149,10 @@ INSTALLED_APPS = [
     'babeldjango',
 
     # Desktop injects all the other installed apps into here magically.
-    'desktop'
+    'desktop',
+    
+     # django-celery for beeswax exporting
+    'djcelery'
 ]
 
 # Keep default values up to date
@@ -305,3 +308,12 @@ if default_db['ENGINE'] == 'moxy':
 # ticket cache
 os.environ['KRB5CCNAME'] = desktop.conf.KERBEROS.CCACHE_PATH.get()
 
+# django-celery
+import djcelery
+djcelery.setup_loader()
+
+BROKER_HOST = "localhost"
+BROKER_PORT = 5672
+BROKER_USER = "guest"
+BROKER_PASSWORD = "guest"
+BROKER_VHOST = "/"

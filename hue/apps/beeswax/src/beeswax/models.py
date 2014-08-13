@@ -211,6 +211,100 @@ class HiveServerQueryHistory(QueryHistory):
     self.save()
 
 
+class BeeswaxQueryHistory(QueryHistory):
+  # Map from (thrift) server state
+  STATE_MAP = {
+    QueryState.CREATED          : QueryHistory.STATE.submitted,
+    QueryState.INITIALIZED      : QueryHistory.STATE.submitted,
+    QueryState.COMPILED         : QueryHistory.STATE.running,
+    QueryState.RUNNING          : QueryHistory.STATE.running,
+    QueryState.FINISHED         : QueryHistory.STATE.available,
+    QueryState.EXCEPTION        : QueryHistory.STATE.failed
+  }
+
+  node_type = BEESWAX
+
+  class Meta:
+    proxy = True
+
+  def get_server_id(self):
+    """
+    get_server_id() ->  (True/False, server-side query id)
+
+    The boolean indicates success/failure. The server_id follows, and may be None.
+    Note that the server_id can legally be None when the query is just submitted.
+    This method handles the various cases of the server_id being absent.
+
+    Does not issue RPC.
+    """
+    if self.server_id:
+      return (True, self.server_id)
+
+    # Query being submitted have no server_id?
+    if self.last_state == QueryHistory.STATE.submitted.index:
+      # (1) Really? Check the submission date.
+      #     This is possibly due to the server dying when compiling the query
+      if self.submission_date.now() - self.submission_date > QUERY_SUBMISSION_TIMEOUT:
+        LOG.error("Query submission taking too long. Expiring id %s: [%s]..." %
+                  (self.id, self.query[:40]))
+        self.save_state(QueryHistory.STATE.expired)
+        return (False, None)
+      else:
+        # (2) It's not an error. Return the current state
+        LOG.debug("Query %s (submitted) has no server id yet" % (self.id,))
+        return (True, None)
+    else:
+      # (3) It has no server_id for no good reason. A case (1) will become this
+      #     after we expire it. Note that we'll never be able to recover this
+      #     query.
+      LOG.error("Query %s (%s) has no server id [%s]..." %
+                (self.id, QueryHistory.STATE[self.last_state], self.query[:40]))
+      self.save_state(QueryHistory.STATE.expired)
+      return (False, None)
+
+  def get_handle(self):
+    """
+    get_server_id() ->  (server-side query id)
+
+    The boolean indicates success/failure. The server_id follows, and may be None.
+    Note that the server_id can legally be None when the query is just submitted.
+    This method handles the various cases of the server_id being absent.
+
+    Does not issue RPC.
+    """
+    if self.server_id:
+      return BeeswaxQueryHandle(secret=self.server_id, has_result_set=self.has_results, log_context=self.log_context)
+    else:
+      # Query being submitted have no server_id?
+      if self.last_state == QueryHistory.STATE.submitted.index:
+        # (1) Really? Check the submission date.
+        #     This is possibly due to the server dying when compiling the query
+        if self.submission_date.now() - self.submission_date > QUERY_SUBMISSION_TIMEOUT:
+          LOG.error("Query submission taking too long. Expiring id %s: [%s]..." % (self.id, self.query[:40]))
+          self.save_state(QueryHistory.STATE.expired)
+        else:
+          # (2) It's not an error. Return the current state
+          LOG.debug("Query %s (submitted) has no server id yet" % (self.id,))
+      else:
+        # (3) It has no server_id for no good reason. A case (1) will become this
+        #     after we expire it. Note that we'll never be able to recover this
+        #     query.
+        LOG.error("Query %s (%s) has no server id [%s]..." %
+                  (self.id, QueryHistory.STATE[self.last_state], self.query[:40]))
+        self.save_state(QueryHistory.STATE.expired)
+      return None
+
+  def save_state(self, new_state):
+    """Set the last_state from an enum, and save"""
+    if self.last_state != new_state.index:
+      if new_state.index < self.last_state:
+        backtrace = ''.join(traceback.format_stack(limit=5))
+        LOG.error("Invalid query state transition: %s -> %s\n%s" % (QueryHistory.STATE[self.last_state], new_state, backtrace))
+        return
+      self.last_state = new_state.index
+      self.save()
+
+
 class SavedQuery(models.Model):
   """
   Stores the query that people have save or submitted.
@@ -285,16 +379,16 @@ class SavedQuery(models.Model):
     try:
       design = SavedQuery.objects.get(id=id)
     except SavedQuery.DoesNotExist, err:
-      msg = _('Cannot retrieve query id %(id)s.') % {'id': id}
+      msg = _('Cannot retrieve Beeswax design id %(id)s') % {'id': id}
       raise err
 
     if owner is not None and design.owner != owner:
-      msg = _('Query id %(id)s does not belong to user %(user)s.') % {'id': id, 'user': owner}
+      msg = _('Design id %(id)s does not belong to user %(user)s') % {'id': id, 'user': owner}
       LOG.error(msg)
       raise PopupException(msg)
 
     if type is not None and design.type != type:
-      msg = _('Type mismatch for design id %(id)s (owner %(owner)s) - Expected %(expected_type)s, got %(real_type)s.') % \
+      msg = _('Type mismatch for design id %(id)s (owner %(owner)s) - Expected %(expected_type)s got %(real_type)s') % \
             {'id': id, 'owner': owner, 'expected_type': design.type, 'real_type': type}
       LOG.error(msg)
       raise PopupException(msg)
@@ -394,8 +488,6 @@ class HiveServerQueryHandle(QueryHandle):
   def get_encoded(self):
     return base64.encodestring(self.secret), base64.encodestring(self.guid)
 
-
-# Deprecated. Could be removed.
 
 class BeeswaxQueryHandle(QueryHandle):
   """

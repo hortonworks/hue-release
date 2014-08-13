@@ -14,6 +14,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 <%!
+from desktop.lib.i18n import smart_unicode
 from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 %>
@@ -73,7 +74,18 @@ ${layout.menubar(section='query')}
                     % if download_urls:
                     <li class="nav-header">${_('Downloads')}</li>
                     <li><a target="_blank" href="${download_urls["csv"]}">${_('Download as CSV')}</a></li>
-                    <li><a target="_blank" href="${download_urls["xls"]}">${_('Download as XLS')}</a></li>
+                    <li><a target="_blank" href="${download_urls["xlsx"]}">${_('Download as XLSX')}</a></li>
+                    <%
+                    from django.core.urlresolvers import reverse
+                    export_results = None
+                    try:
+                      export_results = reverse(app_name + ':export_results', kwargs={'id': query.id})
+                    except Exception:
+                      pass
+                    %>
+                    % if export_results:
+                    <li><a href="${export_results}">${_('Export to DB2')}</a></li>
+                    % endif
                     % endif
                     %if can_save:
                     <li><a data-toggle="modal" href="#saveAs">${_('Save')}</a></li>
@@ -146,7 +158,7 @@ ${layout.menubar(section='query')}
             % if expected_first_row != start_row:
                 <div class="alert"><strong>${_('Warning:')}</strong> ${_('Page offset may have incremented since last view.')}</div>
             % endif
-            <table class="table table-striped table-condensed resultTable" cellpadding="0" cellspacing="0" data-tablescroller-min-height-disable="true" data-tablescroller-enforce-height="true">
+            <table id="rs" class="table table-striped table-bordered table-condensed resultTable" cellpadding="0" cellspacing="0" data-tablescroller-min-height-disable="true" data-tablescroller-enforce-height="true">
             <thead>
             <tr>
               <th>&nbsp;</th>
@@ -157,10 +169,10 @@ ${layout.menubar(section='query')}
             </thead>
             <tbody>
               % for i, row in enumerate(results):
-              <tr>
-                <td>${start_row + i}</td>
+              <tr id="tr_${ i }">
+                <td onClick=selectText(&quot;tr_${i}&quot;)>${ start_row + i }</td>
                 % for item in row:
-                  <td>${ item }</td>
+                  <td>${ smart_unicode(item, errors='ignore') }</td>
                 % endfor
               </tr>
               % endfor
@@ -189,13 +201,13 @@ ${layout.menubar(section='query')}
 
         % if not error and download_urls.get("csv"):
         <div class="tab-pane" id="columns">
-          <table class="table table-striped table-condensed" cellpadding="0" cellspacing="0">
+          <table id="cs" class="table table-striped table-bordered table-condensed resultTable" cellpadding="0" cellspacing="0">
             <thead>
-              <tr><th>${_('Name')}</th></tr>
+              <tr><th>&nbsp;</th><th>${_('Name')}</th></tr>
             </thead>
             <tbody>
-              % for col in columns:
-                <tr><td>${col}</td></tr>
+              % for i, col in enumerate(columns):
+                <tr id="col_${i}"><td onClick=selectText(&quot;col_${i}&quot;)>${i+1}</td><td>${col}</td></tr>
               % endfor
             </tbody>
           </table>
@@ -256,112 +268,177 @@ ${layout.menubar(section='query')}
     var enable_popup = false;
 % endif
 
-    $(document).ready(function () {
-      $(".resultTable").dataTable({
-        "bPaginate": false,
-        "bLengthChange": false,
-        "bInfo": false,
-        "oLanguage": {
-            "sEmptyTable": "${_('No data available')}",
-            "sZeroRecords": "${_('No matching records')}",
-        },
-        "fnDrawCallback": function( oSettings ) {
-          if (enable_popup) {
-            $(".resultTable").jHueTableExtender({
-              hintElement: "#jumpToColumnAlert",
-              fixedHeader: true,
-              firstColumnTooltip: true
-            });
-          };
-        }
-      });
-      $(".dataTables_wrapper").css("min-height", "0");
-      $(".dataTables_filter").hide();
-      $("input[name='save_target']").change(function () {
-        $("#fieldRequired").addClass("hide");
-        $("input[name='target_dir']").removeClass("fieldError");
-        $("input[name='target_table']").removeClass("fieldError");
-        if ($(this).val().indexOf("HDFS") > -1) {
-          $("input[name='target_table']").addClass("hide");
-          $("input[name='target_dir']").removeClass("hide");
-          $(".fileChooserBtn").removeClass("hide");
-        }
-        else {
-          $("input[name='target_table']").removeClass("hide");
-          $("input[name='target_dir']").addClass("hide");
-          $(".fileChooserBtn").addClass("hide");
-        }
-      });
-
-      $("#saveBtn").click(function () {
-        if ($("input[name='save_target']:checked").val().indexOf("HDFS") > -1) {
-          if ($.trim($("input[name='target_dir']").val()) == "") {
-            $("#fieldRequired").removeClass("hide");
-            $("input[name='target_dir']").addClass("fieldError");
-            return false;
-          }
-        }
-        else {
-          if ($.trim($("input[name='target_table']").val()) == "") {
-            $("#fieldRequired").removeClass("hide");
-            $("input[name='target_table']").addClass("fieldError");
-            return false;
-          }
-        }
-        $("#saveForm").submit();
-      });
-
-
-      $("input[name='target_dir']").after(getFileBrowseButton($("input[name='target_dir']")));
-
-      function getFileBrowseButton(inputElement) {
-        return $("<a>").addClass("btn").addClass("fileChooserBtn").addClass("hide").text("..").click(function (e) {
-          e.preventDefault();
-          $("#fileChooserModal").jHueFileChooser({
-            onFolderChange:function (filePath) {
-              inputElement.val(filePath);
-            },
-            onFolderChoose:function (filePath) {
-              inputElement.val(filePath);
-              $("#fileChooserModal").slideUp();
-            },
-            createFolder:false,
-            uploadFile:false,
-            selectFolder:true,
-            initialPath:$.trim(inputElement.val())
-          });
-          $("#fileChooserModal").slideDown();
+$(document).ready(function () {
+  $(".resultTable").dataTable({
+    "bPaginate": false,
+    "bLengthChange": false,
+    "bInfo": false,
+    "oLanguage": {
+        "sEmptyTable": "${_('No data available')}",
+        "sZeroRecords": "${_('No matching records')}",
+    },
+    "fnDrawCallback": function( oSettings ) {
+      if (enable_popup) {
+        $(".resultTable").jHueTableExtender({
+          hintElement: "#jumpToColumnAlert",
+          fixedHeader: true,
+          firstColumnTooltip: true
         });
+      };
+    }
+  });
+  $(".dataTables_wrapper").css("min-height", "0");
+  $(".dataTables_filter").hide();
+  $("input[name='save_target']").change(function () {
+    $("#fieldRequired").addClass("hide");
+    $("input[name='target_dir']").removeClass("fieldError");
+    $("input[name='target_table']").removeClass("fieldError");
+    if ($(this).val().indexOf("HDFS") > -1) {
+      $("input[name='target_table']").addClass("hide");
+      $("input[name='target_dir']").removeClass("hide");
+      $(".fileChooserBtn").removeClass("hide");
+    }
+    else {
+      $("input[name='target_table']").removeClass("hide");
+      $("input[name='target_dir']").addClass("hide");
+      $(".fileChooserBtn").addClass("hide");
+    }
+  });
+
+  $("#saveBtn").click(function () {
+    if ($("input[name='save_target']:checked").val().indexOf("HDFS") > -1) {
+      if ($.trim($("input[name='target_dir']").val()) == "") {
+        $("#fieldRequired").removeClass("hide");
+        $("input[name='target_dir']").addClass("fieldError");
+        return false;
       }
-
-      $("#collapse").click(function () {
-        $(".sidebar-nav").parent().css("margin-left", "-31%");
-        $("#expand").show().css("top", $(".sidebar-nav i").position().top + "px");
-        $(".sidebar-nav").parent().next().removeClass("span9").addClass("span12").addClass("noLeftMargin");
-      });
-      $("#expand").click(function () {
-        $(this).hide();
-        $(".sidebar-nav").parent().next().removeClass("span12").addClass("span9").removeClass("noLeftMargin");
-        $(".sidebar-nav").parent().css("margin-left", "0");
-      });
-
-
-
-      resizeLogs();
-
-      $(window).resize(function () {
-        resizeLogs();
-      });
-
-      $("a[href='#log']").on("shown", function () {
-        resizeLogs();
-      });
-
-      function resizeLogs() {
-        $("#log pre").css("overflow", "auto").height($(window).height() - $("#log pre").position().top - 40);
+    }
+    else {
+      if ($.trim($("input[name='target_table']").val()) == "") {
+        $("#fieldRequired").removeClass("hide");
+        $("input[name='target_table']").addClass("fieldError");
+        return false;
       }
+    }
+    $("#saveForm").submit();
+  });
 
+
+  $("input[name='target_dir']").after(getFileBrowseButton($("input[name='target_dir']")));
+
+  function getFileBrowseButton(inputElement) {
+    return $("<a>").addClass("btn").addClass("fileChooserBtn").addClass("hide").text("..").click(function (e) {
+      e.preventDefault();
+      $("#fileChooserModal").jHueFileChooser({
+        onFolderChange:function (filePath) {
+          inputElement.val(filePath);
+        },
+        onFolderChoose:function (filePath) {
+          inputElement.val(filePath);
+          $("#fileChooserModal").slideUp();
+        },
+        createFolder:false,
+        uploadFile:false,
+        selectFolder:true,
+        initialPath:$.trim(inputElement.val())
+      });
+      $("#fileChooserModal").slideDown();
     });
+  }
+
+  $("#collapse").click(function () {
+    $(".sidebar-nav").parent().css("margin-left", "-31%");
+    $("#expand").show().css("top", $(".sidebar-nav i").position().top + "px");
+    $(".sidebar-nav").parent().next().removeClass("span9").addClass("span12").addClass("noLeftMargin");
+  });
+  $("#expand").click(function () {
+    $(this).hide();
+    $(".sidebar-nav").parent().next().removeClass("span12").addClass("span9").removeClass("noLeftMargin");
+    $(".sidebar-nav").parent().css("margin-left", "0");
+  });
+
+  resizeLogs();
+
+  $(window).resize(function () {
+    resizeLogs();
+  });
+
+  $("a[href='#log']").on("shown", function () {
+    resizeLogs();
+  });
+
+  function resizeLogs() {
+    $("#log pre").css("overflow", "auto").height($(window).height() - $("#log pre").position().top - 40);
+  }
+
+});
+
+function selectText(element) {
+    var text = document.getElementById(element);
+    if ($.browser.msie) {
+        var range = document.body.createTextRange();
+        range.moveToElementText(text);
+        range.select();
+    } else if ($.browser.mozilla || $.browser.opera) {
+        var selection = window.getSelection();
+        var range = document.createRange();
+        range.selectNodeContents(text);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    } else if ($.browser.safari) {
+        var selection = window.getSelection();
+        selection.setBaseAndExtent(text, 0, text, 1);
+    }
+}
+
+
+
+
+var lastSelectedRow;
+var trs = document.getElementById('rs').tBodies[0].getElementsByTagName('tr');
+
+// disable text selection
+document.onselectstart = function() {
+    return false;
+}
+
+function RowClick(currenttr, lock) {
+    if (window.event.ctrlKey) {
+        toggleRow(currenttr);
+    }
+    
+    if (window.event.button === 0) {
+        if (!window.event.ctrlKey && !window.event.shiftKey) {
+            clearAll();
+            toggleRow(currenttr);
+        }
+    
+        if (window.event.shiftKey) {
+            selectRowsBetweenIndexes([lastSelectedRow.rowIndex, currenttr.rowIndex])
+        }
+    }
+}
+
+function toggleRow(row) {
+    row.className = row.className == 'selected' ? '' : 'selected';
+    lastSelectedRow = row;
+}
+
+function selectRowsBetweenIndexes(indexes) {
+    indexes.sort(function(a, b) {
+        return a - b;
+    });
+
+    for (var i = indexes[0]; i <= indexes[1]; i++) {
+        trs[i-1].className = 'selected';
+    }
+}
+
+function clearAll() {
+    for (var i = 0; i < trs.length; i++) {
+        trs[i].className = '';
+    }
+}
 </script>
 
 ${ commonfooter(messages) | n,unicode }
