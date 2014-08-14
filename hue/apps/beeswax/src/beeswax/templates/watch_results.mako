@@ -96,15 +96,42 @@ ${layout.menubar(section='query')}
                     <li><a data-toggle="modal" href="#saveAs">${_('Save')}</a></li>
                     % endif
 
-                    <%
-                      n_jobs = hadoop_jobs and len(hadoop_jobs) or 0
-                      mr_jobs = (n_jobs == 1) and _('MR Job') or _('MR Jobs')
-                    %>
-                     % if n_jobs > 0:
-                        <li class="nav-header">${mr_jobs} (${n_jobs})</li>
-                        % for jobid in hadoop_jobs:
-                            <li><a href="${url("jobbrowser.views.single_job", job=jobid.replace('application', 'job'))}">${ jobid.replace("application_", "") }</a></li>
-                        % endfor
+                    % if result_info and result_info['size'] != 'unknown':
+                      <li class="nav-header">Results</li>
+
+                      <li><div class="ri_header">${_('Size: ')}</div>${result_info['size']}</li>
+
+                      %if result_info['rows'] != 'unknown' and len(results)>0:
+                        <li><div class="ri_header">${_('Rows: ')}</div>${result_info['rows']}</li>
+                      %endif
+                      %if result_info['total_time'] != 'unknown':
+                        <li><div class="ri_header">${_('Total Time: ')}</div>${result_info['total_time']}</li>
+                      %endif
+                      %if result_info['query_time'] != 'unknown':
+                        <li><div class="ri_header">${_('CPU Time: ')}</div>${result_info['query_time']}</li>
+                      %endif
+                      %if result_info['committed_memory'] != 'unknown':
+                        <li><div class="ri_header">${_('Committed Memory: ')}</div>${result_info['committed_memory']}</li>
+                      %endif
+                      %if result_info['physical_memory'] not in ['unknown', None]:
+                        <li><div class="ri_header">${_('Physical Memory: ')}</div>${result_info['physical_memory']}</li>
+                      %endif
+                      %if result_info['virtual_memory'] not in ['unknown', None]:
+                        <li><div class="ri_header">${_('Virtual Memory: ')}</div>${result_info['virtual_memory']}</li>
+                      %endif
+                    %endif
+
+                    % if app_name != 'impala':
+                      <%
+                        n_jobs = hadoop_jobs and len(hadoop_jobs) or 0
+                        mr_jobs = (n_jobs == 1) and _('MR Job') or _('MR Jobs')
+                      %>
+                       % if n_jobs > 0:
+                          <li class="nav-header">${mr_jobs} (${n_jobs})</li>
+                          % for jobid in hadoop_jobs:
+                              <li><a href="${url("jobbrowser.views.single_job", job=jobid.replace('application', 'job'))}">${ jobid.replace("application_", "") }</a></li>
+                          % endfor
+                      % endif
                     % endif
                 </ul>
             </div>

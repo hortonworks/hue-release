@@ -491,7 +491,14 @@ def execute_directly(request, query, query_server=None, design=None, tablename=N
     return format_preserving_redirect(request, watch_url, get_dict)
 
 
-def watch_query(request, id):
+def explain_directly(request, query, design, query_server):
+  explanation = dbms.get(request.user, query_server).explain(query)
+  context = ("design", design)
+
+  return render('explain.mako', request, dict(query=query, explanation=explanation.textual, query_context=context))
+
+
+def watch_query(request, id, download_format=None):
     """
     Wait for the query to finish and (by default) displays the results of query id.
     It understands the optional GET params:
