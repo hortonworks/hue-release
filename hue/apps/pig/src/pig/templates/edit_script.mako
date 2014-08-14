@@ -353,8 +353,6 @@ function get_job_result(job_id)
   if result.get("arguments"):
     for arg in result["arguments"].split("\t"):
       arguments += '\'' + arg + '\','
-  elif 'id' not in result:
-    arguments = '\'-useHCatalog\''
   endif
 %>
 
