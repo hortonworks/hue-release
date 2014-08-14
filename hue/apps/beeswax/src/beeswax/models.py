@@ -80,7 +80,9 @@ class QueryHistory(models.Model):
 
   design = models.ForeignKey('SavedQuery', to_field='id', null=True) # Some queries (like read/create table) don't have a design
   notify = models.BooleanField(default=False)                        # Notify on completion
-
+  result_size = models.IntegerField(null=True)
+  result_rows = models.IntegerField(null=True)
+  query_stats = models.TextField(null=True)
 
   class Meta:
     ordering = ['-submission_date']
