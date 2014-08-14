@@ -665,6 +665,7 @@ def watch_query(request, id, download_format=None):
       query_history = db.execute_next_statement(query_history)
       return redirect(request.get_full_path())
     except Exception, ex:
+      LOG.exception(ex)
       pass
 
 #   Still running
@@ -720,13 +721,10 @@ def watch_query_refresh_json(request, id, download_format=None):
   handle, state = _get_query_handle_and_state(query_history)
   query_history.save_state(state)
 
-  try:
-    if not query_history.is_finished() and query_history.is_success() and not query_history.has_results:
-      db.execute_next_statement(query_history, request.POST.get('query-query'))
-      handle, state = _get_query_handle_and_state(query_history)    
-  except Exception, ex:
-    handle, state = _get_query_handle_and_state(query_history)
-  
+  if not query_history.is_finished() and query_history.is_success() and not query_history.has_results:
+    db.execute_next_statement(query_history)
+    handle, state = query_result._get_query_handle_and_state(query_history)
+
   log = db.get_log(handle)
   jobs, current, total = _parse_out_hadoop_jobs(log)
   if len(jobs) >= 1 and not (query_history.is_finished() or (query_history.is_success() and query_history.has_results)):
