@@ -29,14 +29,14 @@
                 "hadoop.proxyuser.hue.hosts" : "*",
                 "hadoop.proxyuser.hue.groups" : "*",
                 "hadoop.proxyuser.root.hosts" : "*",
-                "hadoop.proxyuser.root.groups" : "*"
+                "hadoop.proxyuser.root.groups" : "*",
+                "hadoop.security.authorization": "true"
             }
         },
         {
             "hdfs-site" : {
                 "dfs.block.size" : "34217472",
                 "dfs.replication" : "1",
-                "dfs.permissions.enabled" : "false",
                 "dfs.namenode.accesstime.precision" : "3600000",
                 "dfs.nfs3.dump.dir" : "/tmp/.hdfs-nfs",
                 "dfs.nfs.exports.allowed.hosts" : "* rw",
@@ -83,7 +83,6 @@
                 "hive.heapsize" : "250",
                 "hive.server2.enable.impersonation": "true",
                 "hive.users.in.admin.role" : "hue,hive",
-                "hive.server2.enable.doAs": "true",
                 "hive.server2.authentication": "NOSASL"
             }
         },
