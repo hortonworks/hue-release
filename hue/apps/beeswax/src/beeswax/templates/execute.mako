@@ -189,13 +189,9 @@ ${layout.menubar(section='query')}
                           % if show_execution_engine:
                           <li class="nav-header">${_('Execution engine')}</li>
                           <li>
-                            <label class="radio">
-                              <input type="radio" name="execution_engine" id="execution_engine_mr" value="mr" ${' checked="checked"' if default_execution_engine == 'mr' else '' | n} >
-                              Map reduce
-                            </label>
-                            <label class="radio">
-                              <input type="radio" name="execution_engine" id="execution_engine_tez" value="tez" ${' checked="checked"' if default_execution_engine == 'tez' else '' | n} >
-                              Tez
+                            <label class="checkbox" rel="tooltip" data-original-title="${_("If checked, 'hive.execution.engine' will forced set to 'tez'. ")}">
+                              <input type="checkbox" id="execute_on_tez" checked="checked">
+                              Execute on Tez
                             </label>
                           </li>
                           % endif
@@ -469,21 +465,22 @@ ${layout.menubar(section='query')}
             $("<input>").attr("type","hidden").attr("name","button-submit").attr("value","Execute").appendTo($("#advancedSettingsForm"));
             % if show_execution_engine:
 
-            var existsId, next_form_id, execution_engine = $('input[name="execution_engine"]:checked').val();
+            var existsId, next_form_id, execute_on_tez = $('#execute_on_tez').is(':checked');
 
-            if ($('input[name^="settings"][value="hive.execution.engine"]').length > 0) {
-              existsId = $('input[name^="settings"][value="hive.execution.engine"]').attr('name').split('-')[1];
-              $('input[name="settings-' + existsId + '-value"]').val(execution_engine);
-            } else {
-              next_form_id = $("#advancedSettingsForm input[name='settings-next_form_id']").val();
-              $("#advancedSettingsForm").append(
-                $("<input>").attr("type","hidden").attr("name","settings-" + next_form_id + "-key").attr("value","hive.execution.engine"),
-                $("<input>").attr("type","hidden").attr("name","settings-" + next_form_id + "-value").attr("value",execution_engine),
-                $("<input>").attr("type","hidden").attr("name","settings-" + next_form_id + "-_exists").attr("value","True")
-              );
-              $("#advancedSettingsForm input[name='settings-next_form_id']").val(parseInt(next_form_id)+1)
+            if (execute_on_tez) {
+              if ($('input[name^="settings"][value="hive.execution.engine"]').length > 0) {
+                existsId = $('input[name^="settings"][value="hive.execution.engine"]').attr('name').split('-')[1];
+                $('input[name="settings-' + existsId + '-value"]').val('tez');
+              } else {
+                next_form_id = $("#advancedSettingsForm input[name='settings-next_form_id']").val();
+                $("#advancedSettingsForm").append(
+                  $("<input>").attr("type","hidden").attr("name","settings-" + next_form_id + "-key").attr("value","hive.execution.engine"),
+                  $("<input>").attr("type","hidden").attr("name","settings-" + next_form_id + "-value").attr("value","tez"),
+                  $("<input>").attr("type","hidden").attr("name","settings-" + next_form_id + "-_exists").attr("value","True")
+                );
+                $("#advancedSettingsForm input[name='settings-next_form_id']").val(parseInt(next_form_id)+1)
+              }
             }
-            $('input[name="execution_engine"]').remove();
             % endif
             checkAndSubmit();
         }

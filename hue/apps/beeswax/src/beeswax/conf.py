@@ -108,13 +108,6 @@ SHOW_EXECUTION_ENGINE= Config(
   help=_t('Option to show execution engine choice.')
 )
 
-DEFAULT_EXECUTION_ENGINE= Config(
-  key='default_execution_engine',
-  default='mr',
-  type=str,
-  help=_t('Option to set default execution engine.')
-)
-
 CHECK_PARTITION_CLAUSE_IN_QUERY = Config(
   key="enable_partition_query_check",
   default=False,
@@ -189,8 +182,5 @@ def config_validator(user):
       server.get_databases()
   except:
     res.append((NICE_NAME, _("The application won't work without a running HiveServer2.")))
-
-  if DEFAULT_EXECUTION_ENGINE.get() not in ["mr", "tez"]:
-    res.append((DEFAULT_EXECUTION_ENGINE, _("Default execution engine must be 'mr' or 'tez'")))
 
   return res
