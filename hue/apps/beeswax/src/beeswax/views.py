@@ -608,6 +608,8 @@ def execute_query(request, design_id=None):
     'form': form,
     'log': log,
     'on_success_url': on_success_url,
+    'show_execution_engine':conf.SHOW_EXECUTION_ENGINE.get(),
+    'default_execution_engine':conf.DEFAULT_EXECUTION_ENGINE.get(),
   })
   response.set_cookie("hueBeeswaxLastDatabase", database, expires=90)
   return response
