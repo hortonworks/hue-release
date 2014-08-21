@@ -2,20 +2,34 @@
     "configurations" : [
         {
             "global" : {
-                "nodemanager_heapsize" : "250",
-                "apptimelineserver_heapsize" : "250",
-                "resourcemanager_heapsize" : "250",
-                "yarn_heapsize" : "250",
-                "dtnode_heapsize" : "250",
-                "hadoop_heapsize" : "250",
-                "namenode_heapsize" : "250",
                 "hive_metastore_user_passwd" : "hive",
                 "hbase_master_heapsize": "250",
                 "hbase_regionserver_heapsize": "250",
-                "namenode_opt_newsize": "50",
-                "namenode_opt_maxnewsize": "100",
                 "oozie_metastore_user_passwd" : "oozie"
             }
+        },
+        {
+            "hadoop-env": {
+                "dtnode_heapsize" : "250",
+                "hadoop_heapsize" : "250",
+                "namenode_heapsize" : "250",
+                "namenode_opt_newsize": "50",
+                "namenode_opt_maxnewsize": "100"
+            }  
+        },
+        {
+            "mapred-env": {
+                "jobhistory_heapsize" : "250"
+            }
+        },
+        {
+            "yarn-env": {
+                "apptimelineserver_heapsize" : "250",
+                "resourcemanager_heapsize" : "250",
+                "nodemanager_heapsize" : "250",
+                "yarn_heapsize" : "250"
+            }
+            
         },
         {
             "nagios-env":{
