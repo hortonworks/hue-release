@@ -74,7 +74,7 @@ class Resource(object):
 
     self._client.logger.debug(
         "%s Got response: %s%s" %
-        (method, resp.content[:32], len(resp.content) > 32 and "..." or ""))
+        (method, resp.content[:320], len(resp.content) > 320 and "..." or ""))
 
     return self._format_response(resp)
 
