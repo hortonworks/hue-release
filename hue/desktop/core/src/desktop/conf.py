@@ -99,6 +99,11 @@ USER_ACCESS_HISTORY_SIZE = Config(
   type=int,
   default=10)
 
+SUPERVISEES_CONTROL = UnspecifiedConfigSection(
+    key='supervisor',
+    each=Config(type=coerce_bool))
+
+
 def is_https_enabled():
   return bool(SSL_CERTIFICATE.get() and SSL_PRIVATE_KEY.get())
 

@@ -47,6 +47,8 @@ import time
 import desktop.lib.daemon_utils
 import desktop.lib.paths
 import desktop.log
+import desktop.conf
+
 
 # BaseException not available on python 2.4
 try:
@@ -71,6 +73,7 @@ g_user_gid = None
 
 # The entry point group in which to find processes to supervise.
 ENTRY_POINT_GROUP = "desktop.supervisor.specs"
+ENTRY_POINT_OPTIONAL_GROUP = "desktop.supervisor.optional_specs"
 
 # How long to wait while trying to acquire the supervisor pid lock
 # file. We shouldn't spin long here - we'd rather fail to start up.
@@ -244,7 +247,22 @@ def get_pid_cmdline(pid):
 def get_supervisees():
   """Pull the supervisor specifications out of the entry point."""
   eps = list(pkg_resources.iter_entry_points(ENTRY_POINT_GROUP))
-  return dict((ep.name, ep.load()) for ep in eps)
+  supervisees = dict((ep.name, ep.load()) for ep in eps)
+
+  eps_opt = list(pkg_resources.iter_entry_points(ENTRY_POINT_OPTIONAL_GROUP))
+  supervisees_optional = dict((ep.name, ep.load()) for ep in eps_opt)
+
+  supervisee_control = desktop.conf.SUPERVISEES_CONTROL.get()
+  for sv in supervisee_control:
+      status = desktop.conf.SUPERVISEES_CONTROL[sv].get()
+      if not status and sv in supervisees:
+        LOG.warning("Supervisee '%s' disabled")
+        del supervisees[sv]
+      if status and sv in supervisees_optional:
+        LOG.warning("Optional supervisee '%s' enabled")
+        supervisees[sv] = supervisees_optional[sv]
+
+  return supervisees
 
 
 def setup_user_info():
@@ -405,3 +423,6 @@ def wait_loop(sups, options):
 
 if __name__ == "__main__":
   sys.exit(main())
+
+
+import desktop.settings
