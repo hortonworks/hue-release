@@ -27,7 +27,7 @@ setup(
       install_requires = ['setuptools', 'desktop'],
       entry_points = {
         'desktop.sdk.application': 'beeswax=beeswax',
-        'desktop.supervisor.specs': [
+        'desktop.supervisor.optional_specs': [
         'celeryd = beeswax:CELERYD_SUPERVISOR_SPEC'
          ],
       }
