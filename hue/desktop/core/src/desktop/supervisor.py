@@ -246,6 +246,16 @@ def get_pid_cmdline(pid):
 
 def get_supervisees():
   """Pull the supervisor specifications out of the entry point."""
+
+  # Substitute HUE_PROCESS_NAME to avoid looking up in settings
+  old_name = os.environ.get("HUE_PROCESS_NAME")
+  os.environ["HUE_PROCESS_NAME"] = "supervisor"
+  import desktop.settings
+  if old_name:
+    os.environ["HUE_PROCESS_NAME"] = old_name
+  else:
+    del os.environ["HUE_PROCESS_NAME"]
+
   eps = list(pkg_resources.iter_entry_points(ENTRY_POINT_GROUP))
   supervisees = dict((ep.name, ep.load()) for ep in eps)
 
@@ -254,13 +264,13 @@ def get_supervisees():
 
   supervisee_control = desktop.conf.SUPERVISEES_CONTROL.get()
   for sv in supervisee_control:
-      status = desktop.conf.SUPERVISEES_CONTROL[sv].get()
-      if not status and sv in supervisees:
-        LOG.warning("Supervisee '%s' disabled")
-        del supervisees[sv]
-      if status and sv in supervisees_optional:
-        LOG.warning("Optional supervisee '%s' enabled")
-        supervisees[sv] = supervisees_optional[sv]
+    status = desktop.conf.SUPERVISEES_CONTROL[sv].get()
+    if not status and sv in supervisees:
+      LOG.warning("Supervisee '%s' disabled")
+      del supervisees[sv]
+    if status and sv in supervisees_optional:
+      LOG.warning("Optional supervisee '%s' enabled")
+      supervisees[sv] = supervisees_optional[sv]
 
   return supervisees
 
@@ -423,6 +433,3 @@ def wait_loop(sups, options):
 
 if __name__ == "__main__":
   sys.exit(main())
-
-
-import desktop.settings
