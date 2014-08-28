@@ -171,6 +171,7 @@ class HiveServerTRowSet:
 
 class HiveServerDataTable(DataTable):
   def __init__(self, results, schema, operation_handle):
+    self.results = results
     self.schema = schema and schema.schema
     self.row_set = HiveServerTRowSet(results.results, schema)
     self.operation_handle = operation_handle
@@ -271,6 +272,10 @@ class HiveServerTColumnDesc:
   @property
   def type(self):
     return self.get_type(self.column.typeDesc)
+
+  @property
+  def hive_type(self):
+    return self.get_type(self.column.typeDesc).lower().replace("_type", "")
 
   @classmethod
   def get_type(self, typeDesc):
@@ -649,8 +654,10 @@ class ExplainCompatible:
 
 class ResultMetaCompatible:
 
-  def __init__(self):
+  def __init__(self, schema=None, status=None):
     self.in_tablename = True
+    self.schema = schema
+    self.status = status
 
 
 class HiveServerClientCompatible(object):
@@ -757,7 +764,11 @@ class HiveServerClientCompatible(object):
 
 
   def get_results_metadata(self, handle):
-    # We just need to mock
+    operation_handle = handle.get_rpc_handle()
+    if operation_handle.hasResultSet:
+      meta_req = TGetResultSetMetadataReq(operationHandle=operation_handle)
+      metadata = self._client.call(self._client._client.GetResultSetMetadata, meta_req)
+      return ResultMetaCompatible(schema=metadata.schema, status=metadata.status)
     return ResultMetaCompatible()
 
 

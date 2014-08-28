@@ -782,7 +782,7 @@ def _log_total_query_time(request, query_history):
 
 def _stat_result_info(request, query_history, jobs):
   """ compute and persist result info """
-  beeswaxQueryHistory = models.BeeswaxQueryHistory.objects.get(id=query_history.id)
+  beeswaxQueryHistory = models.HiveServerQueryHistory.objects.get(id=query_history.id)
   query_history.result_size = query_result.create(beeswaxQueryHistory, request.fs).size()
   try:
     job = _getjob(request, job = jobs[-1])
