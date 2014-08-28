@@ -1,25 +1,26 @@
 from beeswax.models import QueryHistory
-from beeswax.models import BeeswaxQueryHistory
+from beeswax.models import HiveServerQueryHistory
 from beeswaxd.ttypes import QueryHandle
 from desktop.lib.exceptions_renderable import PopupException
-from beeswax.server.beeswax_lib import BeeswaxClient
+from beeswax.server.hive_server2_lib import HiveServerClientCompatible, HiveServerClient
 from beeswax.server import dbms
 from beeswax import query_helper
 import logging
 import time
 from django.utils.translation import ugettext as _
+from django.utils.encoding import force_unicode
 from hadoop.fs.exceptions import WebHdfsException
 
 LOG = logging.getLogger(__name__)
 _DATA_WAIT_SLEEP=0.1
 
 def create_from_request(request, id):
-  query_history = BeeswaxQueryHistory.objects.get(id=id)
+  query_history = HiveServerQueryHistory.objects.get(id=id)
   handle, state = _get_query_handle_and_state(query_history)
-  return QueryResult(query_history, BeeswaxClient(query_history.get_query_server_config(), request.user), request.fs, handle, state)
+  return QueryResult(query_history, HiveServerClientCompatible(HiveServerClient(query_history.get_query_server_config(), request.user)), request.fs, handle, state)
 
 def create(query_history, fs):
-  client = BeeswaxClient(query_history.get_query_server_config(), query_history.owner.username)
+  client = HiveServerClientCompatible(HiveServerClient(query_history.get_query_server_config(), query_history.owner))
   handle, state = _get_query_handle_and_state(query_history)
   return QueryResult(query_history, client, fs, handle, state)
 
@@ -65,13 +66,13 @@ class QueryResult:
     """
     return True if the result is available
     """
-    return self.state == BeeswaxQueryHistory.STATE.available
+    return self.state == HiveServerQueryHistory.STATE.available
 
   def is_failed(self):
-    return self.state == BeeswaxQueryHistory.STATE.failed
+    return self.state == HiveServerQueryHistory.STATE.failed
 
   def is_expired(self):
-    return self.state == BeeswaxQueryHistory.STATE.expired
+    return self.state == HiveServerQueryHistory.STATE.expired
 
   def owned_by(self, user):
     return self.query_history.owner == user
@@ -126,26 +127,17 @@ class QueryResult:
     while True:
       # Make sure that we have the next batch of ready results
       while results is None or not results.ready:
-        results = self.db_client.fetch(self.handle, start_over=is_first_row, rows=-1)
+        results = self.db_client.fetch(self.handle, start_over=is_first_row)
         if not results.ready:
           time.sleep(_DATA_WAIT_SLEEP)
-  
-      # Someone is reading the results concurrently. Abort.
-      # But unfortunately, this current generator will produce incomplete data.
-      if next_row != results.startRowOffset:
-        err = ('Detected another client retrieving results for %s. '
-            'Expect next row being %s and got %s. Aborting' %
-            (self.query_history.server_id, next_row, results.start_row))
-        raise RuntimeError(err)
-  
+
       if is_first_row:
         is_first_row = False
-
-      for row in results.results.data:
-        yield row
+      
+      for row in results.rows():
+        yield u'\t'.join(force_unicode(e, errors='replace') for e in row)
   
-      if results.results.has_more:
-        next_row += len(results.results.data)
+      if results.has_more:
         results = None
       else:
         break

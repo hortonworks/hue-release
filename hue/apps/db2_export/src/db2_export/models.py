@@ -3,7 +3,7 @@ from django.db import models
 
 from enum import Enum
 
-from beeswax.models import BeeswaxQueryHistory
+from beeswax.models import HiveServerQueryHistory
 
 
 class ExportState(models.Model):
@@ -15,7 +15,7 @@ class ExportState(models.Model):
                'exceeded'  # exceeded the size limit
                )
 
-  query_history = models.ForeignKey(BeeswaxQueryHistory)
+  query_history = models.ForeignKey(HiveServerQueryHistory)
   user = models.CharField(max_length=128, db_index=True)
   schema = models.CharField(max_length=128)
   table = models.CharField(max_length=128, db_index=True)

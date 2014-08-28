@@ -1,4 +1,5 @@
 from db2_export import step_info
+from beeswax.server.hive_server2_lib import HiveServerTColumnDesc
 from celery.result import AsyncResult
 
 import logging
@@ -101,9 +102,9 @@ class StepHandler:
     return a dict with column name and type of the hive query result
     """
     data = []
-    for field in result.metadata().schema.fieldSchemas:
-      data.append({ 'name': field.name,
-          'hive_type': field.type })
+    for col in result.metadata().schema.columns:
+      t_col_desc = HiveServerTColumnDesc(col)
+      data.append({ 'name': t_col_desc.name, 'hive_type': t_col_desc.hive_type})
     return data
 
   def handle_submit_def_columns(self, request, result):
