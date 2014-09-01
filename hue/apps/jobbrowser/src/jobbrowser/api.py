@@ -16,7 +16,6 @@
 # limitations under the License.
 
 import logging
-import sys
 
 from desktop.lib.paginator import Paginator
 from django.utils.functional import wraps
@@ -31,7 +30,7 @@ import hadoop.yarn.node_manager_api as node_manager_api
 from jobbrowser.conf import SHARE_JOBS, MAX_VISIBLE_TASKS
 from jobbrowser.models import Job, JobLinkage, TaskList, Tracker
 from jobbrowser.yarn_models import Application, Job as YarnJob, Container
-from hadoop.cluster import get_next_ha_mrcluster
+from hadoop.cluster import get_next_ha_mrcluster, get_next_ha_yarncluster
 from desktop.lib.exceptions_renderable import PopupException
 
 
@@ -57,15 +56,32 @@ def jt_ha(funct):
     try:
       return funct(api, *args, **kwargs)
     except Exception, ex:
-      if 'Could not connect to' in str(ex):
+       ex_message = str(ex)
+       if 'Connection refused' in ex_message or 'standby RM' in ex_message:
+         LOG.info('Resource Manager not available, trying another RM: %s.' % ex)
+         jt_ha = get_next_ha_mrcluster()
+         if jt_ha is not None:
+           config, api.jt = jt_ha
+           return funct(api, *args, **kwargs)
+       raise ex
+  return wraps(funct)(decorate)
+
+def rm_ha(funct):
+  """
+  Support RM HA by trying other RM API.
+  """
+  def decorate(api, *args, **kwargs):
+    try:
+      return funct(api, *args, **kwargs)
+    except Exception, ex:
+      if 'Connection refused' in str(ex):
         LOG.info('JobTracker not available, trying JT plugin HA: %s.' % ex)
-        jt_ha = get_next_ha_mrcluster()
-        if jt_ha is not None:
-          config, api.jt = jt_ha
+        rm_ha = get_next_ha_yarncluster()
+        if rm_ha is not None:
+          config, api.resource_manager_api = rm_ha
           return funct(api, *args, **kwargs)
       raise ex
   return wraps(funct)(decorate)
-
 
 class JobBrowserApi(object):
 
@@ -190,12 +206,12 @@ class YarnApi(JobBrowserApi):
     self.user = user
     self.resource_manager_api = resource_manager_api.get_resource_manager()
     self.mapreduce_api = mapreduce_api.get_mapreduce_api()
-    self.node_manager_api = node_manager_api.get_resource_manager_api()
     self.history_server_api = history_server_api.get_history_server_api()
 
   def get_job_link(self, job_id):
     return self.get_job(job_id)
 
+  @rm_ha
   def get_jobs(self, user, **kwargs):
     state_filters = {'running': 'UNDEFINED', 'completed': 'SUCCEEDED', 'failed': 'FAILED', 'killed': 'KILLED', }
     filters = {}
@@ -206,6 +222,8 @@ class YarnApi(JobBrowserApi):
       filters['finalStatus'] = state_filters[kwargs['state']]
 
     json = self.resource_manager_api.apps(**filters)
+    if type(json) == str and 'This is standby RM' in json:
+      raise Exception(json)
     if json['apps']:
       jobs = [Application(app) for app in json['apps']['app']]
     else:
@@ -229,11 +247,15 @@ class YarnApi(JobBrowserApi):
                   user.is_superuser or
                   job.user == user.username, jobs)
 
+  @rm_ha
   def get_job(self, jobid):
     try:
       # App id
       jobid = jobid.replace('job', 'application')
       job = self.resource_manager_api.app(jobid)['app']
+
+      if job['state'] == 'ACCEPTED':
+        raise ApplicationNotRunning(jobid, job)
 
       # MR id
       jobid = jobid.replace('application', 'job')
@@ -258,3 +280,9 @@ class YarnApi(JobBrowserApi):
 
   def get_tracker(self, container_id):
     return Container(self.node_manager_api.container(container_id))
+
+class ApplicationNotRunning(Exception):
+
+  def __init__(self, application_id, job):
+    self.application_id = application_id
+    self.job = job
