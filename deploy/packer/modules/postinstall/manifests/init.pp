@@ -6,10 +6,11 @@ class postinstall {
     include knox
     include spark
     include hue
+    include kafka
   }
 
   if $sandbox=='true'{
     include sandbox
   }
-  
+
 }
