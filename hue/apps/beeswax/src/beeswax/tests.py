@@ -1287,9 +1287,14 @@ Starting Job = job_201003191517_0002, Tracking URL = http://localhost:50030/jobd
 Starting Job = job_201003191517_0003, Tracking URL = http://localhost:50030/jobdetails.jsp?jobid=job_201003191517_0003
 12/12/27 10:48:22 INFO mapreduce.Job: The url to track the job: http://localhost:8088/proxy/application_1356251510842_0022/
 """
-  assert_equal(["job_201003191517_0002", "job_201003191517_0003", "application_1356251510842_0022"],
-    beeswax.views._parse_out_hadoop_jobs(sample_log))
-  assert_equal([], beeswax.views._parse_out_hadoop_jobs("nothing to see here"))
+  ret, current, total = beeswax.views._parse_out_hadoop_jobs(sample_log)
+  assert_equal(["job_201003191517_0002", "job_201003191517_0003", "application_1356251510842_0022"], ret)
+  assert_equal('application_1356251510842_0022', current)
+  assert_equal(0, total)
+  ret, current, total = beeswax.views._parse_out_hadoop_jobs("nothing to see here")
+  assert_equal([], ret)
+  assert_equal(-1, current)
+  assert_equal(0, total)
 
 
 def test_hive_site():
