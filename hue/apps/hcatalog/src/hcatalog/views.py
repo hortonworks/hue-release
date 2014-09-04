@@ -40,7 +40,6 @@ from beeswax.views import (authorized_get_design, safe_get_design, save_design,
 from beeswax.forms import QueryForm, SaveResultsForm
 from beeswax.models import SavedQuery, QueryHistory, make_query_context
 from beeswax.design import HQLdesign
-from beeswaxd.ttypes import BeeswaxException
 from beeswax.server import dbms
 from beeswax.server.dbms import expand_exception, get_query_server_config, NoSuchObjectException
 
@@ -538,7 +537,7 @@ def watch_query(request, id, download_format=None):
             not query_history.is_finished() and query_history.is_success() and not query_history.has_results):
         try:
             query_history = db.execute_next_statement(query_history)
-        except BeeswaxException:
+        except Exception:
             pass
 
     # Check query state

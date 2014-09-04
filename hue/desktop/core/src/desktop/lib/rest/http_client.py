@@ -141,7 +141,7 @@ class HttpClient(object):
       command += "--negotiate -u :"
     if headers:
       headers_string = ["{0}: {1}".format(k, v) for k, v in headers.items()]
-      command += " -H ".join(headers_string)
+      command += " -H ".join([""] + headers_string)
     if data:
       command += " -d %s" % data
     self.logger.debug("REST invocation: %s '%s'" % (command, url))

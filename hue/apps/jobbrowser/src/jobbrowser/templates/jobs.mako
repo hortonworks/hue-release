@@ -132,7 +132,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
     $(document).ajaxError(function (event, jqxhr, settings, exception) {
       if (jqxhr.status == 500) {
         window.clearInterval(_runningInterval);
-        $.jHueNotify.error("${_('There was a problem communicating with the server. Please refresh the page.')}");
+        $.jHueNotify.error("${_('There was a problem communicating with the server: ')}" + $.parseJSON(jqxhr.responseText).message);
       }
     });
 
@@ -152,7 +152,7 @@ ${ commonheader("Job Browser", "jobbrowser", user) | n,unicode }
           var status_value = $(".btn-status.active").data("value"),
               status_filter = (status_value)?status_value.toUpperCase():'';
           for (var cnt in data) {
-              var job = data[cnt]; 
+              var job = data[cnt];
                   rowar.push(getJobRow(job));
               if (activeStates.indexOf(job.status) > -1 && (status_filter.indexOf(job.status) > -1||!status_filter)) {
                 newRows.push(job);

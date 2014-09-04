@@ -19,8 +19,12 @@ import logging
 import posixpath
 import threading
 
+from django.utils.translation import ugettext as _
+
+from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.rest.http_client import HttpClient
 from desktop.lib.rest.resource import Resource
+
 from hadoop import cluster
 
 
@@ -41,18 +45,23 @@ def get_resource_manager():
     try:
       if _api_cache is None:
         yarn_cluster = cluster.get_cluster_conf_for_job_submission()
-        _api_cache = ResourceManagerApi(yarn_cluster.RESOURCE_MANAGER_API_URL.get())
+        if yarn_cluster is None:
+          raise PopupException(_('No Resource Manager are available.'))
+        _api_cache = ResourceManagerApi(yarn_cluster.RESOURCE_MANAGER_API_URL.get(), yarn_cluster.SECURITY_ENABLED.get())
     finally:
       _api_cache_lock.release()
   return _api_cache
 
 
 class ResourceManagerApi(object):
-  def __init__(self, oozie_url):
+  def __init__(self, oozie_url, security_enabled=False):
     self._url = posixpath.join(oozie_url, 'ws', _API_VERSION)
     self._client = HttpClient(self._url, logger=LOG)
     self._root = Resource(self._client)
-    self._security_enabled = False
+    self._security_enabled = security_enabled
+
+    if self._security_enabled:
+      self._client.set_kerberos_auth()
 
   def __str__(self):
     return "ResourceManagerApi at %s" % (self._url,)
@@ -64,6 +73,9 @@ class ResourceManagerApi(object):
   @property
   def security_enabled(self):
     return self._security_enabled
+
+  def cluster(self, **kwargs):
+    return self._root.get('cluster', params=kwargs, headers={'Accept': _JSON_CONTENT_TYPE})
 
   def apps(self, **kwargs):
     return self._root.get('cluster/apps', params=kwargs, headers={'Accept': _JSON_CONTENT_TYPE})

@@ -33,8 +33,6 @@ from enum import Enum
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.models import Document
 
-from beeswax.design import HQLdesign, hql_query
-from beeswaxd.ttypes import QueryHandle as BeeswaxdQueryHandle, QueryState
 from TCLIService.ttypes import TSessionHandle, THandleIdentifier,\
   TOperationState, TOperationHandle, TOperationType
 
@@ -136,7 +134,7 @@ class QueryHistory(models.Model):
     query.hql_query = hql_query
     self.design.data = query.dumps()
     self.query = hql_query
- 
+
   def is_finished(self):
     is_statement_finished = not self.is_running()
 
@@ -216,6 +214,11 @@ class HiveServerQueryHistory(QueryHistory):
     self.last_state = new_state.index
     self.save()
 
+  @classmethod
+  def is_canceled(self, res):
+    return res.operationState in (TOperationState.CANCELED_STATE, TOperationState.CLOSED_STATE)
+
+
 
 class SavedQuery(models.Model):
   """
@@ -275,8 +278,8 @@ class SavedQuery(models.Model):
     design.save()
 
     Document.objects.link(design, owner=design.owner, extra=design.type, name=design.name, description=design.desc)
-    design.doc.get().add_to_history()    
-    
+    design.doc.get().add_to_history()
+
     return design
 
   @staticmethod

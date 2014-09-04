@@ -1,6 +1,5 @@
 from beeswax.models import QueryHistory
 from beeswax.models import HiveServerQueryHistory
-from beeswaxd.ttypes import QueryHandle
 from desktop.lib.exceptions_renderable import PopupException
 from beeswax.server.hive_server2_lib import HiveServerClientCompatible, HiveServerClient
 from beeswax.server import dbms
@@ -46,10 +45,10 @@ def _get_query_handle_and_state(query_history):
        Please ensure your query is using a partition filter when using a partitioned table. \
         If you are sure you are running a well-optimized query, please ignore this message. \
          Hue is now back up and queries can be submitted again."
-    
+
     raise PopupException(msg, title="Hue Restarted")
   return (handle, state)
-            
+
 
 class QueryResult:
 
@@ -83,10 +82,10 @@ class QueryResult:
   def query(self):
     return self.query_history.query
 
-  def size(self): 
-  
+  def size(self):
+
     """return query result size in bytes. return -1 if the result is in a table or a partition of a table."""
-    if self.result_size is None: 
+    if self.result_size is None:
       self.result_size = -1
       md = self.metadata()
       ## added new check to avoid meta data query failure
@@ -104,7 +103,7 @@ class QueryResult:
     return self.result_size
 
   def metadata(self):
-    """ 
+    """
     return query result meta data
     """
     if self.result_metadata is None:
@@ -123,7 +122,7 @@ class QueryResult:
     is_first_row = True
     next_row = 0
     results = None
-  
+
     while True:
       # Make sure that we have the next batch of ready results
       while results is None or not results.ready:
@@ -133,10 +132,10 @@ class QueryResult:
 
       if is_first_row:
         is_first_row = False
-      
+
       for row in results.rows():
         yield u'\t'.join(force_unicode(e, errors='replace') for e in row)
-  
+
       if results.has_more:
         results = None
       else:
