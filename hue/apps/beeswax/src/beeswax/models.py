@@ -33,8 +33,6 @@ from enum import Enum
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.models import Document
 
-from beeswax.design import HQLdesign, hql_query
-from beeswaxd.ttypes import QueryHandle as BeeswaxdQueryHandle, QueryState
 from TCLIService.ttypes import TSessionHandle, THandleIdentifier,\
   TOperationState, TOperationHandle, TOperationType
 
@@ -136,7 +134,7 @@ class QueryHistory(models.Model):
     query.hql_query = hql_query
     self.design.data = query.dumps()
     self.query = hql_query
- 
+
   def is_finished(self):
     is_statement_finished = not self.is_running()
 
@@ -216,99 +214,10 @@ class HiveServerQueryHistory(QueryHistory):
     self.last_state = new_state.index
     self.save()
 
+  @classmethod
+  def is_canceled(self, res):
+    return res.operationState in (TOperationState.CANCELED_STATE, TOperationState.CLOSED_STATE)
 
-class BeeswaxQueryHistory(QueryHistory):
-  # Map from (thrift) server state
-  STATE_MAP = {
-    QueryState.CREATED          : QueryHistory.STATE.submitted,
-    QueryState.INITIALIZED      : QueryHistory.STATE.submitted,
-    QueryState.COMPILED         : QueryHistory.STATE.running,
-    QueryState.RUNNING          : QueryHistory.STATE.running,
-    QueryState.FINISHED         : QueryHistory.STATE.available,
-    QueryState.EXCEPTION        : QueryHistory.STATE.failed
-  }
-
-  node_type = BEESWAX
-
-  class Meta:
-    proxy = True
-
-  def get_server_id(self):
-    """
-    get_server_id() ->  (True/False, server-side query id)
-
-    The boolean indicates success/failure. The server_id follows, and may be None.
-    Note that the server_id can legally be None when the query is just submitted.
-    This method handles the various cases of the server_id being absent.
-
-    Does not issue RPC.
-    """
-    if self.server_id:
-      return (True, self.server_id)
-
-    # Query being submitted have no server_id?
-    if self.last_state == QueryHistory.STATE.submitted.index:
-      # (1) Really? Check the submission date.
-      #     This is possibly due to the server dying when compiling the query
-      if self.submission_date.now() - self.submission_date > QUERY_SUBMISSION_TIMEOUT:
-        LOG.error("Query submission taking too long. Expiring id %s: [%s]..." %
-                  (self.id, self.query[:40]))
-        self.save_state(QueryHistory.STATE.expired)
-        return (False, None)
-      else:
-        # (2) It's not an error. Return the current state
-        LOG.debug("Query %s (submitted) has no server id yet" % (self.id,))
-        return (True, None)
-    else:
-      # (3) It has no server_id for no good reason. A case (1) will become this
-      #     after we expire it. Note that we'll never be able to recover this
-      #     query.
-      LOG.error("Query %s (%s) has no server id [%s]..." %
-                (self.id, QueryHistory.STATE[self.last_state], self.query[:40]))
-      self.save_state(QueryHistory.STATE.expired)
-      return (False, None)
-
-  def get_handle(self):
-    """
-    get_server_id() ->  (server-side query id)
-
-    The boolean indicates success/failure. The server_id follows, and may be None.
-    Note that the server_id can legally be None when the query is just submitted.
-    This method handles the various cases of the server_id being absent.
-
-    Does not issue RPC.
-    """
-    if self.server_id:
-      return BeeswaxQueryHandle(secret=self.server_id, has_result_set=self.has_results, log_context=self.log_context)
-    else:
-      # Query being submitted have no server_id?
-      if self.last_state == QueryHistory.STATE.submitted.index:
-        # (1) Really? Check the submission date.
-        #     This is possibly due to the server dying when compiling the query
-        if self.submission_date.now() - self.submission_date > QUERY_SUBMISSION_TIMEOUT:
-          LOG.error("Query submission taking too long. Expiring id %s: [%s]..." % (self.id, self.query[:40]))
-          self.save_state(QueryHistory.STATE.expired)
-        else:
-          # (2) It's not an error. Return the current state
-          LOG.debug("Query %s (submitted) has no server id yet" % (self.id,))
-      else:
-        # (3) It has no server_id for no good reason. A case (1) will become this
-        #     after we expire it. Note that we'll never be able to recover this
-        #     query.
-        LOG.error("Query %s (%s) has no server id [%s]..." %
-                  (self.id, QueryHistory.STATE[self.last_state], self.query[:40]))
-        self.save_state(QueryHistory.STATE.expired)
-      return None
-
-  def save_state(self, new_state):
-    """Set the last_state from an enum, and save"""
-    if self.last_state != new_state.index:
-      if new_state.index < self.last_state:
-        backtrace = ''.join(traceback.format_stack(limit=5))
-        LOG.error("Invalid query state transition: %s -> %s\n%s" % (QueryHistory.STATE[self.last_state], new_state, backtrace))
-        return
-      self.last_state = new_state.index
-      self.save()
 
 
 class SavedQuery(models.Model):
@@ -369,8 +278,8 @@ class SavedQuery(models.Model):
     design.save()
 
     Document.objects.link(design, owner=design.owner, extra=design.type, name=design.name, description=design.desc)
-    design.doc.get().add_to_history()    
-    
+    design.doc.get().add_to_history()
+
     return design
 
   @staticmethod

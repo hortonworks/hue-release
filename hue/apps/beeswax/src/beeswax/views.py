@@ -40,8 +40,9 @@ from desktop.lib.exceptions_renderable import PopupException
 from desktop.lib.exceptions import StructuredException
 
 from hadoop.fs.exceptions import WebHdfsException
+
 from jobsub.parameterization import find_variables, substitute_variables
-from beeswaxd.ttypes import QueryNotFoundException
+
 
 import beeswax.forms
 import beeswax.design
@@ -65,14 +66,6 @@ SAVE_RESULTS_CTAS_TIMEOUT = 300         # seconds
 
 
 def index(request):
-  try:
-    tables = dbms.get(request.user).get_tables()
-    if not tables:
-      examples_installed = beeswax.models.MetaInstall.get().installed_example
-      return render("index.mako", request, {'examples_installed': examples_installed})
-  except:
-    pass
-
   return execute_query(request)
 
 
@@ -500,7 +493,7 @@ def visualize(request, id, cut=None):
   gen = data_export.data_generator(query_history.get_handle(), 'csv', db, cut)
   resp = HttpResponse(gen, mimetype='application/csv')
   resp['Content-Disposition'] = 'attachment; filename=query_result.%s' % ('csv',)
-  
+
   return resp
 
 """
@@ -782,7 +775,7 @@ def _log_total_query_time(request, query_history):
 
 def _stat_result_info(request, query_history, jobs):
   """ compute and persist result info """
-  beeswaxQueryHistory = models.BeeswaxQueryHistory.objects.get(id=query_history.id)
+  beeswaxQueryHistory = models.HiveServerQueryHistory.objects.get(id=query_history.id)
   query_history.result_size = query_result.create(beeswaxQueryHistory, request.fs).size()
   try:
     job = _getjob(request, job = jobs[-1])
@@ -1468,7 +1461,7 @@ def _run_parameterized_query(request, design_id, explain):
 
   query_str = query_form.query.cleaned_data["query"]
   app_name = get_app_name(request)
-  query_server = get_query_server_config(app_name)  
+  query_server = get_query_server_config(app_name)
   query_type = SavedQuery.TYPES_MAPPING[app_name]
 
   parameterization_form_cls = make_parameterization_form(query_str)

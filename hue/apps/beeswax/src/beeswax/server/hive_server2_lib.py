@@ -19,7 +19,7 @@ import logging
 import re
 
 from operator import itemgetter
-
+from django.utils.translation import ugettext as _
 from desktop.lib import thrift_util
 from desktop.conf import LDAP_PASSWORD
 from hadoop import cluster
@@ -28,7 +28,7 @@ from TCLIService import TCLIService
 from TCLIService.ttypes import TOpenSessionReq, TGetTablesReq, TFetchResultsReq,\
   TStatusCode, TGetResultSetMetadataReq, TGetColumnsReq, TTypeId,\
   TExecuteStatementReq, TGetOperationStatusReq, TFetchOrientation,\
-  TCloseSessionReq, TGetSchemasReq, TGetLogReq, TCancelOperationReq,\
+  TCloseSessionReq, TGetSchemasReq, TCancelOperationReq,\
   TCloseOperationReq, TFetchResultsResp, TRowSet
 
 from beeswax import conf as beeswax_conf
@@ -354,8 +354,9 @@ class HiveServerClient:
 
   def open_session(self, user):
     kwargs = {
-        'username': user.username, # If SASL, it gets the username from the authentication mechanism" since it dependents on it.
-        'configuration': {},
+      'client_protocol': 4, ##TODO: support latest column protocol
+      'username': user.username, # If SASL, it gets the username from the authentication mechanism" since it dependents on it.
+      'configuration': {},
     }
 
     if self.impersonation_enabled:
@@ -544,14 +545,14 @@ class HiveServerClient:
     return res, schema
 
 
-  def fetch_result(self, operation_handle, orientation=TFetchOrientation.FETCH_NEXT, max_rows=1000):
+  def fetch_result(self, operation_handle, orientation=TFetchOrientation.FETCH_NEXT, max_rows=1000, fetchType=0):
     if operation_handle.hasResultSet:
-      fetch_req = TFetchResultsReq(operationHandle=operation_handle, orientation=orientation, maxRows=max_rows)
+      fetch_req = TFetchResultsReq(operationHandle=operation_handle, orientation=orientation, maxRows=max_rows, fetchType=fetchType)
       res = self.call(self._client.FetchResults, fetch_req)
     else:
       res = TFetchResultsResp(results=TRowSet(startRowOffset=0, rows=[], columns=[]))
 
-    if operation_handle.hasResultSet:
+    if operation_handle.hasResultSet and fetchType==0:
       meta_req = TGetResultSetMetadataReq(operationHandle=operation_handle)
       schema = self.call(self._client.GetResultSetMetadata, meta_req)
     else:
@@ -571,12 +572,9 @@ class HiveServerClient:
 
 
   def get_log(self, operation_handle):
-    try:
-      req = TGetLogReq(operationHandle=operation_handle)
-      res = self.call(self._client.GetLog, req)
-      return res.log
-    except:
-      return 'Server does not support GetLog()'
+    orientation = TFetchOrientation.FETCH_FIRST
+    res, schema = self.fetch_result(operation_handle=operation_handle, orientation=orientation, max_rows=10000, fetchType=1)
+    return "\n".join((str(row[0]) for row in HiveServerDataTable(res, schema, operation_handle).rows()))
 
 
   def get_partitions(self, database, table_name, max_parts):
@@ -757,7 +755,11 @@ class HiveServerClientCompatible(object):
 
 
   def get_results_metadata(self, handle):
-    # We just need to mock
+    operation_handle = handle.get_rpc_handle()
+    if operation_handle.hasResultSet:
+      meta_req = TGetResultSetMetadataReq(operationHandle=operation_handle)
+      metadata = self._client.call(self._client._client.GetResultSetMetadata, meta_req)
+      return ResultMetaCompatible(schema=metadata.schema, status=metadata.status)
     return ResultMetaCompatible()
 
 

@@ -23,11 +23,11 @@ from django.core.urlresolvers import reverse
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext as _
 
-from beeswax import hive_site
 from beeswax.conf import HIVE_SERVER_HOST, HIVE_SERVER_PORT,\
   BROWSE_PARTITIONED_TABLE_LIMIT, BROWSE_UNPARTITIONED_TABLE_LIMIT
 from beeswax.design import hql_query
 from beeswax.models import QueryHistory, HIVE_SERVER2, BEESWAX, QUERY_TYPES
+from beeswax import hive_site
 
 from filebrowser.views import location_to_url
 from desktop.lib.django_util import format_preserving_redirect
@@ -63,27 +63,14 @@ def get(user, query_server=None):
 
 
 def get_query_server_config(name='beeswax', server=None):
-  if name == 'impala':
-    from impala.conf import SERVER_HOST as IMPALA_SERVER_HOST, SERVER_PORT as IMPALA_SERVER_PORT, \
-        IMPALA_PRINCIPAL, IMPERSONATION_ENABLED, QUERYCACHE_ROWS
+  kerberos_principal = hive_site.get_hiveserver2_kerberos_principal(HIVE_SERVER_HOST.get())
 
-    query_server = {
-        'server_name': 'impala',
-        'server_host': IMPALA_SERVER_HOST.get(),
-        'server_port': IMPALA_SERVER_PORT.get(),
-        'principal': IMPALA_PRINCIPAL.get(),
-        'impersonation_enabled': IMPERSONATION_ENABLED.get(),
-        'querycache_rows': QUERYCACHE_ROWS.get()
-    }
-  else:
-    kerberos_principal = hive_site.get_hiveserver2_kerberos_principal(HIVE_SERVER_HOST.get())
-
-    query_server = {
-        'server_name': 'beeswax', # Aka HiveServer2 now
-        'server_host': HIVE_SERVER_HOST.get(),
-        'server_port': HIVE_SERVER_PORT.get(),
-        'principal': kerberos_principal
-    }
+  query_server = {
+    'server_name': 'beeswax', # Aka HiveServer2 now
+    'server_host': HIVE_SERVER_HOST.get(),
+    'server_port': HIVE_SERVER_PORT.get(),
+    'principal': kerberos_principal
+  }
 
   LOG.debug("Query Server: %s" % query_server)
 
