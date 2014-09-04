@@ -13,22 +13,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from setuptools import setup, find_packages
-from hueversion import VERSION
-
-setup(
-      name = "beeswax",
-      version = VERSION,
-      author = "Hue",
-      url = 'http://github.com/cloudera/hue',
-      description = "Hive Interface on Hue",
-      packages = find_packages('src') + find_packages('gen-py'),
-      package_dir = {'TCLIService': 'gen-py', '': 'src'},
-      install_requires = ['setuptools', 'desktop'],
-      entry_points = {
-        'desktop.sdk.application': 'beeswax=beeswax',
-        'desktop.supervisor.optional_specs': [
-        'celeryd = beeswax:CELERYD_SUPERVISOR_SPEC'
-         ],
-      }
-)
+DJANGO_APPS = ["db2_export"]
+NICE_NAME = "DB2 export"
