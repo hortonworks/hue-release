@@ -3,7 +3,7 @@
 hue_dir=/usr/lib/hue
 
 # Run only first time
-grep "^#FIXME" ${hue_dir}/VERSIONS &>/dev/null || exit
+if [ -f ${hue_dir}/VERSIONS ]; then exit; fi
 
 echo "Detecting versions of components..."
 
