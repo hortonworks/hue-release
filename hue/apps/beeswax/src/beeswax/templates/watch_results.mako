@@ -96,10 +96,12 @@ ${layout.menubar(section='query')}
                     <li><a data-toggle="modal" href="#saveAs">${_('Save')}</a></li>
                     % endif
 
-                    % if result_info and result_info['size'] != 'unknown':
+                    % if result_info and (result_info['size'] != 'unknown' or result_info['virtual_memory'] != 'unknown'):
                       <li class="nav-header">Results</li>
 
-                      <li><div class="ri_header">${_('Size: ')}</div>${result_info['size']}</li>
+                      %if result_info['size'] != 'unknown':
+                        <li><div class="ri_header">${_('Size: ')}</div>${result_info['size']}</li>
+                      %endif
 
                       %if result_info['rows'] != 'unknown' and len(results)>0:
                         <li><div class="ri_header">${_('Rows: ')}</div>${result_info['rows']}</li>
