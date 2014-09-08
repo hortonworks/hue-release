@@ -18,7 +18,7 @@ import time
 from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 from beeswax import models
-from beeswax.views import collapse_whitespace
+from beeswax.views import collapse_whitespace, _get_result_info
 %>
 
 <%namespace name="layout" file="layout.mako" />
@@ -96,6 +96,13 @@ ${ layout.menubar(section='history') }
                 <th width="15%">${_('Name')}</th>
                 <th width="45%">${_('Query')}</th>
                 <th width="10%">${_('User')}</th>
+                <th width="5%">${_('Size')}</th>
+                <th width="5%">${_('Rows')}</th>
+                <th width="8%">${_('Total Time')}</th>
+                <th width="8%">${_('CPU Time')}</th>
+                <th width="10%">${_('Committed Memory')}</th>
+                <th width="10%">${_('Physical Memory')}</th>
+                <th width="10%">${_('Virtual Memory')}</th>
                 <th width="5%">${_('State')}</th>
                 <th width="5%">${_('Result')}</th>
               </tr>
@@ -108,6 +115,7 @@ ${ layout.menubar(section='history') }
                   qcontext = query.design.get_query_context()
                 except AttributeError:
                   pass
+                result_info = _get_result_info(query)
               %>
               <tr class="histRow">
                 <td data-sort-value="${time.mktime(query.submission_date.timetuple())}">${query.submission_date.strftime("%x %X")}</td>
@@ -122,6 +130,13 @@ ${ layout.menubar(section='history') }
                   </p>
                 </td>
                 <td>${query.owner}</td>
+                <td>${result_info['size'] |u}</td>
+                <td>${result_info['rows']}</td>
+                <td>${result_info['total_time'] }</td>
+                <td>${result_info['query_time'] }</td>
+                <td>${result_info['committed_memory'] |u}</td>
+                <td>${result_info['physical_memory'] |u}</td>
+                <td>${result_info['virtual_memory'] |u}</td>
                 <td>${models.QueryHistory.STATE[query.last_state]}</td>
                 <td>
                   % if qcontext and query.last_state not in (models.QueryHistory.STATE.expired.index, models.QueryHistory.STATE.failed.index):
