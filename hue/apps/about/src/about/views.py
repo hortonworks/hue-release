@@ -23,6 +23,7 @@ import time
 from multiprocessing import Process
 from desktop.lib.django_util import render
 from desktop.lib.paths import get_run_root, get_var_root
+from desktop.lib.exceptions_renderable import PopupException
 from desktop import conf as desktop_conf
 from django.http import HttpResponse
 import simplejson as json
@@ -173,23 +174,28 @@ def _get_tutorials_version():
 def _read_versions(filename):
   global HUE_VERSION
   components = []
-  with open(filename) as f:
-    for line in f:
-      l = line.strip().split("=")
-      if len(l) < 2 or line.strip()[:1] == '#':
-        continue
-      component, version = l
-      if len(version.strip()) == 0:
-        continue
-      if component == "HUE_VERSION":
-        HUE_VERSION, buildnumber = version.split("-")
-        components.append(('Hue', version))
-      elif component == "Sandbox":
-        components.append(('Sandbox Build', version))
-      elif component == "Ambari-server":
-        components.append(('Ambari', version))
-      else:
-        components.append((component, version))
+  try:
+    with open(filename) as f:
+      for line in f:
+        l = line.strip().split("=")
+        if len(l) < 2 or line.strip()[:1] == '#':
+          continue
+        component, version = l
+        if len(version.strip()) == 0:
+          continue
+        if component == "HUE_VERSION":
+          HUE_VERSION, buildnumber = version.split("-")
+          components.append(('Hue', version))
+        elif component == "Sandbox":
+          components.append(('Sandbox Build', version))
+        elif component == "Ambari-server":
+          components.append(('Ambari', version))
+        else:
+          components.append((component, version))
+  except Exception, ex:
+    msg = 'Exception occurred processing file "%s": %s' % (filename, ex)
+    LOG.error(msg)
+    raise PopupException(msg)
   return components
 
 def _get_components():
