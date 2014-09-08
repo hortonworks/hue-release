@@ -39,7 +39,7 @@ import subprocess
 
 LOG = logging.getLogger(__name__)
 
-HUE_VERSION = "2.6.0"  # default version if VERSIONS file not exists
+HUE_VERSION = "2.6.1"  # default version if VERSIONS file not exists
 
 def index(request):
   if request.method == 'POST':
