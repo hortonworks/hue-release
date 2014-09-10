@@ -9,13 +9,21 @@
             }
         },
         {
+            "cluster-env": {
+                "cluster_name": "sandbox",
+                "smokeuser": "ambari-qa",
+                "user_group": "hadoop",
+                "security_enabled": "false"
+            }
+        },
+        {
             "hadoop-env": {
                 "dtnode_heapsize" : "250",
                 "hadoop_heapsize" : "250",
                 "namenode_heapsize" : "250",
                 "namenode_opt_newsize": "50",
                 "namenode_opt_maxnewsize": "100"
-            }  
+            }
         },
         {
             "mapred-env": {
@@ -29,14 +37,14 @@
                 "nodemanager_heapsize" : "250",
                 "yarn_heapsize" : "250"
             }
-            
+
         },
         {
             "nagios-env":{
                 "nagios_contact" : "admin@localhost.localdomain",
                 "nagios_web_login" : "nagiosadmin",
                 "nagios_web_password" : "admin"
-            }  
+            }
         },
         {
             "core-site" : {
@@ -70,7 +78,7 @@
                 "mapred.job.map.memory.mb" : "250",
                 "io.sort.mb" : "64",
                 "mapreduce.map.java.opts" : "-Xmx200m",
-                "mapreduce.reduce.java.opts" : "-Xmx200m"                
+                "mapreduce.reduce.java.opts" : "-Xmx200m"
             }
         },
         {
@@ -106,7 +114,7 @@
                 "nimbus.childopts" : "-Xmx200m -Djava.security.auth.login.config=/etc/storm/storm_jaas.conf -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8649,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
                 "ui.childopts" : "-Xmx200m -Djava.security.auth.login.config=/etc/storm/storm_jaas.conf",
                 "drpc.childopts" : "-Xmx200m",
-                "worker.childopts" : "-Xmx200m -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8650,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Worker_%ID%_JVM"                
+                "worker.childopts" : "-Xmx200m -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8650,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Worker_%ID%_JVM"
             }
         },
         {
@@ -126,7 +134,7 @@
                 "tez.am.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true -XX:+UseNUMA -XX:+UseParallelGC",
                 "tez.am.resource.memory.mb" : "250",
                 "tez.dag.am.resource.memory.mb" : "250",
-                "yarn.app.mapreduce.am.command-opts" : "-Xmx200m"                
+                "yarn.app.mapreduce.am.command-opts" : "-Xmx200m"
             }
         }
     ],
@@ -158,7 +166,7 @@
                 {"name" : "OOZIE_CLIENT"},
                 {"name" : "PIG"},
                 {"name" : "RESOURCEMANAGER"},
-                {"name" : "SECONDARY_NAMENODE"},       
+                {"name" : "SECONDARY_NAMENODE"},
                 {"name" : "SQOOP"},
                 {"name" : "STORM_REST_API"},
                 {"name" : "STORM_UI_SERVER"},
