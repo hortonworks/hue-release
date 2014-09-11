@@ -1237,10 +1237,10 @@ def test_history_page():
 
   do_view('')
   do_view('q-user=test')
-  do_view('q-user=test_who', 0)
+  do_view('q-user=test_who')
   do_view('q-user=:all')
   do_view('q-design_id=%s' % query.id)
-  do_view('q-design_id=9999999', 0)
+  do_view('q-design_id=9999999')
   do_view('q-auto_query=0')
   do_view('q-auto_query=1')
   do_view('sort=date')
@@ -1251,21 +1251,20 @@ def test_history_page():
   do_view('sort=-name')
   do_view('sort=type')
   do_view('sort=-type')
-  do_view('sort=name&user=bogus&design_id=1&auto_query=1')
-  do_view('sort=-type&user=:all&type=hql&auto_query=0')
+  do_view('sort=name&user=bogus&design_id=1&auto_query=1', 0)
+  do_view('sort=-type&user=:all&type=hql&auto_query=0', 0)
 
   # Only show Beeswax queries
   response = do_view('')
-  assert_equal({u'q-type': [u'beeswax']}, response.context['filter_params'])
+  assert_equal({u'type': [u'beeswax']}, dict(response.context['filter_params'].iterlists()))
 
   # Test pagination
-  response = do_view('q-page=100', 0)
-  assert_equal(0, len(response.context['page'].object_list))
+  response = do_view('q-page=100')
+  assert_equal(1, len(response.context['page'].object_list))
 
   client = make_logged_in_client(username='test_who')
   grant_access('test_who', 'test_who', 'test_who')
   do_view('q-user=test_who', 0)
-  do_view('q-user=:all')
 
 def test_strip_trailing_semicolon():
   # Note that there are two queries (both an execute and an explain) scattered
@@ -1439,47 +1438,11 @@ class MockDbms:
 class TestWithMockedServer(object):
 
   def setUp(self):
-    # Beware: Monkey patch Beeswax/Hive server with Mock API
-    if not hasattr(dbms, 'OriginalBeeswaxApi'):
-      dbms.OriginalBeeswaxApi = dbms.Dbms
     dbms.Dbms = MockDbms
 
     self.client = make_logged_in_client(is_superuser=False)
     grant_access("test", "test", "beeswax")
 
-  def tearDown(self):
-    dbms.Dbms = dbms.OriginalBeeswaxApi
-
-  def test_save_design_properties(self):
-    resp = self.client.get('/beeswax/save_design_properties')
-    content = json.loads(resp.content)
-    assert_equal(-1, content['status'])
-
-    response = _make_query(self.client, 'SELECT', submission_type='Save', name='My Name', desc='My Description')
-    design = response.context['design']
-
-    try:
-      resp = self.client.post('/beeswax/save_design_properties', {'name': 'name', 'value': 'New Name', 'pk': design.id})
-      design = SavedQuery.objects.get(id=design.id)
-      content = json.loads(resp.content)
-      assert_equal(0, content['status'])
-      assert_equal('New Name', design.name)
-      assert_equal('My Description', design.desc)
-    finally:
-      design.delete()
-
-    response = _make_query(self.client, 'SELECT', submission_type='Save', name='My Name', desc='My Description')
-    design = response.context['design']
-
-    try:
-      resp = self.client.post('/beeswax/save_design_properties', {'name': 'description', 'value': 'New Description', 'pk': design.id})
-      design = SavedQuery.objects.get(id=design.id)
-      content = json.loads(resp.content)
-      assert_equal(0, content['status'])
-      assert_equal('My Name', design.name)
-      assert_equal('New Description', design.desc)
-    finally:
-      design.delete()
 
   def test_bulk_query_trash(self):
     response = _make_query(self.client, 'SELECT', submission_type='Save', name='My Name 1', desc='My Description')
@@ -1494,33 +1457,7 @@ class TestWithMockedServer(object):
 
     resp = self.client.post(reverse('beeswax:delete_design'), {u'skipTrash': [u'false'], u'designs_selection': ids})
     queries = SavedQuery.objects.filter(id__in=ids)
-    assert_true(queries[0].is_trashed)
-    assert_true(queries[1].is_trashed)
-
-    resp = self.client.get('/beeswax/list_designs')
-    ids_page_1 = set([query.id for query in resp.context['page'].object_list])
-    assert_equal(0, sum([query_id in ids_page_1 for query_id in ids]))
-
-    resp = self.client.post(reverse('beeswax:restore_design'), {u'skipTrash': [u'false'], u'designs_selection': ids})
-    query = SavedQuery.objects.filter(id__in=ids)
-    assert_false(queries[0].is_trashed)
-    assert_false(queries[1].is_trashed)
-
-    resp = self.client.get('/beeswax/list_designs')
-    ids_page_1 = set([query.id for query in resp.context['page'].object_list])
-    assert_equal(2, sum([query_id in ids_page_1 for query_id in ids]))
-
-    resp = self.client.post(reverse('beeswax:delete_design'), {u'skipTrash': [u'false'], u'designs_selection': ids})
-    query = SavedQuery.objects.filter(id__in=ids)
-    assert_true(queries[0].is_trashed)
-    assert_true(queries[1].is_trashed)
-
-    resp = self.client.get('/beeswax/list_designs')
-    ids_page_1 = set([query.id for query in resp.context['page'].object_list])
-    assert_equal(0, sum([query_id in ids_page_1 for query_id in ids]))
-
-    resp = self.client.post(reverse('beeswax:delete_design'), {u'skipTrash': [u'true'], u'designs_selection': ids})
-    assert_false(SavedQuery.objects.filter(id__in=ids).exists())
+    assert_equal(0, len(queries))
 
     resp = self.client.get('/beeswax/list_designs')
     ids_page_1 = set([query.id for query in resp.context['page'].object_list])
@@ -1535,7 +1472,6 @@ def search_log_line(component, expected_log, all_logs):
 def test_hiveserver2_get_security():
   # Bad but easy mocking
   hive_site.get_conf()
-
   prev = hive_site._HIVE_SITE_DICT.get(hive_site._CNF_HIVESERVER2_AUTHENTICATION)
   try:
     hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_KERBEROS_PRINCIPAL] = 'hive/hive@test.com'
@@ -1543,37 +1479,25 @@ def test_hiveserver2_get_security():
     principal = get_query_server_config('beeswax')['principal']
     assert_true(principal.startswith('hive/'), principal)
 
-    principal = get_query_server_config('impala')['principal']
-    assert_true(principal.startswith('impala/'), principal)
-
     # Beeswax
-    beeswax_query_server = {'server_name': 'beeswax', 'principal': 'hive'}
-    assert_equal((True, 'PLAIN', 'hive', False), HiveServerClient.get_security(beeswax_query_server))
+    # beeswax_query_server = {'server_name': 'beeswax', 'principal': 'hive'}
+    beeswax_query_server = {'server_host': 'localhost', 'server_port': 10000, 'server_name': 'beeswax', 'principal': 'hive/hive@test.com'}
+    user = User.objects.get(username='test')
+    hive_server_client = HiveServerClient(beeswax_query_server, user)
+    assert_equal((True, 'PLAIN', 'hive', False), hive_server_client.get_security())
 
     hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_AUTHENTICATION] = 'NOSASL'
     hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_IMPERSONATION] = 'true'
-    assert_equal((False, 'NOSASL', 'hive', True), HiveServerClient.get_security(beeswax_query_server))
+    assert_equal((False, 'NOSASL', 'hive', True), hive_server_client.get_security())
     hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_AUTHENTICATION] = 'KERBEROS'
-    assert_equal((True, 'GSSAPI', 'hive', True), HiveServerClient.get_security(beeswax_query_server))
+    assert_equal((True, 'GSSAPI', 'hive', True), hive_server_client.get_security())
 
-    # Impala
-    impala_query_server = {'server_name': 'impala', 'principal': 'impala', 'impersonation_enabled': False}
-    assert_equal((False, 'GSSAPI', 'impala', False), HiveServerClient.get_security(impala_query_server))
-
-    impala_query_server = {'server_name': 'impala', 'principal': 'impala', 'impersonation_enabled': True}
-    assert_equal((False, 'GSSAPI', 'impala', True), HiveServerClient.get_security(impala_query_server))
-
-    cluster_conf = hadoop.cluster.get_cluster_conf_for_job_submission()
-    finish = cluster_conf.SECURITY_ENABLED.set_for_testing(True)
-    try:
-      assert_equal((True, 'GSSAPI', 'impala', True), HiveServerClient.get_security(impala_query_server))
-    finally:
-      finish()
   finally:
     if prev is not None:
       hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_AUTHENTICATION] = prev
     else:
-      del hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_AUTHENTICATION]
+      if hive_site._CNF_HIVESERVER2_AUTHENTICATION in hive_site._HIVE_SITE_DICT:
+        del hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_AUTHENTICATION]
 
 
 def hive_site_xml(is_local=False, use_sasl=False, thrift_uris='thrift://darkside-1234:9999',
