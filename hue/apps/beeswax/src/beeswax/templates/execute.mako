@@ -190,7 +190,7 @@ ${layout.menubar(section='query')}
                           <li class="nav-header">${_('Execution engine')}</li>
                           <li>
                             <label class="checkbox" rel="tooltip" data-original-title="${_("If checked, 'hive.execution.engine' will forced set to 'tez'. ")}">
-                              <input type="checkbox" id="execute_on_tez" checked="checked">
+                              <input type="checkbox" id="execute_on_tez">
                               Execute on Tez
                             </label>
                           </li>

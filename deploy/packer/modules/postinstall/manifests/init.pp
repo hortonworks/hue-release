@@ -4,7 +4,7 @@ class postinstall {
     #include accumulo
   if $role=='ambari'{
     include knox
-    include spark
+    #include spark
     include hue
     include kafka
   }

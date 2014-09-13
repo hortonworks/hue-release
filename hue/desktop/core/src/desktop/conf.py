@@ -325,7 +325,16 @@ AUTH = ConfigSection(
     FORCE_USERNAME_LOWERCASE = Config("force_username_lowercase",
                                       help=_("Force usernames to lowercase when creating new users from LDAP."),
                                       type=coerce_bool,
-                                      default=False)
+                                      default=False),
+    EXPIRES_AFTER = Config("expires_after",
+                            help=_("Users will expire after they have not logged in for 'n' amount of seconds."
+                                   "A negative number means that users will never expire."),
+                            type=int,
+                            default=-1),
+    EXPIRE_SUPERUSERS = Config("expire_superusers",
+                                help=_("Apply 'expires_after' to superusers."),
+                                type=coerce_bool,
+                                default=True)
 ))
 
 LDAP = ConfigSection(
@@ -349,6 +358,10 @@ LDAP = ConfigSection(
       type=coerce_bool,
       private=True,
       default=False),
+    FORCE_USERNAME_UPPERCASE = Config("force_username_uppercase",
+                                      help=_("Force usernames to uppercase when creating new users from LDAP."),
+                                      type=coerce_bool,
+                                      default=False),
     SUBGROUPS = Config("subgroups",
       help=_("Choose which kind of subgrouping to use: nested or suboordinate (deprecated)."),
       type=coerce_str_lowercase,
@@ -422,6 +435,10 @@ LDAP = ConfigSection(
                          default=None,
                          private=True,
                          help=_("The password for the bind user.")),
+          SEARCH_BIND_AUTHENTICATION=Config("search_bind_authentication",
+                                            default=True,
+                                            type=coerce_bool,
+                                            help=_("Use search bind authentication.")),
 
           USERS = ConfigSection(
             key="users",
@@ -486,6 +503,48 @@ LDAP = ConfigSection(
                    default=True,
                    type=coerce_bool,
                    help=_("Use search bind authentication."))))
+
+OAUTH = ConfigSection(
+  key='oauth',
+  help=_('Configuration options for Oauth 1.0 authentication'),
+  members=dict(
+    CONSUMER_KEY = Config(
+      key="consumer_key",
+      help=_("The Consumer key of the application."),
+      type=str,
+      default="XXXXXXXXXXXXXXXXXXXXX"
+    ),
+
+    CONSUMER_SECRET = Config(
+      key="consumer_secret",
+      help=_("The Consumer secret of the application."),
+      type=str,
+      default="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    ),
+
+    REQUEST_TOKEN_URL = Config(
+      key="request_token_url",
+      help=_("The Request token URL."),
+      type=str,
+      default="https://api.twitter.com/oauth/request_token"
+    ),
+
+    ACCESS_TOKEN_URL = Config(
+      key="access_token_url",
+      help=_("The Access token URL."),
+      type=str,
+      default="https://api.twitter.com/oauth/access_token"
+    ),
+
+    AUTHENTICATE_URL = Config(
+      key="authenticate_url",
+      help=_("The Authorize URL."),
+      type=str,
+      default="https://api.twitter.com/oauth/authorize"
+    ),
+  )
+)
+
 
 
 LOCAL_FILESYSTEMS = UnspecifiedConfigSection(
@@ -562,7 +621,7 @@ DJANGO_EMAIL_BACKEND = Config(
   default="django.core.mail.backends.smtp.EmailBackend"
 )
 
-###OBFUCATOR####                             
+###OBFUCATOR####
 def decrypt_values():
   from lockfile import FileLock
   from desktop.lib.obfuscator import Obfuscator
@@ -570,7 +629,7 @@ def decrypt_values():
   lock.acquire()
   OBFUSCATOR = Obfuscator()
   ENCRYPTED_VALUE_PATTERN = re.compile("\$\s?{ALIAS=(\w+)}")
-  PASSWORD_VALUES = [DATABASE.PASSWORD, SMTP.PASSWORD, LDAP.BIND_PASSWORD]
+  PASSWORD_VALUES = [DATABASE.PASSWORD, SMTP.PASSWORD, LDAP.BIND_PASSWORD] + [LDAP.LDAP_SERVERS.get()[server].BIND_PASSWORD for server in LDAP.LDAP_SERVERS]
   for val in PASSWORD_VALUES:
     if not val.get():
       continue
@@ -617,6 +676,7 @@ def validate_ldap(user, config):
 
   return res
 
+
 def config_validator(user):
   """
   config_validator() -> [ (config_variable, error_message) ]
@@ -625,7 +685,7 @@ def config_validator(user):
   """
   from desktop.lib import i18n
 
-  res = [ ]
+  res = []
   if not SECRET_KEY.get():
     res.append((SECRET_KEY, unicode(_("Secret key should be configured as a random string."))))
 
@@ -648,12 +708,12 @@ def config_validator(user):
     kt_stat = os.stat(KERBEROS.HUE_KEYTAB.get())
     if stat.S_IMODE(kt_stat.st_mode) & 0077:
       res.append((KERBEROS.HUE_KEYTAB,
-                  unicode(_("Keytab should have 0600 permissions (has %o).") %
+                  force_unicode(_("Keytab should have 0600 permissions (has %o).") %
                   stat.S_IMODE(kt_stat.st_mode))))
 
     res.extend(validate_path(KERBEROS.KINIT_PATH, is_dir=False))
     res.extend(validate_path(KERBEROS.CCACHE_PATH, is_dir=False))
-    
+
   if LDAP.LDAP_SERVERS.get():
     for ldap_record_key in LDAP.LDAP_SERVERS.get():
       res.extend(validate_ldap(user, LDAP.LDAP_SERVERS.get()[ldap_record_key]))
