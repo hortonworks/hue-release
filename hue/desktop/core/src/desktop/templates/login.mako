@@ -34,6 +34,7 @@ from django.utils.translation import ugettext as _
   <link href="/static/ext/css/bootstrap.min.css" rel="stylesheet">
   <link href="/static/ext/css/font-awesome.min.css" rel="stylesheet">
   <link href="/static/css/hue2.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/ext/chosen/chosen.min.css">
 
   <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
   <!--[if lt IE 9]>
@@ -90,6 +91,30 @@ from django.utils.translation import ugettext as _
       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
       box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
     }
+
+    .chosen-single {
+     min-height: 38px;
+     text-align: left;
+     font-size: 18px;
+   }
+
+   .chosen-single span {
+     display: inline;
+     line-height: 38px;
+     vertical-align: middle;
+   }
+
+   .chosen-container-active.chosen-with-drop .chosen-single div b,
+   .chosen-container-single .chosen-single div b {
+     background-position-x: 1px;
+     background-position-y: 10px;
+   }
+
+   .chosen-container-active.chosen-with-drop .chosen-single div b {
+    background-position-x: -17px;
+    background-position-y: 10px;
+  }
+
   </style>
 </head>
 
@@ -114,7 +139,7 @@ from django.utils.translation import ugettext as _
         %if credentials:
             <div class="alert alert-info">username: ${credentials['user']}<br> password: ${credentials['pass']}</div>
         %endif
-        <form method="POST" action="${action}" class="well" autocomplete="off"> ${ csrf_token_field | n } 
+        <form method="POST" action="${action}" class="well" autocomplete="off"> ${ csrf_token_field | n }
           <label
           % if backend_name == 'OAuthBackend':
             class="hide"
@@ -138,6 +163,13 @@ from django.utils.translation import ugettext as _
             </div>
           %endif
 
+        %if active_directory:
+        <div class="input-prepend">
+          <span class="add-on"><i class="fa fa-globe"></i></span>
+          ${ form['server'] | n,unicode }
+        </div>
+        %endif
+
           %if first_login_ever:
             <div class="alert alert-block">
               <i class="icon-warning-sign"></i>
@@ -157,8 +189,14 @@ from django.utils.translation import ugettext as _
   </div>
 
   <script src="/static/ext/js/jquery/jquery-1.8.1.min.js"></script>
+  <script src="/static/ext/chosen/chosen.jquery.min.js" type="text/javascript" charset="utf-8"></script>
   <script>
     $(document).ready(function(){
+    $("#id_server").chosen({
+      disable_search_threshold: 5,
+      width: "90%",
+      no_results_text: "${_('Oops, no database found!')}"
+    });
 
     % if backend_name == 'AllowAllBackend':
       $('#id_password').val('password');

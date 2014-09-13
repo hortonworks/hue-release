@@ -15,14 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+try:
+  import oauth2 as oauth
+except:
+  pass
+
+import cgi
+import datetime
 import logging
-import os
-import json
+import urllib
 
 import django.contrib.auth.views
 from django.core import urlresolvers
 from django.core.exceptions import SuspiciousOperation
-from django.contrib.auth import authenticate, login, get_backends
+from django.contrib.auth import login, get_backends, authenticate
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.http import HttpResponseRedirect
@@ -30,29 +37,14 @@ from django.utils.translation import ugettext as _
 from hadoop.fs.exceptions import WebHdfsException
 from useradmin.views import ensure_home_directory
 
-from desktop.auth.backend import AllowFirstUserDjangoBackend
-from desktop.auth.forms import UserCreationForm, AuthenticationForm
+from desktop.auth import forms as auth_forms
 from desktop.lib.django_util import render
 from desktop.lib.django_util import login_notrequired
 from desktop.log.access import access_warn, last_access_map
+from desktop.conf import AUTH, LDAP, OAUTH
+
 
 LOG = logging.getLogger(__name__)
-
-SINGLE_USER_MODE = None
-SHOW_CREDENTIALS = None
-
-
-def reload_config():
-  global SINGLE_USER_MODE, SHOW_CREDENTIALS
-  if os.path.exists("/var/lib/hue/single_user_mode"):
-    SINGLE_USER_MODE = json.load(open("/var/lib/hue/single_user_mode"))
-  else:
-    SINGLE_USER_MODE = None
-
-  if os.path.exists("/var/lib/hue/show_credentials"):
-    SHOW_CREDENTIALS = json.load(open("/var/lib/hue/show_credentials"))
-  else:
-    SHOW_CREDENTIALS = None
 
 
 def get_current_users():
@@ -79,44 +71,46 @@ def get_current_users():
 def first_login_ever():
   backends = get_backends()
   for backend in backends:
-    if isinstance(backend, AllowFirstUserDjangoBackend) and backend.is_first_login_ever():
+    if hasattr(backend, 'is_first_login_ever') and backend.is_first_login_ever():
       return True
   return False
 
 
+def get_backend_name():
+  return get_backends() and get_backends()[0].__class__.__name__
+
+
 @login_notrequired
 def dt_login(request):
-  """Used by the non-jframe login"""
-  reload_config()
   redirect_to = request.REQUEST.get('next', '/')
-  if not redirect_to.startswith("/"):
-    redirect_to = "/"
   is_first_login_ever = first_login_ever()
+  backend_name = get_backend_name()
+  is_active_directory = backend_name == 'LdapBackend' and ( bool(LDAP.NT_DOMAIN.get()) or bool(LDAP.LDAP_SERVERS.get()) )
 
-  if SINGLE_USER_MODE or request.method == 'POST':
+  if is_active_directory:
+    UserCreationForm = auth_forms.LdapUserCreationForm
+    AuthenticationForm = auth_forms.LdapAuthenticationForm
+  else:
+    UserCreationForm = auth_forms.UserCreationForm
+    AuthenticationForm = auth_forms.AuthenticationForm
+
+  if request.method == 'POST':
     # For first login, need to validate user info!
     first_user_form = is_first_login_ever and UserCreationForm(data=request.POST) or None
     first_user = first_user_form and first_user_form.is_valid()
 
     if first_user or not is_first_login_ever:
-      if not SINGLE_USER_MODE: 
-        auth_form = AuthenticationForm(data=request.POST)
+      auth_form = AuthenticationForm(data=request.POST)
 
-      if SINGLE_USER_MODE or auth_form.is_valid():
+      if auth_form.is_valid():
         # Must login by using the AuthenticationForm.
         # It provides 'backends' on the User object.
-        if not SINGLE_USER_MODE:
-          user = auth_form.get_user()
-        else:
-          user = authenticate(username=SINGLE_USER_MODE['user'],
-                              password=SINGLE_USER_MODE['pass'])
-
+        user = auth_form.get_user()
         login(request, user)
-
         if request.session.test_cookie_worked():
           request.session.delete_test_cookie()
 
-        if is_first_login_ever:
+        if is_first_login_ever or backend_name in ('AllowAllBackend', 'LdapBackend'):
           # Create home directory for first user.
           try:
             ensure_home_directory(request.fs, user.username)
@@ -141,16 +135,21 @@ def dt_login(request):
     'next': redirect_to,
     'first_login_ever': is_first_login_ever,
     'login_errors': request.method == 'POST',
-    'credentials': SHOW_CREDENTIALS,
+    'backend_name': backend_name,
+    'active_directory': is_active_directory
   })
 
 
 def dt_logout(request, next_page=None):
   """Log out the user"""
-  try:
-    os.remove("/var/lib/hue/single_user_mode")
-  except:
-    pass
+  backends = get_backends()
+  if backends:
+    for backend in backends:
+      if hasattr(backend, 'logout'):
+        response = backend.logout(request, next_page)
+        if response:
+          return response
+
   return django.contrib.auth.views.logout(request, next_page)
 
 
@@ -167,3 +166,42 @@ def _profile_dict(user):
     last_name=user.last_name,
     last_login=str(user.last_login), # datetime object needs to be converted
     email=user.email)
+
+
+# OAuth is based on Twitter as example.
+
+@login_notrequired
+def oauth_login(request):
+  consumer = oauth.Consumer(OAUTH.CONSUMER_KEY.get(), OAUTH.CONSUMER_SECRET.get())
+  client = oauth.Client(consumer)
+  resp, content = client.request(OAUTH.REQUEST_TOKEN_URL.get(), "POST", body=urllib.urlencode({
+                      'oauth_callback': 'http://' + request.get_host() + '/login/oauth_authenticated/'
+                  }))
+
+  if resp['status'] != '200':
+    raise Exception(_("Invalid response from OAuth provider: %s") % resp)
+
+  request.session['request_token'] = dict(cgi.parse_qsl(content))
+
+  url = "%s?oauth_token=%s" % (OAUTH.AUTHENTICATE_URL.get(), request.session['request_token']['oauth_token'])
+
+  return HttpResponseRedirect(url)
+
+
+@login_notrequired
+def oauth_authenticated(request):
+  consumer = oauth.Consumer(OAUTH.CONSUMER_KEY.get(), OAUTH.CONSUMER_SECRET.get())
+  token = oauth.Token(request.session['request_token']['oauth_token'], request.session['request_token']['oauth_token_secret'])
+  client = oauth.Client(consumer, token)
+
+  resp, content = client.request(OAUTH.ACCESS_TOKEN_URL.get(), "GET")
+  if resp['status'] != '200':
+      raise Exception(_("Invalid response from OAuth provider: %s") % resp)
+
+  access_token = dict(cgi.parse_qsl(content))
+
+  user = authenticate(access_token=access_token)
+  login(request, user)
+
+  redirect_to = request.REQUEST.get('next', '/')
+  return HttpResponseRedirect(redirect_to)
