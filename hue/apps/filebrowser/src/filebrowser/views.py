@@ -63,7 +63,6 @@ from filebrowser.lib import xxd
 from filebrowser.forms import RenameForm, UploadFileForm, UploadArchiveForm, MkDirForm, EditorForm, TouchForm,\
                               RenameFormSet, RmTreeFormSet, ChmodFormSet, ChownFormSet, CopyFormSet, RestoreFormSet,\
                               TrashPurgeForm
-from hadoop.core_site import get_trash_interval
 from hadoop.fs.hadoopfs import Hdfs
 from hadoop.fs.exceptions import WebHdfsException
 from hadoop.fs.upload import HDFStemporaryUploadedFile
@@ -438,7 +437,7 @@ def listdir_paged(request, path):
     if not request.fs.isdir(path):
         raise PopupException("Not a directory: %s" % (path,))
 
-    trash_enabled = get_trash_interval()
+    trash_enabled = True
 
     pagenum = int(request.GET.get('pagenum', 1))
     pagesize = int(request.GET.get('pagesize', 30))
@@ -586,7 +585,7 @@ def display(request, path):
     """
     if not request.fs.isfile(path):
         raise PopupException(_("Not a file: '%(path)s'") % {'path': path})
-      
+
     mimetype = mimetypes.guess_type(path)[0]
     if mimetype is not None and INLINE_DISPLAY_MIMETYPE.search(mimetype):
       path_enc = urlencode(path)
