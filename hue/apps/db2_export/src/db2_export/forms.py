@@ -15,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import hive_metastore
-
 from django import forms
 from django.forms.formsets import formset_factory
 from django.forms.widgets import RadioSelect
