@@ -27,8 +27,6 @@ Checked-in third party dependencies
 |Y|Spawning|0.9.6|MIT|http://pypi.python.org/pypi/Spawning/0.9.6/|
 |Y|Twisted|8.2.0|MIT|http://twistedmatrix.com/trac/|
 |Y|Werkzeug|0.5.1|BSD|http://pypi.python.org/packages/source/W/Werkzeug/Werkzeug-0.5.1.zip|
-|Y|amqp|1.0.11|LGPL|https://pypi.python.org/pypi/amqp/1.0.11/|
-|Y|amqplib|1.0.2|LGPL|https://pypi.python.org/pypi/amqplib/1.0.2|
 |Y|anyjson|0.3.1|BSD|https://pypi.python.org/pypi/anyjson/0.3.1|
 |Y|avro|1.5.0|ASL2|http://avro.apache.org/|
 |Y|billiard|2.7.3.28|BSD|https://pypi.python.org/pypi/billiard/2.7.3.28/|
