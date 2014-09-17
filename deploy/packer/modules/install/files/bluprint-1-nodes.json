@@ -4,8 +4,7 @@
             "global" : {
                 "hive_metastore_user_passwd" : "hive",
                 "hbase_master_heapsize": "250",
-                "hbase_regionserver_heapsize": "250",
-                "oozie_metastore_user_passwd" : "oozie"
+                "hbase_regionserver_heapsize": "250"
             }
         },
         {
@@ -108,21 +107,6 @@
             }
         },
         {
-            "storm-site" : {
-                "logviewer.port" : "8005",
-                "nimbus.childopts" : "-Xmx200m -Djava.security.auth.login.config=/etc/storm/storm_jaas.conf -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8649,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
-                "ui.childopts" : "-Xmx200m -Djava.security.auth.login.config=/etc/storm/storm_jaas.conf",
-                "drpc.childopts" : "-Xmx200m",
-                "worker.childopts" : "-Xmx200m -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8650,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Worker_%ID%_JVM"
-            }
-        },
-        {
-            "oozie-site" : {
-                "oozie.service.ProxyUserService.proxyuser.hue.hosts" : "*",
-                "oozie.service.ProxyUserService.proxyuser.hue.groups" : "*"
-            }
-        },
-        {
             "webhcat-site" : {
                 "webhcat.proxyuser.hue.hosts" : "*",
                 "webhcat.proxyuser.hue.groups" : "*"
@@ -143,9 +127,6 @@
             "components" : [
                 {"name": "APP_TIMELINE_SERVER"},
                 {"name" : "DATANODE"},
-                {"name" : "DRPC_SERVER"},
-                {"name" : "FALCON_CLIENT"},
-                {"name" : "FALCON_SERVER"},
                 {"name" : "GANGLIA_SERVER"},
                 {"name" : "HBASE_CLIENT"},
                 {"name" : "HBASE_MASTER"},
@@ -159,17 +140,10 @@
                 {"name" : "MYSQL_SERVER"},
                 {"name" : "NAGIOS_SERVER"},
                 {"name" : "NAMENODE"},
-                {"name" : "NIMBUS"},
                 {"name" : "NODEMANAGER"},
-                {"name" : "OOZIE_SERVER"},
-                {"name" : "OOZIE_CLIENT"},
                 {"name" : "PIG"},
                 {"name" : "RESOURCEMANAGER"},
                 {"name" : "SECONDARY_NAMENODE"},
-                {"name" : "SQOOP"},
-                {"name" : "STORM_REST_API"},
-                {"name" : "STORM_UI_SERVER"},
-                {"name" : "SUPERVISOR"},
                 {"name" : "TEZ_CLIENT"},
                 {"name" : "WEBHCAT_SERVER"},
                 {"name" : "YARN_CLIENT"},
