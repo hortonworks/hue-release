@@ -231,5 +231,3 @@ an appropriate version of Cython installed.
 
 if OPTION_RUN_TESTS:
     print("Running tests.")
-    import test
-    sys.exit( test.main(sys.argv[:1]) )
