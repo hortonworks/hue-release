@@ -262,14 +262,15 @@ def get_supervisees():
   eps_opt = list(pkg_resources.iter_entry_points(ENTRY_POINT_OPTIONAL_GROUP))
   supervisees_optional = dict((ep.name, ep.load()) for ep in eps_opt)
 
+  from desktop import settings
   supervisee_control = desktop.conf.SUPERVISEES_CONTROL.get()
   for sv in supervisee_control:
     status = desktop.conf.SUPERVISEES_CONTROL[sv].get()
     if not status and sv in supervisees:
-      LOG.warning("Supervisee '%s' disabled")
+      LOG.info("Supervisee '%s' disabled" % str(sv))
       del supervisees[sv]
     if status and sv in supervisees_optional:
-      LOG.warning("Optional supervisee '%s' enabled")
+      LOG.info("Optional supervisee '%s' enabled" % str(sv))
       supervisees[sv] = supervisees_optional[sv]
 
   return supervisees
