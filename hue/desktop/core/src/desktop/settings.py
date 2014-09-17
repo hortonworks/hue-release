@@ -46,7 +46,7 @@ TEMPLATE_DEBUG = DEBUG
 
 # Start basic logging as soon as possible.
 if ENV_HUE_PROCESS_NAME not in os.environ:
-  _proc = os.path.basename(len(sys.argv) > 1 and sys.argv[1] or sys.argv[0])
+  _proc = os.path.basename(len(sys.argv) > 1 and not sys.argv[1].startswith("-") and sys.argv[1] or sys.argv[0])
   os.environ[ENV_HUE_PROCESS_NAME] = _proc
 
 desktop.log.basic_logging(os.environ[ENV_HUE_PROCESS_NAME])
