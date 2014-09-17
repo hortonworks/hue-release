@@ -262,7 +262,6 @@ def get_supervisees():
   eps_opt = list(pkg_resources.iter_entry_points(ENTRY_POINT_OPTIONAL_GROUP))
   supervisees_optional = dict((ep.name, ep.load()) for ep in eps_opt)
 
-  from desktop import settings
   supervisee_control = desktop.conf.SUPERVISEES_CONTROL.get()
   for sv in supervisee_control:
     status = desktop.conf.SUPERVISEES_CONTROL[sv].get()
