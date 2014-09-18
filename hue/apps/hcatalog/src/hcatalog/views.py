@@ -32,6 +32,7 @@ from filebrowser.views import location_to_url
 import hcatalog.forms
 from hcatalog import common
 from hcat_client import HCatClient
+from beeswax import conf
 from beeswax.views import (authorized_get_design, safe_get_design, save_design,
                            get_parameterization, _get_query_handle_and_state,
                            authorized_get_history, confirm_query,
@@ -44,6 +45,7 @@ from beeswax.server import dbms
 from beeswax.server.dbms import expand_exception, get_query_server_config, NoSuchObjectException
 
 import logging
+import time
 
 LOG = logging.getLogger(__name__)
 
@@ -310,96 +312,111 @@ def hive_view(request, database=None, table=None):
     return confirm_query(request, query_msg)
 
 
-def execute_query(request, design_id=None, query_msg=''):
-    """
-    View function for executing an arbitrary query.
-    It understands the optional GET/POST params:
+def execute_query(request, design_id=None):
+  """
+  View function for executing an arbitrary query.
+  It understands the optional GET/POST params:
 
-      on_success_url
-        If given, it will be displayed when the query is successfully finished.
-        Otherwise, it will display the view query results page by default.
-    """
-    authorized_get_design(request, design_id)
+    on_success_url
+      If given, it will be displayed when the query is successfully finished.
+      Otherwise, it will display the view query results page by default.
+  """
+  authorized_get_design(request, design_id)
 
-    error_message = None
-    form = QueryForm()
-    action = request.path
-    log = None
-    app_name = get_app_name(request)
-    query_type = SavedQuery.TYPES_MAPPING['beeswax']
-    design = safe_get_design(request, query_type, design_id)
-    on_success_url = request.REQUEST.get('on_success_url')
+  request.session['start_time'] = time.time()  # FIXME: add job id to not intersect simultaneous jobs
+  error_message = None
+  form = QueryForm()
+  action = request.path
+  log = None
+  app_name = get_app_name(request)
+  query_type = SavedQuery.TYPES_MAPPING['beeswax']
+  design = safe_get_design(request, query_type, design_id)
+  on_success_url = request.REQUEST.get('on_success_url')
 
-    query_server = get_query_server_config(app_name, requires_ddl=False)
-    db = dbms.get(request.user, query_server)
-    databases = _get_db_choices(request)
+  query_server = get_query_server_config(app_name)
+  db = dbms.get(request.user, query_server)
+  databases = _get_db_choices(request)
 
-    if request.method == 'POST':
-        form.bind(request.POST)
-        form.query.fields['database'].choices = databases  # Could not do it in the form
 
-        to_explain = 'button-explain' in request.POST
-        to_submit = 'button-submit' in request.POST
+  if request.method == 'POST':
+    form.bind(request.POST)
+    form.query.fields['database'].choices =  databases # Could not do it in the form
 
-        # Always validate the saveform, which will tell us whether it needs explicit saving
-        if form.is_valid():
-            to_save = form.saveform.cleaned_data['save']
-            to_saveas = form.saveform.cleaned_data['saveas']
+    to_explain = request.POST.has_key('button-explain')
+    to_submit = request.POST.has_key('button-submit')
 
-            if to_saveas and not design.is_auto:
-                # Save As only affects a previously saved query
-                design = design.clone()
+    # Always validate the saveform, which will tell us whether it needs explicit saving
+    if form.is_valid():
+      to_save = form.saveform.cleaned_data['save']
+      to_saveas = form.saveform.cleaned_data['saveas']
 
-            if to_submit or to_save or to_saveas or to_explain:
-                explicit_save = to_save or to_saveas
-                design = save_design(request, form, query_type, design, explicit_save)
-                action = urlresolvers.reverse(app_name + ':execute_query', kwargs=dict(design_id=design.id))
+      if to_save or to_saveas:
+        if 'beeswax-autosave' in request.session:
+          del request.session['beeswax-autosave']
 
-            if to_explain or to_submit:
-                query_str = form.query.cleaned_data["query"]
+      if to_saveas and not design.is_auto:
+        # Save As only affects a previously saved query
+        design = design.clone()
 
-                # (Optional) Parameterization.
-                parameterization = get_parameterization(request, query_str, form, design, to_explain)
-                if parameterization:
-                    return parameterization
+      if to_submit or to_save or to_saveas or to_explain:
+        explicit_save = to_save or to_saveas
+        design = save_design(request, form, query_type, design, explicit_save)
+        action = urlresolvers.reverse(app_name + ':execute_query', kwargs=dict(design_id=design.id))
 
-                try:
-                    query = HQLdesign(form, query_type=query_type)
-                    if to_explain:
-                        return explain_directly(request, query, design, query_server)
-                    else:
-                        download = request.POST.has_key('download')
+      if to_explain or to_submit:
+        query_str = form.query.cleaned_data["query"]
 
-                        download_format = form.query.cleaned_data.get('download_format', None)
-                        if not download_format: download_format = None
-                        request.session['dl_status'] = download_format in common.DL_FORMATS
+        if conf.CHECK_PARTITION_CLAUSE_IN_QUERY.get():
+          query_str = _strip_trailing_semicolon(query_str)
+          # check query. if a select query on partitioned table without partition keys,
+          # intercept it and raise a PopupException.
+          _check_partition_clause_in_query(form.query.cleaned_data.get('database', None), query_str, db)
 
-                        return execute_directly(request, query, query_server, design, on_success_url=on_success_url,
-                                                download=download, download_format=download_format)
-                except Exception as ex:
-                    error_message, log = expand_exception(ex, db)
+        # (Optional) Parameterization.
+        parameterization = get_parameterization(request, query_str, form, design, to_explain)
+        if parameterization:
+          return parameterization
+
+        try:
+          query = HQLdesign(form, query_type=query_type)
+          if to_explain:
+            return explain_directly(request, query, design, query_server)
+          else:
+            download = request.POST.has_key('download')
+
+            download_format = form.query.cleaned_data.get('download_format', None)
+            if not download_format: download_format = None
+            if download_format in common.DL_FORMATS:
+              request.session['dl_status'] = True
+
+            return execute_directly(request, query, query_server, design, on_success_url=on_success_url, download_format=download_format, download=download)
+        except QueryServerException, ex:
+          error_message, log = expand_exception(ex, db)
+  else:
+    if design.id is not None:
+      data = HQLdesign.loads(design.data).get_query_dict()
+      form.bind(data)
+      form.saveform.set_data(design.name, design.desc)
     else:
-        if design.id is not None:
-            data = HQLdesign.loads(design.data).get_query_dict()
-            form.bind(data)
-            form.saveform.set_data(design.name, design.desc)
-        else:
-            # New design
-            form.bind()
-        form.query.fields['database'].choices = databases  # Could not do it in the form
+      # New design
+      form.bind()
+      if 'beeswax-autosave' in request.session:
+        form.query.fields['query'].initial = request.session['beeswax-autosave']['query']
 
-    database = _get_current_db(request)
-    response = render('execute.mako', request, {
-      'action': action,
-      'design': design,
-      'error_message': error_message,
-      'form': form,
-      'log': log,
-      'on_success_url': on_success_url,
-      'query_msg': query_msg,
-    })
-    response.set_cookie("hueHcatalogLastDatabase", database, expires=90)
-    return response
+    form.query.fields['database'].choices = databases # Could not do it in the form
+
+  database = _get_current_db(request)
+  response = render('execute.mako', request, {
+    'action': action,
+    'design': design,
+    'error_message': error_message,
+    'form': form,
+    'log': log,
+    'on_success_url': on_success_url,
+    'show_execution_engine':conf.SHOW_EXECUTION_ENGINE.get(),
+  })
+  response.set_cookie("hueHcatalogLastDatabase", database, expires=90)
+  return response
 
 
 def hive_view_download(request, id, format):
