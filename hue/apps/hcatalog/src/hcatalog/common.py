@@ -30,7 +30,7 @@ HIVE_COLUMN_NAME_MAX_LEN = 128
 
 HIVE_IDENTIFER_REGEX = re.compile("^[a-zA-Z0-9]\w*$")
 
-DL_FORMATS = ['csv', 'xls']
+DL_FORMATS = ['csv', 'xlsx']
 
 SELECTION_SOURCE = ['', 'table', 'constant', ]
 

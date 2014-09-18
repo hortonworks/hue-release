@@ -73,7 +73,7 @@ ${layout.menubar(section='tables')}
                     % if download_urls:
                     <li class="nav-header">${_('Downloads')}</li>
                     <li><a target="_blank" href="${download_urls["csv"]}">${_('Download as CSV')}</a></li>
-                    <li><a target="_blank" href="${download_urls["xls"]}">${_('Download as XLS')}</a></li>
+                    <li><a target="_blank" href="${download_urls["xlsx"]}">${_('Download as XLSX')}</a></li>
                     % endif
                     %if can_save:
                     <li><a data-toggle="modal" href="#saveAs">${_('Save')}</a></li>
