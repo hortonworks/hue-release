@@ -39,7 +39,8 @@ CPSERVER_OPTIONS = {
   'server_user': conf.SERVER_USER.get(),
   'server_group': conf.SERVER_GROUP.get(),
   'ssl_certificate': conf.SSL_CERTIFICATE.get(),
-  'ssl_private_key': conf.SSL_PRIVATE_KEY.get()
+  'ssl_private_key': conf.SSL_PRIVATE_KEY.get(),
+  'ssl_cipher_list': conf.SSL_CIPHER_LIST.get()
 }
 
 
@@ -61,7 +62,7 @@ class Command(BaseCommand):
         except AttributeError:
             pass
         runcpserver(args)
-        
+
     def usage(self, subcommand):
         return CPSERVER_HELP
 
@@ -75,12 +76,13 @@ def start_server(options):
     server = Server(
         (options['host'], int(options['port'])),
         WSGIHandler(),
-        int(options['threads']), 
+        int(options['threads']),
         options['server_name']
     )
     if options['ssl_certificate'] and options['ssl_private_key']:
         server.ssl_certificate = options['ssl_certificate']
-        server.ssl_private_key = options['ssl_private_key']  
+        server.ssl_private_key = options['ssl_private_key']
+        server.ssl_cipher_list = options['ssl_cipher_list']
     try:
         server.bind_server()
         drop_privileges_if_necessary(options)
@@ -99,7 +101,7 @@ def runcpserver(argset=[], **kwargs):
         else:
             k, v = x, True
         options[k.lower()] = v
-    
+
     if "help" in options:
         print CPSERVER_HELP
         return
