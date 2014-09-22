@@ -1,11 +1,11 @@
 class splash{
   file { 'ttys':
     path    => "/etc/init/tty-splash.conf",
-    content => "stop on runlevel [S016]
+    content => 'stop on runlevel [S016]
 
-    respawn
-    instance $TTY
-    exec /sbin/mingetty --autologin root --noclear $TTY"
+respawn
+instance $TTY
+exec /sbin/mingetty --autologin root --noclear $TTY'
   }
 
   file { 'tty1':
