@@ -2,23 +2,17 @@
     "configurations" : [
         {
             "global" : {
-                "dtnode_heapsize" : "250",
-                "hadoop_heapsize" : "250",
-                "namenode_heapsize" : "250",
-                "namenode_opt_newsize": "50",
-                "namenode_opt_maxnewsize": "100",
                 "hive_metastore_user_passwd" : "hive",
                 "hbase_master_heapsize": "250",
-                "nagios_contact" : "admin@localhost.localdomain",
-                "jobhistory_heapsize" : "250",
-                "nagios_web_login" : "nagiosadmin",
-                "nagios_web_password" : "admin",
-                 "apptimelineserver_heapsize" : "250",
-                "resourcemanager_heapsize" : "250",
-                "nodemanager_heapsize" : "250",
-                "yarn_heapsize" : "250",
-                "hbase_regionserver_heapsize": "250",
-                "oozie_metastore_user_passwd" : "oozie"
+                "hbase_regionserver_heapsize": "250"
+            }
+        },
+        {
+            "cluster-env": {
+                "cluster_name": "sandbox",
+                "smokeuser": "ambari-qa",
+                "user_group": "hadoop",
+                "security_enabled": "false"
             }
         },
         {
@@ -42,13 +36,14 @@
                 "nodemanager_heapsize" : "250",
                 "yarn_heapsize" : "250"
             }
+
         },
         {
             "nagios-env":{
                 "nagios_contact" : "admin@localhost.localdomain",
                 "nagios_web_login" : "nagiosadmin",
                 "nagios_web_password" : "admin"
-            }  
+            }
         },
         {
             "core-site" : {
@@ -66,8 +61,7 @@
                 "dfs.nfs3.dump.dir" : "/tmp/.hdfs-nfs",
                 "dfs.nfs.exports.allowed.hosts" : "* rw",
                 "dfs.datanode.max.xcievers" : "1024",
-                "dfs.block.access.token.enable" : "false",
-                "dfs.permissions.enabled" : "true"
+                "dfs.block.access.token.enable" : "false"
             }
         },
         {
@@ -109,17 +103,13 @@
                 "hive.heapsize" : "250",
                 "hive.server2.enable.impersonation": "true",
                 "hive.users.in.admin.role" : "hue,hive",
-                "hive.server2.enable.doAs": "true",
                 "hive.server2.authentication": "NOSASL"
             }
         },
         {
-            "storm-site" : {
-                "logviewer.port" : "8005",
-                "nimbus.childopts" : "-Xmx200m -Djava.security.auth.login.config=/etc/storm/storm_jaas.conf -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8649,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
-                "ui.childopts" : "-Xmx200m -Djava.security.auth.login.config=/etc/storm/storm_jaas.conf",
-                "drpc.childopts" : "-Xmx200m",
-                "worker.childopts" : "-Xmx200m -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8650,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Worker_%ID%_JVM"                
+            "webhcat-site" : {
+                "webhcat.proxyuser.hue.hosts" : "*",
+                "webhcat.proxyuser.hue.groups" : "*"
             }
         },
         {
@@ -129,9 +119,12 @@
             }
         },
         {
-            "webhcat-site" : {
-                "webhcat.proxyuser.hue.hosts" : "*",
-                "webhcat.proxyuser.hue.groups" : "*"
+            "storm-site" : {
+                "logviewer.port" : "8005",
+                "nimbus.childopts" : "-Xmx200m -javaagent:/usr/hdp/current/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=localhost,port=8649,wireformat31x=true,mode=multicast,config=/usr/hdp/current/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
+                "ui.childopts" : "-Xmx200m",
+                "drpc.childopts" : "-Xmx200m",
+                "worker.childopts" : "-Xmx200m -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8650,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Worker_%ID%_JVM"
             }
         },
         {
@@ -156,6 +149,9 @@
             "components" : [
                 {"name": "APP_TIMELINE_SERVER"},
                 {"name" : "DATANODE"},
+                {"name" : "DRPC_SERVER"},
+                {"name" : "FALCON_CLIENT"},
+                {"name" : "FALCON_SERVER"},
                 {"name" : "GANGLIA_SERVER"},
                 {"name" : "HBASE_CLIENT"},
                 {"name" : "HBASE_MASTER"},
@@ -169,11 +165,17 @@
                 {"name" : "MYSQL_SERVER"},
                 {"name" : "NAGIOS_SERVER"},
                 {"name" : "NAMENODE"},
+                {"name" : "NIMBUS"},
                 {"name" : "NODEMANAGER"},
+                {"name" : "OOZIE_SERVER"},
+                {"name" : "OOZIE_CLIENT"},
                 {"name" : "PIG"},
                 {"name" : "RESOURCEMANAGER"},
                 {"name" : "SECONDARY_NAMENODE"},
                 {"name" : "SQOOP"},
+                {"name" : "STORM_REST_API"},
+                {"name" : "STORM_UI_SERVER"},
+                {"name" : "SUPERVISOR"},
                 {"name" : "TEZ_CLIENT"},
                 {"name" : "WEBHCAT_SERVER"},
                 {"name" : "YARN_CLIENT"},
