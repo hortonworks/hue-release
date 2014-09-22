@@ -135,10 +135,10 @@ class Templeton(object):
         """
         Check the status of a job and get related job information given its job ID.
         """
-        return self.get("queue/%s" % job_id)
+        return self.get("jobs/%s" % job_id)
 
     def kill_job(self, job_id):
         """
         Kill a job given its job ID.
         """
-        return self.delete("queue/%s" % job_id)
+        return self.delete("jobs/%s" % job_id)
