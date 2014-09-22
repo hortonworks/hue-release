@@ -157,13 +157,13 @@ mysql:
 hive: HDFS postgresql mysql
 	$(call colorized,\
 		hive server, \
-		su - hive -c 'env HADOOP_HOME=/usr JAVA_HOME=/usr/jdk64/jdk1.7.0_45 /tmp/start_metastore_script /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server', true,\
+		env HADOOP_HOME=/usr JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_metastore_script /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server /var/log/hive, true,\
 		/var/log/hive/hive.log)
 
 hive2: HDFS hive
 	$(call colorized,\
 		Hiveserver2, \
-		su - hive -c 'env JAVA_HOME=/usr/jdk64/jdk1.7.0_45 /tmp/start_hiveserver2_script /var/log/hive/hive-server2.out /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid /etc/hive/conf.server',true,\
+		env JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_hiveserver2_script /var/log/hive/hive-server2.out /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid /etc/hive/conf.server /var/log/hive,true,\
 		/var/log/hive/hive-server2.log)
 
 # ==== Storm ====

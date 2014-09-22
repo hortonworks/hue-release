@@ -65,6 +65,18 @@ class postinstall::sandbox{
     require => [Package[$postInstallPackages],Exec["install nfs"]]
   }
 
+  file {'/root/start_ambari.sh':
+      ensure => link,
+      target => "/usr/lib/hue/tools/start_scripts/start_ambari.sh",
+      mode => 0755,
+  }
+
+  file {'/root/start_hbase.sh':
+     ensure => link,
+      target => "/usr/lib/hue/tools/start_scripts/start_hbase.sh",
+      mode => 0755,
+  }
+
   $hueSandbox = ["hue-sandbox", "hue-tutorials"]
 
   package{$hueSandbox:
