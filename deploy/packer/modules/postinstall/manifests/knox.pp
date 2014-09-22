@@ -2,7 +2,7 @@ class postinstall::knox{
 
   package{"knox":
     ensure => installed,
-    require => Class["install::ambari-bluprints"]
+    # require => Class["install::ambari-bluprints"]
   }
 
   exec{"create knox master":

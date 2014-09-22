@@ -9,7 +9,7 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "CentOS6.5-basebox"
   config.vm.box_url = "http://dev2.hortonworks.com.s3.amazonaws.com/sandbox/vagrant/CentOS6.5-basebox.box"
-  config.vm.box_download_checksum = "0ee589eeae5d55b09980a1ed6b0f04a04c6fe58237a116207fc795e26b10c8e6"
+  config.vm.box_download_checksum = "8166183c85d4f0564c8341cdd2532eef7c8df9fde397e3fd583ee830af3b90af"
   config.vm.box_download_checksum_type = "sha256"
   config.vm.hostname = "sandbox.hortonworks.com"
 
@@ -32,7 +32,7 @@ Vagrant.configure("2") do |config|
     vb.customize ["modifyvm", :id, "--nic2", "none"]
     vb.customize ["modifyvm", :id, "--mouse", "usbtablet"]
 
-    vb.customize ["modifyvm", :id, "--name", "Hortonworks_Sandbox_Bluprints_champlaine", "--groups", "/Hortonworks"]
+    vb.customize ["modifyvm", :id, "--name", "Hortonworks_Sandbox_Bluprints", "--groups", "/Hortonworks"]
   end
 
   
@@ -44,13 +44,15 @@ Vagrant.configure("2") do |config|
        "nodes_count" => 1,
        "nodecount" => 1,
        "role" => "ambari",
-       "sandbox" => "true"
+       "sandbox" => "true",
+       "xasecure_version" => "3.5.001"
      }
   end
   
 
   config.vm.network :forwarded_port, guest: 80, host: 42080, host_ip: "127.0.0.1", auto_correct: true #Apache http
   config.vm.network :forwarded_port, guest: 111, host: 42111, host_ip: "127.0.0.1", auto_correct: true #NFS portmap
+  config.vm.network :forwarded_port, guest: 6080, host: 6080, host_ip: "127.0.0.1", auto_correct: true #XASecure Manager
   config.vm.network :forwarded_port, guest: 8000, host: 8000, host_ip: "127.0.0.1", auto_correct: true #Hue
   config.vm.network :forwarded_port, guest: 8020, host: 8020, host_ip: "127.0.0.1", auto_correct: true #Hdfs
   config.vm.network :forwarded_port, guest: 8042, host: 8042, host_ip: "127.0.0.1", auto_correct: true #NodeManager
@@ -60,6 +62,7 @@ Vagrant.configure("2") do |config|
   config.vm.network :forwarded_port, guest: 8443, host: 8443, host_ip: "127.0.0.1", auto_correct: true #Knox gateway
   config.vm.network :forwarded_port, guest: 8744, host: 8744, host_ip: "127.0.0.1", auto_correct: true #Storm UI
   config.vm.network :forwarded_port, guest: 8888, host: 8888, host_ip: "127.0.0.1", auto_correct: true #Tutorials
+  config.vm.network :forwarded_port, guest: 8983, host: 8983, host_ip: "127.0.0.1", auto_correct: true #Solr
   config.vm.network :forwarded_port, guest: 10000, host: 10000, host_ip: "127.0.0.1", auto_correct: true #HiveServer2 thrift
   config.vm.network :forwarded_port, guest: 10001, host: 10001, host_ip: "127.0.0.1", auto_correct: true #HiveServer2 thrift http
   config.vm.network :forwarded_port, guest: 11000, host: 11000, host_ip: "127.0.0.1", auto_correct: true #Oozie
@@ -68,5 +71,7 @@ Vagrant.configure("2") do |config|
   config.vm.network :forwarded_port, guest: 50070, host: 50070, host_ip: "127.0.0.1", auto_correct: true #WebHdfs
   config.vm.network :forwarded_port, guest: 50075, host: 50075, host_ip: "127.0.0.1", auto_correct: true #Datanode
   config.vm.network :forwarded_port, guest: 50111, host: 50111, host_ip: "127.0.0.1", auto_correct: true #WebHcat
+  config.vm.network :forwarded_port, guest: 60010, host: 60010, host_ip: "127.0.0.1", auto_correct: true #HBase Master
+  config.vm.network :forwarded_port, guest: 60030, host: 60030, host_ip: "127.0.0.1", auto_correct: true #HBase Region
   config.vm.network :forwarded_port, guest: 60080, host: 60080, host_ip: "127.0.0.1", auto_correct: true #WebHBase
 end

@@ -19,7 +19,7 @@ import logging
 import re
 import time
 import urlparse
-
+import datetime
 from lxml import html
 
 from django.utils.translation import ugettext as _
@@ -29,13 +29,19 @@ from desktop.lib.view_util import format_duration_in_millis
 
 from hadoop.yarn.clients import get_log_client
 
-from jobbrowser.models import format_unixtime_ms
-
-
 LOGGER = logging.getLogger(__name__)
 
+def format_unixtime_ms(unixtime):
+  """
+  Format a unix timestamp in ms to a human readable string
+  """
+  if unixtime:
+    return str(datetime.datetime.fromtimestamp(unixtime/1000).strftime("%x %X %Z"))
+  else:
+    return ""
 
-class Application:
+
+class Application(object):
 
   def __init__(self, attrs):
     for attr in attrs.keys():
@@ -72,7 +78,7 @@ class Application:
     setattr(self, 'durationFormatted', format_duration_in_millis(self.durationInMillis))
 
 
-class Job:
+class Job(object):
 
   def __init__(self, api, attrs):
     self.api = api
@@ -85,24 +91,32 @@ class Job:
   def _fixup(self):
     jobid = self.id
 
-    setattr(self, 'status', getattr(self, 'state', None))
+    setattr(self, 'status', self.state)
     setattr(self, 'jobId', jobid)
     setattr(self, 'jobId_short', self.jobId.replace('job_', ''))
     setattr(self, 'is_retired', False)
-    setattr(self, 'maps_percent_complete', getattr(self, 'mapProgress', None))
-    setattr(self, 'reduces_percent_complete', getattr(self, 'reduceProgress', None))
+    setattr(self, 'maps_percent_complete', None)
+    setattr(self, 'reduces_percent_complete', None)
+    if self.state in ('FINISHED', 'FAILED', 'KILLED'):
+      setattr(self, 'finishTime', self.finishedTime)
+      setattr(self, 'startTime', self.startedTime)
     setattr(self, 'duration', self.finishTime - self.startTime)
     setattr(self, 'finishTimeFormatted', format_unixtime_ms(self.finishTime))
     setattr(self, 'startTimeFormatted', format_unixtime_ms(self.startTime))
-    setattr(self, 'finishedMaps', getattr(self, 'mapsCompleted', None))
-    setattr(self, 'desiredMaps', getattr(self, 'mapsTotal', None))
-    setattr(self, 'finishedReduces', getattr(self, 'reducesCompleted', None))
-    setattr(self, 'desiredReduces', getattr(self, 'reducesTotal', None))
+    setattr(self, 'finishedMaps', self.mapsCompleted)
+    setattr(self, 'desiredMaps', None)
+    setattr(self, 'finishedReduces', self.reducesCompleted)
+    setattr(self, 'desiredReduces', None)
+
+    if not hasattr(self, 'acls'):
+      setattr(self, 'acls', {})
+
+  def kill(self):
+    return self.api.kill(self.id)
 
   @property
   def counters(self):
     counters = self.api.counters(self.id)
-    LOGGER.debug("Counters for %s: %s" % (self.id, str(counters)))
     if counters:
       return counters['jobCounters']
     else:
@@ -124,14 +138,47 @@ class Job:
 
   def filter_tasks(self, task_types=None, task_states=None, task_text=None):
     return [Task(self, task) for task in self.api.tasks(self.id).get('tasks', {}).get('task', [])
-            if (not task_types or task['type'].lower() in task_types) and
-               (not task_states or task['state'].lower() in task_states)]
+          if (not task_types or task['type'].lower() in task_types) and
+             (not task_states or task['state'].lower() in task_states)]
 
   @property
   def job_attempts(self):
     if not hasattr(self, '_job_attempts'):
       self._job_attempts = self.api.job_attempts(self.id)['jobAttempts']
     return self._job_attempts
+
+
+class KilledJob(Job):
+
+  def __init__(self, api, attrs):
+    self._fixup()
+
+    super(KilledJob, self).__init__(api, attrs)
+    super(KilledJob, self)._fixup()
+
+    setattr(self, 'jobId_short', self.jobId.replace('application_', ''))
+
+  def _fixup(self):
+    if not hasattr(self, 'mapsCompleted'):
+      setattr(self, 'mapsCompleted', 1)
+    if not hasattr(self, 'reducesCompleted'):
+      setattr(self, 'reducesCompleted', 1)
+
+
+  @property
+  def counters(self):
+    return {}
+
+  @property
+  def full_job_conf(self):
+    return {'property': []}
+
+  def filter_tasks(self, task_types=None, task_states=None, task_text=None):
+    return []
+
+  @property
+  def job_attempts(self):
+    return {'jobAttempt': []}
 
 
 class Task:
@@ -156,6 +203,7 @@ class Task:
     setattr(self, 'execFinishTimeFormatted', format_unixtime_ms(self.finishTime))
     setattr(self, 'startTimeFormatted', format_unixtime_ms(self.startTime))
     setattr(self, 'progress', self.progress / 100)
+
   @property
   def attempts(self):
     # We can cache as we deal with history server
@@ -272,3 +320,15 @@ class Container:
     setattr(self, 'maxMapTasks', None)
     setattr(self, 'maxReduceTasks', None)
     setattr(self, 'taskReports', None)
+
+
+def can_view_job(username, job):
+  acl = get_acls(job).get('mapreduce.job.acl-view-job', '')
+  return acl == '*' or username in acl.split(',')
+
+def can_modify_job(username, job):
+  acl = get_acls(job).get('mapreduce.job.acl-modify-job', '')
+  return acl == '*' or username in acl.split(',')
+
+def get_acls(job):
+  return dict([(acl['name'], acl['value']) for acl in job.acls])

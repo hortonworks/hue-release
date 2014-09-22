@@ -2,7 +2,7 @@ class postinstall::hue{
 
   package{"hue":
     ensure => installed,
-    require => Class["install::ambari-bluprints"]
+    # require => Class["install::ambari-bluprints"]
   }
 
   file { "/etc/hue/conf/hue.ini":

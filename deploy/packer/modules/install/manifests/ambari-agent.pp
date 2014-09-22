@@ -12,32 +12,41 @@ class install::ambari-agent {
     require => Exec["ambari-repo"]
   }
 
-  exec {"register ambari agent":
-    command => 'sed -i.bak "/^hostname/ s/.*/hostname=ambari.hortonworks.com/" /etc/ambari-agent/conf/ambari-agent.ini',
-    require => Package["ambari-agent"]
+  if $sandbox=='true'{
+    exec {"register ambari agent":
+      command => 'sed -i.bak "/^hostname/ s/.*/hostname=sandbox.hortonworks.com/" /etc/ambari-agent/conf/ambari-agent.ini',
+      require => Package["ambari-agent"]
+    }
+  }
+  else
+  {
+    exec {"register ambari agent":
+      command => 'sed -i.bak "/^hostname/ s/.*/hostname=ambari.hortonworks.com/" /etc/ambari-agent/conf/ambari-agent.ini',
+      require => Package["ambari-agent"]
+    }
   }
 
-  ###Because of ambari fails due to timeout need to preinstall all the software.
-  # if $role == 'ambari' {
-  #   exec {"preinstall software":
-  #     command => 'wget -O /etc/yum.repos.d/HDP.repo http://dev.hortonworks.com.s3.amazonaws.com/HDP/centos6/2.x/updates/2.1.3.0/hdp.repo && yum install -y hadoop hadoop-yarn hive pig webhcat-tar-pig webhcat-tar-hive falcon sqoop oozie tez zookeeper mysql-connector-java storm hive-hcatalog hive-webhcat hbase && rm -rf /etc/yum.repos.d/HDP.repo',
-  #     require => Package["ambari-agent"],
-  #     timeout => 0
-  #   }
-  # }
-  # else {
-  #   exec {"preinstall software":
-  #     command => 'wget -O /etc/yum.repos.d/HDP.repo http://dev.hortonworks.com.s3.amazonaws.com/HDP/centos6/2.x/updates/2.1.3.0/hdp.repo && yum install -y hadoop hadoop-yarn hive pig oozie-client tez hbase-client mysql-connector-java zookeeper && rm -rf /etc/yum.repos.d/HDP.repo',
-  #     require => Package["ambari-agent"],
-  #     timeout => 0
-  #   }    
-  # }
-
+  ##Because of ambari fails due to timeout need to preinstall all the software.
+   if $role == 'ambari' {
+     exec {"preinstall software":
+       command => 'wget -O /etc/yum.repos.d/HDP.repo http://dev.hortonworks.com.s3.amazonaws.com/HDP/centos6/2.x/updates/2.2.0.0/hdp.repo && yum install -y hadoop hadoop-yarn hive pig webhcat-tar-pig webhcat-tar-hive falcon sqoop oozie tez zookeeper mysql-connector-java storm hive-hcatalog hive-webhcat hbase && rm -rf /etc/yum.repos.d/HDP.repo',
+       require => Package["ambari-agent"],
+       timeout => 0
+     }
+   }
+   else {
+     exec {"preinstall software":
+       command => 'wget -O /etc/yum.repos.d/HDP.repo http://dev.hortonworks.com.s3.amazonaws.com/HDP/centos6/2.x/updates/2.2.0.0/hdp.repo && yum install -y hadoop hadoop-yarn hive pig oozie-client tez hbase-client mysql-connector-java zookeeper && rm -rf /etc/yum.repos.d/HDP.repo',
+       require => Package["ambari-agent"],
+       timeout => 0
+     }    
+   }
 
     
   exec {"ambari-agent start":
     command => "ambari-agent start",
-    require => [Exec["register ambari agent"]]
+    require => [Exec["register ambari agent"], Exec["preinstall software"]],
+    returns => [0, 255]  # 255 means already started
   }
 
 }
