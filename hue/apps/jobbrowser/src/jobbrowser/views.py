@@ -38,30 +38,50 @@ from desktop.lib.django_util import render_json, render, copy_query_dict, encode
 from desktop.lib.exceptions import MessageException
 from desktop.lib.exceptions_renderable import PopupException
 from desktop.views import register_status_bar_view
-from hadoop.api.jobtracker.ttypes import ThriftJobPriority, TaskTrackerNotFoundException, ThriftJobState
 
 from jobbrowser import conf
 from jobbrowser.api import get_api
-from jobbrowser.models import Job, JobLinkage, Tracker, Cluster
-from pig.templeton import Templeton
+#from jobbrowser.yarn_models import can_view_job, can_modify_job
+
 
 def check_job_permission(view_func):
   """
   Ensure that the user has access to the job.
-  Assumes that the wrapped function takes a 'jobid' param.
+  Assumes that the wrapped function takes a 'jobid' param named 'job'.
   """
   def decorate(request, *args, **kwargs):
     jobid = kwargs['job']
     try:
       job = get_api(request.user, request.jt).get_job(jobid=jobid)
+    except ApplicationNotRunning, e:
+      # reverse() seems broken, using request.path but beware, it discards GET and POST info
+      return job_not_assigned(request, jobid, request.path)
     except Exception, e:
-      raise PopupException(_('Could not find job %s. The job might not be running yet.') % jobid, detail=e)
+      raise PopupException(_('Could not find job %s.') % jobid, detail=e)
+
     if not conf.SHARE_JOBS.get() and not request.user.is_superuser \
-      and job.user != request.user.username:
-      raise PopupException(_("You don't have the permissions to access job %(id)s.") % {'id': jobid})
+        and job.user != request.user.username: #and not can_view_job(request.user.username, job):
+      raise PopupException(_("You don't have permission to access job %(id)s.") % {'id': jobid})
     kwargs['job'] = job
     return view_func(request, *args, **kwargs)
   return wraps(view_func)(decorate)
+
+
+def job_not_assigned(request, jobid, path):
+  if request.GET.get('format') == 'json':
+    result = {'status': -1, 'message': ''}
+
+    try:
+      get_api(request.user, request.jt).get_job(jobid=jobid)
+      result['status'] = 0
+    except ApplicationNotRunning, e:
+      result['status'] = 1
+    except Exception, e:
+      result['message'] = _('Error polling job %s: %s') % (jobid, e)
+
+    return HttpResponse(encode_json_for_js(result), mimetype="application/json")
+  else:
+    return render('job_not_assigned.mako', request, {'jobid': jobid, 'path': path})
 
 
 def jobs(request):
@@ -116,7 +136,7 @@ def massage_job_for_json(job, request):
     'finishTimeFormatted': hasattr(job, 'finishTimeFormatted') and job.finishTimeFormatted or '',
     'durationFormatted': hasattr(job, 'durationFormatted') and job.durationFormatted or '',
     'durationMs': hasattr(job, 'durationInMillis') and job.durationInMillis or '',
-    'canKill': (job.status.lower() in ['running', 'pending']) and (request.user.is_superuser or request.user.username == job.user),
+    'canKill': (job.status.lower() in ['running', 'pending']) and (request.user.is_superuser or request.user.username == job.user), #or can_modify_job(request.user.username, job),
     'killUrl': job.jobId and reverse('jobbrowser.views.kill_job', kwargs={'job': job.jobId}) or ''
   }
   return job
@@ -198,22 +218,14 @@ def kill_job(request, job):
     access_warn(request, _('Insufficient permission'))
     raise MessageException(_("Permission denied.  User %(username)s cannot delete user %(user)s's job.") %
                            dict(username=request.user.username, user=job.user))
-  if job.is_mr2:
-    t = Templeton(request.user.username)
-    try:
-      t.kill_job(job.jobId)
-    except:
-      #Temp hack due to https://issues.apache.org/jira/browse/HIVE-5835
-      pass
-    if request.REQUEST.get("next"):
-        return HttpResponseRedirect(request.REQUEST.get("next"))
-    elif request.REQUEST.get("format") == "json":
-        return HttpResponse(encode_json_for_js({'status': 0}), mimetype="application/json")
-  else:
-    job.kill()
+
+  job.kill()
+
   cur_time = time.time()
+  api = get_api(request.user, request.jt)
+
   while time.time() - cur_time < 15:
-    job = Job.from_id(jt=request.jt, jobid=job.jobId)
+    job = api.get_job(jobid=job.jobId)
 
     if job.status not in ["RUNNING", "QUEUED"]:
       if request.REQUEST.get("next"):
@@ -223,10 +235,8 @@ def kill_job(request, job):
       else:
         raise MessageException("Job Killed")
     time.sleep(1)
-    job = Job.from_id(jt=request.jt, jobid=job.jobId)
 
-  raise Exception(_("Job did not appear as killed within 15 seconds"))
-
+  raise Exception(_("Job did not appear as killed within 15 seconds."))
 
 @check_job_permission
 def job_attempt_logs(request, job, attempt_index=0):
@@ -301,16 +311,20 @@ def tasks(request, job):
   ttypes = request.GET.get('tasktype')
   tstates = request.GET.get('taskstate')
   ttext = request.GET.get('tasktext')
+  pagenum = int(request.GET.get('page', 1))
+  pagenum = pagenum > 0 and pagenum or 1
 
   filters = {
     'task_types': ttypes and set(ttypes.split(',')) or None,
     'task_states': tstates and set(tstates.split(',')) or None,
     'task_text': ttext,
+    'pagenum': pagenum
   }
 
   jt = get_api(request.user, request.jt)
   task_list = jt.get_tasks(job.jobId, **filters)
   filter_params = copy_query_dict(request.GET, ('tasktype', 'taskstate', 'tasktext')).urlencode()
+  page = jt.paginate_task(task_list, pagenum)
 
   return render("tasks.mako", request, {
     'request': request,
@@ -368,22 +382,15 @@ def single_task_attempt_logs(request, job, taskid, attemptid):
 
   first_log_tab = 0
 
-  try:
-    # Add a diagnostic log
-    if job_link.is_mr2:
-      diagnostic_log = attempt.diagnostics
-    else:
-      diagnostic_log =  ", ".join(task.diagnosticMap[attempt.attemptId])
-    logs = [diagnostic_log]
-    # Add remaining logs
-    logs += [section.strip() for section in attempt.get_task_log()]
-    log_tab = [i for i, log in enumerate(logs) if log]
-    if log_tab:
-      first_log_tab = log_tab[0]
-  except TaskTrackerNotFoundException:
-    # Four entries,
-    # for diagnostic, stdout, stderr and syslog
-    logs = [_("Failed to retrieve log. TaskTracker not found.")] * 4
+  # Add a diagnostic log
+  diagnostic_log = attempt.diagnostics
+
+  logs = [diagnostic_log]
+  # Add remaining logs
+  logs += [section.strip() for section in attempt.get_task_log()]
+  log_tab = [i for i, log in enumerate(logs) if log]
+  if log_tab:
+    first_log_tab = log_tab[0]
 
   context = {
       "attempt": attempt,
@@ -405,19 +412,6 @@ def single_task_attempt_logs(request, job, taskid, attemptid):
   else:
     return render("attempt_logs.mako", request, context)
 
-@check_job_permission
-def task_attempt_counters(request, job, taskid, attemptid):
-  """
-  We get here from /jobs/jobid/tasks/taskid/attempts/attemptid/counters
-  (phew!)
-  """
-  job_link = JobLinkage(request.jt, job.jobId)
-  task = job_link.get_task(taskid)
-  attempt = task.get_attempt(attemptid)
-  counters = {}
-  if attempt:
-    counters = attempt.counters
-  return render("counters.html", request, {'counters':counters})
 
 @access_log_level(logging.WARN)
 def kill_task_attempt(request, attemptid):
@@ -457,15 +451,6 @@ def queues(request):
   """
   return render("queues.html", request, { "queuelist" : request.jt.queues()})
 
-@check_job_permission
-def set_job_priority(request, job):
-  """
-  We get here from /jobs/job/setpriority?priority=PRIORITY
-  """
-  priority = request.GET.get("priority")
-  jid = request.jt.thriftjobid_from_string(job.jobId)
-  request.jt.set_job_priority(jid, ThriftJobPriority._NAMES_TO_VALUES[priority])
-  return render_json({})
 
 CONF_VARIABLE_REGEX = r"\$\{(.+)\}"
 
@@ -535,77 +520,3 @@ def get_state_link(request, option=None, val='', VALID_OPTIONS = ("state", "user
     states[option] = val
 
   return "&".join([ "%s=%s" % (key, quote_plus(value)) for key, value in states.iteritems() ])
-
-
-## All Unused below
-
-# DEAD?
-def dock_jobs(request):
-  username = request.user.username
-  matching_jobs = get_job_count_by_state(request, username)
-  return render("jobs_dock_info.mako", request, {
-    'jobs':matching_jobs
-  }, force_template=True)
-register_status_bar_view(dock_jobs)
-
-
-def get_tasktrackers(request):
-  """
-  Return a ThriftTaskTrackerStatusList object containing all task trackers
-  """
-  return [ Tracker(tracker) for tracker in request.jt.all_task_trackers().trackers]
-
-
-def get_single_job(request, jobid):
-  """
-  Returns the job which matches jobid.
-  """
-  return Job.from_id(jt=request.jt, jobid=jobid)
-
-
-def get_job_count_by_state(request, username):
-  """
-  Returns the number of comlpeted, running, and failed jobs for a user.
-  """
-  res = {
-    'completed': 0,
-    'running': 0,
-    'failed': 0,
-    'killed': 0,
-    'all': 0
-  }
-
-  jobcounts = request.jt.get_job_count_by_user(username)
-  res['completed'] = jobcounts.nSucceeded
-  res['running'] = jobcounts.nPrep + jobcounts.nRunning
-  res['failed'] = jobcounts.nFailed
-  res['killed'] = jobcounts.nKilled
-  res['all'] = res['completed'] + res['running'] + res['failed'] + res['killed']
-  return res
-
-
-def jobbrowser(request):
-  """
-  jobbrowser.jsp - a - like.
-  """
-  # TODO(bc): Is this view even reachable?
-  def check_job_state(state):
-    return lambda job: job.status == state
-
-  status = request.jt.cluster_status()
-  alljobs = [] #get_matching_jobs(request)
-  runningjobs = filter(check_job_state('RUNNING'), alljobs)
-  completedjobs = filter(check_job_state('COMPLETED'), alljobs)
-  failedjobs = filter(check_job_state('FAILED'), alljobs)
-  killedjobs = filter(check_job_state('KILLED'), alljobs)
-  jobqueues = request.jt.queues()
-
-  return render("jobbrowser.html", request, {
-      "clusterstatus" : status,
-      "queues" : jobqueues,
-      "alljobs" : alljobs,
-      "runningjobs" : runningjobs,
-      "failedjobs" : failedjobs,
-      "killedjobs" : killedjobs,
-      "completedjobs" : completedjobs
-  })

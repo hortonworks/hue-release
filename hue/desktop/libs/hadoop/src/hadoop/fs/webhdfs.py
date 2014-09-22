@@ -30,8 +30,8 @@ from django.utils.encoding import smart_str
 from django.utils.translation import ugettext as _
 from desktop.lib.rest import http_client, resource
 from hadoop.fs import normpath, SEEK_SET, SEEK_CUR, SEEK_END
-from hadoop.fs.hadoopfs import Hdfs
 from hadoop.fs.exceptions import WebHdfsException
+from hadoop.fs.hadoopfs import Hdfs
 from hadoop.fs.webhdfs_types import WebHdfsStat, WebHdfsContentSummary
 from hadoop.conf import UPLOAD_CHUNK_SIZE
 

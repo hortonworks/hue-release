@@ -3,7 +3,7 @@
 #
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #
-#  options string: py:new-style
+#  options string: py:new_style
 #
 
 from thrift.Thrift import TType, TMessageType, TException, TApplicationException
@@ -17,7 +17,7 @@ except:
   fastbinary = None
 
 
-class Iface:
+class Iface(object):
   def OpenSession(self, req):
     """
     Parameters:
@@ -981,7 +981,7 @@ class Processor(Iface, TProcessor):
 
 # HELPER FUNCTIONS AND STRUCTURES
 
-class OpenSession_args:
+class OpenSession_args(object):
   """
   Attributes:
    - req
@@ -1042,7 +1042,7 @@ class OpenSession_args:
   def __ne__(self, other):
     return not (self == other)
 
-class OpenSession_result:
+class OpenSession_result(object):
   """
   Attributes:
    - success
@@ -1102,7 +1102,7 @@ class OpenSession_result:
   def __ne__(self, other):
     return not (self == other)
 
-class CloseSession_args:
+class CloseSession_args(object):
   """
   Attributes:
    - req
@@ -1163,7 +1163,7 @@ class CloseSession_args:
   def __ne__(self, other):
     return not (self == other)
 
-class CloseSession_result:
+class CloseSession_result(object):
   """
   Attributes:
    - success
@@ -1223,7 +1223,7 @@ class CloseSession_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetInfo_args:
+class GetInfo_args(object):
   """
   Attributes:
    - req
@@ -1284,7 +1284,7 @@ class GetInfo_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetInfo_result:
+class GetInfo_result(object):
   """
   Attributes:
    - success
@@ -1344,7 +1344,7 @@ class GetInfo_result:
   def __ne__(self, other):
     return not (self == other)
 
-class ExecuteStatement_args:
+class ExecuteStatement_args(object):
   """
   Attributes:
    - req
@@ -1405,7 +1405,7 @@ class ExecuteStatement_args:
   def __ne__(self, other):
     return not (self == other)
 
-class ExecuteStatement_result:
+class ExecuteStatement_result(object):
   """
   Attributes:
    - success
@@ -1465,7 +1465,7 @@ class ExecuteStatement_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetTypeInfo_args:
+class GetTypeInfo_args(object):
   """
   Attributes:
    - req
@@ -1526,7 +1526,7 @@ class GetTypeInfo_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetTypeInfo_result:
+class GetTypeInfo_result(object):
   """
   Attributes:
    - success
@@ -1586,7 +1586,7 @@ class GetTypeInfo_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetCatalogs_args:
+class GetCatalogs_args(object):
   """
   Attributes:
    - req
@@ -1647,7 +1647,7 @@ class GetCatalogs_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetCatalogs_result:
+class GetCatalogs_result(object):
   """
   Attributes:
    - success
@@ -1707,7 +1707,7 @@ class GetCatalogs_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetSchemas_args:
+class GetSchemas_args(object):
   """
   Attributes:
    - req
@@ -1768,7 +1768,7 @@ class GetSchemas_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetSchemas_result:
+class GetSchemas_result(object):
   """
   Attributes:
    - success
@@ -1828,7 +1828,7 @@ class GetSchemas_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetTables_args:
+class GetTables_args(object):
   """
   Attributes:
    - req
@@ -1889,7 +1889,7 @@ class GetTables_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetTables_result:
+class GetTables_result(object):
   """
   Attributes:
    - success
@@ -1949,7 +1949,7 @@ class GetTables_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetTableTypes_args:
+class GetTableTypes_args(object):
   """
   Attributes:
    - req
@@ -2010,7 +2010,7 @@ class GetTableTypes_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetTableTypes_result:
+class GetTableTypes_result(object):
   """
   Attributes:
    - success
@@ -2070,7 +2070,7 @@ class GetTableTypes_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetColumns_args:
+class GetColumns_args(object):
   """
   Attributes:
    - req
@@ -2131,7 +2131,7 @@ class GetColumns_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetColumns_result:
+class GetColumns_result(object):
   """
   Attributes:
    - success
@@ -2191,7 +2191,7 @@ class GetColumns_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetFunctions_args:
+class GetFunctions_args(object):
   """
   Attributes:
    - req
@@ -2252,7 +2252,7 @@ class GetFunctions_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetFunctions_result:
+class GetFunctions_result(object):
   """
   Attributes:
    - success
@@ -2312,7 +2312,7 @@ class GetFunctions_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetOperationStatus_args:
+class GetOperationStatus_args(object):
   """
   Attributes:
    - req
@@ -2373,7 +2373,7 @@ class GetOperationStatus_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetOperationStatus_result:
+class GetOperationStatus_result(object):
   """
   Attributes:
    - success
@@ -2433,7 +2433,7 @@ class GetOperationStatus_result:
   def __ne__(self, other):
     return not (self == other)
 
-class CancelOperation_args:
+class CancelOperation_args(object):
   """
   Attributes:
    - req
@@ -2494,7 +2494,7 @@ class CancelOperation_args:
   def __ne__(self, other):
     return not (self == other)
 
-class CancelOperation_result:
+class CancelOperation_result(object):
   """
   Attributes:
    - success
@@ -2554,7 +2554,7 @@ class CancelOperation_result:
   def __ne__(self, other):
     return not (self == other)
 
-class CloseOperation_args:
+class CloseOperation_args(object):
   """
   Attributes:
    - req
@@ -2615,7 +2615,7 @@ class CloseOperation_args:
   def __ne__(self, other):
     return not (self == other)
 
-class CloseOperation_result:
+class CloseOperation_result(object):
   """
   Attributes:
    - success
@@ -2675,7 +2675,7 @@ class CloseOperation_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetResultSetMetadata_args:
+class GetResultSetMetadata_args(object):
   """
   Attributes:
    - req
@@ -2736,7 +2736,7 @@ class GetResultSetMetadata_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetResultSetMetadata_result:
+class GetResultSetMetadata_result(object):
   """
   Attributes:
    - success
@@ -2796,7 +2796,7 @@ class GetResultSetMetadata_result:
   def __ne__(self, other):
     return not (self == other)
 
-class FetchResults_args:
+class FetchResults_args(object):
   """
   Attributes:
    - req
@@ -2857,7 +2857,7 @@ class FetchResults_args:
   def __ne__(self, other):
     return not (self == other)
 
-class FetchResults_result:
+class FetchResults_result(object):
   """
   Attributes:
    - success
@@ -2917,7 +2917,7 @@ class FetchResults_result:
   def __ne__(self, other):
     return not (self == other)
 
-class GetDelegationToken_args:
+class GetDelegationToken_args(object):
   """
   Attributes:
    - req
@@ -2978,7 +2978,7 @@ class GetDelegationToken_args:
   def __ne__(self, other):
     return not (self == other)
 
-class GetDelegationToken_result:
+class GetDelegationToken_result(object):
   """
   Attributes:
    - success
@@ -3038,7 +3038,7 @@ class GetDelegationToken_result:
   def __ne__(self, other):
     return not (self == other)
 
-class CancelDelegationToken_args:
+class CancelDelegationToken_args(object):
   """
   Attributes:
    - req
@@ -3099,7 +3099,7 @@ class CancelDelegationToken_args:
   def __ne__(self, other):
     return not (self == other)
 
-class CancelDelegationToken_result:
+class CancelDelegationToken_result(object):
   """
   Attributes:
    - success
@@ -3159,7 +3159,7 @@ class CancelDelegationToken_result:
   def __ne__(self, other):
     return not (self == other)
 
-class RenewDelegationToken_args:
+class RenewDelegationToken_args(object):
   """
   Attributes:
    - req
@@ -3220,7 +3220,7 @@ class RenewDelegationToken_args:
   def __ne__(self, other):
     return not (self == other)
 
-class RenewDelegationToken_result:
+class RenewDelegationToken_result(object):
   """
   Attributes:
    - success

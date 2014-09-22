@@ -135,15 +135,7 @@ class ClusterMiddleware(object):
     except KeyError:
       raise KeyError(_('Cannot find HDFS called "%(fs_ref)s".') % {'fs_ref': request.fs_ref})
 
-    if request.user.is_authenticated():
-      if request.fs is not None:
-        request.fs.setuser(request.user.username)
-
-      request.jt = cluster.get_default_mrcluster()
-      if request.jt is not None:
-        request.jt.setuser(request.user.username)
-    else:
-      request.jt = None
+    request.jt = None
 
 
 class NotificationMiddleware(object):

@@ -20,7 +20,6 @@ import logging
 
 from hadoop import conf
 from hadoop.fs import webhdfs, LocalSubFileSystem
-from hadoop.job_tracker import LiveJobTracker
 
 from desktop.lib.paths import get_build_dir
 
@@ -68,24 +67,6 @@ def get_all_hdfs():
   return FS_CACHE
 
 
-def get_default_mrcluster():
-  """
-  Get the default JT (not necessarily HA).
-  """
-  global MR_CACHE
-  global MR_NAME_CACHE
-
-  try:
-    all_mrclusters()
-    return MR_CACHE.get(MR_NAME_CACHE)
-  except KeyError:
-    # Return an arbitrary cluster
-    candidates = all_mrclusters()
-    if candidates:
-      return candidates.values()[0]
-    return None
-
-
 def get_default_yarncluster():
   """
   Get the default RM (not necessarily HA).
@@ -96,57 +77,6 @@ def get_default_yarncluster():
     return conf.YARN_CLUSTERS[MR_NAME_CACHE]
   except KeyError:
     return get_yarn()
-
-
-def get_next_ha_mrcluster():
-  """
-  Return the next available JT instance and cache its name.
-
-  This method currently works for distincting between active/standby JT as a standby JT does not respond.
-  A cleaner but more complicated way would be to do something like the MRHAAdmin tool and
-  org.apache.hadoop.ha.HAServiceStatus#getServiceStatus().
-  """
-  global MR_NAME_CACHE
-  candidates = all_mrclusters()
-  has_ha = sum([conf.MR_CLUSTERS[name].SUBMIT_TO.get() for name in conf.MR_CLUSTERS.keys()]) >= 2
-
-  current_user = get_default_mrcluster().user
-
-  for name in conf.MR_CLUSTERS.keys():
-    config = conf.MR_CLUSTERS[name]
-    if config.SUBMIT_TO.get():
-      jt = candidates[name]
-      if has_ha:
-        try:
-          jt.setuser(current_user)
-          status = jt.cluster_status()
-          if status.stateAsString == 'RUNNING':
-            MR_NAME_CACHE = name
-            LOG.warn('Picking HA JobTracker: %s' % name)
-            return (config, jt)
-          else:
-            LOG.info('JobTracker %s is not RUNNING, skipping it: %s' % (name, status))
-        except Exception, ex:
-          LOG.info('JobTracker %s is not available, skipping it: %s' % (name, ex))
-      else:
-        return (config, jt)
-  return None
-
-
-def get_mrcluster(identifier="default"):
-  global MR_CACHE
-  all_mrclusters()
-  return MR_CACHE[identifier]
-
-
-def all_mrclusters():
-  global MR_CACHE
-  if MR_CACHE is not None:
-    return MR_CACHE
-  MR_CACHE = {}
-  for identifier in conf.MR_CLUSTERS.keys():
-    MR_CACHE[identifier] = _make_mrcluster(identifier)
-  return MR_CACHE
 
 
 def get_yarn():
@@ -201,10 +131,6 @@ def get_cluster_for_job_submission():
   yarn = get_next_ha_yarncluster()
   if yarn:
     return yarn
-
-  mr = get_next_ha_mrcluster()
-  if mr is not None:
-    return mr
 
   return None
 
