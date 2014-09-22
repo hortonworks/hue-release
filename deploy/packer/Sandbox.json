@@ -25,6 +25,7 @@
             ["modifyvm", "{{.Name}}", "--nic2", "none"],
             ["modifyvm", "{{.Name}}", "--mouse", "usbtablet"],
             ["modifyvm", "{{.Name}}", "--natpf1", "ssh,tcp,127.0.0.1,2222,,22"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "solr,tcp,127.0.0.1,8983,,8983"],
             ["modifyvm", "{{.Name}}", "--natpf1", "apache,tcp,127.0.0.1,80,,42080"],
             ["modifyvm", "{{.Name}}", "--natpf1", "nfs,tcp,127.0.0.1,111,,42111"],
             ["modifyvm", "{{.Name}}", "--natpf1", "hue,tcp,127.0.0.1,8000,,8000"],
@@ -36,6 +37,7 @@
             ["modifyvm", "{{.Name}}", "--natpf1", "Knox,tcp,127.0.0.1,8443,,8443"],
             ["modifyvm", "{{.Name}}", "--natpf1", "StormUI,tcp,127.0.0.1,8744,,8744"],
             ["modifyvm", "{{.Name}}", "--natpf1", "Tutorials,tcp,127.0.0.1,8888,,8888"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Solr,tcp,127.0.0.1,8993,,8993"],
             ["modifyvm", "{{.Name}}", "--natpf1", "HS2,tcp,127.0.0.1,10000,,10000"],
             ["modifyvm", "{{.Name}}", "--natpf1", "HS2Http,tcp,127.0.0.1,10001,,10001"],
             ["modifyvm", "{{.Name}}", "--natpf1", "Oozie,tcp,127.0.0.1,11000,,11000"],
@@ -99,7 +101,7 @@
             "type": "puppet-masterless",
             "manifest_file": "manifests/init.pp",
             "module_paths": ["modules"],
-            "facter": {"role": "ambari","nodecount": "1", "sandbox": "true"}
+            "facter": {"role": "ambari","nodecount": "1", "sandbox": "true", "xasecure_version": "3.5.001"}
         },{
             "type": "file",
             "source": "scripts/files/start-ttys.override",

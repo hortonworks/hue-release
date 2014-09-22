@@ -2,17 +2,23 @@
     "configurations" : [
         {
             "global" : {
+                "dtnode_heapsize" : "250",
+                "hadoop_heapsize" : "250",
+                "namenode_heapsize" : "250",
+                "namenode_opt_newsize": "50",
+                "namenode_opt_maxnewsize": "100",
                 "hive_metastore_user_passwd" : "hive",
                 "hbase_master_heapsize": "250",
-                "hbase_regionserver_heapsize": "250"
-            }
-        },
-        {
-            "cluster-env": {
-                "cluster_name": "sandbox",
-                "smokeuser": "ambari-qa",
-                "user_group": "hadoop",
-                "security_enabled": "false"
+                "nagios_contact" : "admin@localhost.localdomain",
+                "jobhistory_heapsize" : "250",
+                "nagios_web_login" : "nagiosadmin",
+                "nagios_web_password" : "admin",
+                 "apptimelineserver_heapsize" : "250",
+                "resourcemanager_heapsize" : "250",
+                "nodemanager_heapsize" : "250",
+                "yarn_heapsize" : "250",
+                "hbase_regionserver_heapsize": "250",
+                "oozie_metastore_user_passwd" : "oozie"
             }
         },
         {
@@ -36,14 +42,13 @@
                 "nodemanager_heapsize" : "250",
                 "yarn_heapsize" : "250"
             }
-
         },
         {
             "nagios-env":{
                 "nagios_contact" : "admin@localhost.localdomain",
                 "nagios_web_login" : "nagiosadmin",
                 "nagios_web_password" : "admin"
-            }
+            }  
         },
         {
             "core-site" : {
@@ -61,7 +66,8 @@
                 "dfs.nfs3.dump.dir" : "/tmp/.hdfs-nfs",
                 "dfs.nfs.exports.allowed.hosts" : "* rw",
                 "dfs.datanode.max.xcievers" : "1024",
-                "dfs.block.access.token.enable" : "false"
+                "dfs.block.access.token.enable" : "false",
+                "dfs.permissions.enabled" : "true"
             }
         },
         {
@@ -103,7 +109,31 @@
                 "hive.heapsize" : "250",
                 "hive.server2.enable.impersonation": "true",
                 "hive.users.in.admin.role" : "hue,hive",
-                "hive.server2.authentication": "NOSASL"
+                "hive.server2.enable.doAs": "true",
+                "hive.server2.authentication": "NOSASL",
+
+                "hive.security.authorization.manager": "com.xasecure.authorization.hive.authorizer.XaSecureAuthorizer",
+                "hive.security.authorization.enabled": "true",
+                "hive.exec.pre.hooks": "org.apache.hadoop.hive.ql.hooks.ATSHook,com.xasecure.authorization.hive.hooks.XaSecureHivePreExecuteRunHook",
+                "hive.exec.post.hooks": "org.apache.hadoop.hive.ql.hooks.ATSHook,com.xasecure.authorization.hive.hooks.XaSecureHivePostExecuteRunHook",
+                "hive.semantic.analyzer.hook": "com.xasecure.authorization.hive.hooks.XaSecureSemanticAnalyzerHook",
+                "hive.server2.custom.authentication.class": "com.xasecure.authentication.hive.LoginNameAuthenticator",
+                "hive.conf.restricted.list": "hive.exec.driver.run.hooks, hive.server2.authentication, hive.metastore.pre.event.listeners, hive.security.authorization.enabled,hive.security.authorization.manager, hive.semantic.analyzer.hook, hive.exec.post.hooks"
+            }
+        },
+        {
+            "storm-site" : {
+                "logviewer.port" : "8005",
+                "nimbus.childopts" : "-Xmx200m -Djava.security.auth.login.config=/etc/storm/storm_jaas.conf -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8649,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
+                "ui.childopts" : "-Xmx200m -Djava.security.auth.login.config=/etc/storm/storm_jaas.conf",
+                "drpc.childopts" : "-Xmx200m",
+                "worker.childopts" : "-Xmx200m -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8650,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Worker_%ID%_JVM"                
+            }
+        },
+        {
+            "oozie-site" : {
+                "oozie.service.ProxyUserService.proxyuser.hue.hosts" : "*",
+                "oozie.service.ProxyUserService.proxyuser.hue.groups" : "*"
             }
         },
         {
@@ -118,6 +148,15 @@
                 "tez.am.resource.memory.mb" : "250",
                 "tez.dag.am.resource.memory.mb" : "250",
                 "yarn.app.mapreduce.am.command-opts" : "-Xmx200m"
+            }
+        },
+        {
+            "hbase-site" : {
+                "hbase.security.authorization": "true",
+                "hbase.coprocessor.master.classes": "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor",
+                "hbase.coprocessor.region.classes": "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor",
+                "hbase.rpc.engine": "org.apache.hadoop.hbase.ipc.SecureRpcEngine",
+                "hbase.rpc.protection": "PRIVACY"
             }
         }
     ],
@@ -144,6 +183,7 @@
                 {"name" : "PIG"},
                 {"name" : "RESOURCEMANAGER"},
                 {"name" : "SECONDARY_NAMENODE"},
+                {"name" : "SQOOP"},
                 {"name" : "TEZ_CLIENT"},
                 {"name" : "WEBHCAT_SERVER"},
                 {"name" : "YARN_CLIENT"},
