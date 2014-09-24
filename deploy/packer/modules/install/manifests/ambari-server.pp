@@ -9,7 +9,7 @@ class install::ambari-server{
 
   exec {"ambari-server setup":
     command => 'ambari-server setup -j `source /etc/profile.d/java.sh; echo $JAVA_HOME` -s',
-    require => [Package["ambari-server"], Class["prepare"]]
+    require => [Package["ambari-server"]]
   }
 
 

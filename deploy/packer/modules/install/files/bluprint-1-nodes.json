@@ -50,7 +50,9 @@
                 "hadoop.proxyuser.hue.hosts" : "*",
                 "hadoop.proxyuser.hue.groups" : "*",
                 "hadoop.proxyuser.root.hosts" : "*",
-                "hadoop.proxyuser.root.groups" : "*"
+                "hadoop.proxyuser.root.groups" : "*",
+                "hadoop.proxyuser.oozie.hosts" : "*",
+                "hadoop.proxyuser.oozie.groups" : "*"
             }
         },
         {
@@ -121,7 +123,7 @@
         {
             "storm-site" : {
                 "logviewer.port" : "8005",
-                "nimbus.childopts" : "-Xmx200m -javaagent:/usr/hdp/current/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=localhost,port=8649,wireformat31x=true,mode=multicast,config=/usr/hdp/current/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
+                "nimbus.childopts" : "-Xmx200m -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=localhost,port=8649,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
                 "ui.childopts" : "-Xmx200m",
                 "drpc.childopts" : "-Xmx200m",
                 "worker.childopts" : "-Xmx200m -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8650,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Worker_%ID%_JVM"
