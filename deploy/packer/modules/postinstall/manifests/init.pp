@@ -8,6 +8,7 @@ class postinstall {
     include hue
     include kafka
     include solr
+    include ambari_views
     # include xasecure
   }
 
