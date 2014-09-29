@@ -1,13 +1,6 @@
 {
     "configurations" : [
         {
-            "global" : {
-                "hive_metastore_user_passwd" : "hive",
-                "hbase_master_heapsize": "250",
-                "hbase_regionserver_heapsize": "250"
-            }
-        },
-        {
             "cluster-env": {
                 "cluster_name": "sandbox",
                 "smokeuser": "ambari-qa",
@@ -103,8 +96,9 @@
                 "hive.tez.container.size" : "250",
                 "hive.tez.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true",
                 "hive.heapsize" : "250",
-                "hive.server2.enable.impersonation": "true",
                 "hive.users.in.admin.role" : "hue,hive",
+                "hive_metastore_user_passwd" : "hive",
+                "hive.server2.enable.impersonation": "true",
                 "hive.server2.authentication": "NOSASL"
             }
         },
@@ -117,7 +111,8 @@
         {
             "oozie-site" : {
                 "oozie.service.ProxyUserService.proxyuser.hue.hosts" : "*",
-                "oozie.service.ProxyUserService.proxyuser.hue.groups" : "*"
+                "oozie.service.ProxyUserService.proxyuser.hue.groups" : "*",
+ 		"oozie.service.JPAService.jdbc.password" : "oozie"
             }
         },
         {
@@ -141,6 +136,8 @@
             "hbase-site" : {
                 "hbase.security.authorization": "true",
                 "hbase.rpc.engine": "org.apache.hadoop.hbase.ipc.SecureRpcEngine",
+                "hbase_master_heapsize": "250",
+                "hbase_regionserver_heapsize": "250",
                 "hbase.rpc.protection": "PRIVACY"
             }
         }
@@ -190,6 +187,6 @@
     "Blueprints" : {
         "blueprint_name" : "sandbox",
         "stack_name" : "HDP",
-        "stack_version" : "2.2.1"
+        "stack_version" : "2.2"
     }
 }
