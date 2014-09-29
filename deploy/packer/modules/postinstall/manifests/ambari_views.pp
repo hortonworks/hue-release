@@ -17,11 +17,83 @@ class postinstall::ambari_views{
       timeout => 0,
       creates => "/var/lib/ambari-server/resources/views/capacity-scheduler-0.0.1-SNAPSHOT.jar"
     }
-  }
-  include download_ambari_views
 
-  exec {'restart ambari':
-    command => 'ambari-server restart',
-    require => Class[download_ambari_views],
+    file { 'pig-view-props.json':
+      path    => "/tmp/pig-view-props.json",
+      content => '[ {
+"ViewInstanceInfo" : {
+"properties" : {
+"dataworker.webhcat.url" : "http://sandbox.hortonworks.com:50111/templeton/v1",
+"dataworker.webhcat.user" : "hue",
+"dataworker.scripts.path" : "/tmp/.pigscripts",
+"dataworker.jobs.path" : "/tmp/.pigjobs",
+"dataworker.defaultFs" : "webhdfs://sandbox.hortonworks.com:50070",
+"dataworker.username" : "pigview"
+}
+}
+} ]'
+    }
+
+    file { 'files-view-props.json':
+      path    => "/tmp/files-view-props.json",
+      content => '
+[ {
+"ViewInstanceInfo" : {
+"properties" : {
+"dataworker.defaultFs" : "hdfs://sandbox.hortonworks.com:8020"
+}
+}
+} ]'
+    }
+
+    file { 'capsched-view-props.json':
+      path    => "/tmp/capsched-view-props.json",
+      content => '[ {
+"ViewInstanceInfo" : {
+"properties" : {
+"ambari.server.url" : "http://sandbox.hortonworks.com:8080/api/v1/clusters/sandbox",
+"ambari.server.username" : "admin",
+"ambari.server.password" : "admin"
+}
+}
+} ]'
+    }
   }
+
+  class create_instances {
+    include download_ambari_views
+
+    exec {'install_views':
+      command => 'ambari-server restart; while ! curl -s --user admin:admin 127.0.0.1:8080/api/v1/views 2>&1 >/dev/null; do sleep 1; done',
+      require => Class[download_ambari_views],
+    }
+
+    exec {'files_instance':
+      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/FILES/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done; curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/FILES/versions/0.1.0/instances/MyFiles --data "@/tmp/files-view-props.json"',
+      require => Exec['install_views'],
+      provider => 'shell',
+      timeout => 0,
+    }
+
+    exec {'pig_instance':
+      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/PIG/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done; curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/FILES/versions/0.1.0/instances/MyPig --data "@/tmp/pig-view-props.json"',
+      require => Exec['install_views'],
+      provider => 'shell',
+      timeout => 0,
+    }
+
+    exec {'capsched_instance':
+      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/CAPACITY-SCHEDULER/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done; curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/FILES/versions/0.1.0/instances/MyFiles --data "@/tmp/capsched-view-props.json"',
+      require => Exec['install_views'],
+      provider => 'shell',
+      timeout => 0,
+    }
+  }
+  include create_instances
+
+  exec {'finish_views_install':
+    command => 'ambari-server restart; while ! curl -s --user admin:admin 127.0.0.1:8080/api/v1/views 2>&1 >/dev/null; do sleep 1; done',
+    require => Class[create_instances],
+  }
+
 }
