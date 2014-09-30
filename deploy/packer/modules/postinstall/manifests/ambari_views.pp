@@ -68,23 +68,44 @@ class postinstall::ambari_views{
       require => Class[download_ambari_views],
     }
 
-    exec {'files_instance':
-      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/FILES/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done; curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/FILES/versions/0.1.0/instances/MyFiles --data "@/tmp/files-view-props.json"',
+    exec {'files_wait_deploy':
+      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/FILES/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done',
       require => Exec['install_views'],
       provider => 'shell',
       timeout => 0,
     }
-
+/* Don't need Files instance
+    exec {'files_instance':
+      command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/FILES/versions/0.1.0/instances/MyFiles --data "@/tmp/files-view-props.json"',
+      require => Exec['files_wait_deploy'],
+      provider => 'shell',
+      timeout => 0,
+    }
+*/
+    exec {'pig_wait_deploy':
+      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/PIG/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done',
+      require => Exec['install_views'],
+      provider => 'shell',
+      timeout => 0,
+    }
+/* Don't need Pig instance
     exec {'pig_instance':
-      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/PIG/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done; curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/PIG/versions/0.1.0/instances/MyPig --data "@/tmp/pig-view-props.json"',
+      command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/PIG/versions/0.1.0/instances/MyPig --data "@/tmp/pig-view-props.json"',
+      require => Exec['pig_wait_deploy'],
+      provider => 'shell',
+      timeout => 0,
+    }
+*/
+    exec {'capsched_wait_deploy':
+      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/CAPACITY-SCHEDULER/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done',
       require => Exec['install_views'],
       provider => 'shell',
       timeout => 0,
     }
 
     exec {'capsched_instance':
-      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/CAPACITY-SCHEDULER/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done; curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/CAPACITY-SCHEDULER/versions/0.1.0/instances/CS_1 --data "@/tmp/capsched-view-props.json"',
-      require => Exec['install_views'],
+      command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/CAPACITY-SCHEDULER/versions/0.1.0/instances/CS_1 --data "@/tmp/capsched-view-props.json"',
+      require => Exec['capsched_wait_deploy'],
       provider => 'shell',
       timeout => 0,
     }
