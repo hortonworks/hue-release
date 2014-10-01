@@ -6,7 +6,7 @@ class postinstall {
     include knox
     include spark
     include hue
-    include kafka
+    # include kafka
     include solr
     include ambari_views
     # include xasecure
