@@ -77,10 +77,8 @@ Downloaded third party dependencies during build
 
 |Re-distributed|Project|Version|License|Source URL|
 |--------------|-------|-------|-------|----------|
+|Y|coverage|3.2|BSD|https://pypi.python.org/pypi/coverage/3.2|
 |Y|ipython|0.10|BSD|http://ipython.scipy.org/dist|
-|Y|MooTools-Core|?|MIT|http://mootools.net/download|
-|Y|Nose|0.11.1|LGPL|http://somethingaboutorange.com/mrl/projects/nose/0.11.1/|
-|Y|nosetty|0.4|LGPL|http://code.google.com/p/nosetty/|
-|N|pylint|0.19.0|GPL|http://www.logilab.org/project/pylint|
+|Y|threadframe|0.2|Python|https://pypi.python.org/pypi/threadframe/0.2|
 |Y|Werkzeug|0.5.1|BSD|http://werkzeug.pocoo.org/|
 |Y|windmill|1.3|Apache2|http://www.getwindmill.com/|

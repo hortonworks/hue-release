@@ -19,10 +19,8 @@
 
 # May require download from PyPI or whereever
 DEVTOOLS += \
-	ipython-0.10.tar.gz \
-	nose-0.11.3.tar.gz \
 	coverage-3.2.tar.gz \
-	nosetty-0.4.tar.gz \
+	ipython-0.10.tar.gz \
 	threadframe-0.2.tar.gz \
 	Werkzeug-0.6.tar.gz \
 	windmill-1.3.tar.gz
