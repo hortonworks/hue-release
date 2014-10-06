@@ -44,12 +44,6 @@ def _make_filesystem(identifier):
     cluster_conf = conf.HDFS_CLUSTERS[identifier]
     return webhdfs.WebHdfs.from_config(cluster_conf)
 
-
-def _make_mrcluster(identifier):
-  cluster_conf = conf.MR_CLUSTERS[identifier]
-  return LiveJobTracker.from_conf(cluster_conf)
-
-
 def get_hdfs(identifier="default"):
   global FS_CACHE
   get_all_hdfs()
@@ -126,7 +120,7 @@ def get_cluster_for_job_submission():
   Check the 'submit_to' for each MR/Yarn cluster, and return the
   config section of first one that enables submission.
 
-  Support MR1/MR2 HA.
+  Support Yarn HA.
   """
   yarn = get_next_ha_yarncluster()
   if yarn:
@@ -147,7 +141,7 @@ def get_cluster_conf_for_job_submission():
 
 def get_cluster_addr_for_job_submission():
   """
-  Check the 'submit_to' for each MR/Yarn cluster, and return the logical name or host:port of first one that enables submission.
+  Check the 'submit_to' for each Yarn cluster, and return the logical name or host:port of first one that enables submission.
   """
   if is_yarn():
     if get_yarn().LOGICAL_NAME.get():
@@ -157,7 +151,7 @@ def get_cluster_addr_for_job_submission():
   if conf is None:
     return None
 
-  return "%s:%s" % (conf.HOST.get(), conf.PORT.get())
+  return conf.RESOURCE_MANAGER_API_URL.get()
 
 
 def is_yarn():

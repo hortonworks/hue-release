@@ -15,7 +15,7 @@
         "disk_size" : "50000",
         "format" : "ova",
         "output_directory": "packer_virtualbox",
-        "vm_name" : "packer_sandbox",
+        "vm_name" : "Hortonworks Sandbox with HDP 2.2 Preview",
 	"http_directory": "http",
         "vboxmanage": [
             ["modifyvm", "{{.Name}}", "--memory", "4096"],

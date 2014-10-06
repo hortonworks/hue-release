@@ -5,6 +5,6 @@ export TUTORIALS_HOME=/usr/lib/tutorials
 export GIT_FILES=$TUTORIALS_HOME/sandbox-tutorials
 
 export BRANCH=master
-export TUTORIALS_BRANCH=Baikal
+export TUTORIALS_BRANCH=Champlain-preview
 
 export HUE_HOME_DIR=/usr/lib/hue

@@ -1,10 +1,9 @@
 {
     "configurations" : [
         {
-            "global" : {
-                "hive_metastore_user_passwd" : "hive",
-                "hbase_master_heapsize": "250",
-                "hbase_regionserver_heapsize": "250"
+            "capacity-scheduler" : {
+                "yarn.scheduler.capacity.root.default.maximum-am-resource-percent" :  "0.5",
+                "yarn.scheduler.capacity.maximum-am-resource-percent" : "0.5"
             }
         },
         {
@@ -13,6 +12,16 @@
                 "smokeuser": "ambari-qa",
                 "user_group": "hadoop",
                 "security_enabled": "false"
+            }
+        },
+        {
+            "core-site" : {
+                "hadoop.proxyuser.hue.hosts" : "*",
+                "hadoop.proxyuser.hue.groups" : "*",
+                "hadoop.proxyuser.root.hosts" : "*",
+                "hadoop.proxyuser.root.groups" : "*",
+                "hadoop.proxyuser.oozie.hosts" : "*",
+                "hadoop.proxyuser.oozie.groups" : "*"
             }
         },
         {
@@ -25,32 +34,12 @@
             }
         },
         {
-            "mapred-env": {
-                "jobhistory_heapsize" : "250"
-            }
-        },
-        {
-            "yarn-env": {
-                "apptimelineserver_heapsize" : "250",
-                "resourcemanager_heapsize" : "250",
-                "nodemanager_heapsize" : "250",
-                "yarn_heapsize" : "250"
-            }
-
-        },
-        {
-            "nagios-env":{
-                "nagios_contact" : "admin@localhost.localdomain",
-                "nagios_web_login" : "nagiosadmin",
-                "nagios_web_password" : "admin"
-            }
-        },
-        {
-            "core-site" : {
-                "hadoop.proxyuser.hue.hosts" : "*",
-                "hadoop.proxyuser.hue.groups" : "*",
-                "hadoop.proxyuser.root.hosts" : "*",
-                "hadoop.proxyuser.root.groups" : "*"
+            "hbase-site" : {
+                "hbase.security.authorization": "true",
+                "hbase.rpc.engine": "org.apache.hadoop.hbase.ipc.SecureRpcEngine",
+                "hbase_master_heapsize": "250",
+                "hbase_regionserver_heapsize": "250",
+                "hbase.rpc.protection": "PRIVACY"
             }
         },
         {
@@ -62,6 +51,23 @@
                 "dfs.nfs.exports.allowed.hosts" : "* rw",
                 "dfs.datanode.max.xcievers" : "1024",
                 "dfs.block.access.token.enable" : "false"
+            }
+        },
+        {
+            "hive-site" : {
+                "javax.jdo.option.ConnectionPassword" : "hive",
+                "hive.tez.container.size" : "250",
+                "hive.tez.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true",
+                "hive.heapsize" : "250",
+                "hive.users.in.admin.role" : "hue,hive",
+                "hive_metastore_user_passwd" : "hive",
+                "hive.server2.enable.impersonation": "true",
+                "hive.server2.authentication": "NOSASL"
+            }
+        },
+        {
+            "mapred-env": {
+                "jobhistory_heapsize" : "250"
             }
         },
         {
@@ -80,51 +86,25 @@
             }
         },
         {
-            "yarn-site" : {
-                "yarn.nodemanager.resource.memory-mb": "2250",
-                "yarn.nodemanager.vmem-pmem-ratio" : "10",
-                "yarn.scheduler.minimum-allocation-mb" : "250",
-                "yarn.scheduler.maximum-allocation-mb" : "2250",
-                "yarn.nodemanager.pmem-check-enabled" : "false",
-                "yarn.acl.enable" : "false"
-            }
-        },
-        {
-            "capacity-scheduler" : {
-                "yarn.scheduler.capacity.root.default.maximum-am-resource-percent" :  "0.5",
-                "yarn.scheduler.capacity.maximum-am-resource-percent" : "0.5"
-            }
-        },
-        {
-            "hive-site" : {
-                "javax.jdo.option.ConnectionPassword" : "hive",
-                "hive.tez.container.size" : "250",
-                "hive.tez.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true",
-                "hive.heapsize" : "250",
-                "hive.server2.enable.impersonation": "true",
-                "hive.users.in.admin.role" : "hue,hive",
-                "hive.server2.authentication": "NOSASL"
-            }
-        },
-        {
-            "webhcat-site" : {
-                "webhcat.proxyuser.hue.hosts" : "*",
-                "webhcat.proxyuser.hue.groups" : "*"
+            "nagios-env":{
+                "nagios_contact" : "admin@localhost.localdomain",
+                "nagios_web_login" : "nagiosadmin",
+                "nagios_web_password" : "admin"
             }
         },
         {
             "oozie-site" : {
                 "oozie.service.ProxyUserService.proxyuser.hue.hosts" : "*",
-                "oozie.service.ProxyUserService.proxyuser.hue.groups" : "*"
+                "oozie.service.ProxyUserService.proxyuser.hue.groups" : "*",
+ 		"oozie.service.JPAService.jdbc.password" : "oozie"
             }
         },
         {
             "storm-site" : {
-                "logviewer.port" : "8005",
-                "nimbus.childopts" : "-Xmx200m -javaagent:/usr/hdp/current/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=localhost,port=8649,wireformat31x=true,mode=multicast,config=/usr/hdp/current/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
-                "ui.childopts" : "-Xmx200m",
-                "drpc.childopts" : "-Xmx200m",
-                "worker.childopts" : "-Xmx200m -javaagent:/usr/lib/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8650,wireformat31x=true,mode=multicast,config=/usr/lib/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Worker_%ID%_JVM"
+                "logviewer.port" : 8005,
+                "nimbus.childopts" : "-Xmx220m -javaagent:/usr/hdp/current/storm/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8649,wireformat31x=true,mode=multicast,config=/usr/hdp/current/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
+                "ui.childopts" : "-Xmx220m",
+                "drpc.childopts" : "-Xmx220m"
             }
         },
         {
@@ -136,10 +116,28 @@
             }
         },
         {
-            "hbase-site" : {
-                "hbase.security.authorization": "true",
-                "hbase.rpc.engine": "org.apache.hadoop.hbase.ipc.SecureRpcEngine",
-                "hbase.rpc.protection": "PRIVACY"
+            "webhcat-site" : {
+                "webhcat.proxyuser.hue.hosts" : "*",
+                "webhcat.proxyuser.hue.groups" : "*"
+            }
+        },
+        {
+            "yarn-env": {
+                "apptimelineserver_heapsize" : "250",
+                "resourcemanager_heapsize" : "250",
+                "nodemanager_heapsize" : "250",
+                "yarn_heapsize" : "250"
+            }
+
+        },
+        {
+            "yarn-site" : {
+                "yarn.nodemanager.resource.memory-mb": "2250",
+                "yarn.nodemanager.vmem-pmem-ratio" : "10",
+                "yarn.scheduler.minimum-allocation-mb" : "250",
+                "yarn.scheduler.maximum-allocation-mb" : "2250",
+                "yarn.nodemanager.pmem-check-enabled" : "false",
+                "yarn.acl.enable" : "false"
             }
         }
     ],
@@ -152,6 +150,7 @@
                 {"name" : "DRPC_SERVER"},
                 {"name" : "FALCON_CLIENT"},
                 {"name" : "FALCON_SERVER"},
+		{"name" : "FLUME_HANDLER"},
                 {"name" : "GANGLIA_SERVER"},
                 {"name" : "HBASE_CLIENT"},
                 {"name" : "HBASE_MASTER"},
@@ -172,6 +171,7 @@
                 {"name" : "PIG"},
                 {"name" : "RESOURCEMANAGER"},
                 {"name" : "SECONDARY_NAMENODE"},
+                {"name" : "SLIDER"},
                 {"name" : "SQOOP"},
                 {"name" : "STORM_REST_API"},
                 {"name" : "STORM_UI_SERVER"},
@@ -188,6 +188,6 @@
     "Blueprints" : {
         "blueprint_name" : "sandbox",
         "stack_name" : "HDP",
-        "stack_version" : "2.2.1"
+        "stack_version" : "2.2"
     }
 }
