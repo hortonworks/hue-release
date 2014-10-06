@@ -51,7 +51,7 @@ class postinstall::ambari_views{
       content => '[ {
 "ViewInstanceInfo" : {
 "properties" : {
-"ambari.server.url" : "http://sandbox.hortonworks.com:8080/api/v1/clusters/sandbox",
+"ambari.server.url" : "http://sandbox.hortonworks.com:8080/api/v1/clusters/Sandbox",
 "ambari.server.username" : "admin",
 "ambari.server.password" : "admin"
 }
