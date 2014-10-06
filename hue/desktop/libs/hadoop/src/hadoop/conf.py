@@ -73,46 +73,12 @@ HDFS_CLUSTERS = UnspecifiedConfigSection(
   )
 )
 
-MR_CLUSTERS = UnspecifiedConfigSection(
-  "mapred_clusters",
-  help="One entry for each MapReduce cluster",
-  each=ConfigSection(
-    help="Information about a single MapReduce cluster",
-    members=dict(
-      HOST=Config("jobtracker_host", help="Host/IP for JobTracker"),
-      PORT=Config("jobtracker_port",
-                  default=8021,
-                  help="Service port for the JobTracker",
-                  type=int),
-      LOGICAL_NAME=Config('logical_name',
-                          default="",
-                          type=str,
-                          help=_t('JobTracker logical name.')),
-      JT_THRIFT_PORT=Config("thrift_port", help="Thrift port for JobTracker", default=9290,
-                            type=int),
-      JT_KERBEROS_PRINCIPAL=Config("jt_kerberos_principal", help="Kerberos principal for JobTracker",
-                                   default="mapred", type=str),
-      SECURITY_ENABLED=Config("security_enabled", help="Is running with Kerberos authentication",
-                              default=False, type=coerce_bool),
-      SUBMIT_TO=Config('submit_to', help="Whether Hue should use this cluster to run jobs",
-                       default=True, type=coerce_bool), # True here for backward compatibility
-    )
-  )
-)
-
 YARN_CLUSTERS = UnspecifiedConfigSection(
   "yarn_clusters",
   help="One entry for each Yarn cluster",
   each=ConfigSection(
     help="Information about a single Yarn cluster",
     members=dict(
-      HOST=Config("resourcemanager_host",
-                  default='localhost',
-                  help="Host/IP for the ResourceManager"),
-      PORT=Config("resourcemanager_port",
-                  default=8032,
-                  type=int,
-                  help="Service port for the ResourceManager"),
       LOGICAL_NAME=Config('logical_name',
                           default="",
                           type=str,
@@ -121,8 +87,6 @@ YARN_CLUSTERS = UnspecifiedConfigSection(
                               default=False, type=coerce_bool),
       SUBMIT_TO=Config('submit_to', help="Whether Hue should use this cluster to run jobs",
                        default=False, type=coerce_bool), # False here for backward compatibility
-      IS_YARN=Config("is_yarn", help="Attribute set only on YARN clusters and not MR1 ones.",
-                     default=True, type=coerce_bool),
       RESOURCE_MANAGER_API_URL=Config("resourcemanager_api_url",
                   default='http://localhost:8088',
                   help="URL of the ResourceManager API"),
@@ -144,7 +108,6 @@ def config_validator(user):
   Called by core check_config() view.
   """
   from hadoop.fs import webhdfs
-  from hadoop import job_tracker
 
   res = []
   submit_to = []
@@ -158,17 +121,6 @@ def config_validator(user):
       has_default = True
   if not has_default:
     res.append("hadoop.hdfs_clusters", "You should have an HDFS called 'default'.")
-
-  # MR_CLUSTERS
-  mr_down = []
-  for name in MR_CLUSTERS.keys():
-    cluster = MR_CLUSTERS[name]
-    if cluster.SUBMIT_TO.get():
-      mr_down.extend(job_tracker.test_jt_configuration(cluster))
-      submit_to.append('mapred_clusters.' + name)
-  # If HA still failing
-  if mr_down and len(mr_down) == len(MR_CLUSTERS.keys()):
-    res.extend(mr_down)
 
   # YARN_CLUSTERS
   for name in YARN_CLUSTERS.keys():
