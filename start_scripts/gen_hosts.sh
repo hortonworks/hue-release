@@ -21,7 +21,7 @@ while [ -z "$HOST" ]; do
 		break
 	fi
 done
-echo "$HOST	`hostname` sandbox" >> /etc/hosts
+echo "$HOST	`hostname` sandbox ambari.hortonworks.com" >> /etc/hosts
 
 echo 0 > /proc/sys/kernel/hung_task_timeout_secs
 # ethtool -K eth0 tso off

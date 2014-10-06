@@ -1,4 +1,5 @@
 #----- Stop script -------------
+export PATH=${PATH}:/usr/hdp/current/hadoop/bin:/usr/hdp/current/hive/bin
 
 # host machine
 echo "Stop Oozie"

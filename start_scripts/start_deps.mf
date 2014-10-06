@@ -42,6 +42,9 @@ WebHCat: webhcat
 Tez: # tez
 Oozie: oozie
 
+PATH := ${PATH}:/usr/hdp/current/hadoop/bin:/usr/hdp/current/hive/bin
+HADOOP_HOME := /usr/hdp/current/hadoop
+
 postgresql:
 	$(call colorized,\
 		Postgre SQL, \
@@ -60,7 +63,7 @@ namenode: postgresql
 datanode: postgresql
 	$(call colorized,\
 		data node, \
-		su -l hdfs -c  "export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode",\
+		su -l hdfs -c  "export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec PATH=${PATH} && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode",\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-datanode-*.log)
 	@su - hdfs -c"hadoop dfsadmin -safemode leave"
@@ -92,27 +95,27 @@ hdfsnfs: namenode datanode
 resourcemanager: postgresql HDFS
 	$(call colorized,\
 		resource manager, \
-		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/currrent/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager',\
+		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager',\
 		sleep 25)
 
 
 yarnhistoryserver: postgresql HDFS
 	$(call colorized,\
 		yarn history server, \
-		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/currrent/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start historyserver',\
+		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start historyserver',\
 		sleep 5)
 
 mapredhistoryserver: postgresql HDFS
 	$(call colorized,\
 		mapred history server, \
-		su - mapred -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/currrent/hadoop-mapreduce/sbin/mr-jobhistory-daemon.sh --config /etc/hadoop/conf start historyserver',\
+		su - mapred -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop-mapreduce/sbin/mr-jobhistory-daemon.sh --config /etc/hadoop/conf start historyserver',\
 		sleep 5)
 
 
 nodemanagers: postgresql HDFS
 	$(call colorized,\
 		node manager, \
-		su - yarn -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/currrent/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager',\
+		su - yarn -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager',\
 		sleep 5)
 
 
@@ -121,28 +124,28 @@ nodemanagers: postgresql HDFS
 hbase_master: postgresql zookeeper
 	$(call colorized,\
 		hbase master, \
-		su - hbase -c "/usr/hdp/currrent/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master",\
+		su - hbase -c "/usr/hdp/current/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start master",\
 		sleep 25,\
 		/var/log/hbase/hbase-hbase-master-*.log)
 
 hbase_stargate: postgresql hbase_master
 	$(call colorized,\
 		hbase stargate, \
-		su -l hbase -c "/usr/hdp/currrent/hbase/bin/hbase-daemon.sh start rest -p 60080",\
+		su -l hbase -c "/usr/hdp/current/hbase/bin/hbase-daemon.sh start rest -p 60080",\
 		true,\
 		/var/log/hbase/hbase-hbase-rest-*.log)
 
 hbase_thrift: postgresql hbase_master
 	$(call colorized,\
 		hbase thrift, \
-		su -l hbase -c "/usr/hdp/currrent/hbase/bin/hbase-daemon.sh start thrift",\
+		su -l hbase -c "/usr/hdp/current/hbase/bin/hbase-daemon.sh start thrift",\
 		true,\
 		/var/log/hbase/hbase-hbase-rest-*.log)
 
 hbase_regionservers: hbase_master
 	$(call colorized,\
 		hbase regionservers, \
-		su -l hbase -c "/usr/hdp/currrent/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver",\
+		su -l hbase -c "/usr/hdp/current/hbase/bin/hbase-daemon.sh --config /etc/hbase/conf start regionserver",\
 		sleep 5,\
 		/var/log/hbase/hbase-hbase-regionserver-*.log)
 
@@ -157,13 +160,13 @@ mysql:
 hive: HDFS postgresql mysql
 	$(call colorized,\
 		hive server, \
-		env PATH=$PATH:/usr/hdp/current/hive/bin HADOOP_HOME=/usr JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_metastore_script /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server /var/log/hive, true,\
+		env HADOOP_HOME=/usr JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_metastore_script /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server /var/log/hive, true,\
 		/var/log/hive/hive.log)
 
 hive2: HDFS hive
 	$(call colorized,\
 		Hiveserver2, \
-		env PATH=$PATH:/usr/hdp/current/hive/bin JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_hiveserver2_script /var/log/hive/hive-server2.out /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid /etc/hive/conf.server /var/log/hive,true,\
+		env JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_hiveserver2_script /var/log/hive/hive-server2.out /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid /etc/hive/conf.server /var/log/hive,true,\
 		/var/log/hive/hive-server2.log)
 
 # ==== Storm ====
@@ -204,7 +207,7 @@ stormrest: supervisor YARN
 zookeeper: namenode
 	$(call colorized,\
 		zookeeper nodes, \
-		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/hdp/current/zookeeper/bin/zkServer.sh start; sleep 10",\
+		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOKEEPER_HOME=/usr/hdp/current/zookeeper ZOOCFG=zoo.cfg /usr/hdp/current/zookeeper/bin/zkServer.sh start; sleep 10",\
 		true)
 
 
@@ -245,7 +248,7 @@ nagios:
 falcon: HDFS Oozie
 	$(call colorized,\
 		Falcon, \
-		su - falcon -c'env JAVA_HOME=/usr/jdk64/jdk1.7.0_45 FALCON_LOG_DIR=/var/log/falcon FALCON_PID_DIR=/var/run/falcon FALCON_DATA_DIR=/hadoop/falcon/activemq /usr/hdp/current/falcon/bin/falcon-start -port 15000',\
+		su - falcon -c'env HADOOP_HOME=/usr/hdp/current/hadoop JAVA_HOME=/usr/jdk64/jdk1.7.0_45 FALCON_LOG_DIR=/var/log/falcon FALCON_PID_DIR=/var/run/falcon FALCON_DATA_DIR=/hadoop/falcon/activemq /usr/hdp/current/falcon/bin/falcon-start -port 15000',\
 		sleep 5,)
 
 
