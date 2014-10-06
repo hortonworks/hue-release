@@ -1121,11 +1121,14 @@ def save_results(request, id):
           redirected = redirect(reverse('beeswax:watch_query', args=[query_history.id]) \
                                 + '?on_success_url=' + reverse('filebrowser.views.view', kwargs={'path': target_dir}))
         elif form.cleaned_data['save_target'] == form.SAVE_TYPE_TBL:
-          redirected = db.create_table_as_a_select(request, query_history, form.cleaned_data['target_table'], result_meta)
+          target_database = _get_current_db(request)
+          target_table = form.cleaned_data['target_table']
+          select_query_history = db.create_table_as_a_select(request, query_history, target_database,  target_table, result_meta)
+          redirected = redirect(reverse(app_name + ':watch_query', args=[select_query_history.id]) \
+                                + '?on_success_url=' + reverse(app_name + ':describe_table', kwargs={'database': target_database, 'table': target_table}))
       except Exception, ex:
         error_msg, log = expand_exception(ex, db)
         raise PopupException(_('The result could not be saved: %s.') % log, detail=ex)
-
       return redirected
   else:
     form = beeswax.forms.SaveResultsForm()
