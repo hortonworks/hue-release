@@ -56,5 +56,10 @@ class install::ambari-bluprints{
     logoutput => true,
     require => [File["/tmp/install/check_status.py"], File["/tmp/install/check_status.sh"], Exec["add cluster"]]
   }
-  
+ 
+  exec{'set_hadoop_path':    
+    command => "echo 'export PATH=\$PATH:/usr/hdp/current/falcon/bin:/usr/hdp/current/flume/bin:/usr/hdp/current/hadoop/bin:/usr/hdp/current/hadoop-hdfs/bin:/usr/hdp/current/hadoop-mapreduce/bin:/usr/hdp/current/hadoop-yarn/bin:/usr/hdp/current/hbase/bin:/usr/hdp/current/hive/bin:/usr/hdp/current/hive-hcatalog/bin:/usr/hdp/current/knox/bin:/usr/hdp/current/oozie/bin:/usr/hdp/current/pig/bin:/usr/hdp/current/sqoop/bin:/usr/hdp/current/storm/bin:/usr/hdp/current/zookeeper/bin' > /etc/profile.d/hadoop.sh;",
+    require => Exec["install cluster"]
+  }
+
 }

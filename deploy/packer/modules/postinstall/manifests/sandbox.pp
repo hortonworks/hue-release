@@ -40,7 +40,7 @@ exec /sbin/mingetty --autologin root --noclear $TTY'
 class postinstall::sandbox{
 
   yumrepo{"sandbox":
-    baseurl => "http://dev2.hortonworks.com.s3.amazonaws.com/repo/dev/baikal-GA-2.3.1/utils/",
+    baseurl => "http://dev2.hortonworks.com.s3.amazonaws.com/repo/dev/master/utils/",
     descr => "Sandbox repository (tutorials)",
     enabled => 1,
     gpgcheck => 0,
