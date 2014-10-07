@@ -15,7 +15,8 @@ su -l tez -c "/usr/hdp/current/tez/sbin/tez-daemon.sh stop ampoolservice"
 
 # host machine
 echo "Stop Hive"
-ps aux | awk '{print $1,$2}' | grep hive | awk '{print $2}' | xargs kill >/dev/null 2>&1
+ps aux | grep HiveServer2 | awk '{print $2}' | xargs kill >/dev/null 2>&1
+ps aux | grep MetaStore | awk '{print $2}' | xargs kill >/dev/null 2>&1
 
 # host machine
 echo "Stop ZooKeeper"
