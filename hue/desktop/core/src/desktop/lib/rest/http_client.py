@@ -143,7 +143,7 @@ class HttpClient(object):
       headers_string = ["{0}: {1}".format(k, v) for k, v in headers.items()]
       command += " -H ".join([""] + headers_string)
     if data:
-      command += " -d %s" % data
+      command += "".join(" -d " + param for param in urllib.unquote_plus(data).split('&'))
     self.logger.debug("REST invocation: %s '%s'" % (command, url))
     ######
 
