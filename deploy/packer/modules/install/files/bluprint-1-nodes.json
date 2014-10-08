@@ -179,7 +179,6 @@
                 {"name" : "SECONDARY_NAMENODE"},
                 {"name" : "SLIDER"},
                 {"name" : "SQOOP"},
-                {"name" : "STORM_REST_API"},
                 {"name" : "STORM_UI_SERVER"},
                 {"name" : "SUPERVISOR"},
                 {"name" : "TEZ_CLIENT"},
