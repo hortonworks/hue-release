@@ -22,6 +22,10 @@ class prepare{
     ensure => installed
   }
 
+  package {'vim':
+    ensure => installed
+  }
+
   exec{'set_javahome':    
     command => "echo 'export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64; export PATH=\$JAVA_HOME/bin:\$PATH' > /etc/profile.d/java.sh;",
     require => Package['java']
