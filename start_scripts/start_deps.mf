@@ -35,7 +35,7 @@ YARN: resourcemanager yarnhistoryserver mapredhistoryserver nodemanagers
 HBase: hbase_master hbase_regionservers hbase_stargate hbase_thrift
 Zookeeper: zookeeper
 Hive_Metastore: mysql hive hive2
-Strom: nimbus supervisor stormui stormdrpc stormlogview # stormrest
+Storm: nimbus supervisor stormui stormdrpc stormlogview # stormrest
 Falcon: falcon
 Knox: knox-gateway knox-ldap
 WebHCat: webhcat
