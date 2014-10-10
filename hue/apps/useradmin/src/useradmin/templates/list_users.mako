@@ -70,7 +70,7 @@ ${layout.menubar(section='users', _=_)}
                 %endif
                 <td>
                     %if user.is_superuser or user.username == listed_user.username:
-                        <strong><a title="${_('Edit %(username)s') % dict(username=listed_user.username)}" href="${ url('useradmin.views.edit_user', username=urllib.quote(listed_user.username)) }" data-row-selector="true">${listed_user.username}</a></strong>
+                        <strong><a title="${_('Edit %(username)s') % dict(username=listed_user.username)}" href="${ url('useradmin.views.edit_user', username=urllib.quote(listed_user.username.encode('UTF-8'))) }" data-row-selector="true">${listed_user.username}</a></strong>
                     %else:
                         <strong>${listed_user.username}</strong>
                     %endif
