@@ -133,7 +133,11 @@ class HttpClient(object):
     # Prepare URL and params
     if urlencode:
       path = urllib.quote(smart_str(path))
-    url = self._make_url(path, params)
+      params_encoded = {}
+      if isinstance(params, dict):
+        for k, val in params.iteritems():
+          params_encoded[smart_str(k)] = smart_str(val)
+    url = self._make_url(path, params_encoded)
 
     ##REST logging
     command = "curl -X %s " % http_method

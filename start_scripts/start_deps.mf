@@ -35,14 +35,13 @@ YARN: resourcemanager yarnhistoryserver mapredhistoryserver nodemanagers
 HBase: hbase_master hbase_regionservers hbase_stargate hbase_thrift
 Zookeeper: zookeeper
 Hive_Metastore: mysql hive hive2
-Strom: nimbus supervisor stormui stormdrpc stormlogview stormrest
+Storm: nimbus supervisor stormui stormdrpc stormlogview # stormrest
 Falcon: falcon
 Knox: knox-gateway knox-ldap
 WebHCat: webhcat
 Tez: # tez
 Oozie: oozie
 
-PATH := ${PATH}:/usr/hdp/current/hadoop/bin:/usr/hdp/current/hive/bin
 HADOOP_HOME := /usr/hdp/current/hadoop
 
 postgresql:
@@ -56,23 +55,23 @@ postgresql:
 namenode: postgresql
 	$(call colorized,\
 		name node, \
-		su -l hdfs -c "export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode",\
+		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode',\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-namenode-*.log)
 
 datanode: postgresql
 	$(call colorized,\
 		data node, \
-		su -l hdfs -c  "export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec PATH=${PATH} && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode",\
+		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode',\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-datanode-*.log)
-	@su - hdfs -c"hadoop dfsadmin -safemode leave"
+	@su - hdfs -c"hdfs dfsadmin -safemode leave"
 
 
 secondary_namenode: postgresql
 	$(call colorized,\
 		secondary name node, \
-		su -l hdfs -c  "export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode",\
+		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode',\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-secondarynamenode-*.log)
 
@@ -160,13 +159,13 @@ mysql:
 hive: HDFS postgresql mysql
 	$(call colorized,\
 		hive server, \
-		env HADOOP_HOME=/usr JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_metastore_script /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server /var/log/hive, true,\
+		su - hive -c 'env HADOOP_HOME=/usr/hdp/current/hadoop JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_metastore_script /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server /var/log/hive', true,\
 		/var/log/hive/hive.log)
 
 hive2: HDFS hive
 	$(call colorized,\
 		Hiveserver2, \
-		env JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_hiveserver2_script /var/log/hive/hive-server2.out /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid /etc/hive/conf.server /var/log/hive,true,\
+		su - hive -c 'env JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_hiveserver2_script /var/log/hive/hive-server2.out /var/log/hive/hive-server2.log /var/run/hive/hive-server.pid /etc/hive/conf.server /var/log/hive',true,\
 		/var/log/hive/hive-server2.log)
 
 # ==== Storm ====
@@ -174,32 +173,32 @@ hive2: HDFS hive
 nimbus: Zookeeper YARN
 	$(call colorized,\
 		Storm nimbus, \
-                su - storm -c '/usr/bin/storm nimbus > /var/log/storm/nimbus.log &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.nimbus$" && pgrep -f "^java.+backtype.storm.daemon.nimbus$" > /var/run/storm/nimbus.pid',true)
+				su - storm -c 'env JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 PATH=$PATH:/usr/lib/jvm/java-1.7.0-openjdk.x86_64/bin storm nimbus > /var/log/storm/nimbus.out 2>&1 &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.nimbus$" && pgrep -f "^java.+backtype.storm.daemon.nimbus$" > /var/run/storm/nimbus.pid',true)
 
 supervisor: Zookeeper stormui YARN
 	$(call colorized,\
 		Storm supervisor, \
-		su - storm -c '/usr/bin/storm supervisor > /var/log/storm/supervisor.log &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.supervisor$" && pgrep -f "^java.+backtype.storm.daemon.supervisor$" > /var/run/storm/supervisor.pid',true)
+		su - storm -c 'env JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 PATH=$PATH:/usr/lib/jvm/java-1.7.0-openjdk.x86_64/bin storm supervisor > /var/log/storm/supervisor.out 2>&1 &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.supervisor$" && pgrep -f "^java.+backtype.storm.daemon.supervisor$" > /var/run/storm/supervisor.pid',true)
 
 stormui: Zookeeper nimbus stormlogview YARN
 	$(call colorized,\
 		Storm ui, \
-		su - storm -c '/usr/bin/storm ui > /var/log/storm/ui.log &'; sleep 10; su - storm -c 'pgrep -f "^java.+backtype.storm.ui.core$" && pgrep -f "^java.+backtype.storm.ui.core$" > /var/run/storm/ui.pid',true)
+		su - storm -c 'env JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 PATH=$PATH:/usr/lib/jvm/java-1.7.0-openjdk.x86_64/bin storm ui > /var/log/storm/ui.out 2>&1 &'; sleep 10; su - storm -c 'pgrep -f "^java.+backtype.storm.ui.core$" && pgrep -f "^java.+backtype.storm.ui.core$" > /var/run/storm/ui.pid',true)
 
 stormdrpc: Zookeeper nimbus YARN
 	$(call colorized,\
 		Storm DRPC, \
-		su - storm -c '/usr/bin/storm drpc > /var/log/storm/drpc.log &'; sleep 10; su - storm -c 'pgrep -f "^java.+backtype.storm.daemon.drpc$" && pgrep -f "^java.+backtype.storm.daemon.drpc$" > /var/run/storm/drpc.pid',true)
+		su - storm -c 'env JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 PATH=$PATH:/usr/lib/jvm/java-1.7.0-openjdk.x86_64/bin storm drpc > /var/log/storm/drpc.log &'; sleep 10; su - storm -c 'pgrep -f "^java.+backtype.storm.daemon.drpc$" && pgrep -f "^java.+backtype.storm.daemon.drpc$" > /var/run/storm/drpc.pid',true)
 
 stormlogview: Zookeeper stormdrpc YARN
 	$(call colorized,\
 		Storm Logview, \
-                su - storm -c '/usr/bin/storm logviewer > /var/log/storm/logviewer.log &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.logviewer$" && pgrep -f "^java.+backtype.storm.daemon.logviewer$" > /var/run/storm/logviewer.pid',true)
+				su - storm -c 'env JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 PATH=$PATH:/usr/lib/jvm/java-1.7.0-openjdk.x86_64/bin storm logviewer > /var/log/storm/logviewer.log &'; sleep 10; su - storm -c'pgrep -f "^java.+backtype.storm.daemon.logviewer$" && pgrep -f "^java.+backtype.storm.daemon.logviewer$" > /var/run/storm/logviewer.pid',true)
 
-stormrest: supervisor YARN
-	$(call colorized,\
-               Storm Rest server,\
-               su - storm -c '/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/hdp/current/storm/contrib/storm-rest/`ls /usr/hdp/current/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server /etc/storm/conf/config.yaml > /var/log/storm/restapi.log &'; sleep 10; su - storm -c 'pgrep -f "/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/hdp/current/storm/contrib/storm-rest/`ls /usr/hdp/current/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server" && pgrep -f "/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/hdp/current/storm/contrib/storm-rest/`ls /usr/hdp/current/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server" > /var/run/storm/restapi.pid', true)
+#stormrest: supervisor YARN
+#	$(call colorized,\
+#               Storm Rest server,\
+#               su - storm -c 'env JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 PATH=$PATH:/usr/lib/jvm/java-1.7.0-openjdk.x86_64/bin java -jar /usr/hdp/current/storm/contrib/storm-rest/`ls /usr/hdp/current/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server /etc/storm/conf/config.yaml > /var/log/storm/restapi.log &'; sleep 10; su - storm -c 'pgrep -f "/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/hdp/current/storm/contrib/storm-rest/`ls /usr/hdp/current/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server" && pgrep -f "/usr/jdk64/jdk1.7.0_45/bin/java -jar /usr/hdp/current/storm/contrib/storm-rest/`ls /usr/hdp/current/storm/contrib/storm-rest | grep -wE storm-rest-[0-9.-]+\.jar` server" > /var/run/storm/restapi.pid', true)
 
 
 # ==== Single services ====
@@ -207,21 +206,21 @@ stormrest: supervisor YARN
 zookeeper: namenode
 	$(call colorized,\
 		zookeeper nodes, \
-		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOKEEPER_HOME=/usr/hdp/current/zookeeper ZOOCFG=zoo.cfg /usr/hdp/current/zookeeper/bin/zkServer.sh start; sleep 10",\
+		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/hdp/current/zookeeper/bin/zkServer.sh start; sleep 10",\
 		true)
 
 
-tez: namenode
-	$(call colorized,\
-		tez node, \
-		su - tez -c "/usr/hdp/current/tez/sbin/tez-daemon.sh start ampoolservice",\
-		true)
+#tez: namenode
+#	$(call colorized,\
+#		tez node, \
+#		su - tez -c "/usr/hdp/current/tez/sbin/tez-daemon.sh start ampoolservice",\
+#		true)
 	
 
 webhcat: hive HDFS
 	$(call colorized,\
 		webhcat server, \
-		su -l hcat -c "env HADOOP_HOME=/usr /usr/hdp/current/hive-hcatalog/sbin/webhcat_server.sh start", true\
+		su -l hcat -c "env HADOOP_HOME=/usr/hdp/current/hadoop /usr/hdp/current/hive-hcatalog/sbin/webhcat_server.sh start", true\
 		, /var/log/webhcat/webhcat.log)
 
 
@@ -254,9 +253,9 @@ falcon: HDFS Oozie
 
 knox-ldap:
 	$(call colorized,\
-    	Knox ldap, \
-    	su - knox -c "/usr/hdp/current/knox/bin/ldap.sh start",\
-    	sleep 2,)
+		Knox ldap, \
+		su - knox -c "/usr/hdp/current/knox/bin/ldap.sh start",\
+		sleep 2,)
   
 
 knox-gateway: HDFS WebHCat Oozie knox-ldap

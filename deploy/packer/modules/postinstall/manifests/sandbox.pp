@@ -49,7 +49,29 @@ class postinstall::sandbox{
 
   $services = ["ambari-agent", "ambari-server", "auditd", "cups", "gmetad", "gmond", "hadoop-mapreduce-historyserver", "hadoop-yarn-nodemanager", "hadoop-yarn-proxyserver", "hadoop-yarn-resourcemanager", "hdp-gmetad", "hdp-gmond", "iptables", "nagios", "nfs", "nfslock", "rpcbind", "rpcidmapd", "rpcgssd", "rpcsvcgssd"]
 
-  $postInstallPackages = ["yum-plugin-priorities", "epel-release", "libxslt", "python-lxml"]
+  $postInstallPackages = ["yum-plugin-priorities", "epel-release", "libxslt", "python-lxml", "httpd"]
+
+  service { "httpd":
+    ensure => running,
+    require => [ Package[httpd], ],
+  }
+
+  file { 'apache-hue.conf':
+      path    => "/etc/httpd/conf.d/hue.conf",
+      ensure  => file,
+      notify  => Service['httpd'],
+      require => [ Package[httpd], ],
+      content => '# Proxy to tutorials
+<VirtualHost *:80>
+  ProxyPass /ganglia !
+  ProxyPass /nagios !
+  ProxyPass /ambarinagios !
+  ProxyPass /cgi-bin !
+  ProxyPass / http://127.0.0.1:8888/
+  ProxyPassReverse / http://127.0.0.1:8888/
+</VirtualHost>
+'
+    }
 
   package{$postInstallPackages:
     ensure => installed,

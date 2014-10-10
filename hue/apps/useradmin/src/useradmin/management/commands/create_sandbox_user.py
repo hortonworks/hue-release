@@ -10,7 +10,7 @@ class Command(NoArgsCommand):
 
   def handle_noargs(self, **options):
     try:
-      User.objects.get(username=DEFAULT_USER.get())
+      return User.objects.get(username=DEFAULT_USER.get())
     except User.DoesNotExist:
       form = SuperUserChangeForm(
         {
@@ -24,3 +24,4 @@ class Command(NoArgsCommand):
       )
       instance = form.save()
       get_profile(instance)
+      return User.objects.get(username=DEFAULT_USER.get())
