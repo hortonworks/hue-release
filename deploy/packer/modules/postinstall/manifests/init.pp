@@ -15,5 +15,4 @@ class postinstall {
   if $sandbox=='true'{
     include sandbox
   }
-  
 }
