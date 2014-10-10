@@ -530,7 +530,9 @@ function edit_node_modal(node, save, cancel, template) {
   };
 
   var try_save = save || function() {
-    if (node.validate()) {
+    var _node = ko.mapping.toJS(node);
+    normalize_model_fields(_node);
+    if (ko.mapping.fromJS(_node, node).validate()) {
       workflow.is_dirty( true );
       modal.hide();
     }
