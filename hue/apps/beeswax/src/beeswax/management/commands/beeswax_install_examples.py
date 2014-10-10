@@ -32,7 +32,7 @@ from beeswax.models import SavedQuery, IMPALA
 from beeswax.design import hql_query
 from beeswax.server import dbms
 from beeswax.server.dbms import get_query_server_config, QueryServerException
-from useradmin.models import install_sample_user
+from useradmin.management.commands.create_sandbox_user import Command as CreateSandboxUserCommand
 
 
 LOG = logging.getLogger(__name__)
@@ -48,10 +48,10 @@ class Command(NoArgsCommand):
   """
   def handle_noargs(self, **options):
     exception = None
-
+    sample_user = None
     # Documents will belong to this user but we run the install as the current user
     try:
-      sample_user = install_sample_user()
+      sample_user = CreateSandboxUserCommand().handle_noargs()
       self._install_tables(sample_user, 'beeswax')
     except Exception, ex:
       exception = ex

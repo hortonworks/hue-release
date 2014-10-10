@@ -23,7 +23,8 @@ from django.core import management
 from django.core.management.base import NoArgsCommand
 from django.db import transaction
 from django.utils.translation import ugettext as _
-
+from desktop.conf import DEFAULT_USER
+from useradmin.management.commands.create_sandbox_user import Command as CreateSandboxUserCommand
 from hadoop import cluster
 
 from oozie.conf import LOCAL_SAMPLE_DATA_DIR, LOCAL_SAMPLE_DIR,\
@@ -36,7 +37,7 @@ LOG = logging.getLogger(__name__)
 
 class Command(NoArgsCommand):
   def handle_noargs(self, **options):
-    fs = cluster.get_hdfs()    
+    fs = cluster.get_hdfs()
     create_directories(fs, [REMOTE_SAMPLE_DIR.get()])
     remote_dir = REMOTE_SAMPLE_DIR.get()
 
@@ -56,9 +57,5 @@ class Command(NoArgsCommand):
     fs.do_as_user(fs.DEFAULT_USER, fs.copyFromLocal, local_dir, remote_data_dir)
 
     # Load jobs
-    USERNAME = 'hue'
-    try:
-      sample_user = User.objects.get(username=USERNAME)
-    except User.DoesNotExist:
-      sample_user = User.objects.create(username=USERNAME, password='!', is_active=False, is_superuser=False, id=1100713, pk=1100713)
+    sample_user = CreateSandboxUserCommand().handle_noargs()
     management.call_command('loaddata', 'initial_oozie_examples.json', verbosity=2)
