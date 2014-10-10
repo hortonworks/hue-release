@@ -137,7 +137,8 @@ class HttpClient(object):
       if isinstance(params, dict):
         for k, val in params.iteritems():
           params_encoded[smart_str(k)] = smart_str(val)
-    url = self._make_url(path, params_encoded)
+        params = params_encoded
+    url = self._make_url(path, params)
 
     ##REST logging
     command = "curl -X %s " % http_method
