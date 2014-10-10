@@ -6,7 +6,7 @@ class postinstall::knox{
   }
 
   exec{"create knox master":
-    command => "su -l knox -c '/usr/hdp/current/knox/bin/knoxcli.sh create-master --master knox'",
+    command => "su -l knox -c '/usr/hdp/current/knox-server/bin/knoxcli.sh create-master --master knox'",
     require => Package["knox*"]
   }
 
