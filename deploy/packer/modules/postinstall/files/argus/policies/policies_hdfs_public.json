@@ -1,0 +1,24 @@
+{
+   "policyName":"HDFS Global Allow",
+   "resourceName":"/,/*",
+   "description":"",
+   "repositoryName":"sandbox_hdfs",
+   "repositoryType":"HDFS",
+   "permMapList":[
+      {
+         "groupList":[
+            "public"
+         ],
+         "permList":[
+            "Admin",
+            "Read",
+            "Write",
+            "Execute"
+         ]
+      }
+   ],
+   "isEnabled":true,
+   "isRecursive":true,
+   "isAuditEnabled":true,
+   "replacePerm":false
+}
