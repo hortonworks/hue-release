@@ -76,6 +76,7 @@ class postinstall::argus{
     cwd => "/vagrant/modules/postinstall/files/argus/install_overrides",
     command => "/tmp/argus_override_properties_and_install.sh",
     require => File["stage_override_properties"],
+    logoutput => true,
   }
   
 #  exec{"install_argus_admin":
@@ -122,6 +123,7 @@ class postinstall::argus{
     command => "/tmp/create_argus_policies.sh",
 #    require => File["stage_create_policies"],
     require => File["stage_create_policies", "stage_hdfs_repos", "stage_hdfs_policies"],
+    logoutput => true,
   }
   ambariApi {"maintenance_on":
     url => "hosts/sandbox.hortonworks.com",

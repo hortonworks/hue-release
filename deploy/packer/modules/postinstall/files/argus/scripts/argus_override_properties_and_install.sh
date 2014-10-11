@@ -12,7 +12,11 @@ fi
 #latest_ver=`ls | grep -v current | sort -unr | head --lines=1`
 latest_folder=`find /usr/hdp -name argus | grep -v current | sort -unr | head --lines=1`
 
-echo "Override folder=$install_overrides_folder Install_folder=$latest_folder"
+if [ -f /etc/profile.d/java.sh ]; then
+	. /etc/profile.d/java.sh
+fi
+
+echo "Override folder=$install_overrides_folder Install_folder=$latest_folder JAVA_HOME=$JAVA_HOME"
 
 cd $install_overrides_folder
 cp -r * $latest_folder
