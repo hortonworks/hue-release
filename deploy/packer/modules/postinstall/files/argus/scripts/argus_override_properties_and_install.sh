@@ -1,11 +1,11 @@
 #!/bin/bash
 
 #Make sure this script is from where folder which contains the override files
-#e.g. cd /vagrant/modules/postinstall/files/argus/install_overrides
+#e.g. cd /tmp/argus/install_overrides
 install_overrides_folder=`pwd`
 
 if [ ! -d admin ]; then
-	echo "ERROR: This script should be run from override folder. e.g. /vagrant/modules/postinstall/files/argus/install_overrides"
+	echo "ERROR: This script should be run from override folder. e.g. /tmp/argus/install_overrides"
 	exit 1
 fi
 

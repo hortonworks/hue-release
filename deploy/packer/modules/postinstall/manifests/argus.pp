@@ -65,19 +65,27 @@ class postinstall::argus{
 #    owner  => '0',
 #  }
   
-  file { "stage_override_properties":
-    path => "/tmp/argus_override_properties_and_install.sh",
-    source => "puppet:///modules/postinstall/argus/scripts/argus_override_properties_and_install.sh",
+#  file { "stage_override_properties":
+#    path => "/tmp/argus_override_properties_and_install.sh",
+#    source => "puppet:///modules/postinstall/argus/scripts/argus_override_properties_and_install.sh",
+#    mode   => '777',
+#    require => Package["argus*"],
+#  }
+
+  file { "argus_directory":
+    path => "/tmp/argus",
+    source => "puppet:///modules/postinstall/argus/",
     mode   => '777',
+    recurse => true,
     require => Package["argus*"],
   }
  
  #   Puppet doesn't relative like this
  #   cwd => "puppet:///modules/postinstall/argus/install_overrides", 
   exec{"override_properties_and_install":
-    cwd => "/vagrant/modules/postinstall/files/argus/install_overrides",
-    command => "/tmp/argus_override_properties_and_install.sh",
-    require => File["stage_override_properties"],
+    cwd => "/tmp/argus/install_overrides",
+    command => "bash /tmp/argus/scripts/argus_override_properties_and_install.sh",
+    require => File["argus_directory"],
     logoutput => true,
   }
   
@@ -89,7 +97,7 @@ class postinstall::argus{
   }
   
   exec{"create_argus_policies":
-    cwd => "/vagrant/modules/postinstall/files/argus/policies",
+    cwd => "/tmp/argus/policies",
     command => "/tmp/create_argus_policies.sh",
     require => File["stage_create_policies"],    
     logoutput => true,

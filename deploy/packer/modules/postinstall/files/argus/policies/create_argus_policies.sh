@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Make sure this script is run from the folder which contains the policies
-#e.g. cd /vagrant/modules/postinstall/files/argus/policies
+#e.g. cd /tmp/argus/policies
 policies_folder=`pwd`
 
 echo "Policies folder=$policies_folder"
