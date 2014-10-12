@@ -1,0 +1,32 @@
+{
+   "policyName":"Hive Global Tables Allow",
+   "resourceName":"/*/*/*,/*/*/ToMakeUnique",
+   "description":"This policy gives global permission for all users. Disable this to test Apache Argus",
+   "repositoryName":"sandbox_hive",
+   "repositoryType":"Hive",
+   "permMapList":[
+      {
+         "groupList":[
+            "public"
+         ],
+         "permList":[
+            "Admin",
+            "Select",
+            "Update",
+            "Create",
+            "Drop",
+            "Alter",
+            "Index",
+            "Lock",
+            "All"
+         ]
+      }
+   ],
+   "tables":"*",
+   "columns":"*,ToMakeUnique",
+   "databases":"*",
+   "tableType":"Inclusion",
+   "columnType":"Inclusion",
+   "isEnabled":true,
+   "isAuditEnabled":true
+}

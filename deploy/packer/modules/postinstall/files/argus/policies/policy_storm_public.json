@@ -1,0 +1,34 @@
+{
+   "policyName":"Global Storm Allow",
+   "resourceName":"/*,/ToMakeUnique",
+   "description":"This policy gives global permission for all users. Disable this to test Apache Argus",
+   "repositoryName":"sandbox_storm",
+   "repositoryType":"Storm",
+   "permMapList":[
+      {
+         "groupList":[
+            "public"
+         ],
+         "permList":[
+            "Admin",
+            "submitTopology",
+            "fileUpload",
+            "getNimbusConf",
+            "getClusterInfo",
+            "fileDownload",
+            "killTopology",
+            "rebalance",
+            "activate",
+            "deactivate",
+            "getTopologyConf",
+            "getTopology",
+            "getUserTopology",
+            "getTopologyInfo",
+            "uploadNewCredentials"
+         ]
+      }
+   ],
+   "topologies":"*,ToMakeUnique",
+   "isEnabled":true,
+   "isAuditEnabled":true
+}

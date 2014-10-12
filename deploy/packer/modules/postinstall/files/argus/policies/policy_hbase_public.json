@@ -1,9 +1,9 @@
 {
-   "policyName":"HDFS Global Allow",
-   "resourceName":"/,/*",
+   "policyName":"HBase Global Allow",
+   "resourceName":"/*",
    "description":"This policy gives global permission for all users. Disable this to test Apache Argus",
-   "repositoryName":"sandbox_hdfs",
-   "repositoryType":"HDFS",
+   "repositoryName":"sandbox_hbase",
+   "repositoryType":"HBase",
    "permMapList":[
       {
          "groupList":[
@@ -13,12 +13,13 @@
             "Admin",
             "Read",
             "Write",
-            "Execute"
+            "Create"
          ]
       }
    ],
+   "tables":"*",
+   "columnFamilies":"*",
+   "columns":"*",
    "isEnabled":true,
-   "isRecursive":true,
-   "isAuditEnabled":true,
-   "replacePerm":false
+   "isAuditEnabled":true
 }

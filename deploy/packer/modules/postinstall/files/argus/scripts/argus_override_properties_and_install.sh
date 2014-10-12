@@ -18,6 +18,7 @@ fi
 
 echo "Override folder=$install_overrides_folder Install_folder=$latest_folder JAVA_HOME=$JAVA_HOME"
 
+set -x
 cd $install_overrides_folder
 cp -r * $latest_folder
 
@@ -29,6 +30,20 @@ cd ${latest_folder}/ugsync
 
 cd ${latest_folder}/hdfs-agent
 ./enable-hdfs-agent.sh
+
+cd ${latest_folder}/hive-agent
+./enable-hive-agent.sh
+cp /etc/hive/conf/xa* /etc/hive/conf.server
+
+cd ${latest_folder}/hbase-agent
+./enable-hbase-agent.sh
+
+cd ${latest_folder}/knox-agent
+./enable-knox-agent.sh
+
+#cd ${latest_folder}/storm-agent
+#./enable-storm-agent.sh
+
 
 #  exec{"install_argus_admin":
 #    cwd => "/usr/hdp/current/argus/admin",

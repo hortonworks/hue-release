@@ -1,0 +1,7 @@
+{
+   "name":"sandbox_knox",
+   "description":"Policies for Knox in sandbox",
+   "repositoryType":"Knox",
+   "config":"{\"username\":\"xapolicymgr\",\"password\":\"*****\",\"knox.url\":\"https://sandbox.hortonworks.com:8443\",\"commonNameForCertificate\":\"\",\"isencrypted\":\"true\"}",
+   "isActive":true
+}
