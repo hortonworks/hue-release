@@ -45,6 +45,16 @@ cd ${latest_folder}/knox-agent
 #./enable-storm-agent.sh
 
 
+#Set the properties in Hive and HBase to use Argus
+cd /var/lib/ambari-server/resources/scripts
+./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authorization.enabled" "true"
+./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authorization.manager" "com.xasecure.authorization.hive.authorizer.XaSecureHiveAuthorizerFactory"
+
+./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hbase-site "hbase.coprocessor.master.classes" "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor"
+./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hbase-site "hbase.coprocessor.region.classes" "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor"
+
+
+
 #  exec{"install_argus_admin":
 #    cwd => "/usr/hdp/current/argus/admin",
 #    command => "/usr/hdp/current/argus/admin/install.sh",
