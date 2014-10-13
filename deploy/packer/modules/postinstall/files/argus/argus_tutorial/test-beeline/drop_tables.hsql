@@ -1,0 +1,2 @@
+drop table xademo.customer_info ;
+drop table xademo.customer_tx_info ;

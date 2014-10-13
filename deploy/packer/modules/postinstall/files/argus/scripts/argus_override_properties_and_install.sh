@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#Make sure this script is from where folder which contains the override files
+#Make sure this script is run from the folder which contains the override files
 #e.g. cd /tmp/argus/install_overrides
 install_overrides_folder=`pwd`
 
@@ -53,6 +53,9 @@ cd /var/lib/ambari-server/resources/scripts
 ./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hbase-site "hbase.coprocessor.master.classes" "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor"
 ./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hbase-site "hbase.coprocessor.region.classes" "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor"
 
+#Copy the tutorial files to the home folder of root
+cd $install_overrides_folder
+cp -r ../argus_tutorial /root
 
 
 #  exec{"install_argus_admin":

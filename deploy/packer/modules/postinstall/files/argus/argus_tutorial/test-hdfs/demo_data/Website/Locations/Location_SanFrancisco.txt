@@ -1,0 +1,6 @@
+Location id	Name of branch	Address	City	State	Number of employees
+787	San Francisco Main	100 Union St	San Francisco	CA	9876
+					
+					
+					
+					

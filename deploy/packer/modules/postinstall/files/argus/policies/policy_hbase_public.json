@@ -19,7 +19,7 @@
    ],
    "tables":"*",
    "columnFamilies":"*",
-   "columns":"*",
+   "columns":"*,ToMakeUnique",
    "isEnabled":true,
    "isAuditEnabled":true
 }

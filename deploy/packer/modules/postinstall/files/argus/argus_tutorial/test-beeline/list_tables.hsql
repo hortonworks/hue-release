@@ -1,0 +1,3 @@
+show databases ;
+use xademo ;
+show tables ;

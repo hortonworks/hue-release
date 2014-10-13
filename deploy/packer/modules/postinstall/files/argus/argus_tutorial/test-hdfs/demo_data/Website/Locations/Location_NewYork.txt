@@ -1,0 +1,6 @@
+Location id	Name of branch	Address	City	State	Number of employees
+232	New York Main	150 Park Ave	New York	CA	65998
+					
+					
+					
+					

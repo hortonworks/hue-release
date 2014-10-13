@@ -1,0 +1,25 @@
+{
+	"policyName":"sandbox_hdfs-1-20141013080224",
+	"resourceName":"/",
+	"description":"",
+	"repositoryName":"sandbox_hdfs",
+	"repositoryType":"HDFS",
+	"permMapList":[
+		{
+			"userList":[
+				"hdfs"
+			],
+			"permList":[
+				"Admin",
+				"Read",
+				"Write",
+				"Execute"
+			]
+			
+		}
+		
+	],
+	"isEnabled":true,
+	"isRecursive":true,
+	"isAuditEnabled":true
+}

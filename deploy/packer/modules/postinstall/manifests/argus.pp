@@ -27,50 +27,10 @@ class postinstall::argus{
     managehome => true,
   }
   
-    
+  
   package{"argus*":
     ensure => installed,
   }
-
-
-#  file { "/usr/hdp/current/argus/admin/install.properties":
-#    source => "puppet:///modules/postinstall/argus/install_overrides/admin/install.properties",
-#    require => Package["argus*"],
-#    group  => '0',
-#    mode   => '777',
-#    owner  => '0',
-#  }
-#
-#  file { "/usr/hdp/current/argus/ugsync/install.properties":
-#    source => "puppet:///modules/postinstall/argus/install_overrides/ugsync/install.properties",
-#    require => Package["argus*"],
-#    group  => '0',
-#    mode   => '640',
-#    owner  => '0',
-#  }
-#
-#  file { "/usr/hdp/current/argus/hdfs-agent/install.properties":
-#    source => "puppet:///modules/postinstall/argus/install_overrides/hdfs-agent/install.properties",
-#    require => Package["argus*"],
-#    group  => '0',
-#    mode   => '640',
-#    owner  => '0',
-#  }
-#
-#  file { "/usr/hdp/current/argus/hive-agent/install.properties":
-#    source => "puppet:///modules/postinstall/argus/install_overrides/hive-agent/install.properties",
-#    require => Package["argus*"],
-#    group  => '0',
-#    mode   => '640',
-#    owner  => '0',
-#  }
-  
-#  file { "stage_override_properties":
-#    path => "/tmp/argus_override_properties_and_install.sh",
-#    source => "puppet:///modules/postinstall/argus/scripts/argus_override_properties_and_install.sh",
-#    mode   => '777',
-#    require => Package["argus*"],
-#  }
 
   file { "argus_directory":
     path => "/tmp/argus",
@@ -80,7 +40,7 @@ class postinstall::argus{
     require => Package["argus*"],
   }
  
- #   Puppet doesn't relative like this
+ #   Puppet doesn't like relative path like this
  #   cwd => "puppet:///modules/postinstall/argus/install_overrides", 
   exec{"override_properties_and_install":
     cwd => "/tmp/argus/install_overrides",

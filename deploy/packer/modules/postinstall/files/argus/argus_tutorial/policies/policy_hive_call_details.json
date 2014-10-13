@@ -1,0 +1,28 @@
+{
+	"policyName":"Call_Details_Table",
+	"resourceName":"/xademo/call_detail_records",
+	"description":"",
+	"repositoryName":"sandbox_hive",
+	"repositoryType":"Hive",
+	"permMapList":[
+		{
+			"groupList":[
+				"IT",
+				"Network"
+			],
+			"permList":[
+				"Select"
+			]
+			
+		}
+		
+	],
+	"tables":"call_detail_records",
+	"columns":"*",
+	"databases":"xademo",
+	"udfs":"",
+	"tableType":"Inclusion",
+	"columnType":"Inclusion",
+	"isEnabled":true,
+	"isAuditEnabled":true
+}

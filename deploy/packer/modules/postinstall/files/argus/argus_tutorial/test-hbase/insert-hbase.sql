@@ -1,0 +1,13 @@
+put 'iemployee', '1',  'personal:fname', 'Mike'
+put 'iemployee', '1',  'personal:lname', 'Young'
+put 'iemployee', '1',  'personal:city', 'San Fransisco'
+put 'iemployee', '1',  'personal:zip', '12345'
+put 'iemployee', '1',  'payroll:grade', 'G16'
+put 'iemployee', '1',  'payroll:salary', '250000.00'
+put 'iemployee', '1',  'skills:management', 'executive,creator,innovative'
+put 'iemployee', '1',  'skills:interpersonal-rating', 'medium'
+put 'iemployee', '1',  'insurance:health', 'anthem'
+put 'iemployee', '1',  'insurance:dental', 'metlife' 
+put 'iemployee', '1',  'insurance:vision', 'visionOne'
+put 'iemployee', '1',  'insurance:life', 'metlife'
+exit

@@ -1,0 +1,27 @@
+{
+	"policyName":"Customer_Details_Table",
+	"resourceName":"/xademo/customer_details/phone_number,/xademo/customer_details/plan,/xademo/customer_details/date",
+	"description":"",
+	"repositoryName":"sandbox_hive",
+	"repositoryType":"Hive",
+	"permMapList":[
+		{
+			"groupList":[
+				"Marketing"
+			],
+			"permList":[
+				"Select"
+			]
+			
+		}
+		
+	],
+	"tables":"customer_details",
+	"columns":"phone_number,plan,date",
+	"databases":"xademo",
+	"udfs":"",
+	"tableType":"Inclusion",
+	"columnType":"Inclusion",
+	"isEnabled":true,
+	"isAuditEnabled":true
+}

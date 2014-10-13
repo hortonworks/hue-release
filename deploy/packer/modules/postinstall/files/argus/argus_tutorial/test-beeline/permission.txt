@@ -1,0 +1,3 @@
+phone_number,plan,date,status,balance,region
+phone_number,phone_type,in_out,local,duration,date,time,roaming,amount,in_network,is_promo,toll_free,bytes,type
+

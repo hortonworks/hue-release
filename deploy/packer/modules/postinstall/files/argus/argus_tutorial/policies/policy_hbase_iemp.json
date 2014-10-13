@@ -1,0 +1,26 @@
+{
+	"policyName":"iemployee Policy",
+	"resourceName":"/iemployee",
+	"description":"Policy for iemployee",
+	"repositoryName":"sandbox_hbase",
+	"repositoryType":"HBase",
+	"permMapList":[
+		{
+			"groupList":[
+				"Marketing",
+				"Legal",
+				"Network"
+			],
+			"permList":[
+				"Read"
+			]
+			
+		}
+		
+	],
+	"tables":"iemployee",
+	"columnFamilies":"*",
+	"columns":"*",
+	"isEnabled":false,
+	"isAuditEnabled":true
+}
