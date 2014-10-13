@@ -18,7 +18,7 @@ class postinstall::knox{
 
   file { "/etc/knox/conf/topologies/sandbox.xml":
     source => "puppet:///modules/postinstall/knox/sandbox.xml",
-    require => [Package["knox*"], Exec["create knox master"]]
+    require => [Package["knox*"], Exec["create knox master"], File["/etc/knox/sandbox.xml.provided"]]
   }
   
 }
