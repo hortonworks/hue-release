@@ -44,6 +44,12 @@ cd ${latest_folder}/knox-agent
 #cd ${latest_folder}/storm-agent
 #./enable-storm-agent.sh
 
+#Apply the patches
+cd $install_overrides_folder
+cd ../patches
+#Resolve hue getting databases issues. Should be removed later as it is fixed by dev team
+./patch_for_audit_log_message/apply_patch.sh 
+
 
 #Set the properties in Hive and HBase to use Argus
 cd /var/lib/ambari-server/resources/scripts
