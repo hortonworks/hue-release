@@ -99,7 +99,7 @@ class postinstall::argus{
   exec{"create_argus_policies":
     cwd => "/tmp/argus/policies",
     command => "/tmp/create_argus_policies.sh",
-    require => File["stage_create_policies"],    
+    require => [File["stage_create_policies"], File["argus_directory"]],    
     logoutput => true,
   }
   
