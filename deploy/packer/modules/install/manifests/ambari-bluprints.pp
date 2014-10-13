@@ -63,7 +63,7 @@ class install::ambari-bluprints{
   }
 
   exec{'hadoop_path_add':    
-    command => "sed -i.bak 's/exec /source \/etc\/profile.d\/hadoop.sh\nexec /g' /usr/hdp/current/hadoop-client/bin/hadoop",
+    command => 'sed -i.bak "s/exec /source \/etc\/profile.d\/hadoop.sh\nexec /g" /usr/hdp/current/hadoop-client/bin/hadoop',
     require => Exec["install cluster"]
   }
 
