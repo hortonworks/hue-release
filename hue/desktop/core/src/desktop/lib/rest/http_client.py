@@ -23,6 +23,7 @@ from django.utils.encoding import iri_to_uri, smart_str
 
 from requests import exceptions
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
+from desktop.conf import DJANGO_DEBUG_MODE
 
 __docformat__ = "epytext"
 
@@ -147,9 +148,10 @@ class HttpClient(object):
     if headers:
       headers_string = ["{0}: {1}".format(k, v) for k, v in headers.items()]
       command += " -H ".join([""] + headers_string)
-    if data:
+    if data and headers.get("Content-Type", "") != "application/octet-stream":
       command += "".join(" -d " + param for param in urllib.unquote_plus(data).split('&'))
-    self.logger.debug("REST invocation: %s '%s'" % (command, url))
+    if DJANGO_DEBUG_MODE.get():
+      self.logger.debug("REST invocation: %s '%s'" % (command, url))
     ######
 
     if http_method in ("GET", "DELETE"):
