@@ -1,0 +1,7 @@
+{
+   "name":"sandbox_hbase",
+   "description":"Policies for HBase in sandbox",
+   "repositoryType":"HBase",
+   "config":"{\"username\":\"xapolicymgr\",\"password\":\"*****\",\"hadoop.security.authentication\":\"simple\",\"hbase.master.kerberos.principal\":\"hbase/_HOST@EXAMPLE.COM\",\"hbase.security.authentication\":\"simple\",\"hbase.zookeeper.property.clientPort\":\"2181\",\"hbase.zookeeper.quorum\":\"sandbox.hortonworks.com\",\"zookeeper.znode.parent\":\"/hbase-unsecure\",\"isencrypted\":\"true\"}",
+   "isActive":true
+}

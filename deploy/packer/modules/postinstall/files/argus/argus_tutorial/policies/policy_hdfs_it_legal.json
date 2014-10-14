@@ -1,0 +1,25 @@
+{
+	"policyName":"IT and Network Policy",
+	"resourceName":"/demo/data/Website/Website-Logs",
+	"description":"",
+	"repositoryName":"sandbox_hdfs",
+	"repositoryType":"HDFS",
+	"permMapList":[
+		{
+			"groupList":[
+				"IT",
+				"Network"
+			],
+			"permList":[
+				"Read",
+				"Write",
+				"Execute"
+			]
+			
+		}
+		
+	],
+	"isEnabled":true,
+	"isRecursive":false,
+	"isAuditEnabled":true
+}

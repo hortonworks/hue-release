@@ -1,0 +1,22 @@
+{
+   "policyName":"Global Knox Allow",
+   "resourceName":"/*",
+   "description":"This policy gives global permission for all users. Disable this to test Apache Argus",
+   "repositoryName":"sandbox_knox",
+   "repositoryType":"Knox",
+   "permMapList":[
+      {
+         "groupList":[
+            "public"
+         ],
+         "permList":[
+            "Admin",
+            "Allow"
+         ]
+      }
+   ],
+   "topologies":"*",
+   "services":"*",
+   "isEnabled":true,
+   "isAuditEnabled":true
+}

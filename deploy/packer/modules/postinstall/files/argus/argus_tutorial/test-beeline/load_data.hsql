@@ -1,0 +1,3 @@
+load data local inpath '/tmp/cdrs.txt'  into table xademo.call_detail_records;
+load data local inpath '/tmp/recharges.txt'  into table xademo.recharge_details;
+load data local inpath '/tmp/acct.txt'  into table xademo.customer_details;

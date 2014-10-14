@@ -10,10 +10,10 @@ class postinstall {
     include solr
     include ambari_views
     # include xasecure
+    include argus
   }
 
   if $sandbox=='true'{
     include sandbox
   }
-  
 }

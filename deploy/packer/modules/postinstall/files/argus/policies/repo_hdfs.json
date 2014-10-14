@@ -1,0 +1,8 @@
+{  
+   "name":"sandbox_hdfs",
+   "description":"Policies for HDFS in sandbox",
+   "repositoryType":"HDFS",
+   "config":"{\"username\":\"xapolicymgr\",\"password\":\"xapolicymgr\",\"fs.default.name\":\"hdfs://sandbox.hortonworks.com:8020\",\"hadoop.security.authorization\":\"\",\"hadoop.security.authentication\":\"\",\"hadoop.security.auth_to_local\":\"\",\"dfs.datanode.kerberos.principal\":\"\",\"dfs.namenode.kerberos.principal\":\"\",\"dfs.secondary.namenode.kerberos.principal\":\"\",\"commonNameForCertificate\":\"\"}",
+   "isActive":true,
+   "version":""
+}

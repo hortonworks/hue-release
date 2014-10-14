@@ -1,0 +1,6 @@
+Customer Id		Customer Name	Address	City	State
+2201	Joe Doe		100 Skyward Drive	Menlo Park	CA
+2202	Jane Doe	220 Governor's Drive	Trenton	NJ
+2203	Trisha Man	1600 Pennsylvania Ave	Washington	DC
+2204	Corey Toll	700 Capitol Ave	Washington	DC
+2205	Matt Martin	100 State Drove	New York	NY

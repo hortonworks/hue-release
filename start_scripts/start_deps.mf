@@ -42,8 +42,6 @@ WebHCat: webhcat
 Tez: # tez
 Oozie: oozie
 
-HADOOP_HOME := /usr/hdp/current/hadoop
-
 postgresql:
 	$(call colorized,\
 		Postgre SQL, \
@@ -55,14 +53,14 @@ postgresql:
 namenode: postgresql
 	$(call colorized,\
 		name node, \
-		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode',\
+		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop-client/libexec && /usr/hdp/current/hadoop-client/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode',\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-namenode-*.log)
 
 datanode: postgresql
 	$(call colorized,\
 		data node, \
-		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode',\
+		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop-client/libexec && /usr/hdp/current/hadoop-client/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode',\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-datanode-*.log)
 	@su - hdfs -c"hdfs dfsadmin -safemode leave"
@@ -71,21 +69,21 @@ datanode: postgresql
 secondary_namenode: postgresql
 	$(call colorized,\
 		secondary name node, \
-		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode',\
+		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop-client/libexec && /usr/hdp/current/hadoop-client/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode',\
 		sleep 5,\
 		/var/log/hadoop/hdfs/hadoop-hdfs-secondarynamenode-*.log)
 
 nfsportpap: namenode datanode
 	$(call colorized,\
 		NFS portmap, \
-		export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start portmap,\
+		export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop-client/libexec && /usr/hdp/current/hadoop-client/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start portmap,\
 		sleep 5,\
 		/var/log/hadoop/root/hadoop-root-portmap-sandbox.hortonworks.com.log)
 
 hdfsnfs: namenode datanode
 	$(call colorized,\
 		Hdfs nfs, \
-		export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start nfs3,\
+		export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop-client/libexec && /usr/hdp/current/hadoop-client/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start nfs3,\
 		sleep 5,\
 		/var/log/hadoop/root/hadoop-root-nfs3-sandbox.hortonworks.com.log)
 
@@ -94,27 +92,27 @@ hdfsnfs: namenode datanode
 resourcemanager: postgresql HDFS
 	$(call colorized,\
 		resource manager, \
-		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager',\
+		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop-client/libexec && /usr/hdp/current/hadoop-yarn-client/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager',\
 		sleep 25)
 
 
 yarnhistoryserver: postgresql HDFS
 	$(call colorized,\
 		yarn history server, \
-		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start historyserver',\
+		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop-client/libexec && /usr/hdp/current/hadoop-yarn-client/sbin/yarn-daemon.sh --config /etc/hadoop/conf start historyserver',\
 		sleep 5)
 
 mapredhistoryserver: postgresql HDFS
 	$(call colorized,\
 		mapred history server, \
-		su - mapred -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop-mapreduce/sbin/mr-jobhistory-daemon.sh --config /etc/hadoop/conf start historyserver',\
+		su - mapred -c'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop-client/libexec && /usr/hdp/current/hadoop-mapreduce-historyserver/sbin/mr-jobhistory-daemon.sh --config /etc/hadoop/conf start historyserver',\
 		sleep 5)
 
 
 nodemanagers: postgresql HDFS
 	$(call colorized,\
 		node manager, \
-		su - yarn -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop/libexec && /usr/hdp/current/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager',\
+		su - yarn -c 'export HADOOP_LIBEXEC_DIR=/usr/hdp/current/hadoop-client/libexec && /usr/hdp/current/hadoop-yarn-client/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager',\
 		sleep 5)
 
 
@@ -159,7 +157,7 @@ mysql:
 hive: HDFS postgresql mysql
 	$(call colorized,\
 		hive server, \
-		su - hive -c 'env HADOOP_HOME=/usr/hdp/current/hadoop JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_metastore_script /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server /var/log/hive', true,\
+		su - hive -c 'env HADOOP_HOME=/usr/hdp/current/hadoop-client JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64 /var/lib/ambari-agent/data/tmp/start_metastore_script /var/log/hive/hive.out /var/log/hive/hive.log /var/run/hive/hive.pid /etc/hive/conf.server /var/log/hive', true,\
 		/var/log/hive/hive.log)
 
 hive2: HDFS hive
@@ -206,7 +204,7 @@ stormlogview: Zookeeper stormdrpc YARN
 zookeeper: namenode
 	$(call colorized,\
 		zookeeper nodes, \
-		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/hdp/current/zookeeper/bin/zkServer.sh start; sleep 10",\
+		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/hdp/current/zookeeper-server/bin/zkServer.sh start; sleep 10",\
 		true)
 
 
@@ -220,14 +218,14 @@ zookeeper: namenode
 webhcat: hive HDFS
 	$(call colorized,\
 		webhcat server, \
-		su -l hcat -c "env HADOOP_HOME=/usr/hdp/current/hadoop /usr/hdp/current/hive-hcatalog/sbin/webhcat_server.sh start", true\
+		su -l hcat -c "env HADOOP_HOME=/usr/hdp/current/hadoop-client /usr/hdp/current/hive-webhcat/sbin/webhcat_server.sh start", true\
 		, /var/log/webhcat/webhcat.log)
 
 
 oozie: namenode
 	$(call colorized,\
 		Oozie, \
-		su - oozie -c "cd /var/log/oozie; /usr/hdp/current/oozie/bin/oozie-start.sh", true\
+		su - oozie -c "cd /var/log/oozie; /usr/hdp/current/oozie-server/bin/oozie-start.sh", true\
 		,\
 		/var/log/oozie/oozie.log)
 
@@ -247,21 +245,21 @@ nagios:
 falcon: HDFS Oozie
 	$(call colorized,\
 		Falcon, \
-		su - falcon -c'env HADOOP_HOME=/usr/hdp/current/hadoop JAVA_HOME=/usr/jdk64/jdk1.7.0_45 FALCON_LOG_DIR=/var/log/falcon FALCON_PID_DIR=/var/run/falcon FALCON_DATA_DIR=/hadoop/falcon/activemq /usr/hdp/current/falcon/bin/falcon-start -port 15000',\
+		su - falcon -c'env HADOOP_HOME=/usr/hdp/current/hadoop-client JAVA_HOME=/usr/jdk64/jdk1.7.0_45 FALCON_LOG_DIR=/var/log/falcon FALCON_PID_DIR=/var/run/falcon FALCON_DATA_DIR=/hadoop/falcon/activemq /usr/hdp/current/falcon-server/bin/falcon-start -port 15000',\
 		sleep 5,)
 
 
 knox-ldap:
 	$(call colorized,\
 		Knox ldap, \
-		su - knox -c "/usr/hdp/current/knox/bin/ldap.sh start",\
+		su - knox -c "/usr/hdp/current/knox-server/bin/ldap.sh start",\
 		sleep 2,)
   
 
 knox-gateway: HDFS WebHCat Oozie knox-ldap
 	$(call colorized,\
 		Knox gateway, \
-		su - knox -c "/usr/hdp/current/knox/bin/gateway.sh start",\
+		su - knox -c "/usr/hdp/current/knox-server/bin/gateway.sh start",\
 		sleep 2,)
 
 

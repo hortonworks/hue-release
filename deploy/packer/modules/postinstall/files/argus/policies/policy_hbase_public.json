@@ -1,0 +1,25 @@
+{
+   "policyName":"HBase Global Allow",
+   "resourceName":"/*",
+   "description":"This policy gives global permission for all users. Disable this to test Apache Argus",
+   "repositoryName":"sandbox_hbase",
+   "repositoryType":"HBase",
+   "permMapList":[
+      {
+         "groupList":[
+            "public"
+         ],
+         "permList":[
+            "Admin",
+            "Read",
+            "Write",
+            "Create"
+         ]
+      }
+   ],
+   "tables":"*",
+   "columnFamilies":"*",
+   "columns":"*,ToMakeUnique",
+   "isEnabled":true,
+   "isAuditEnabled":true
+}

@@ -1,0 +1,24 @@
+{
+	"policyName":"Demo data public access",
+	"resourceName":"/demo/data",
+	"description":"",
+	"repositoryName":"sandbox_hdfs",
+	"repositoryType":"HDFS",
+	"permMapList":[
+		{
+			"groupList":[
+				"public"
+			],
+			"permList":[
+				"Read",
+				"Write",
+				"Execute"
+			]
+			
+		}
+		
+	],
+	"isEnabled":true,
+	"isRecursive":false,
+	"isAuditEnabled":true
+}

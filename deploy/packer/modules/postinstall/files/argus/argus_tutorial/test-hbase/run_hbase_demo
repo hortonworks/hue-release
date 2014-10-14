@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+#
+# login as FINANCE user and create/insert/read records - It should show all column family 
+#
+klogin() 
+{
+	echo $1 | kinit $1/`hostname`@CLOUDERA
+}
+hshell()
+{
+	hbase shell $* 2>&1 | grep -v '^SLF4J:'
+}
+
+klogin ramesh
+hshell drop-hbase.sql
+hshell create-hbase.sql
+hshell insert-hbase.sql
+hshell read-hbase.sql
+#
+klogin network1
+hshell read-hbase.sql
+klogin mktg1
+hshell read-hbase.sql
+hshell read-limited-hbase.sql
+klogin legal1
+hshell read-hbase.sql
+# MKTG user should not be allowed to drop record.
+klogin mktg1
+hshell drop-hbase.sql

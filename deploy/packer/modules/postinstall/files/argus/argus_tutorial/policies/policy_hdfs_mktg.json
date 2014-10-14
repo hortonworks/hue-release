@@ -1,0 +1,24 @@
+{
+	"policyName":"Marketing Policy",
+	"resourceName":"/demo/data/Customer*",
+	"description":"",
+	"repositoryName":"sandbox_hdfs",
+	"repositoryType":"HDFS",
+	"permMapList":[
+		{
+			"groupList":[
+				"Marketing"
+			],
+			"permList":[
+				"Read",
+				"Write",
+				"Execute"
+			]
+			
+		}
+		
+	],
+	"isEnabled":true,
+	"isRecursive":false,
+	"isAuditEnabled":true
+}

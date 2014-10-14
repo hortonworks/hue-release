@@ -1,0 +1,24 @@
+{
+	"policyName":"Sandbox for Guest",
+	"resourceName":"/sandbox",
+	"description":"",
+	"repositoryName":"sandbox_knox",
+	"repositoryType":"Knox",
+	"permMapList":[
+		{
+			"userList":[
+				"guest"
+			],
+			"permList":[
+				"Allow",
+				"Admin"
+			]
+			
+		}
+		
+	],
+	"topologies":"sandbox",
+	"services":"*",
+	"isEnabled":false,
+	"isAuditEnabled":true
+}

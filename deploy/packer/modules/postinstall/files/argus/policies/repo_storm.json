@@ -1,0 +1,7 @@
+{
+   "name":"sandbox_storm",
+   "description":"Policies for Storm in sandbox",
+   "repositoryType":"Storm",
+   "config":"{\"username\":\"xapolicymgr\",\"password\":\"*****\",\"nimbus.url\":\"http://sandbox.hortonworks.com:8746\",\"commonNameForCertificate\":\"\",\"isencrypted\":\"true\"}",
+   "isActive":true
+}

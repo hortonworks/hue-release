@@ -1,0 +1,2 @@
+select count(*) as cdr_count from xademo.call_detail_records ;
+select count(*) as cust_dtl_count from xademo.customer_details ;

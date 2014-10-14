@@ -1,0 +1,7 @@
+{
+   "name":"sandbox_hive",
+   "description":"Policies for Hive in sandbox",
+   "repositoryType":"Hive",
+   "config":"{\"username\":\"xapolicymgr\",\"password\":\"xapolicymgr\",\"jdbc.driverClassName\":\"org.apache.hive.jdbc.HiveDriver\",\"jdbc.url\":\"jdbc:hive2://sandbox.hortonworks.com:10000/default;auth=noSasl\",\"commonNameForCertificate\":\"\"}",
+   "isActive":true
+}

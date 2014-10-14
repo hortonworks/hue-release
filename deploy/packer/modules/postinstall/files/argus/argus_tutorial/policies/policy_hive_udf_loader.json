@@ -1,0 +1,35 @@
+{
+	"policyName":"sandbox_hive-2-20141013080224",
+	"resourceName":"/*/*",
+	"description":"",
+	"repositoryName":"sandbox_hive",
+	"repositoryType":"Hive",
+	"permMapList":[
+		{
+			"userList":[
+				"hive"
+			],
+			"permList":[
+				"Admin",
+				"Select",
+				"Update",
+				"Create",
+				"Drop",
+				"Alter",
+				"Index",
+				"Lock",
+				"All"
+			]
+			
+		}
+		
+	],
+	"tables":"",
+	"columns":"",
+	"databases":"*",
+	"udfs":"*",
+	"tableType":"Inclusion",
+	"columnType":"Inclusion",
+	"isEnabled":true,
+	"isAuditEnabled":true
+}

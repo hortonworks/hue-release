@@ -66,9 +66,13 @@ start)
     fi
     
     echo "Starting HDP ..."
+    cp -f /etc/knox/sandbox.xml.provided /etc/knox/conf/topologies/sandbox.xml # knox topology setup
     make --makefile $SCRIPTS_PATH/start_deps.mf -B Startup -j -i
 
-    sudo -u hdfs /usr/hdp/current/hadoop-hdfs/bin/hdfs dfsadmin -safemode leave
+    sudo -u hdfs /usr/hdp/current/hadoop-hdfs-client/bin/hdfs dfsadmin -safemode leave
+
+    touch /var/log/hadoop/hue/hadoop.log # pig access error workaround
+    chown hue:hadoop -Rf /var/log/hadoop/hue/
     
     printf "%-50s\n" "Starting sandbox..." | tee -a $LOG
     
