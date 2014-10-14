@@ -37,9 +37,19 @@ class install::ambari-bluprints{
     source => "puppet:///modules/install/check_status.sh" 
   }
 
+  file{"/tmp/install/pin_repo.json":
+    content => '{"Repositories":{"base_url":"http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-913/","verify_base_url":false}}'
+  }
+
+  exec {"pin repo":
+    command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://ambari.hortonworks.com:8080/api/v1/stacks/HDP/versions/2.2/operating_systems/redhat6/repositories/HDP-2.2 -d @/tmp/install/pin_repo.json",
+    require => [File["/tmp/install/bluprint.json"],Class["install::ambari-server"]],
+    logoutput => true
+  }
+
   exec {"add bluprint":
     command => "curl -f -H 'X-Requested-By: ambari' -u admin:admin http://ambari.hortonworks.com:8080/api/v1/blueprints/sandbox -d @/tmp/install/bluprint.json",
-    require => [File["/tmp/install/bluprint.json"],Class["install::ambari-server"]],
+    require => [File["/tmp/install/bluprint.json"],Exec["pin repo"]],
     logoutput => true
   }
 
