@@ -3,8 +3,9 @@ Exec { path => [ "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/", "/usr/local/bin" 
 stage { 'prepare': }
 stage { 'install': }
 stage { 'postinstall': }
+stage { 'postpostinstall': }
 
-Stage['prepare'] -> Stage['install'] -> Stage['postinstall']
+Stage['prepare'] -> Stage['install'] -> Stage['postinstall'] -> Stage['postpostinstall']
 
 
 node default {
@@ -16,6 +17,9 @@ node default {
   }
   class {postinstall:
     stage => postinstall
+  }
+  class {postpostinstall:
+    stage => postpostinstall
   }
 }
 
