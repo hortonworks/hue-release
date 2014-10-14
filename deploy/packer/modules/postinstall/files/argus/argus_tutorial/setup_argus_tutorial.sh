@@ -20,6 +20,11 @@ sleep_secs=30
 echo "Sleeping for $sleep_secs seconds to let user and group sync to policy mgr"
 sleep $sleep_secs
 
+#Create Hue users
+cd $script_dir
+cd hue
+`pwd`/setup_data.sh
+
 #Give appropriate permission to users to populate the data
 cd $script_dir
 cd policies
