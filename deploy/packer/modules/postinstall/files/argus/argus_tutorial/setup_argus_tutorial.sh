@@ -43,6 +43,9 @@ runuser -l hbase -c `pwd`/setup_data.sh
 cd $script_dir
 cp /etc/knox/conf/topologies/sandbox.xml /etc/knox/conf/topologies/sandbox.xml.$(date +%m%d%y%H%M)
 cp knox/sandbox.xml  /etc/knox/conf/topologies
+cd /usr/hdp/current/knox-server
+sudo -u knox bin/ldap.sh
+	
 su -l knox /usr/hdp/current/knox-server/bin/gateway.sh stop
 su -l knox /usr/hdp/current/knox-server/bin/gateway.sh start
 
