@@ -38,3 +38,11 @@ runuser -l hive -c `pwd`/setup_data.sh
 cd $script_dir
 cd test-hbase
 runuser -l hbase -c `pwd`/setup_data.sh
+
+#Enable Knox
+cd $script_dir
+cp /etc/knox/conf/topologies/sandbox.xml /etc/knox/conf/topologies/sandbox.xml.$(date +%m%d%y%H%M)
+cp knox/sandbox.xml  /etc/knox/conf/topologies
+su -l knox /usr/hdp/current/knox-server/bin/gateway.sh stop
+su -l knox /usr/hdp/current/knox-server/bin/gateway.sh start
+
