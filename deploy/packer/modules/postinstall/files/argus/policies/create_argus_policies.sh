@@ -40,3 +40,9 @@ curl -i --header "Accept:application/json" -H "Content-Type: application/json" -
 
 #Add Storm Policies
 curl -i --header "Accept:application/json" -H "Content-Type: application/json" -X POST -u admin:admin http://localhost:6080/service/public/api/policy -d @/tmp/policy_storm_public.json
+
+
+#Setup Argus tutorial
+cd $policies_folder
+cd ../argus_tutorial
+./setup_argus_tutorial.sh
