@@ -120,4 +120,10 @@
         <url>http://sandbox:10001/cliservice</url>
     </service>
 
+    <service>
+        <role>RESOURCEMANAGER</role>
+        <url>http://sandbox:8088</url>
+    </service>
+
+
 </topology>
