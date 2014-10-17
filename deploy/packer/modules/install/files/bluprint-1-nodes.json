@@ -121,7 +121,7 @@
                 "tez.am.resource.memory.mb" : "250",
                 "tez.dag.am.resource.memory.mb" : "250",
                 "yarn.app.mapreduce.am.command-opts" : "-Xmx200m",
-                "tez.lib.uris": "hdfs:///apps/tez/tez.tar.gz"
+                "tez.lib.uris": "hdfs:///apps/tez/,hdfs:///apps/tez/lib/,hdfs:///apps/tez/tez.tar.gz"
             }
         },
         {

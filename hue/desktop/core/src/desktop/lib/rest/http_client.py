@@ -148,7 +148,7 @@ class HttpClient(object):
     if headers:
       headers_string = ["{0}: {1}".format(k, v) for k, v in headers.items()]
       command += " -H ".join([""] + headers_string)
-    if data and headers.get("Content-Type", "") != "application/octet-stream":
+    if data and ((headers is None) or (headers.get("Content-Type", "") != "application/octet-stream")):
       command += "".join(" -d " + param for param in urllib.unquote_plus(data).split('&'))
     if DJANGO_DEBUG_MODE.get():
       self.logger.debug("REST invocation: %s '%s'" % (command, url))
