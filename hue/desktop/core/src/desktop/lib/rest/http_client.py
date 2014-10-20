@@ -23,6 +23,7 @@ from django.utils.encoding import iri_to_uri, smart_str
 
 from requests import exceptions
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
+from desktop.conf import DJANGO_DEBUG_MODE
 
 __docformat__ = "epytext"
 
@@ -68,6 +69,7 @@ class RestException(Exception):
 
 
 class HttpClient(object):
+  is_kerberos_auth = False
   """
   Basic HTTP client tailored for rest APIs.
   """
@@ -82,10 +84,14 @@ class HttpClient(object):
     self._exc_class = exc_class or RestException
     self._logger = logger or LOG
     self._session = requests.Session()
+    requests_log = logging.getLogger("requests")
+    requests_log.setLevel(logging.WARNING)
+
 
   def set_kerberos_auth(self):
     """Set up kerberos auth for the client, based on the current ticket."""
     self._session.auth = HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+    self.is_kerberos_auth = True
     return self
 
 
@@ -128,7 +134,26 @@ class HttpClient(object):
     # Prepare URL and params
     if urlencode:
       path = urllib.quote(smart_str(path))
+      params_encoded = {}
+      if isinstance(params, dict):
+        for k, val in params.iteritems():
+          params_encoded[smart_str(k)] = smart_str(val)
+        params = params_encoded
     url = self._make_url(path, params)
+
+    ##REST logging
+    command = "curl -X %s " % http_method
+    if self.is_kerberos_auth:
+      command += "--negotiate -u :"
+    if headers:
+      headers_string = ["{0}: {1}".format(k, v) for k, v in headers.items()]
+      command += " -H ".join([""] + headers_string)
+    if data and ((headers is None) or (headers.get("Content-Type", "") != "application/octet-stream")):
+      command += "".join(" -d " + param for param in urllib.unquote_plus(data).split('&'))
+    if DJANGO_DEBUG_MODE.get():
+      self.logger.debug("REST invocation: %s '%s'" % (command, url))
+    ######
+
     if http_method in ("GET", "DELETE"):
       if data is not None:
         self.logger.warn("GET and DELETE methods do not pass any data. Path '%s'" % path)
