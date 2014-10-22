@@ -1,7 +1,7 @@
 class install::ambari-agent {
 
   exec{"ambari-repo":
-    command => "wget -O /etc/yum.repos.d/ambari.repo http://dev.hortonworks.com.s3.amazonaws.com/ambari/centos6/1.x/BUILDS/1.7.0-117/ambaribn.repo",
+    command => "wget -O /etc/yum.repos.d/ambari.repo http://dev.hortonworks.com.s3.amazonaws.com/ambari/centos6/1.x/BUILDS/1.7.0-121/ambaribn.repo",
     unless => "ls -al /etc/yum.repos.d/ambari.repo"
   }
 
