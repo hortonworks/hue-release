@@ -110,7 +110,7 @@
         {
             "storm-site" : {
                 "logviewer.port" : 8005,
-                "nimbus.childopts" : "-Xmx220m -javaagent:/usr/hdp/current/storm-client/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8649,wireformat31x=true,mode=multicast,config=/usr/hdp/current/storm/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
+                "nimbus.childopts" : "-Xmx220m -javaagent:/usr/hdp/current/storm-client/contrib/storm-jmxetric/lib/jmxetric-1.0.4.jar=host=sandbox.hortonworks.com,port=8649,wireformat31x=true,mode=multicast,config=/usr/hdp/current/storm-client/contrib/storm-jmxetric/conf/jmxetric-conf.xml,process=Nimbus_JVM",
                 "ui.childopts" : "-Xmx220m",
                 "drpc.childopts" : "-Xmx220m"
             }
