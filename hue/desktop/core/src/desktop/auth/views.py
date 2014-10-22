@@ -46,6 +46,22 @@ from desktop.conf import AUTH, LDAP, OAUTH
 
 LOG = logging.getLogger(__name__)
 
+SINGLE_USER_MODE = None
+SHOW_CREDENTIALS = None
+
+
+def reload_config():
+  global SINGLE_USER_MODE, SHOW_CREDENTIALS
+  if os.path.exists("/var/lib/hue/single_user_mode"):
+    SINGLE_USER_MODE = json.load(open("/var/lib/hue/single_user_mode"))
+  else:
+    SINGLE_USER_MODE = None
+
+  if os.path.exists("/var/lib/hue/show_credentials"):
+    SHOW_CREDENTIALS = json.load(open("/var/lib/hue/show_credentials"))
+  else:
+    SHOW_CREDENTIALS = None
+
 
 def get_current_users():
   """Return dictionary of User objects and
@@ -82,6 +98,7 @@ def get_backend_name():
 
 @login_notrequired
 def dt_login(request):
+  reload_config()
   redirect_to = request.REQUEST.get('next', '/')
   is_first_login_ever = first_login_ever()
   backend_name = get_backend_name()
@@ -94,18 +111,23 @@ def dt_login(request):
     UserCreationForm = auth_forms.UserCreationForm
     AuthenticationForm = auth_forms.AuthenticationForm
 
-  if request.method == 'POST':
+  if SINGLE_USER_MODE or request.method == 'POST':
     # For first login, need to validate user info!
     first_user_form = is_first_login_ever and UserCreationForm(data=request.POST) or None
     first_user = first_user_form and first_user_form.is_valid()
 
     if first_user or not is_first_login_ever:
-      auth_form = AuthenticationForm(data=request.POST)
+      if not SINGLE_USER_MODE:
+        auth_form = AuthenticationForm(data=request.POST)
 
-      if auth_form.is_valid():
+      if SINGLE_USER_MODE or auth_form.is_valid():
         # Must login by using the AuthenticationForm.
         # It provides 'backends' on the User object.
-        user = auth_form.get_user()
+        if not SINGLE_USER_MODE:
+          user = auth_form.get_user()
+        else:
+          user = authenticate(username=SINGLE_USER_MODE['user'],
+                              password=SINGLE_USER_MODE['pass'])
         login(request, user)
         if request.session.test_cookie_worked():
           request.session.delete_test_cookie()
@@ -142,6 +164,10 @@ def dt_login(request):
 
 def dt_logout(request, next_page=None):
   """Log out the user"""
+  try:
+    os.remove("/var/lib/hue/single_user_mode")
+  except:
+    pass
   backends = get_backends()
   if backends:
     for backend in backends:
