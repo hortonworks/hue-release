@@ -219,10 +219,10 @@ class AddLdapGroupsForm(forms.Form):
         validate_dn(groupname_pattern)
       else:
         validate_groupname(groupname_pattern)
-    except AssertionError, e:
+    except AssertionError as e:
       errors = self._errors.setdefault('groupname_pattern', ErrorList())
-      errors.append(e.message)
-      raise forms.ValidationError(e.message)
+      errors.append(str(e))
+      raise forms.ValidationError(str(e))
 
     return cleaned_data
 
