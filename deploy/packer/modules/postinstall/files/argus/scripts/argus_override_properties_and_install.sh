@@ -36,7 +36,7 @@ cd ${latest_folder}/hive-agent
 ./enable-hive-agent.sh
 cp /etc/hive/conf/xa* /etc/hive/conf.server
 cp /etc/hive/conf/hiveserver2-site.xml /etc/hive/conf.server
-chmod hive:hadoop /etc/hive/conf.server/hiveserver2-site.xml
+chown hive:hadoop /etc/hive/conf.server/hiveserver2-site.xml
 
 cd ${latest_folder}/hbase-agent
 ./enable-hbase-agent.sh
