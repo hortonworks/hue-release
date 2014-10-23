@@ -1,5 +1,6 @@
 #!/bin/bash
 #This script will call all dependent scripts to create the users, groups, data and tables
+set -x
 
 cd `dirname $0`
 
@@ -32,7 +33,9 @@ cd policies
 
 
 #Setup HDFS
-runuser -l hdfs -c "cd `pwd`;`pwd`/setup_data.sh"
+cd $script_dir
+cd test-hdfs
+runuser -l hdfs -c "`pwd`/setup_data.sh"
 
 #Setup Hive table
 cd $script_dir
@@ -46,10 +49,10 @@ runuser -l hbase -c `pwd`/setup_data.sh
 
 #Enable Knox
 cd $script_dir
-cp /etc/knox/conf/topologies/sandbox.xml /etc/knox/conf/topologies/sandbox.xml.$(date +%m%d%y%H%M)
+cp /etc/knox/conf/topologies/sandbox.xml /etc/knox/conf/topologies/sandbox.xml.$(date +%m%d%y%H%M).by_ranger
 cp knox/sandbox.xml  /etc/knox/conf/topologies
 cd /usr/hdp/current/knox-server
-sudo -u knox bin/ldap.sh
+sudo -u knox bin/ldap.sh start
 	
 su -l knox /usr/hdp/current/knox-server/bin/gateway.sh stop
 su -l knox /usr/hdp/current/knox-server/bin/gateway.sh start

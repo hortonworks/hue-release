@@ -4,7 +4,7 @@
 	"updateDate":"2014-10-13T08:15:52Z",
 	"owner":"Admin",
 	"updatedBy":"Admin",
-	"policyName":"sandbox_hbase-1-20141013080226",
+	"policyName":"HBase Demo Data Loader",
 	"resourceName":"/*",
 	"description":"",
 	"repositoryName":"sandbox_hbase",
@@ -24,7 +24,7 @@
 		}
 		
 	],
-	"tables":"*",
+	"tables":"i*",
 	"columnFamilies":"*",
 	"columns":"*",
 	"isEnabled":true,
