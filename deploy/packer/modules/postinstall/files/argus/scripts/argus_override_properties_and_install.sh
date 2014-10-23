@@ -35,6 +35,8 @@ cd ${latest_folder}/hdfs-agent
 cd ${latest_folder}/hive-agent
 ./enable-hive-agent.sh
 cp /etc/hive/conf/xa* /etc/hive/conf.server
+cp /etc/hive/conf/hiveserver2-site.xml /etc/hive/conf.server
+chmod hive:hadoop /etc/hive/conf.server/hiveserver2-site.xml
 
 cd ${latest_folder}/hbase-agent
 ./enable-hbase-agent.sh
@@ -54,7 +56,7 @@ cd ../patches
 
 #Set the properties in Hive and HBase to use Argus
 cd /var/lib/ambari-server/resources/scripts
-./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authorization.enabled" "true"
+#./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authorization.enabled" "true"
 #./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authorization.manager" "com.xasecure.authorization.hive.authorizer.XaSecureHiveAuthorizerFactory"
 #./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authenticator.manager" "org.apache.hadoop.hive.ql.security.SessionStateUserAuthenticator"
 
@@ -62,11 +64,11 @@ cd /var/lib/ambari-server/resources/scripts
 ./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hbase-site "hbase.coprocessor.region.classes" "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor"
 
 #Override the HiveServer2 startup template used by Ambari
-cd $install_overrides_folder
-cd ../hive_override
-hive_startup_template=/var/lib/ambari-server/resources/stacks/HDP/2.0.6/services/HIVE/package/templates/startHiveserver2.sh.j2
-cp $hive_startup_template ${hive_startup_template}.$(date +%m%d%y%H%M).by_ranger
-cp startHiveserver2.sh.j2 $hive_startup_template
+#cd $install_overrides_folder
+#cd ../hive_override
+#hive_startup_template=/var/lib/ambari-server/resources/stacks/HDP/2.0.6/services/HIVE/package/templates/startHiveserver2.sh.j2
+#cp $hive_startup_template ${hive_startup_template}.$(date +%m%d%y%H%M).by_ranger
+#cp startHiveserver2.sh.j2 $hive_startup_template
 
 
 #Restart all the servers
