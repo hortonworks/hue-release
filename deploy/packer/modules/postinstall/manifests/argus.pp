@@ -118,6 +118,7 @@ class postinstall::argus{
 #    body => '{"RequestInfo":{"context":"Turn Off Maintenance Mode for host"},"Body":{"Hosts":{"maintenance_state":"OFF"}}}',
 #    require => AmbariApi["restart hbase"],
 #  }
+>>>>>>> Tez fix; Argus restart Hive and HBase; commented ambari views
 
 }
 
