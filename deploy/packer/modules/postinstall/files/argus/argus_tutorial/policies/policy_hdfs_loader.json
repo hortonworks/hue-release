@@ -1,6 +1,6 @@
 {
-	"policyName":"sandbox_hdfs-1-20141013080224",
-	"resourceName":"/",
+	"policyName":"HDFS Demo Data Loader",
+	"resourceName":"/demo",
 	"description":"",
 	"repositoryName":"sandbox_hdfs",
 	"repositoryType":"HDFS",

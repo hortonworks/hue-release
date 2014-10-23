@@ -36,7 +36,8 @@ urlpatterns = patterns('beeswax.views',
 
   url(r'^execute/(?P<design_id>\d+)?$', 'execute_query', name='execute_query'),
   url(r'^explain_parameterized/(?P<design_id>\d+)$', 'explain_parameterized_query', name='explain_parameterized_query'),
-  url(r'^execute_parameterized/(?P<design_id>\d+)$', 'execute_parameterized_query', name='execute_parameterized_query'),
+  url(r'^session/invalidate$', 'invalidate_session', name='invalidate_session'),
+
 
   url(r'^watch/(?P<id>\d+)/(?P<download_format>\w+)$', 'watch_query', name='watch_query'),  # BUG-20020
   url(r'^watch/json/(?P<id>\d+)/(?P<download_format>\w+)$', 'watch_query_refresh_json', name='watch_query_refresh_json'),

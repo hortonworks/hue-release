@@ -15,7 +15,7 @@
          ]
       }
    ],
-   "topologies":"*",
+   "topologies":"*,ToMakeUnique",
    "services":"*",
    "isEnabled":true,
    "isAuditEnabled":true

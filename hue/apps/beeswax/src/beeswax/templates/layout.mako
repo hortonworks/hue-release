@@ -39,8 +39,8 @@ def is_selected(section, matcher):
 			<li class="${is_selected(section, 'databases')}"><a href="${ url('beeswax' + ':databases') }">${_('Databases')}</a></li>
 			<li class="${is_selected(section, 'tables')}"><a href="${ url('beeswax' + ':show_tables') }">${_('Tables')}</a></li>
 			<li class="${is_selected(section, 'configuration')}"><a href="${ url('beeswax' + ':configuration') }">${_('Settings')}</a></li>
+                        <li class="pull-right"><a href="${ url('beeswax' + ':invalidate_session') }" onClick='return confirm("Are you sure you want to Invalidate current session? This will result in temporary tables being removed, running queries will be terminated and previous query results will become unavailable.");'>${_('Invalidate session')}</a></li>
 		</ul>
 	</div>
 </div>
 </%def>
-

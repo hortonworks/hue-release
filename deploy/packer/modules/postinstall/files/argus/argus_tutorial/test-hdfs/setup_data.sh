@@ -6,6 +6,7 @@
 #fi
 
 set -x
+cd `dirname $0`
 
 FS_ROOT=demo_data
 HDFS_ROOT=/demo/data

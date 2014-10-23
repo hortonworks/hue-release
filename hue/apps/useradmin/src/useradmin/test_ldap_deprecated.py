@@ -28,8 +28,7 @@ from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.urlresolvers import reverse
 
-from useradmin.models import LdapGroup, UserProfile
-from useradmin.models import get_profile
+from useradmin.models import LdapGroup, UserProfile, get_profile
 
 from hadoop import pseudo_hdfs4
 from views import sync_ldap_users, sync_ldap_groups, import_ldap_users, import_ldap_groups, \
@@ -469,7 +468,7 @@ def test_add_ldap_users():
     assert_true('Could not' in response.context['form'].errors['username_pattern'][0], response)
 
     # Test wild card
-    response = c.post(URL, dict(username_pattern='*r*', password1='test', password2='test'))
+    response = c.post(URL, dict(username_pattern='*rr*', password1='test', password2='test'))
     assert_true('/useradmin/users' in response['Location'], response)
 
     # Test ignore case
@@ -493,6 +492,19 @@ def test_add_ldap_users():
     assert_true('/useradmin/users' in response['Location'], response)
     assert_false(User.objects.filter(username='Rock').exists())
     assert_true(User.objects.filter(username='rock').exists())
+
+    # Test regular with spaces (should fail)
+    response = c.post(URL, dict(username_pattern='user with space', password1='test', password2='test'))
+    assert_true("Username must not contain whitespaces and ':'" in response.context['form'].errors['username_pattern'][0], response)
+
+    # Test dn with spaces in username and dn (should fail)
+    response = c.post(URL, dict(username_pattern='uid=user with space,ou=People,dc=example,dc=com', password1='test', password2='test', dn=True))
+    assert_true("There was a problem with some of the LDAP information" in response.content, response)
+    assert_true("Username must not contain whitespaces" in response.content, response)
+
+    # Test dn with spaces in dn, but not username (should succeed)
+    response = c.post(URL, dict(username_pattern='uid=user without space,ou=People,dc=example,dc=com', password1='test', password2='test', dn=True))
+    assert_true(User.objects.filter(username='spaceless').exists())
 
   finally:
     for finish in done:
@@ -560,47 +572,51 @@ def test_ldap_exception_handling():
 
 @attr('requires_hadoop')
 def test_ensure_home_directory_add_ldap_users():
-  URL = reverse(add_ldap_users)
+  try:
+    URL = reverse(add_ldap_users)
 
-  reset_all_users()
-  reset_all_groups()
+    reset_all_users()
+    reset_all_groups()
 
-  # Set up LDAP tests to use a LdapTestConnection instead of an actual LDAP connection
-  ldap_access.CACHED_LDAP_CONN = LdapTestConnection()
+    # Set up LDAP tests to use a LdapTestConnection instead of an actual LDAP connection
+    ldap_access.CACHED_LDAP_CONN = LdapTestConnection()
 
-  cluster = pseudo_hdfs4.shared_cluster()
-  c = make_logged_in_client(cluster.superuser, is_superuser=True)
-  cluster.fs.setuser(cluster.superuser)
+    cluster = pseudo_hdfs4.shared_cluster()
+    c = make_logged_in_client(cluster.superuser, is_superuser=True)
+    cluster.fs.setuser(cluster.superuser)
 
-  assert_true(c.get(URL))
+    assert_true(c.get(URL))
 
-  response = c.post(URL, dict(username_pattern='moe', password1='test', password2='test'))
-  assert_true('/useradmin/users' in response['Location'])
-  assert_false(cluster.fs.exists('/user/moe'))
+    response = c.post(URL, dict(username_pattern='moe', password1='test', password2='test'))
+    assert_true('/useradmin/users' in response['Location'])
+    assert_false(cluster.fs.exists('/user/moe'))
 
-  # Try same thing with home directory creation.
-  response = c.post(URL, dict(username_pattern='curly', password1='test', password2='test', ensure_home_directory=True))
-  assert_true('/useradmin/users' in response['Location'])
-  assert_true(cluster.fs.exists('/user/curly'))
+    # Try same thing with home directory creation.
+    response = c.post(URL, dict(username_pattern='curly', password1='test', password2='test', ensure_home_directory=True))
+    assert_true('/useradmin/users' in response['Location'])
+    assert_true(cluster.fs.exists('/user/curly'))
 
-  response = c.post(URL, dict(username_pattern='bad_name', password1='test', password2='test'))
-  assert_true('Could not' in response.context['form'].errors['username_pattern'][0])
-  assert_false(cluster.fs.exists('/user/bad_name'))
+    response = c.post(URL, dict(username_pattern='bad_name', password1='test', password2='test'))
+    assert_true('Could not' in response.context['form'].errors['username_pattern'][0])
+    assert_false(cluster.fs.exists('/user/bad_name'))
 
-  # See if moe, who did not ask for his home directory, has a home directory.
-  assert_false(cluster.fs.exists('/user/moe'))
+    # See if moe, who did not ask for his home directory, has a home directory.
+    assert_false(cluster.fs.exists('/user/moe'))
 
-  # Try wild card now
-  response = c.post(URL, dict(username_pattern='*r*', password1='test', password2='test', ensure_home_directory=True))
-  assert_true('/useradmin/users' in response['Location'])
-  assert_true(cluster.fs.exists('/user/curly'))
-  assert_true(cluster.fs.exists(u'/user/lårry'))
-  assert_true(cluster.fs.exists('/user/otherguy'))
-
-  # Clean up
-  cluster.fs.rmtree('/user/curly')
-  cluster.fs.rmtree(u'/user/lårry')
-  cluster.fs.rmtree('/user/otherguy')
+    # Try wild card now
+    response = c.post(URL, dict(username_pattern='*rr*', password1='test', password2='test', ensure_home_directory=True))
+    assert_true('/useradmin/users' in response['Location'])
+    assert_true(cluster.fs.exists('/user/curly'))
+    assert_true(cluster.fs.exists(u'/user/lårry'))
+    assert_false(cluster.fs.exists('/user/otherguy'))
+  finally:
+    # Clean up
+    if cluster.fs.exists('/user/curly'):
+      cluster.fs.rmtree('/user/curly')
+    if cluster.fs.exists(u'/user/lårry'):
+      cluster.fs.rmtree(u'/user/lårry')
+    if cluster.fs.exists('/user/otherguy'):
+      cluster.fs.rmtree('/user/otherguy')
 
 @attr('requires_hadoop')
 def test_ensure_home_directory_sync_ldap_users_groups():

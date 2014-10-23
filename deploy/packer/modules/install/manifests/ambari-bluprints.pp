@@ -38,7 +38,7 @@ class install::ambari-bluprints{
   }
 
   file{"/tmp/install/pin_repo.json":
-    content => '{"Repositories":{"base_url":"http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-913/","verify_base_url":false}}'
+    content => '{"Repositories":{"base_url":"http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-974/","verify_base_url":false}}'
   }
 
   exec {"pin repo":
@@ -64,9 +64,38 @@ class install::ambari-bluprints{
     cwd => "/tmp/install",
     timeout => 0,
     logoutput => true,
-    require => [File["/tmp/install/check_status.py"], File["/tmp/install/check_status.sh"], Exec["add cluster"]]
+    require => [File["/tmp/install/check_status.py"], File["/tmp/install/check_status.sh"], Exec["add cluster"]],
+    returns => [0, 1]
+  }
+
+  exec {"hive workaround":
+    command => "cp hive-*.tar.gz hive.tar.gz",
+    cwd => "/usr/hdp/current/hive-client/",
+    require => Exec["install cluster"]
   }
  
+  define ambariApi($url, $body, $method = 'POST') {
+    case $method {
+      POST: {
+        exec {"/usr/bin/curl  -H \"X-Requested-By: ambari\"  -u admin:admin -d '${body}' http://127.0.0.1:8080/api/v1/clusters/Sandbox/${url} | python /tmp/wait_finish.py; sleep 5":
+          logoutput => true,
+        }
+      }
+      PUT: {
+        exec {"/usr/bin/curl  -H \"X-Requested-By: ambari\"  -u admin:admin -X PUT -d '${body}' http://127.0.0.1:8080/api/v1/clusters/Sandbox/${url} | python /tmp/wait_finish.py; sleep 5":
+          logoutput => true,
+        }
+      }
+    }
+  }
+
+  ambariApi {"start everything again":
+    url => "services",
+    method => "PUT",
+    body => '{"RequestInfo":{"context":"_PARSE_.START.ALL_SERVICES","operation_level":{"level":"CLUSTER","cluster_name":"Sandbox"}},"Body":{"ServiceInfo":{"state":"STARTED"}}}',
+    require => Exec["hive workaround"]
+  }
+
   exec{'set_hadoop_path':    
     command => "echo 'export PATH=\$PATH:/usr/hdp/current/falcon-client/bin:/usr/hdp/current/hadoop-mapreduce-historyserver/bin:/usr/hdp/current/oozie-client/bin:/usr/hdp/current/falcon-server/bin:/usr/hdp/current/hadoop-yarn-client/bin:/usr/hdp/current/oozie-server/bin:/usr/hdp/current/flume-client/bin:/usr/hdp/current/hadoop-yarn-nodemanager/bin:/usr/hdp/current/pig-client/bin:/usr/hdp/current/flume-server/bin:/usr/hdp/current/hadoop-yarn-resourcemanager/bin:/usr/hdp/current/slider-client/bin:/usr/hdp/current/hadoop-client/bin:/usr/hdp/current/hadoop-yarn-timelineserver/bin:/usr/hdp/current/sqoop-client/bin:/usr/hdp/current/hadoop-hdfs-client/bin:/usr/hdp/current/hbase-client/bin:/usr/hdp/current/sqoop-server/bin:/usr/hdp/current/hadoop-hdfs-datanode/bin:/usr/hdp/current/hbase-master/bin:/usr/hdp/current/storm-client/bin:/usr/hdp/current/hadoop-hdfs-journalnode/bin:/usr/hdp/current/hbase-regionserver/bin:/usr/hdp/current/storm-nimbus/bin:/usr/hdp/current/hadoop-hdfs-namenode/bin:/usr/hdp/current/hive-client/bin:/usr/hdp/current/storm-supervisor/bin:/usr/hdp/current/hadoop-hdfs-nfs3/bin:/usr/hdp/current/hive-metastore/bin:/usr/hdp/current/zookeeper-client/bin:/usr/hdp/current/hadoop-hdfs-portmap/bin:/usr/hdp/current/hive-server2/bin:/usr/hdp/current/zookeeper-server/bin:/usr/hdp/current/hadoop-hdfs-secondarynamenode/bin:/usr/hdp/current/hive-webhcat/bin:/usr/hdp/current/hadoop-mapreduce-client/bin:/usr/hdp/current/knox-server/bin:/usr/hdp/current/hadoop-client/sbin:/usr/hdp/current/hadoop-hdfs-nfs3/sbin:/usr/hdp/current/hadoop-yarn-client/sbin:/usr/hdp/current/hadoop-hdfs-client/sbin:/usr/hdp/current/hadoop-hdfs-portmap/sbin:/usr/hdp/current/hadoop-yarn-nodemanager/sbin:/usr/hdp/current/hadoop-hdfs-datanode/sbin:/usr/hdp/current/hadoop-hdfs-secondarynamenode/sbin:/usr/hdp/current/hadoop-yarn-resourcemanager/sbin:/usr/hdp/current/hadoop-hdfs-journalnode/sbin:/usr/hdp/current/hadoop-mapreduce-client/sbin:/usr/hdp/current/hadoop-yarn-timelineserver/sbin:/usr/hdp/current/hadoop-hdfs-namenode/sbin:/usr/hdp/current/hadoop-mapreduce-historyserver/sbin:/usr/hdp/current/hive-webhcat/sbin' > /etc/profile.d/hadoop.sh;",
     require => Exec["install cluster"]

@@ -23,7 +23,7 @@ DEVTOOLS += \
 	ipython-0.10.tar.gz \
 	threadframe-0.2.tar.gz \
 	Werkzeug-0.6.tar.gz \
-	windmill-1.3.tar.gz
+	windmill-1.6.tar.gz
 
 # Install/download dev tools for SDK into the virtual environment
 .PHONY: $(DEVTOOLS)

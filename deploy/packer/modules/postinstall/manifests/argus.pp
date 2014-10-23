@@ -48,12 +48,33 @@ class postinstall::argus{
     require => File["argus_directory"],
     logoutput => true,
   }
+
+  exec{"argus_restart_namenode":
+    cwd => "/tmp/argus/scripts",
+    command => "bash /tmp/argus/scripts/restart_namenode.sh",
+    require => Exec["override_properties_and_install"],
+    logoutput => true,
+  }
+
+  exec{"argus_restart_hiveservers":
+    cwd => "/tmp/argus/scripts",
+    command => "bash /tmp/argus/scripts/restart_hiveservers.sh",
+    require => Exec["argus_restart_namenode"],
+    logoutput => true,
+  }
+
+  exec{"argus_restart_hbase":
+    cwd => "/tmp/argus/scripts",
+    command => "bash /tmp/argus/scripts/restart_hbase.sh",
+    require => Exec["argus_restart_hiveservers"],
+    logoutput => true,
+  }
   
   file { "stage_create_policies":
     path => "/tmp/create_argus_policies.sh",
     source => "puppet:///modules/postinstall/argus/policies/create_argus_policies.sh",
     mode   => '777',
-    require => Exec["override_properties_and_install"],
+    require => Exec["argus_restart_hbase"],
   }
   
   exec{"create_argus_policies":
@@ -63,40 +84,40 @@ class postinstall::argus{
     logoutput => true,
   }
   
-  ambariApi {"maintenance_on":
-    url => "hosts/sandbox.hortonworks.com",
-    method => "PUT",
-    body => '{"RequestInfo":{"context":"Turn On Maintenance Mode for host"},"Body":{"Hosts":{"maintenance_state":"ON"}}}',
-    require => Exec["create_argus_policies"],
-  }
-
-  ambariApi {"restart hdfs":
-    url => "requests",
-    method => "POST",
-    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for HDFS","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HDFS"}},"Requests/resource_filters":[{"service_name":"HDFS","component_name":"NAMENODE","hosts":"sandbox.hortonworks.com"}]}',
-    require => AmbariApi["maintenance_on"],
-  }
-
-  ambariApi {"restart hive":
-    url => "requests",
-    method => "POST",
-    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for Hive","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HIVE"}},"Requests/resource_filters":[{"service_name":"HIVE","component_name":"HIVESERVER2","hosts":"sandbox.hortonworks.com"}]}',
-    require => AmbariApi["restart hdfs"],
-  }
-
-  ambariApi {"restart hbase":
-    url => "requests",
-    method => "POST",
-    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for HBase","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HBASE"}},"Requests/resource_filters":[{"service_name":"HBASE","component_name":"MASTERSERVER","hosts":"sandbox.hortonworks.com"}, {"service_name":"HBASE","component_name":"REGIONSERVER","hosts":"sandbox.hortonworks.com"}]}',
-    require => AmbariApi["restart hive"],
-  }
-
-  ambariApi {"maintenance_off":
-    url => "hosts/sandbox.hortonworks.com",
-    method => "PUT",
-    body => '{"RequestInfo":{"context":"Turn Off Maintenance Mode for host"},"Body":{"Hosts":{"maintenance_state":"OFF"}}}',
-    require => AmbariApi["restart hbase"],
-  }
+#  ambariApi {"maintenance_on":
+#    url => "hosts/sandbox.hortonworks.com",
+#    method => "PUT",
+#    body => '{"RequestInfo":{"context":"Turn On Maintenance Mode for host"},"Body":{"Hosts":{"maintenance_state":"ON"}}}',
+#    require => Exec["create_argus_policies"],
+#  }
+#
+#  ambariApi {"restart hdfs":
+#    url => "requests",
+#    method => "POST",
+#    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for HDFS","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HDFS"}},"Requests/resource_filters":[{"service_name":"HDFS","component_name":"NAMENODE","hosts":"sandbox.hortonworks.com"}]}',
+#    require => AmbariApi["maintenance_on"],
+#  }
+#
+#  ambariApi {"restart hive":
+#    url => "requests",
+#    method => "POST",
+#    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for Hive","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HIVE"}},"Requests/resource_filters":[{"service_name":"HIVE","component_name":"HIVESERVER2","hosts":"sandbox.hortonworks.com"}]}',
+#    require => AmbariApi["restart hdfs"],
+#  }
+#
+#  ambariApi {"restart hbase":
+#    url => "requests",
+#    method => "POST",
+#    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for HBase","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HBASE"}},"Requests/resource_filters":[{"service_name":"HBASE","component_name":"MASTERSERVER","hosts":"sandbox.hortonworks.com"}, {"service_name":"HBASE","component_name":"REGIONSERVER","hosts":"sandbox.hortonworks.com"}]}',
+#    require => AmbariApi["restart hive"],
+#  }
+#
+#  ambariApi {"maintenance_off":
+#    url => "hosts/sandbox.hortonworks.com",
+#    method => "PUT",
+#    body => '{"RequestInfo":{"context":"Turn Off Maintenance Mode for host"},"Body":{"Hosts":{"maintenance_state":"OFF"}}}',
+#    require => AmbariApi["restart hbase"],
+#  }
 
 }
 
