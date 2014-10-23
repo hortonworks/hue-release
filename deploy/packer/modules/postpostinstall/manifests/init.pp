@@ -4,6 +4,16 @@ class postpostinstall{
     logoutput => true
   }
 
+  exec {"tez_fix":
+    command => 'su hdfs -c "hdfs dfs -mkdir /apps/tez"; su hdfs -c "hdfs dfs -put /usr/hdp/current/tez-client/lib/tez*.tar.gz /apps/tez/"; su hdfs -c "hdfs dfs -chown -R hcat:hdfs /apps/tez"; ',
+    logoutput => true
+  }
+
+  exec {"hive_hcatalog_fix":
+    command => 'ln -s /usr/hdp/2.*/hive-hcatalog/ /usr/hdp/current/hive-hcatalog',
+    logoutput => true
+  }
+
 /*
   exec {"tez_fix":
     command => 'bash ./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox tez-site "tez.lib.uris" "hdfs:///apps/tez/tez.tar.gz"',

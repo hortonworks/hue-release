@@ -1,10 +1,5 @@
 class postinstall::argus{
   
-  file {"wait_finish.py":
-    path => "/tmp/wait_finish.py",
-    source => "puppet:///modules/postinstall/wait_finish.py"
-  }
-  
   define ambariApi($url, $body, $method = 'POST') {
     case $method {
       POST: {
@@ -118,7 +113,6 @@ class postinstall::argus{
 #    body => '{"RequestInfo":{"context":"Turn Off Maintenance Mode for host"},"Body":{"Hosts":{"maintenance_state":"OFF"}}}',
 #    require => AmbariApi["restart hbase"],
 #  }
->>>>>>> Tez fix; Argus restart Hive and HBase; commented ambari views
 
 }
 
