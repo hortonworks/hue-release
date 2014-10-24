@@ -53,7 +53,7 @@ from beeswax import common, data_export, models, conf, query_result
 from beeswax import query_helper
 from beeswax.forms import LoadDataForm, QueryForm, DbForm
 from beeswax.design import HQLdesign, hql_query
-from beeswax.models import SavedQuery, Session, make_query_context
+from beeswax.models import SavedQuery, make_query_context
 from beeswax.server import dbms
 from beeswax.server.dbms import expand_exception, get_query_server_config, QueryServerException
 from beeswax.counters import Counters
@@ -715,9 +715,15 @@ def watch_query_refresh_json(request, id, download_format=None):
   handle, state = _get_query_handle_and_state(query_history)
   query_history.save_state(state)
 
-  if not query_history.is_finished() and query_history.is_success() and not query_history.has_results:
-    db.execute_next_statement(query_history)
-    handle, state = query_result._get_query_handle_and_state(query_history)
+  try:
+    if not query_history.is_finished() and query_history.is_success() and not query_history.has_results:
+      db.execute_next_statement(query_history)
+      handle, state = query_result._get_query_handle_and_state(query_history)
+  except QueryServerException, ex:
+    return HttpResponse(json.dumps({"message": ex.message, "isFailure": True, "status": -1}), mimetype="application/json", status=200)
+  except Exception, ex:
+    LOG.exception(ex)
+    handle, state = _get_query_handle_and_state(query_history)
 
   log = db.get_log(handle)
   jobs, current, total = _parse_out_hadoop_jobs(log)
