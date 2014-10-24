@@ -30,19 +30,24 @@ cd ${latest_folder}/usersync
 ./install.sh
 
 cd ${latest_folder}/hdfs-agent
-./enable-hdfs-agent.sh
+./enable-hdfs-agent.sh 
+sed -i -e s/30000/5000/g /etc/hadoop/conf.empty/xasecure-hdfs-security.xml
 
 cd ${latest_folder}/hive-agent
 ./enable-hive-agent.sh
+sed -i -e s/30000/5000/g /etc/hive/conf/xasecure-hive-security.xml
 cp /etc/hive/conf/xa* /etc/hive/conf.server
+sed -i -e s/30000/5000/g
 cp /etc/hive/conf/hiveserver2-site.xml /etc/hive/conf.server
 chown hive:hadoop /etc/hive/conf.server/hiveserver2-site.xml
 
 cd ${latest_folder}/hbase-agent
 ./enable-hbase-agent.sh
+sed -i -e s/30000/5000/g /etc/hbase/conf/xasecure-hbase-security.xml
 
 cd ${latest_folder}/knox-agent
 ./enable-knox-agent.sh
+sed -i -e s/30000/5000/g /etc/knox/conf/xasecure-knox-security.xml
 
 #cd ${latest_folder}/storm-agent
 #./enable-storm-agent.sh

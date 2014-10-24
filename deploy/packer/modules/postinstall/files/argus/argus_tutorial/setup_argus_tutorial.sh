@@ -49,8 +49,8 @@ runuser -l hbase -c `pwd`/setup_data.sh
 
 #Enable Knox
 cd $script_dir
-cp /etc/knox/conf/topologies/sandbox.xml /etc/knox/conf/topologies/sandbox.xml.$(date +%m%d%y%H%M).by_ranger
-cp knox/sandbox.xml  /etc/knox/conf/topologies
+#cp /etc/knox/conf/topologies/sandbox.xml /etc/knox/conf/topologies/sandbox.xml.$(date +%m%d%y%H%M).by_ranger
+cp knox/knox_sample.xml  /etc/knox/conf/topologies
 cd /usr/hdp/current/knox-server
 sudo -u knox bin/ldap.sh start
 	
