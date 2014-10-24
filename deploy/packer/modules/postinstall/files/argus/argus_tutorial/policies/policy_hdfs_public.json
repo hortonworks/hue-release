@@ -1,6 +1,6 @@
 {
-	"policyName":"Demo data public access",
-	"resourceName":"/demo/data",
+	"policyName":"Demo data directory access",
+	"resourceName":"/,/demo,/demo/data",
 	"description":"",
 	"repositoryName":"sandbox_hdfs",
 	"repositoryType":"HDFS",
