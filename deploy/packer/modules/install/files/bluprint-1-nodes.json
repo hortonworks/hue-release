@@ -21,7 +21,9 @@
                 "hadoop.proxyuser.root.hosts" : "*",
                 "hadoop.proxyuser.root.groups" : "*",
                 "hadoop.proxyuser.oozie.hosts" : "*",
-                "hadoop.proxyuser.oozie.groups" : "*"
+                "hadoop.proxyuser.oozie.groups" : "*",
+                "hadoop.proxyuser.hcat.hosts" : "*",
+                "hadoop.proxyuser.hcat.groups" : "*"
             }
         },
         {
