@@ -1,19 +1,38 @@
 class postinstall {
-
     #
-    #include accumulo
+    # class {accumulo:
+    #   stage => postinstall_1
+    # }
   if $role=='ambari'{
-    include knox
-    #include spark
-    include hue
-    #include kafka
-    include solr
-    include ambari_views
-    # include xasecure
-    include argus
+    class {knox:
+      stage => postinstall_1
+    }
+    # class {spark:
+    #   stage => postinstall_1
+    # }
+    class {hue:
+      stage => postinstall_1
+    }
+    # class {kafka:
+    #   stage => postinstall_1
+    # }
+    class {solr:
+      stage => postinstall_1
+    }
+    class {ambari_views:
+      stage => postinstall_1
+    }
+    # class {xasecure:
+    #   stage => postinstall_1
+    # }
+    class {argus:
+      stage => postinstall_2
+    }
   }
 
   if $sandbox=='true'{
-    include sandbox
+    class {sandbox:
+      stage => postinstall_1
+    }
   }
 }

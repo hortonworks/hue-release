@@ -1,20 +1,5 @@
 class postinstall::argus{
   
-  define ambariApi($url, $body, $method = 'POST') {
-    case $method {
-      POST: {
-        exec {"/usr/bin/curl  -H \"X-Requested-By: ambari\"  -u admin:admin -d '${body}' http://127.0.0.1:8080/api/v1/clusters/Sandbox/${url} | python /tmp/wait_finish.py; sleep 5":
-          logoutput => true,
-        }
-      }
-      PUT: {
-        exec {"/usr/bin/curl  -H \"X-Requested-By: ambari\"  -u admin:admin -X PUT -d '${body}' http://127.0.0.1:8080/api/v1/clusters/Sandbox/${url} | python /tmp/wait_finish.py; sleep 5":
-          logoutput => true,
-        }
-      }
-    }
-  }
-  
   user {"xapolicymgr":
     name => "xapolicymgr",
     password => "xapolicymgr",

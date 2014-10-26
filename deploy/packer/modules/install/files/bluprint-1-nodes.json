@@ -128,7 +128,9 @@
         {
             "webhcat-site" : {
                 "webhcat.proxyuser.hue.hosts" : "*",
-                "webhcat.proxyuser.hue.groups" : "*"
+                "webhcat.proxyuser.hue.groups" : "*",
+                "webhcat.proxyuser.hcat.hosts" : "*",
+                "webhcat.proxyuser.hcat.groups" : "*"
             }
         },
         {
