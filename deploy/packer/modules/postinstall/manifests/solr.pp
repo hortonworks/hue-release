@@ -18,7 +18,7 @@ class postinstall::solr{
   # }
 
   exec {"download solr":
-    command => "wget -O /opt/solr/solr.tar.gz http://mirror.reverse.net/pub/apache/lucene/solr/4.7.2/solr-4.7.2.tgz && tar xvf solr.tar.gz && rm solr.tar.gz",
+    command => "wget -N -P /var/cache/wget http://mirror.reverse.net/pub/apache/lucene/solr/4.7.2/solr-4.7.2.tgz && cp /var/cache/wget/solr*.tar.gz ./ && tar xvf solr.tar.gz && rm solr.tar.gz",
     cwd => "/opt/solr",
     require => [File["/opt/solr"]],
     timeout => 0,
@@ -26,7 +26,7 @@ class postinstall::solr{
   }
 
   exec {"download lucidworks-hadoop":
-    command => "wget -O /opt/solr/lucidworks-hadoop-lws-job-1.3.0.jar http://dev2.hortonworks.com.s3.amazonaws.com/stuff/lucidworks-hadoop-lws-job-1.3.0.jar",
+    command => "wget -N -P /var/cache/wget http://dev2.hortonworks.com.s3.amazonaws.com/stuff/lucidworks-hadoop-lws-job-1.3.0.jar && cp /var/cache/wget/lucidworks-hadoop-lws-job-1.3.0.jar ./",
     cwd => "/opt/solr",
     require => [File["/opt/solr"]],
     timeout => 0,

@@ -18,6 +18,9 @@ Vagrant.configure("2") do |config|
     # More info on the "Usage" link above
     config.cache.scope = :box
 
+    config.cache.enable :generic, {
+      "wget" => { cache_dir: "/var/cache/wget" },
+    }
   end
 
   config.vm.provider :virtualbox do |vb|

@@ -9,6 +9,11 @@ class postpostinstall{
     logoutput => true
   }
 
+  exec {"pig_fix":
+    command => 'su hdfs -c "hdfs dfs -mkdir /apps/webhcat"; su hdfs -c "hdfs dfs -put /usr/hdp/current/pig-client/pig*.tar.gz /apps/webhcat/pig.tar.gz"; su hdfs -c "hdfs dfs -chown -R hcat:hdfs /apps/webhcat"; ',
+    logoutput => true
+  }
+
   exec {"hive_hcatalog_fix":
     command => 'ln -s /usr/hdp/2.*/hive-hcatalog/ /usr/hdp/current/hive-hcatalog',
     logoutput => true

@@ -20,22 +20,22 @@ class install::ambari-server{
 
 
   exec { "slider accumulo":
-    command => 'wget http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-991/slider-app-packages/accumulo/slider-accumulo-app-package-1.6.1.2.2.0.0-991.zip',
-    cwd => "/var/lib/ambari-server/resources/apps",
+    command => 'wget -N http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-991/slider-app-packages/accumulo/slider-accumulo-app-package-1.6.1.2.2.0.0-991.zip && cp slider-accumulo*.zip /var/lib/ambari-server/resources/apps/',
+    cwd => "/var/cache/wget",
     logoutput => true,
     require => Exec["ambari-server setup"]
   }
 
   exec { "slider hbase":
-    command => 'wget http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-991/slider-app-packages/hbase/slider-hbase-app-package-0.98.4.2.2.0.0-991-hadoop2.zip',
-    cwd => "/var/lib/ambari-server/resources/apps",
+    command => 'wget -N http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-991/slider-app-packages/hbase/slider-hbase-app-package-0.98.4.2.2.0.0-991-hadoop2.zip && cp slider-hbase*.zip /var/lib/ambari-server/resources/apps/',
+    cwd => "/var/cache/wget",
     logoutput => true,
     require => Exec["ambari-server setup"]
   }
 
   exec { "slider storm":
-    command => 'wget http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-991/slider-app-packages/storm/slider-storm-app-package-0.9.3.2.2.0.0-991.zip',
-    cwd => "/var/lib/ambari-server/resources/apps",
+    command => 'wget -N http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-991/slider-app-packages/storm/slider-storm-app-package-0.9.3.2.2.0.0-991.zip && cp slider-storm*.zip /var/lib/ambari-server/resources/apps/',
+    cwd => "/var/cache/wget",
     logoutput => true,
     require => Exec["ambari-server setup"]
   }

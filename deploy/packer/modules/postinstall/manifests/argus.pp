@@ -8,7 +8,7 @@ class postinstall::argus{
   }
   
   
-  package{"argus*":
+  package{"argus_*":
     ensure => installed,
   }
 
@@ -17,7 +17,7 @@ class postinstall::argus{
     source => "puppet:///modules/postinstall/argus/",
     mode   => '777',
     recurse => true,
-    require => Package["argus*"],
+    require => Package["argus_*"],
   }
  
  #   Puppet doesn't like relative path like this

@@ -70,7 +70,20 @@
                 "hive.users.in.admin.role" : "hue,hive",
                 "hive_metastore_user_passwd" : "hive",
                 "hive.server2.enable.impersonation": "true",
-                "hive.server2.authentication": "NOSASL"
+                "hive.server2.authentication": "NOSASL",
+
+                "hive.compactor.check.interval": "300s",
+                "hive.compactor.initiator.on": "true",
+                "hive.compactor.worker.timeout": "86400s",
+                "hive.enforce.bucketing": "true",
+                "hive.support.concurrency": "true",
+                "hive.exec.dynamic.partition.mode": "nonstrict",
+                "hive.server2.enable.doAs": "false",
+                "hive.txn.manager": "org.apache.hadoop.hive.ql.lockmgr.DbTxnManager",
+                "hive.txn.max.open.batch": "1000",
+                "hive.txn.timeout": "300",
+                "hive.security.authorization.enabled": "false",
+                "hive.users.in.admin.role": "hue,hive"
             }
         },
         {
@@ -149,7 +162,11 @@
                 "yarn.scheduler.minimum-allocation-mb" : "250",
                 "yarn.scheduler.maximum-allocation-mb" : "2250",
                 "yarn.nodemanager.pmem-check-enabled" : "false",
-                "yarn.acl.enable" : "false"
+                "yarn.acl.enable" : "false",
+                "yarn.resourcemanager.webapp.proxyuser.hcat.groups" : "*",
+                "yarn.resourcemanager.webapp.proxyuser.hcat.hosts" : "*",
+                "yarn.resourcemanager.webapp.proxyuser.oozie.groups" : "*",
+                "yarn.resourcemanager.webapp.proxyuser.oozie.hosts" : "*"
             }
         }
     ],
