@@ -53,7 +53,7 @@ from beeswax import common, data_export, models, conf, query_result
 from beeswax import query_helper
 from beeswax.forms import LoadDataForm, QueryForm, DbForm
 from beeswax.design import HQLdesign, hql_query
-from beeswax.models import SavedQuery, make_query_context
+from beeswax.models import SavedQuery, Session, make_query_context
 from beeswax.server import dbms
 from beeswax.server.dbms import expand_exception, get_query_server_config, QueryServerException
 from beeswax.counters import Counters
