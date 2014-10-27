@@ -21,6 +21,7 @@ try:
 except:
   pass
 
+import os
 import cgi
 import datetime
 import logging
