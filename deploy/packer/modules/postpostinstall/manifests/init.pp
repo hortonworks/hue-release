@@ -1,6 +1,6 @@
 class postpostinstall{
   exec { "hue_fix":
-    command => 'sed -i.bak 's/import urllib/import urllib,os,json/' /usr/lib/hue/desktop/core/src/desktop/auth/views.py',
+    command => 'sed -i.bak "s/import urllib/import urllib,os,json/" /usr/lib/hue/desktop/core/src/desktop/auth/views.py',
     logoutput => true
   }
 
