@@ -112,6 +112,13 @@ class CommonMiddleware(object):
 
         return response
 
+
+class SecureHttpPropagationMiddleware(object):
+    def process_request(self, request):
+        if 'HTTP_X_FORWARDED_PROTO' in request.META:
+            request.META['wsgi.url_scheme'] = request.META['HTTP_X_FORWARDED_PROTO']
+
+
 def _is_ignorable_404(uri):
     """
     Returns True if a 404 at the given URL *shouldn't* notify the site managers.
