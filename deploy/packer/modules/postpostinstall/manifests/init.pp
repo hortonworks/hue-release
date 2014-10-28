@@ -1,4 +1,10 @@
 class postpostinstall{
+  exec {"prepare_hue":
+    command => "/bin/bash /tmp/install/hdfs_prepare.sh",
+    require => [File["/tmp/install/hdfs_prepare.sh"],Service["hue"]],
+    timeout => 0
+  }
+
   exec { "slider_fix":
     command => 'su hdfs -c "hdfs dfs -mkdir /user/yarn"; su hdfs -c "hdfs dfs -chown yarn:hdfs /user/yarn"',
     logoutput => true

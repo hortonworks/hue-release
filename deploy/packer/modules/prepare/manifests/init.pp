@@ -47,7 +47,8 @@ class prepare{
   }
 
   file {"/var/cache/wget":
-    ensure => directory
+    ensure => directory,
+    replace => false
   }
 }
 
