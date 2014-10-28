@@ -1,9 +1,4 @@
 class postpostinstall{
-  exec { "hue_fix":
-    command => 'sed -i.bak "s/import urllib/import urllib,os,json/" /usr/lib/hue/desktop/core/src/desktop/auth/views.py',
-    logoutput => true
-  }
-
   exec { "slider_fix":
     command => 'su hdfs -c "hdfs dfs -mkdir /user/yarn"; su hdfs -c "hdfs dfs -chown yarn:hdfs /user/yarn"',
     logoutput => true
