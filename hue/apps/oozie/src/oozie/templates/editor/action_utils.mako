@@ -249,7 +249,8 @@
             file_field(action_form['files'], {
               'name': 'files',
               'add': 'addFile',
-              'remove': '$parent.removeFile.bind($parent)'
+              'remove': '$parent.removeFile.bind($parent)',
+              'isFile': true
             })
             %>
           % endif
@@ -259,7 +260,8 @@
             archives_field(action_form['archives'], {
               'name': 'archives',
               'add': 'addArchive',
-              'remove': '$parent.removeArchive.bind($parent)'
+              'remove': '$parent.removeArchive.bind($parent)',
+              'isFile': true
             })
             %>
           % endif
@@ -342,7 +344,10 @@
         <tbody data-bind="foreach: ${ javascript_attrs['name'] }">
           <tr>
             <td>
-              <input type="text" class="span5 required pathChooserKo" data-bind="disable: $root.context().read_only, fileChooser: $data, value: name, uniqueName: false" />
+              <%
+                isFile = 'fileChooserBtn' if 'isFile' in javascript_attrs else ''
+              %>
+              <input type="text" class="span5 required pathChooserKo ${isFile}" data-bind="disable: $root.context().read_only, fileChooser: $data, value: name, uniqueName: false" />
             </td>
             <td>
               % if 'remove' in javascript_attrs:
@@ -370,7 +375,10 @@
         <tbody data-bind="foreach: ${ javascript_attrs['name'] }">
           <tr>
             <td>
-              <input type="text" class="span5 required pathChooserKo" data-bind="disable: $root.context().read_only, fileChooser: $data, value: name, uniqueName: false" />
+              <%
+                isFile = 'fileChooserBtn' if 'isFile' in javascript_attrs else ''
+              %>
+              <input type="text" class="span5 required pathChooserKo ${isFile}" data-bind="disable: $root.context().read_only, fileChooser: $data, value: name, uniqueName: false" />
             </td>
             <td>
               % if 'remove' in javascript_attrs:
