@@ -296,7 +296,7 @@ def pig_view(request, database=None, table=None):
     except:
         raise Http404
     request.session['autosave'] = {
-        "pig_script": 'A = LOAD \'%s.%s\' USING org.apache.hcatalog.pig.HCatLoader();\nDUMP A;' % (
+        "pig_script": 'A = LOAD \'%s.%s\' USING org.apache.hive.hcatalog.pig.HCatLoader();\nDUMP A;' % (
             database if database else "default", table),
         'title': '%s' % table,
         'arguments': "-useHCatalog"

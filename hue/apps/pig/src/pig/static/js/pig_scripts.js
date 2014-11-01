@@ -146,7 +146,7 @@ function getDatabases(){
       for (var i = data[db].length - 1; i >= 0; i--) {
         CodeMirror.db_list[db][data[db][i]] = {};
         CodeMirror.kwset.tables.push('<i class="icon-list-alt"></i> ' + data[db][i])
-        $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + db + "." + data[db][i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
+        $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + db + "." + data[db][i] + "' USING org.apache.hive.hcatalog.pig.HCatLoader();</a></li>"));
       };
     }
   },"json");
@@ -159,7 +159,7 @@ function getTables(database){
         for (var i = 0; i < data.length; i++) {
           CodeMirror.kwset.tables = CodeMirror.kwset.tables.concat(data[i]); //pigKeywordsT.push(data[i]);
           CodeMirror.db_list[database][data[i]]={};
-          $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + database + "." + data[i] + "' USING org.apache.hcatalog.pig.HCatLoader();</a></li>"));
+          $("#hcatalog_helper").append($("<li><a href='#'>LOAD '" + database + "." + data[i] + "' USING org.apache.hive.hcatalog.pig.HCatLoader();</a></li>"));
         }
       }
 
