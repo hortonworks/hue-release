@@ -24,6 +24,7 @@ do
 done
 
 createUser guest guest
+usermod -G users guest
 
 mkdir -p /home/knox
 chown -R knox:knox /home/knox
