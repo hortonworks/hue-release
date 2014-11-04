@@ -51,7 +51,7 @@ class Command(NoArgsCommand):
     sample_user = None
     # Documents will belong to this user but we run the install as the current user
     try:
-      sample_user = CreateSandboxUserCommand().handle_noargs()
+      sample_user = CreateSandboxUserCommand().getuser()
       self._install_tables(sample_user, 'beeswax')
     except Exception, ex:
       exception = ex

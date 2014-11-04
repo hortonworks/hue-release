@@ -23,6 +23,6 @@
 	"udfs":"",
 	"tableType":"Inclusion",
 	"columnType":"Inclusion",
-	"isEnabled":true,
+	"isEnabled":false,
 	"isAuditEnabled":true
 }

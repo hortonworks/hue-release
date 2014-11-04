@@ -8,7 +8,7 @@ from desktop.conf import DEFAULT_USER
 
 class Command(NoArgsCommand):
 
-  def handle_noargs(self, **options):
+  def getuser(self, **options):
     try:
       return User.objects.get(username=DEFAULT_USER.get())
     except User.DoesNotExist:
@@ -25,3 +25,7 @@ class Command(NoArgsCommand):
       instance = form.save()
       get_profile(instance)
       return User.objects.get(username=DEFAULT_USER.get())
+
+  def handle_noargs(self, **options):
+    user = self.getuser()
+    return "User %s created\n" % user

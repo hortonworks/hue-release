@@ -1,25 +1,5 @@
 class postinstall::argus{
   
-  file {"wait_finish.py":
-    path => "/tmp/wait_finish.py",
-    source => "puppet:///modules/postinstall/wait_finish.py"
-  }
-  
-  define ambariApi($url, $body, $method = 'POST') {
-    case $method {
-      POST: {
-        exec {"/usr/bin/curl  -H \"X-Requested-By: ambari\"  -u admin:admin -d '${body}' http://127.0.0.1:8080/api/v1/clusters/Sandbox/${url} | python /tmp/wait_finish.py; sleep 5":
-          logoutput => true,
-        }
-      }
-      PUT: {
-        exec {"/usr/bin/curl  -H \"X-Requested-By: ambari\"  -u admin:admin -X PUT -d '${body}' http://127.0.0.1:8080/api/v1/clusters/Sandbox/${url} | python /tmp/wait_finish.py; sleep 5":
-          logoutput => true,
-        }
-      }
-    }
-  }
-  
   user {"xapolicymgr":
     name => "xapolicymgr",
     password => "xapolicymgr",
@@ -28,7 +8,7 @@ class postinstall::argus{
   }
   
   
-  package{"argus*":
+  package{"argus_*":
     ensure => installed,
   }
 
@@ -37,7 +17,7 @@ class postinstall::argus{
     source => "puppet:///modules/postinstall/argus/",
     mode   => '777',
     recurse => true,
-    require => Package["argus*"],
+    require => Package["argus_*"],
   }
  
  #   Puppet doesn't like relative path like this
@@ -101,7 +81,7 @@ class postinstall::argus{
 #  ambariApi {"restart hive":
 #    url => "requests",
 #    method => "POST",
-#    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for Hive","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HIVE"}},"Requests/resource_filters":[{"service_name":"HIVE","component_name":"HIVESERVER2","hosts":"sandbox.hortonworks.com"}]}',
+#    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for HIVE","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HIVE"}},"Requests/resource_filters":[{"service_name":"HIVE","component_name":"HCAT","hosts":"sandbox.hortonworks.com"},{"service_name":"HIVE","component_name":"HIVE_CLIENT","hosts":"sandbox.hortonworks.com"},{"service_name":"HIVE","component_name":"HIVE_METASTORE","hosts":"sandbox.hortonworks.com"},{"service_name":"HIVE","component_name":"HIVE_SERVER","hosts":"sandbox.hortonworks.com"},{"service_name":"HIVE","component_name":"MYSQL_SERVER","hosts":"sandbox.hortonworks.com"},{"service_name":"HIVE","component_name":"WEBHCAT_SERVER","hosts":"sandbox.hortonworks.com"}]}',
 #    require => AmbariApi["restart hdfs"],
 #  }
 #

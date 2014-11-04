@@ -1,6 +1,6 @@
 {
 	"policyName":"Sandbox for Guest",
-	"resourceName":"/sandbox",
+	"resourceName":"/knox_sample",
 	"description":"",
 	"repositoryName":"sandbox_knox",
 	"repositoryType":"Knox",
@@ -17,7 +17,7 @@
 		}
 		
 	],
-	"topologies":"sandbox",
+	"topologies":"knox_sample",
 	"services":"*",
 	"isEnabled":false,
 	"isAuditEnabled":true

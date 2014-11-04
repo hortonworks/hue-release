@@ -21,7 +21,9 @@
                 "hadoop.proxyuser.root.hosts" : "*",
                 "hadoop.proxyuser.root.groups" : "*",
                 "hadoop.proxyuser.oozie.hosts" : "*",
-                "hadoop.proxyuser.oozie.groups" : "*"
+                "hadoop.proxyuser.oozie.groups" : "*",
+                "hadoop.proxyuser.hcat.hosts" : "*",
+                "hadoop.proxyuser.hcat.groups" : "*"
             }
         },
         {
@@ -68,7 +70,20 @@
                 "hive.users.in.admin.role" : "hue,hive",
                 "hive_metastore_user_passwd" : "hive",
                 "hive.server2.enable.impersonation": "true",
-                "hive.server2.authentication": "NOSASL"
+                "hive.server2.authentication": "NOSASL",
+
+                "hive.compactor.check.interval": "300s",
+                "hive.compactor.initiator.on": "true",
+                "hive.compactor.worker.timeout": "86400s",
+                "hive.enforce.bucketing": "true",
+                "hive.support.concurrency": "true",
+                "hive.exec.dynamic.partition.mode": "nonstrict",
+                "hive.server2.enable.doAs": "false",
+                "hive.txn.manager": "org.apache.hadoop.hive.ql.lockmgr.DbTxnManager",
+                "hive.txn.max.open.batch": "1000",
+                "hive.txn.timeout": "300",
+                "hive.security.authorization.enabled": "false",
+                "hive.users.in.admin.role": "hue,hive"
             }
         },
         {
@@ -120,14 +135,15 @@
                 "tez.am.java.opts" : "-server -Xmx200m -Djava.net.preferIPv4Stack=true -XX:+UseNUMA -XX:+UseParallelGC",
                 "tez.am.resource.memory.mb" : "250",
                 "tez.dag.am.resource.memory.mb" : "250",
-                "yarn.app.mapreduce.am.command-opts" : "-Xmx200m",
-                "tez.lib.uris": "hdfs:///apps/tez/,hdfs:///apps/tez/lib/,hdfs:///apps/tez/tez.tar.gz"
+                "yarn.app.mapreduce.am.command-opts" : "-Xmx200m"
             }
         },
         {
             "webhcat-site" : {
                 "webhcat.proxyuser.hue.hosts" : "*",
-                "webhcat.proxyuser.hue.groups" : "*"
+                "webhcat.proxyuser.hue.groups" : "*",
+                "webhcat.proxyuser.hcat.hosts" : "*",
+                "webhcat.proxyuser.hcat.groups" : "*"
             }
         },
         {
@@ -146,7 +162,11 @@
                 "yarn.scheduler.minimum-allocation-mb" : "250",
                 "yarn.scheduler.maximum-allocation-mb" : "2250",
                 "yarn.nodemanager.pmem-check-enabled" : "false",
-                "yarn.acl.enable" : "false"
+                "yarn.acl.enable" : "false",
+                "yarn.resourcemanager.webapp.proxyuser.hcat.groups" : "*",
+                "yarn.resourcemanager.webapp.proxyuser.hcat.hosts" : "*",
+                "yarn.resourcemanager.webapp.proxyuser.oozie.groups" : "*",
+                "yarn.resourcemanager.webapp.proxyuser.oozie.hosts" : "*"
             }
         }
     ],

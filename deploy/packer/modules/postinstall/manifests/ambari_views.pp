@@ -1,5 +1,7 @@
 class postinstall::ambari_views{
   class download_ambari_views {
+
+/*
     exec {"files":
       command => "wget -O /var/lib/ambari-server/resources/views/files-0.1.0-SNAPSHOT.jar http://dev2.hortonworks.com.s3.amazonaws.com/ARTIFACTS/views/files-0.1.0-SNAPSHOT.jar",
       timeout => 0,
@@ -58,6 +60,7 @@ class postinstall::ambari_views{
 }
 } ]'
     }
+*/
 
     file { 'slider-view-props.json':
       path    => "/tmp/slider-view-props.json",
@@ -81,34 +84,35 @@ class postinstall::ambari_views{
       require => Class[download_ambari_views],
     }
 
+/*
     exec {'files_wait_deploy':
       command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/FILES/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done',
       require => Exec['install_views'],
       provider => 'shell',
       timeout => 0,
     }
-/* Don't need Files instance
+
     exec {'files_instance':
       command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/FILES/versions/0.1.0/instances/MyFiles --data "@/tmp/files-view-props.json"',
       require => Exec['files_wait_deploy'],
       provider => 'shell',
       timeout => 0,
     }
-*/
+
     exec {'pig_wait_deploy':
       command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/PIG/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done',
       require => Exec['install_views'],
       provider => 'shell',
       timeout => 0,
     }
-/* Don't need Pig instance
+
     exec {'pig_instance':
       command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/PIG/versions/0.1.0/instances/MyPig --data "@/tmp/pig-view-props.json"',
       require => Exec['pig_wait_deploy'],
       provider => 'shell',
       timeout => 0,
     }
-*/
+
     exec {'capsched_wait_deploy':
       command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/CAPACITY-SCHEDULER/versions/0.1.0 | grep DEPLOYING >/dev/null; do sleep 1; done',
       require => Exec['install_views'],
@@ -122,13 +126,14 @@ class postinstall::ambari_views{
       provider => 'shell',
       timeout => 0,
     }
-
+*/
     exec {'slider_wait_deploy':
       command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/SLIDER/versions/1.0.0 | grep DEPLOYING >/dev/null; do sleep 1; done',
       require => Exec['install_views'],
       provider => 'shell',
       timeout => 0,
     }
+
 
     exec {'slider_instance':
       command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/SLIDER/versions/1.0.0/instances/SLIDER_1 --data "@/tmp/slider-view-props.json"',

@@ -38,7 +38,7 @@ class install::ambari-bluprints{
   }
 
   file{"/tmp/install/pin_repo.json":
-    content => '{"Repositories":{"base_url":"http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-974/","verify_base_url":false}}'
+    content => '{"Repositories":{"base_url":"http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-1084/","verify_base_url":false}}'
   }
 
   exec {"pin repo":
@@ -72,21 +72,6 @@ class install::ambari-bluprints{
     command => "cp hive-*.tar.gz hive.tar.gz",
     cwd => "/usr/hdp/current/hive-client/",
     require => Exec["install cluster"]
-  }
- 
-  define ambariApi($url, $body, $method = 'POST') {
-    case $method {
-      POST: {
-        exec {"/usr/bin/curl  -H \"X-Requested-By: ambari\"  -u admin:admin -d '${body}' http://127.0.0.1:8080/api/v1/clusters/Sandbox/${url} | python /tmp/wait_finish.py; sleep 5":
-          logoutput => true,
-        }
-      }
-      PUT: {
-        exec {"/usr/bin/curl  -H \"X-Requested-By: ambari\"  -u admin:admin -X PUT -d '${body}' http://127.0.0.1:8080/api/v1/clusters/Sandbox/${url} | python /tmp/wait_finish.py; sleep 5":
-          logoutput => true,
-        }
-      }
-    }
   }
 
   ambariApi {"start everything again":

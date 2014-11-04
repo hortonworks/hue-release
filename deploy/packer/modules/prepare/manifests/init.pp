@@ -41,5 +41,14 @@ class prepare{
   #  }    
   #}
 
+  file {"wait_finish.py":
+    path => "/tmp/wait_finish.py",
+    source => "puppet:///modules/prepare/wait_finish.py"
+  }
+
+  file {"/var/cache/wget":
+    ensure => directory,
+    replace => false
+  }
 }
 
