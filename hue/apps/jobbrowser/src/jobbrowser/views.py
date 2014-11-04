@@ -40,7 +40,7 @@ from desktop.lib.exceptions_renderable import PopupException
 from desktop.views import register_status_bar_view
 
 from jobbrowser import conf
-from jobbrowser.api import get_api
+from jobbrowser.api import get_api, ApplicationNotRunning
 #from jobbrowser.yarn_models import can_view_job, can_modify_job
 
 
