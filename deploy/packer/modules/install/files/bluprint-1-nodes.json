@@ -70,7 +70,6 @@
                 "hive.users.in.admin.role" : "hue,hive",
                 "hive_metastore_user_passwd" : "hive",
                 "hive.server2.enable.impersonation": "true",
-                "hive.server2.authentication": "NOSASL",
 
                 "hive.compactor.check.interval": "300s",
                 "hive.compactor.initiator.on": "true",

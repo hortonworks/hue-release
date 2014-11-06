@@ -33,7 +33,8 @@ from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse
 
 from desktop.log.access import access_warn, access_log_level
-from desktop.lib.rest.http_client import RestException
+from desktop.lib.rest.http_client import RestException, HttpClient
+from desktop.lib.rest.resource import Resource
 from desktop.lib.django_util import render_json, render, copy_query_dict, encode_json_for_js
 from desktop.lib.exceptions import MessageException
 from desktop.lib.exceptions_renderable import PopupException
@@ -262,7 +263,8 @@ def job_attempt_logs_json(request, job, attempt_index=0, name='syslog', offset=0
     link += '?start=%s' % offset
 
   try:
-    log = html.parse(log_link + link).xpath('/html/body/table/tbody/tr/td[2]')[0].text_content()
+    response = Resource(HttpClient(log_link + link), urlencode=False).get()
+    log = html.fromstring(response).xpath('/html/body/table/tbody/tr/td[2]')[0].text_content()
   except Exception, e:
     log = _('Failed to retrieve log: %s') % e
 
