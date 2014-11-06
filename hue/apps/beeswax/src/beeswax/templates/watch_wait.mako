@@ -39,7 +39,7 @@ ${layout.menubar(section='query')}
 
 <div class="container-fluid">
 	<h1>${_('Waiting for query...')} ${util.render_query_context(query_context)}</h1>
-  <div class="alert alert-error query_error"><p></p></div>
+  <div class="alert alert-error query_error" style="display: none;"><p></p></div>
 	<div class="row-fluid">
 		<div class="span3">
 						<li class="nav">
@@ -115,7 +115,7 @@ ${layout.menubar(section='query')}
     function refreshView() {
       $.getJSON("${url('beeswax' + ':watch_query_refresh_json', query.id, download_format)}", function (data) {
         if (data.status == -1) {
-          $('.query_error').prev().hide();
+          $('.query_error').show().prev().hide();
           $('.query_error p').html('<strong>'+ data['message'] + '</strong>');
           return false;
         }
