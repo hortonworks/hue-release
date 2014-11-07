@@ -133,13 +133,13 @@ def test_dump_config():
 
   clear()
 
-  CANARY = '/tmp/space.dat'
-  finish = proxy.conf.WHITELIST.set_for_testing(CANARY)
-  try:
-    response = c.get('/dump_config')
-    assert_true(CANARY in response.content, response.content)
-  finally:
-    finish()
+  # CANARY = '/tmp/space.dat'
+  # finish = proxy.conf.WHITELIST.set_for_testing(CANARY)
+  # try:
+  #   response = c.get('/dump_config')
+  #   assert_true(CANARY in response.content, response.content)
+  # finally:
+  #   finish()
 
   # Login as someone else
   client_not_me = make_logged_in_client(username='not_me', is_superuser=False, groupname='test')

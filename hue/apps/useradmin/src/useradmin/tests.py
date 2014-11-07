@@ -34,6 +34,7 @@ from useradmin.models import HuePermission, GroupPermission, UserProfile
 from useradmin.models import get_profile, get_default_user_group
 
 import useradmin.conf
+import desktop.conf
 from hadoop import pseudo_hdfs4
 
 
@@ -46,6 +47,7 @@ def reset_all_groups():
   """Reset to a clean state by deleting all groups"""
 
   useradmin.conf.DEFAULT_USER_GROUP.set_for_testing(None)
+  desktop.conf.AUTH.SINGLE_USER_MODE_FILE.set_for_testing(None)
   for grp in Group.objects.all():
     grp.delete()
 
@@ -415,11 +417,11 @@ def test_user_admin():
   # Let's try changing the password
   response = c.post('/useradmin/users/edit/test', dict(username="test", first_name="Tom", last_name="Tester", is_superuser=True, password1="foo", password2="foobar"))
   assert_equal(["Passwords do not match."], response.context["form"]["password2"].errors, "Should have complained about mismatched password")
-  response = c.post('/useradmin/users/edit/test', dict(username="test", first_name="Tom", last_name="Tester", password1="foo", password2="foo", is_active=True, is_superuser=True))
+  response = c.post('/useradmin/users/edit/test', dict(username="test", first_name="Tom", last_name="Tester", password_old="test", password1="foo", password2="foo", is_active=True, is_superuser=True))
   assert_true(User.objects.get(username="test").is_superuser)
   assert_true(User.objects.get(username="test").check_password("foo"))
   # Change it back!
-  response = c.post('/useradmin/users/edit/test', dict(username="test", first_name="Tom", last_name="Tester", password1="test", password2="test", is_active="True", is_superuser="True"))
+  response = c.post('/useradmin/users/edit/test', dict(username="test", first_name="Tom", last_name="Tester", password_old="foo", password1="test", password2="test", is_active="True", is_superuser="True"))
   assert_true(User.objects.get(username="test").check_password("test"))
   assert_true(make_logged_in_client(username = "test", password = "test"),
               "Check that we can still login.")
@@ -455,7 +457,7 @@ def test_user_admin():
   response = c.post('/useradmin/users/new', dict(username="group_member", password1="test", password2="test", groups=[group.pk]))
   User.objects.get(username='group_member')
   assert_true(User.objects.get(username='group_member').groups.filter(name='test-group').exists())
-  response = c.post('/useradmin/users/edit/group_member', dict(username="group_member", password1="test", password2="test", groups=[]))
+  response = c.post('/useradmin/users/edit/group_member', dict(username="group_member", password_old="test", password1="test", password2="test", groups=[]))
   assert_false(User.objects.get(username='group_member').groups.filter(name='test-group').exists())
 
   # Check permissions by logging in as the new user

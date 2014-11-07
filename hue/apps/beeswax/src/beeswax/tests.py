@@ -1479,12 +1479,13 @@ def test_hiveserver2_get_security():
     principal = get_query_server_config('beeswax')['principal']
     assert_true(principal.startswith('hive/'), principal)
 
+    client_test = make_logged_in_client(username='test', is_superuser=False, groupname='test')
     # Beeswax
     # beeswax_query_server = {'server_name': 'beeswax', 'principal': 'hive'}
     beeswax_query_server = {'server_host': 'localhost', 'server_port': 10000, 'server_name': 'beeswax', 'principal': 'hive/hive@test.com'}
     user = User.objects.get(username='test')
     hive_server_client = HiveServerClient(beeswax_query_server, user)
-    assert_equal((True, 'PLAIN', 'hive', False), hive_server_client.get_security())
+    assert_equal((False, 'NOSASL', 'hive', False), hive_server_client.get_security())
 
     hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_AUTHENTICATION] = 'NOSASL'
     hive_site._HIVE_SITE_DICT[hive_site._CNF_HIVESERVER2_IMPERSONATION] = 'true'
