@@ -54,7 +54,8 @@ SHOW_CREDENTIALS = None
 
 def reload_config():
   global SINGLE_USER_MODE, SHOW_CREDENTIALS
-  if os.path.exists("/var/lib/hue/single_user_mode"):
+  credentials_path = AUTH.SINGLE_USER_MODE_FILE.get()
+  if credentials_path and os.path.exists(credentials_path):
     SINGLE_USER_MODE = json.load(open("/var/lib/hue/single_user_mode"))
   else:
     SINGLE_USER_MODE = None

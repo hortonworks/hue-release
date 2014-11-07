@@ -349,7 +349,13 @@ AUTH = ConfigSection(
     EXPIRE_SUPERUSERS = Config("expire_superusers",
                                 help=_("Apply 'expires_after' to superusers."),
                                 type=coerce_bool,
-                                default=True)
+                                default=True),
+    SINGLE_USER_MODE_FILE = Config(key="single_user_mode_enabled",
+                                   help=_("Auto login into hue support. File should contain JSON dict with 'user' and 'pass' keys"),
+                                   private=True,
+                                   type=str,
+                                   default="/var/lib/hue/single_user_mode"
+                                   )
 ))
 
 LDAP = ConfigSection(

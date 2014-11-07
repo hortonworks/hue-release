@@ -140,6 +140,7 @@ from django.utils.translation import ugettext as _
             <div class="alert alert-info">username: ${credentials['user']}<br> password: ${credentials['pass']}</div>
         %endif
         <form method="POST" action="${action}" class="well" autocomplete="off"> ${ csrf_token_field | n }
+          ${ form.errors | n,unicode }
           <label
           % if backend_name == 'OAuthBackend':
             class="hide"
