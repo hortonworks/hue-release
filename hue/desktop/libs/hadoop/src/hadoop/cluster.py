@@ -151,7 +151,7 @@ def get_cluster_addr_for_job_submission():
   if conf is None:
     return None
 
-  return conf.RESOURCE_MANAGER_API_URL.get()
+  return conf.RESOURCE_MANAGER_RPC_URL.get()
 
 
 def is_yarn():
