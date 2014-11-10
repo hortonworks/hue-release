@@ -9,7 +9,7 @@
       "deployment_dir": "/user/hue/oozie/workspaces/managed/sleep",
       "schema_version": "uri:oozie:workflow:0.4",
       "last_modified": "2013-01-01 00:00:00",
-      "owner": 1100713,
+      "owner": 1,
       "description": "Example of MapReduce action that sleeps"
     }
   },
