@@ -88,15 +88,18 @@ YARN_CLUSTERS = UnspecifiedConfigSection(
       SUBMIT_TO=Config('submit_to', help="Whether Hue should use this cluster to run jobs",
                        default=False, type=coerce_bool), # False here for backward compatibility
       RESOURCE_MANAGER_API_URL=Config("resourcemanager_api_url",
-                  default='http://localhost:8088',
-                  help="URL of the ResourceManager API"),
+                                      default='http://localhost:8088',
+                                      help="URL of the ResourceManager API (yarn.resourcemanager.webapp.address)"),
+      RESOURCE_MANAGER_RPC_URL=Config("resourcemanager_rpc_url",
+                                      default='http://localhost:8050',
+                                      help="URL of the ResourceManager RPC url (yarn.resourcemanager.address)"),
       PROXY_API_URL=Config("proxy_api_url",
-                  default='http://localhost:8088',
-                  help="URL of the ProxyServer API"),
-      HISTORY_SERVER_API_URL=Config("history_server_api_url",
-                  default='http://localhost:19888',
-                  help="URL of the HistoryServer API"),
-    )
+                           default='http://localhost:8088',
+                           help="URL of the ProxyServer API"),
+      HISTORY_SERVER_API_URL=Config ("history_server_api_url",
+                                     default='http://localhost:19888',
+                                     help="URL of the HistoryServer API"),)
+
   )
 )
 

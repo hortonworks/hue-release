@@ -38,24 +38,25 @@ LOG = logging.getLogger(__name__)
 class Command(NoArgsCommand):
   def handle_noargs(self, **options):
     fs = cluster.get_hdfs()
+    sample_user = CreateSandboxUserCommand().handle_noargs()
+    fs.setuser(sample_user)
     create_directories(fs, [REMOTE_SAMPLE_DIR.get()])
     remote_dir = REMOTE_SAMPLE_DIR.get()
-
     # Copy examples binaries
     for name in os.listdir(LOCAL_SAMPLE_DIR.get()):
       local_dir = fs.join(LOCAL_SAMPLE_DIR.get(), name)
       remote_data_dir = fs.join(remote_dir, name)
       LOG.info(_('Copying examples %(local_dir)s to %(remote_data_dir)s\n') % {
                   'local_dir': local_dir, 'remote_data_dir': remote_data_dir})
-      fs.do_as_user(fs.DEFAULT_USER, fs.copyFromLocal, local_dir, remote_data_dir)
+      fs.copyFromLocal(local_dir, remote_data_dir)
 
     # Copy sample data
     local_dir = LOCAL_SAMPLE_DATA_DIR.get()
     remote_data_dir = fs.join(remote_dir, 'data')
     LOG.info(_('Copying data %(local_dir)s to %(remote_data_dir)s\n') % {
                 'local_dir': local_dir, 'remote_data_dir': remote_data_dir})
-    fs.do_as_user(fs.DEFAULT_USER, fs.copyFromLocal, local_dir, remote_data_dir)
+    fs.copyFromLocal(local_dir, remote_data_dir)
 
     # Load jobs
-    sample_user = CreateSandboxUserCommand().handle_noargs()
+
     management.call_command('loaddata', 'initial_oozie_examples.json', verbosity=2)

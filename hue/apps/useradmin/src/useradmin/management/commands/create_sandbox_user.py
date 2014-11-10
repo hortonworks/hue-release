@@ -10,7 +10,7 @@ class Command(NoArgsCommand):
 
   def getuser(self, **options):
     try:
-      return User.objects.get(username=DEFAULT_USER.get())
+      return User.objects.get(id=1)
     except User.DoesNotExist:
       form = SuperUserChangeForm(
         {
