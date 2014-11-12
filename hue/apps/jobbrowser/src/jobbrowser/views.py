@@ -279,16 +279,20 @@ def tasks(request, job):
   ttypes = request.GET.get('tasktype')
   tstates = request.GET.get('taskstate')
   ttext = request.GET.get('tasktext')
+  pagenum = int(request.GET.get('page', 1))
+  pagenum = pagenum > 0 and pagenum or 1
 
   filters = {
     'task_types': ttypes and set(ttypes.split(',')) or None,
     'task_states': tstates and set(tstates.split(',')) or None,
     'task_text': ttext,
+    'pagenum': pagenum
   }
 
   jt = get_api(request.user, request.jt)
   task_list = jt.get_tasks(job.jobId, **filters)
   filter_params = copy_query_dict(request.GET, ('tasktype', 'taskstate', 'tasktext')).urlencode()
+  page = jt.paginate_task(task_list, pagenum)
 
   return render("tasks.mako", request, {
     'request': request,
