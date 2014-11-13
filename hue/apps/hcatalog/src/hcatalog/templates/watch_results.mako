@@ -15,6 +15,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 <%!
+from desktop.lib.i18n import smart_unicode
 from desktop.views import commonheader, commonfooter
 from django.utils.translation import ugettext as _
 %>
@@ -160,7 +161,7 @@ ${layout.menubar(section='tables')}
               <tr>
                 <td>${start_row + i}</td>
                 % for item in row:
-                  <td>${ item }</td>
+                  <td>${ smart_unicode(item, errors='ignore') }</td>
                 % endfor
               </tr>
               % endfor
@@ -245,7 +246,6 @@ ${layout.menubar(section='tables')}
   </form>
 </div>
 %endif.resultTable
-
 
 
 
