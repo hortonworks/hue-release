@@ -1561,6 +1561,19 @@ class TestImportWorkflow04(OozieMockBase):
     # Should throw PopupException
     import_workflow(workflow, contents)
 
+  @raises(RuntimeError)
+  def test_import_workflow_xxe_attack(self):
+    """
+    Validates import workflow with external entity expansion attack
+    """
+    workflow = Workflow.objects.new_workflow(self.user)
+    workflow.save()
+    f = open('apps/oozie/src/oozie/test_data/workflows/0.4/test-xxe-attack.xml')
+    contents = f.read()
+    f.close()
+
+    # Should throw PopupException
+    import_workflow(workflow, contents)
 
   def test_import_workflow_basic(self):
     """
