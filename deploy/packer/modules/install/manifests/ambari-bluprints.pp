@@ -38,7 +38,7 @@ class install::ambari-bluprints{
   }
 
   file{"/tmp/install/pin_repo.json":
-    content => '{"Repositories":{"base_url":"http://s3.amazonaws.com/dev.hortonworks.com/HDP/centos6/2.x/BUILDS/2.2.0.0-1084/","verify_base_url":false}}'
+    content => '{"Repositories":{"base_url":"http://public-repo-1.hortonworks.com.s3.amazonaws.com/HDP/centos6/2.x/GA/2.2.0.0/","verify_base_url":false}}'
   }
 
   exec {"pin repo":
