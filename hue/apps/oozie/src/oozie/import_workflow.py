@@ -38,6 +38,7 @@ except ImportError:
 
 import logging
 from lxml import etree
+from defusedxml.lxml import parse, fromstring
 
 from django.core import serializers
 from django.utils.encoding import smart_str
@@ -514,7 +515,7 @@ def _resolve_subworkflow_from_deployment_dir(fs, workflow, app_path):
 
   try:
     f = fs.open('%s/workflow.xml' % app_path)
-    root = etree.parse(f)
+    root = parse(f)
     f.close()
     return Workflow.objects.get(name=root.attrib['name'])
   except IOError:
@@ -561,7 +562,8 @@ def import_workflow(workflow, workflow_definition, fs=None):
   })
 
   # Parse Workflow Definition
-  workflow_definition_root = etree.fromstring(workflow_definition)
+  workflow_definition_root = fromstring(workflow_definition)
+
 
   if workflow_definition_root is None:
     raise RuntimeError(_("Could not find any nodes in Workflow definition. Maybe it's malformed?"))
@@ -577,7 +579,7 @@ def import_workflow(workflow, workflow_definition, fs=None):
     })
 
   # Get XSLT
-  xslt = etree.parse(xslt_definition_fh)
+  xslt = parse(xslt_definition_fh)
   xslt_definition_fh.close()
   transform = etree.XSLT(xslt)
 
