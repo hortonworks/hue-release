@@ -68,17 +68,10 @@ class install::ambari-bluprints{
     returns => [0, 1]
   }
 
-#  exec {"hive workaround":
-#    command => "cp hive-*.tar.gz hive.tar.gz",
-#    cwd => "/usr/hdp/current/hive-client/",
-#    require => Exec["install cluster"]
-#  }
-
   ambariApi {"start everything again":
     url => "services",
     method => "PUT",
     body => '{"RequestInfo":{"context":"_PARSE_.START.ALL_SERVICES","operation_level":{"level":"CLUSTER","cluster_name":"Sandbox"}},"Body":{"ServiceInfo":{"state":"STARTED"}}}',
-#    require => Exec["hive workaround"]
   }
 
   exec{'set_hadoop_path':
