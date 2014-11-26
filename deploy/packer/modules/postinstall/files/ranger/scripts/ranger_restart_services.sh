@@ -23,5 +23,5 @@ $scripts_folder/restart_hbase.sh
 
 #Copy the tutorial files to the home folder of root
 cd $scripts_folder
-cp -r ../argus_tutorial /root
+cp -r ../ranger_tutorial /root
 

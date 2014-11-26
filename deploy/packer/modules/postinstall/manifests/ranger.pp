@@ -1,4 +1,4 @@
-class postinstall::argus{
+class postinstall::ranger{
   
   user {"xapolicymgr":
     name => "xapolicymgr",
@@ -8,59 +8,59 @@ class postinstall::argus{
   }
   
   
-  package{"argus_*":
+  package{"ranger_*":
     ensure => installed,
   }
 
-  file { "argus_directory":
-    path => "/tmp/argus",
-    source => "puppet:///modules/postinstall/argus/",
+  file { "ranger_directory":
+    path => "/tmp/ranger",
+    source => "puppet:///modules/postinstall/ranger/",
     mode   => '777',
     recurse => true,
-    require => Package["argus_*"],
+    require => Package["ranger_*"],
   }
  
  #   Puppet doesn't like relative path like this
- #   cwd => "puppet:///modules/postinstall/argus/install_overrides", 
+ #   cwd => "puppet:///modules/postinstall/ranger/install_overrides", 
   exec{"override_properties_and_install":
-    cwd => "/tmp/argus/install_overrides",
-    command => "bash /tmp/argus/scripts/argus_override_properties_and_install.sh",
-    require => File["argus_directory"],
+    cwd => "/tmp/ranger/install_overrides",
+    command => "bash /tmp/ranger/scripts/ranger_override_properties_and_install.sh",
+    require => File["ranger_directory"],
     logoutput => true,
   }
 
-  exec{"argus_restart_namenode":
-    cwd => "/tmp/argus/scripts",
-    command => "bash /tmp/argus/scripts/restart_namenode.sh",
+  exec{"ranger_restart_namenode":
+    cwd => "/tmp/ranger/scripts",
+    command => "bash /tmp/ranger/scripts/restart_namenode.sh",
     require => Exec["override_properties_and_install"],
     logoutput => true,
   }
 
-  exec{"argus_restart_hiveservers":
-    cwd => "/tmp/argus/scripts",
-    command => "bash /tmp/argus/scripts/restart_hiveservers.sh",
-    require => Exec["argus_restart_namenode"],
+  exec{"ranger_restart_hiveservers":
+    cwd => "/tmp/ranger/scripts",
+    command => "bash /tmp/ranger/scripts/restart_hiveservers.sh",
+    require => Exec["ranger_restart_namenode"],
     logoutput => true,
   }
 
-  exec{"argus_restart_hbase":
-    cwd => "/tmp/argus/scripts",
-    command => "bash /tmp/argus/scripts/restart_hbase.sh",
-    require => Exec["argus_restart_hiveservers"],
+  exec{"ranger_restart_hbase":
+    cwd => "/tmp/ranger/scripts",
+    command => "bash /tmp/ranger/scripts/restart_hbase.sh",
+    require => Exec["ranger_restart_hiveservers"],
     logoutput => true,
   }
   
   file { "stage_create_policies":
-    path => "/tmp/create_argus_policies.sh",
-    source => "puppet:///modules/postinstall/argus/policies/create_argus_policies.sh",
+    path => "/tmp/create_ranger_policies.sh",
+    source => "puppet:///modules/postinstall/ranger/policies/create_ranger_policies.sh",
     mode   => '777',
-    require => Exec["argus_restart_hbase"],
+    require => Exec["ranger_restart_hbase"],
   }
   
-  exec{"create_argus_policies":
-    cwd => "/tmp/argus/policies",
-    command => "/tmp/create_argus_policies.sh",
-    require => [File["stage_create_policies"], File["argus_directory"]],    
+  exec{"create_ranger_policies":
+    cwd => "/tmp/ranger/policies",
+    command => "/tmp/create_ranger_policies.sh",
+    require => [File["stage_create_policies"], File["ranger_directory"]],    
     logoutput => true,
   }
   
@@ -68,7 +68,7 @@ class postinstall::argus{
 #    url => "hosts/sandbox.hortonworks.com",
 #    method => "PUT",
 #    body => '{"RequestInfo":{"context":"Turn On Maintenance Mode for host"},"Body":{"Hosts":{"maintenance_state":"ON"}}}',
-#    require => Exec["create_argus_policies"],
+#    require => Exec["create_ranger_policies"],
 #  }
 #
 #  ambariApi {"restart hdfs":
@@ -101,4 +101,4 @@ class postinstall::argus{
 
 }
 
-#include postinstall::argus
+#include postinstall::ranger

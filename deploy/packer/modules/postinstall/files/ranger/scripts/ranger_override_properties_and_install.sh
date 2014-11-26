@@ -1,17 +1,17 @@
 #!/bin/bash
 
 #Make sure this script is run from the folder which contains the override files
-#e.g. cd /tmp/argus/install_overrides
+#e.g. cd /tmp/ranger/install_overrides
 install_overrides_folder=`pwd`
 scripts_folder=${install_overrides_folder}/../scripts
 
 if [ ! -d admin ]; then
-	echo "ERROR: This script should be run from override folder. e.g. /tmp/argus/install_overrides"
+	echo "ERROR: This script should be run from override folder. e.g. /tmp/ranger/install_overrides"
 	exit 1
 fi
 
 #latest_ver=`ls | grep -v current | sort -unr | head --lines=1`
-latest_folder=`find /usr/hdp -name argus | grep -v current | sort -unr | head --lines=1`
+latest_folder=`find /usr/hdp -name ranger | grep -v current | sort -unr | head --lines=1`
 
 if [ -f /etc/profile.d/java.sh ]; then
 	. /etc/profile.d/java.sh
@@ -59,7 +59,7 @@ cd ../patches
 #./patch_for_audit_log_message/apply_patch.sh 
 
 
-#Set the properties in Hive and HBase to use Argus
+#Set the properties in Hive and HBase to use Ranger
 cd /var/lib/ambari-server/resources/scripts
 #./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authorization.enabled" "true"
 #./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authorization.manager" "com.xasecure.authorization.hive.authorizer.XaSecureHiveAuthorizerFactory"
@@ -88,5 +88,5 @@ cd /var/lib/ambari-server/resources/scripts
 
 #Copy the tutorial files to the home folder of root
 cd $install_overrides_folder
-cp -r ../argus_tutorial /root
+cp -r ../ranger_tutorial /root
 

@@ -4,12 +4,12 @@ set -x
 
 cd `dirname $0`
 
-rm -rf /tmp/argus_tutorial
-mkdir -p /tmp/argus_tutorial
-cp -r * /tmp/argus_tutorial
-chmod -R 777 /tmp/argus_tutorial
+rm -rf /tmp/ranger_tutorial
+mkdir -p /tmp/ranger_tutorial
+cp -r * /tmp/ranger_tutorial
+chmod -R 777 /tmp/ranger_tutorial
 
-script_dir=/tmp/argus_tutorial
+script_dir=/tmp/ranger_tutorial
 
 #Create the groups, users and hdfs data
 cd $script_dir

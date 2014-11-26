@@ -1,7 +1,7 @@
 {
    "policyName":"Hive Global UDF Allow",
    "resourceName":"/*/*,/*/ToMakeUnique",
-   "description":"This policy gives global permission for all users. Disable this to test Apache Argus",
+   "description":"This policy gives global permission for all users. Disable this to test Apache Ranger",
    "repositoryName":"sandbox_hive",
    "repositoryType":"Hive",
    "permMapList":[

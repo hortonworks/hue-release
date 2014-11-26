@@ -1,7 +1,7 @@
 {
    "policyName":"HDFS Global Allow",
    "resourceName":"/,/*",
-   "description":"This policy gives global permission for all users. Disable this to test Apache Argus",
+   "description":"This policy gives global permission for all users. Disable this to test Apache Ranger",
    "repositoryName":"sandbox_hdfs",
    "repositoryType":"HDFS",
    "permMapList":[

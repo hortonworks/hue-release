@@ -25,7 +25,7 @@ class postinstall {
     # class {xasecure:
     #   stage => postinstall_1
     # }
-    class {argus:
+    class {ranger:
       stage => postinstall_2
     }
   }

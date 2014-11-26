@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Make sure this script is run from the folder which contains the policies
-#e.g. cd /tmp/argus/policies
+#e.g. cd /tmp/ranger/policies
 policies_folder=`pwd`
 
 echo "Policies folder=$policies_folder"
@@ -42,7 +42,7 @@ curl -i --header "Accept:application/json" -H "Content-Type: application/json" -
 curl -i --header "Accept:application/json" -H "Content-Type: application/json" -X POST -u admin:admin http://localhost:6080/service/public/api/policy -d @/tmp/policy_storm_public.json
 
 
-#Setup Argus tutorial
+#Setup Ranger tutorial
 cd $policies_folder
-cd ../argus_tutorial
-./setup_argus_tutorial.sh
+cd ../ranger_tutorial
+./setup_ranger_tutorial.sh

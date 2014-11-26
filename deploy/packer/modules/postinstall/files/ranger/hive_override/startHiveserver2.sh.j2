@@ -26,7 +26,7 @@ HIVE_SERVER2_OPTS=" -hiveconf hive.log.file=hiveserver2.log -hiveconf hive.log.d
 HIVE_SERVER2_OPTS="${HIVE_SERVER2_OPTS} -hiveconf hive.security.authenticator.manager=org.apache.hadoop.hive.ql.security.SessionStateUserAuthenticator -hiveconf hive.security.authorization.manager=com.xasecure.authorization.hive.authorizer.XaSecureHiveAuthorizerFactory "
 {% endif %}
 
-#We will enable Argus by default
+#We will enable Ranger by default
 HIVE_SERVER2_OPTS="${HIVE_SERVER2_OPTS} -hiveconf hive.security.authenticator.manager=org.apache.hadoop.hive.ql.security.SessionStateUserAuthenticator -hiveconf hive.security.authorization.manager=com.xasecure.authorization.hive.authorizer.XaSecureHiveAuthorizerFactory "
 
 HIVE_CONF_DIR=$4 {{hive_bin}}/hiveserver2 -hiveconf hive.metastore.uris=" " ${HIVE_SERVER2_OPTS} > $1 2> $2 &
