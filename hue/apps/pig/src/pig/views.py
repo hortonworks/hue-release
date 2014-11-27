@@ -385,29 +385,11 @@ def query_history_job_detail(request, job_id):
         {"jobs": jobs}
     )
 
-
-def show_job_result(request, job_id):
-    result = {}
-    result['scripts'] = PigScript.objects.filter(saved=True, user=request.user)
-    result['udfs'] = UDF.objects.all()
-    job = Job.objects.get(job_id=job_id)
-    result['job_id'] = job.job_id
-    if job.email_notification:
-        result['email_notification'] = True
-    instance = job.script
-    for field in instance._meta.fields:
-        result[field.name] = getattr(instance, field.name)
-    if job.status == job.JOB_SUBMITTED:
-        result['JOB_SUBMITTED'] = True
-    else:
-        result.update(_job_result(request, job))
-        result['stdout'] = result['stdout'].decode("utf-8")
-    return render('edit_script.mako', request, dict(result=result))
-
-
 def delete_job_object(request):
     try:
         job = Job.objects.get(job_id=request.POST['job_id'])
+        if (job.user.username != request.user.username):
+            return HttpResponse(json.dumps({"status": -1, "message": "You are not allowed to delete this job"}))
     except:
         return HttpResponse(json.dumps({"status": -1}))
     else:

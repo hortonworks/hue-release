@@ -35,7 +35,6 @@ urlpatterns = patterns(
   url(r'query_history/$', 'query_history', name='query_history'),
   url(r'autosave_scripts/$', 'autosave_scripts', name='autosave_scripts'),
   url(r'notify/(?P<job_id>\w+)/$', 'notify_job_completed', name='notify_job_completed'),
-  url(r'show_job_result/(?P<job_id>\w+)/$', 'show_job_result', name='show_job_result'),
   url(r'delete_job/$', 'delete_job_object', name='delete_job_object'),
   url(r'ping_job/(?P<job_id>\w+)/$', 'ping_job', name='ping_job'),
   url(r'check_running_job/(?P<job_id>\w+)/$', 'check_running_job', name='check_running_job'),
