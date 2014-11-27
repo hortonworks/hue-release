@@ -25,9 +25,9 @@ class postinstall {
     # class {xasecure:
     #   stage => postinstall_1
     # }
-    # class {ranger:
-    #  stage => postinstall_2
-    #}
+    class {ranger:
+      stage => postinstall_2
+    }
   }
 
   if $sandbox=='true'{
