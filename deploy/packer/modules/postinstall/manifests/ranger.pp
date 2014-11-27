@@ -60,8 +60,9 @@ class postinstall::ranger{
   exec{"create_ranger_policies":
     cwd => "/tmp/ranger/policies",
     command => "/tmp/create_ranger_policies.sh",
-    require => [File["stage_create_policies"], File["ranger_directory"]],    
+    require => [File["stage_create_policies"], File["ranger_directory"]],
     logoutput => true,
+    timeout => 600,
   }
   
 #  ambariApi {"maintenance_on":

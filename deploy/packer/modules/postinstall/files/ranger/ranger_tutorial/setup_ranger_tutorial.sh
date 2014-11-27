@@ -38,9 +38,9 @@ cd test-hdfs
 runuser -l hdfs -c "`pwd`/setup_data.sh"
 
 #Setup Hive table
-cd $script_dir
-cd test-beeline
-runuser -l hive -c `pwd`/setup_data.sh
+# cd $script_dir
+# cd test-beeline
+# runuser -l hive -c `pwd`/setup_data.sh
 
 #Setup HBase table
 cd $script_dir
