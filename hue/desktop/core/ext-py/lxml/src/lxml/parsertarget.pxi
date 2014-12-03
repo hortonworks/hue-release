@@ -10,8 +10,6 @@ class _TargetParserResult(Exception):
     def __init__(self, result):
         self.result = result
 
-@cython.final
-@cython.internal
 cdef class _PythonSaxParserTarget(_SaxParserTarget):
     cdef object _target_start
     cdef object _target_end
@@ -21,14 +19,14 @@ cdef class _PythonSaxParserTarget(_SaxParserTarget):
     cdef object _target_comment
     cdef bint _start_takes_nsmap
 
-    def __cinit__(self, target):
+    def __init__(self, target):
         cdef int event_filter
         event_filter = 0
         self._start_takes_nsmap = 0
         try:
             self._target_start = target.start
             if self._target_start is not None:
-                event_filter |= SAX_EVENT_START
+                event_filter = event_filter | SAX_EVENT_START
         except AttributeError:
             pass
         else:
@@ -41,31 +39,31 @@ cdef class _PythonSaxParserTarget(_SaxParserTarget):
         try:
             self._target_end = target.end
             if self._target_end is not None:
-                event_filter |= SAX_EVENT_END
+                event_filter = event_filter | SAX_EVENT_END
         except AttributeError:
             pass
         try:
             self._target_data = target.data
             if self._target_data is not None:
-                event_filter |= SAX_EVENT_DATA
+                event_filter = event_filter | SAX_EVENT_DATA
         except AttributeError:
             pass
         try:
             self._target_doctype = target.doctype
             if self._target_doctype is not None:
-                event_filter |= SAX_EVENT_DOCTYPE
+                event_filter = event_filter | SAX_EVENT_DOCTYPE
         except AttributeError:
             pass
         try:
             self._target_pi = target.pi
             if self._target_pi is not None:
-                event_filter |= SAX_EVENT_PI
+                event_filter = event_filter | SAX_EVENT_PI
         except AttributeError:
             pass
         try:
             self._target_comment = target.comment
             if self._target_comment is not None:
-                event_filter |= SAX_EVENT_COMMENT
+                event_filter = event_filter | SAX_EVENT_COMMENT
         except AttributeError:
             pass
         self._sax_event_filter = event_filter
@@ -92,8 +90,6 @@ cdef class _PythonSaxParserTarget(_SaxParserTarget):
         return self._target_comment(comment)
 
 
-@cython.final
-@cython.internal
 cdef class _TargetParserContext(_SaxParserContext):
     u"""This class maps SAX2 events to the ET parser target interface.
     """
@@ -124,22 +120,11 @@ cdef class _TargetParserContext(_SaxParserContext):
                                    filename):
         cdef bint recover
         recover = parser._parse_options & xmlparser.XML_PARSE_RECOVER
-        try:
-            if self._has_raised():
-                self._cleanupTargetParserContext(result)
-                self._raise_if_stored()
-            if not self._c_ctxt.wellFormed and not recover:
-                _raiseParseError(self._c_ctxt, filename, self._error_log)
-        except:
-            if python.IS_PYTHON3:
-                self._python_target.close()
-                raise
-            else:
-                exc = sys.exc_info()
-                # Python 2 can't chain exceptions
-                try: self._python_target.close()
-                except: pass
-                raise exc[0], exc[1], exc[2]
+        if self._has_raised():
+            self._cleanupTargetParserContext(result)
+            self._raise_if_stored()
+        if not self._c_ctxt.wellFormed and not recover:
+            _raiseParseError(self._c_ctxt, filename, self._error_log)
         return self._python_target.close()
 
     cdef xmlDoc* _handleParseResultDoc(self, _BaseParser parser,
@@ -149,20 +134,8 @@ cdef class _TargetParserContext(_SaxParserContext):
         if result is not NULL and result._private is NULL:
             # no _Document proxy => orphen
             tree.xmlFreeDoc(result)
-        try:
-            self._cleanupTargetParserContext(result)
-            self._raise_if_stored()
-            if not self._c_ctxt.wellFormed and not recover:
-                _raiseParseError(self._c_ctxt, filename, self._error_log)
-        except:
-            if python.IS_PYTHON3:
-                self._python_target.close()
-                raise
-            else:
-                exc = sys.exc_info()
-                # Python 2 can't chain exceptions
-                try: self._python_target.close()
-                except: pass
-                raise exc[0], exc[1], exc[2]
-        parse_result = self._python_target.close()
-        raise _TargetParserResult(parse_result)
+        self._cleanupTargetParserContext(result)
+        self._raise_if_stored()
+        if not self._c_ctxt.wellFormed and not recover:
+            _raiseParseError(self._c_ctxt, filename, self._error_log)
+        raise _TargetParserResult(self._python_target.close())

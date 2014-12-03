@@ -39,14 +39,10 @@ div.footer {
     font-size: 70%;
 }
 
-.center {
-    text-align: center;
-}
-
 /*** TOC ***/
 
 div.contents.topic ul {
-    margin-top: 0;
+    margin-top: 0px;
 }
 
 div.contents.topic ul > li {
@@ -62,15 +58,15 @@ div.contents.topic > p > a {
 
 div.sidemenu {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 26em;
+    top: 0px;
+    left: 0px;
+    width: 24em;
     font-size: 10px;
     text-align: left;
     border-right: groove gray;
     border-bottom: groove gray;
     padding-right: 1ex;
-    background: #FFFAFA url(python-xml.png) no-repeat top right;
+    background: #FFFAFA url(tagpython.png) no-repeat top right;
 }
 
 html > body div.sidemenu {
@@ -85,7 +81,6 @@ div.sidemenu span.section.title {
 
 div.sidemenu ul.menu.current li {
     color: #CC0000;
-    font-size: 105%;
 }
 
 div.sidemenu ul.menu.current > li > a {
@@ -106,7 +101,7 @@ div.sidemenu ul.menu.foreign li.menu:hover ul.submenu {
     position: absolute;
     border: groove #990000;
     padding: 1ex 1ex 1ex 3ex;
-    margin-top: 0;
+    margin-top: 0px;
     margin-left: 4em;
     margin-right: -20em;
     color: #990000;
@@ -126,8 +121,8 @@ div.sidemenu ul {
 /*** headings ***/
 
 h1.title {
-    background: url(python-xml-title.png) no-repeat;
-    padding: 20px 0 0 160px;
+    background: url(http://codespeak.net/img/codespeak1b.png) no-repeat;
+    padding: 20px 0 0 180px;
     height: 60px;
     font-size: 200%;
 }
@@ -179,7 +174,7 @@ p {
     /*margin: 0.5em 0em 1em 0em;*/
     text-align: justify;
     line-height: 1.5em;
-    margin: 0.5em 0 0 0;
+    margin: 0.5em 0em 0em 0em;
 }
 
 th.docinfo-name {
@@ -211,7 +206,7 @@ ul {
 
 ol {
     line-height: 1.5em;
-    margin-left: 0;
+    margin-left: 0em;
 }
 
 blockquote {
@@ -230,8 +225,8 @@ div.eyecatcher, p.eyecatcher {
 
 div.pagequote {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 0px;
+    right: 0px;
     padding: 10px 10px 0 0;
     text-align: right;
     font-size: 80%;

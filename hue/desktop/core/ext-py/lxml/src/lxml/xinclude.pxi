@@ -1,6 +1,6 @@
 # XInclude processing
 
-from lxml.includes cimport xinclude
+cimport xinclude
 
 class XIncludeError(LxmlError):
     u"""Error during XInclude processing.
@@ -20,7 +20,6 @@ cdef class XInclude:
 
     property error_log:
         def __get__(self):
-            assert self._error_log is not None, "XInclude instance not initialised"
             return self._error_log.copy()
 
     def __call__(self, _Element node not None):
@@ -33,28 +32,16 @@ cdef class XInclude:
         # typed as elements.  The included fragment is added between the two,
         # i.e. as a sibling, which does not conflict with traversal.
         cdef int result
-        _assertValidNode(node)
-        assert self._error_log is not None, "XInclude processor not initialised"
-        if node._doc._parser is not None:
-            parse_options = node._doc._parser._parse_options
-            context = node._doc._parser._getParserContext()
-            c_context = <void*>context
-        else:
-            parse_options = 0
-            context = None
-            c_context = NULL
-
         self._error_log.connect()
-        if tree.LIBXML_VERSION < 20704 or not c_context:
-            __GLOBAL_PARSER_CONTEXT.pushImpliedContext(context)
+        __GLOBAL_PARSER_CONTEXT.pushImpliedContextFromParser(
+            node._doc._parser)
         with nogil:
-            if c_context:
-                result = xinclude.xmlXIncludeProcessTreeFlagsData(
-                    node._c_node, parse_options, c_context)
+            if node._doc._parser is not None:
+                result = xinclude.xmlXIncludeProcessTreeFlags(
+                    node._c_node, node._doc._parser._parse_options)
             else:
                 result = xinclude.xmlXIncludeProcessTree(node._c_node)
-        if tree.LIBXML_VERSION < 20704 or not c_context:
-            __GLOBAL_PARSER_CONTEXT.popImpliedContext()
+        __GLOBAL_PARSER_CONTEXT.popImpliedContext()
         self._error_log.disconnect()
 
         if result == -1:

@@ -105,10 +105,7 @@ def _append_text(parent, element, text):
 
 # copied from ET's ElementSoup
 
-try:
-    from html.entities import name2codepoint # Python 3
-except ImportError:
-    from htmlentitydefs import name2codepoint
+from htmlentitydefs import name2codepoint
 import re
 
 handle_entities = re.compile("&(\w+);").sub

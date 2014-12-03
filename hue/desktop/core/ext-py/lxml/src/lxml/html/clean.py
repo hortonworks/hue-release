@@ -14,26 +14,35 @@ except ImportError:
 from lxml import etree
 from lxml.html import defs
 from lxml.html import fromstring, tostring, XHTML_NAMESPACE
-from lxml.html import xhtml_to_html, _transform_result
+from lxml.html import _nons, _transform_result
 
 try:
-    unichr
+    set
 except NameError:
+    # Python 3
+    from sets import Set as set
+
+try:
+    unichr = __builtins__['unichr']
+except (NameError, KeyError):
     # Python 3
     unichr = chr
+
 try:
-    unicode
-except NameError:
+    unicode = __builtins__['unicode']
+except (NameError, KeyError):
     # Python 3
     unicode = str
+
 try:
-    bytes
-except NameError:
+    bytes = __builtins__['bytes']
+except (NameError, KeyError):
     # Python < 2.6
     bytes = str
+
 try:
-    basestring
-except NameError:
+    basestring = __builtins__['basestring']
+except (NameError, KeyError):
     basestring = (str, bytes)
 
 
@@ -70,10 +79,9 @@ _css_import_re = re.compile(
 
 # All kinds of schemes besides just javascript: that can cause
 # execution:
-_is_javascript_scheme = re.compile(
-    r'(?:javascript|jscript|livescript|vbscript|data|about|mocha):',
-    re.I).search
-_substitute_whitespace = re.compile(r'[\s\x00-\x08\x0B\x0C\x0E-\x19]+').sub
+_javascript_scheme_re = re.compile(
+    r'\s*(?:javascript|jscript|livescript|vbscript|about|mocha):', re.I)
+_substitute_whitespace = re.compile(r'\s+').sub
 # FIXME: should data: be blocked?
 
 # FIXME: check against: http://msdn2.microsoft.com/en-us/library/ms537512.aspx
@@ -98,8 +106,7 @@ class Cleaner(object):
         Removes any ``<script>`` tags.
 
     ``javascript``:
-        Removes any Javascript, like an ``onclick`` attribute. Also removes stylesheets
-        as they could contain Javascript.
+        Removes any Javascript, like an ``onclick`` attribute.
 
     ``comments``:
         Removes any comments.
@@ -129,15 +136,10 @@ class Cleaner(object):
         Removes any form tags
 
     ``annoying_tags``:
-        Tags that aren't *wrong*, but are annoying.  ``<blink>`` and ``<marquee>``
+        Tags that aren't *wrong*, but are annoying.  ``<blink>`` and ``<marque>``
 
     ``remove_tags``:
-        A list of tags to remove.  Only the tags will be removed,
-        their content will get pulled up into the parent tag.
-
-    ``kill_tags``:
-        A list of tags to kill.  Killing also removes the tag's content,
-        i.e. the whole subtree, not just the tag itself.
+        A list of tags to remove.
 
     ``allow_tags``:
         A list of tags to include (default include all).
@@ -147,11 +149,8 @@ class Cleaner(object):
 
     ``safe_attrs_only``:
         If true, only include 'safe' attributes (specifically the list
-        from the feedparser HTML sanitisation web site).
-
-    ``safe_attrs``:
-        A set of attribute names to override the default list of attributes
-        considered 'safe' (when safe_attrs_only=True).
+        from `feedparser
+        <http://feedparser.org/docs/html-sanitization.html>`_).
 
     ``add_nofollow``:
         If true, then any <a> tags will have ``rel="nofollow"`` added to them.
@@ -167,8 +166,6 @@ class Cleaner(object):
 
         Note that this parameter might not work as intended if you do not
         make the links absolute before doing the cleaning.
-
-        Note that you may also need to set ``whitelist_tags``.
 
     ``whitelist_tags``:
         A set of tags that can be included with ``host_whitelist``.
@@ -194,10 +191,8 @@ class Cleaner(object):
     annoying_tags = True
     remove_tags = None
     allow_tags = None
-    kill_tags = None
     remove_unknown_tags = True
     safe_attrs_only = True
-    safe_attrs = defs.safe_attrs
     add_nofollow = False
     host_whitelist = ()
     whitelist_tags = set(['iframe', 'embed'])
@@ -239,7 +234,10 @@ class Cleaner(object):
             # ElementTree instance, instead of an element
             doc = doc.getroot()
         # convert XHTML to HTML
-        xhtml_to_html(doc)
+        for el in doc.iter():
+            tag = el.tag
+            if isinstance(tag, basestring):
+                el.tag = _nons(tag)
         # Normalize a case that IE treats <image> like <img>, and that
         # can confuse either this step or later steps.
         for el in doc.iter('image'):
@@ -248,23 +246,23 @@ class Cleaner(object):
             # Of course, if we were going to kill comments anyway, we don't
             # need to worry about this
             self.kill_conditional_comments(doc)
-
-        kill_tags = set(self.kill_tags or ())
+        kill_tags = set()
         remove_tags = set(self.remove_tags or ())
-        allow_tags = set(self.allow_tags or ())
-
+        if self.allow_tags:
+            allow_tags = set(self.allow_tags)
+        else:
+            allow_tags = set()
         if self.scripts:
             kill_tags.add('script')
         if self.safe_attrs_only:
-            safe_attrs = set(self.safe_attrs)
+            safe_attrs = set(defs.safe_attrs)
             for el in doc.iter():
                 attrib = el.attrib
                 for aname in attrib.keys():
                     if aname not in safe_attrs:
                         del attrib[aname]
         if self.javascript:
-            if not (self.safe_attrs_only and
-                    self.safe_attrs == defs.safe_attrs):
+            if not self.safe_attrs_only:
                 # safe_attrs handles events attributes itself
                 for el in doc.iter():
                     attrib = el.attrib
@@ -279,7 +277,7 @@ class Cleaner(object):
                 for el in _find_styled_elements(doc):
                     old = el.get('style')
                     new = _css_javascript_re.sub('', old)
-                    new = _css_import_re.sub('', new)
+                    new = _css_import_re.sub('', old)
                     if self._has_sneaky_javascript(new):
                         # Something tricky is going on...
                         del el.attrib['style']
@@ -316,8 +314,7 @@ class Cleaner(object):
             for el in list(doc.iter('link')):
                 if 'stylesheet' in el.get('rel', '').lower():
                     # Note this kills alternate stylesheets as well
-                    if not self.allow_element(el):
-                        el.drop_tree()
+                    el.drop_tree()
         if self.meta:
             kill_tags.add('meta')
         if self.page_structure:
@@ -345,7 +342,7 @@ class Cleaner(object):
             remove_tags.add('form')
             kill_tags.update(('button', 'input', 'select', 'textarea'))
         if self.annoying_tags:
-            remove_tags.update(('blink', 'marquee'))
+            remove_tags.update(('blink', 'marque'))
 
         _remove = []
         _kill = []
@@ -373,12 +370,12 @@ class Cleaner(object):
                 el.tag = 'div'
             el.clear()
 
-        _kill.reverse() # start with innermost tags
         for el in _kill:
             el.drop_tree()
         for el in _remove:
             el.drop_tag()
 
+        allow_tags = self.allow_tags
         if self.remove_unknown_tags:
             if allow_tags:
                 raise ValueError(
@@ -389,25 +386,12 @@ class Cleaner(object):
             for el in doc.iter():
                 if el.tag not in allow_tags:
                     bad.append(el)
-            if bad:
-                if bad[0] is doc:
-                    el = bad.pop(0)
-                    el.tag = 'div'
-                    el.attrib.clear()
-                for el in bad:
-                    el.drop_tag()
+            for el in bad:
+                el.drop_tag()
         if self.add_nofollow:
             for el in _find_external_links(doc):
                 if not self.allow_follow(el):
-                    rel = el.get('rel')
-                    if rel:
-                        if ('nofollow' in rel
-                                and ' nofollow ' in (' %s ' % rel)):
-                            continue
-                        rel = '%s nofollow' % rel
-                    else:
-                        rel = 'nofollow'
-                    el.set('rel', rel)
+                    el.set('rel', 'nofollow')
 
     def allow_follow(self, anchor):
         """
@@ -467,7 +451,7 @@ class Cleaner(object):
     def _remove_javascript_link(self, link):
         # links like "j a v a s c r i p t:" might be interpreted in IE
         new = _substitute_whitespace('', link)
-        if _is_javascript_scheme(new):
+        if _javascript_scheme_re.search(new):
             # FIXME: should this be None to delete?
             return ''
         return link

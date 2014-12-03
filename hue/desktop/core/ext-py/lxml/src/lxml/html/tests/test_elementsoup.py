@@ -18,14 +18,14 @@ if BS_INSTALLED:
               </body></html>
             """
             root = self.soupparser.fromstring(html)
-            self.assertTrue(root.find('.//input').get('disabled') is not None)
+            self.assert_(root.find('.//input').get('disabled') is not None)
 
 
 def test_suite():
     suite = unittest.TestSuite()
-    if BS_INSTALLED:
-        suite.addTests([unittest.makeSuite(SoupParserTestCase)])
-        if sys.version_info[0] < 3:
+    if sys.version_info >= (2,4):
+        if BS_INSTALLED:
+            suite.addTests([unittest.makeSuite(SoupParserTestCase)])
             suite.addTests([make_doctest('../../../../doc/elementsoup.txt')])
     return suite
 

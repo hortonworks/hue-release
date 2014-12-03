@@ -31,37 +31,33 @@ _XPATH_EVAL_ERRORS = (
 cdef int _register_xpath_function(void* ctxt, name_utf, ns_utf):
     if ns_utf is None:
         return xpath.xmlXPathRegisterFunc(
-            <xpath.xmlXPathContext*>ctxt, _xcstr(name_utf),
+            <xpath.xmlXPathContext*>ctxt, _cstr(name_utf),
             _xpath_function_call)
     else:
         return xpath.xmlXPathRegisterFuncNS(
-            <xpath.xmlXPathContext*>ctxt, _xcstr(name_utf), _xcstr(ns_utf),
+            <xpath.xmlXPathContext*>ctxt, _cstr(name_utf), _cstr(ns_utf),
             _xpath_function_call)
 
 cdef int _unregister_xpath_function(void* ctxt, name_utf, ns_utf):
     if ns_utf is None:
         return xpath.xmlXPathRegisterFunc(
-            <xpath.xmlXPathContext*>ctxt, _xcstr(name_utf), NULL)
+            <xpath.xmlXPathContext*>ctxt, _cstr(name_utf), NULL)
     else:
         return xpath.xmlXPathRegisterFuncNS(
-            <xpath.xmlXPathContext*>ctxt, _xcstr(name_utf), _xcstr(ns_utf), NULL)
+            <xpath.xmlXPathContext*>ctxt, _cstr(name_utf), _cstr(ns_utf), NULL)
 
 
-@cython.final
-@cython.internal
 cdef class _XPathContext(_BaseContext):
     cdef object _variables
-    def __init__(self, namespaces, extensions, error_log, enable_regexp, variables,
+    def __init__(self, namespaces, extensions, enable_regexp, variables,
                  build_smart_strings):
         self._variables = variables
-        _BaseContext.__init__(self, namespaces, extensions, error_log, enable_regexp,
+        _BaseContext.__init__(self, namespaces, extensions, enable_regexp,
                               build_smart_strings)
 
     cdef set_context(self, xpath.xmlXPathContext* xpathCtxt):
         self._set_xpath_context(xpathCtxt)
-        # This would be a good place to set up the XPath parser dict, but
-        # we cannot use the current thread dict as we do not know which
-        # thread will execute the XPath evaluator - so, no dict for now.
+        self._setupDict(xpathCtxt)
         self.registerLocalNamespaces()
         self.registerLocalFunctions(xpathCtxt, _register_xpath_function)
 
@@ -69,7 +65,6 @@ cdef class _XPathContext(_BaseContext):
         self._register_context(doc)
         self.registerGlobalNamespaces()
         self.registerGlobalFunctions(self._xpathCtxt, _register_xpath_function)
-        self.registerExsltFunctions()
         if self._variables is not None:
             self.registerVariables(self._variables)
 
@@ -80,62 +75,54 @@ cdef class _XPathContext(_BaseContext):
         xpath.xmlXPathRegisteredVariablesCleanup(self._xpathCtxt)
         self._cleanup_context()
 
-    cdef void registerExsltFunctions(self):
-        if xslt.LIBXSLT_VERSION < 10125:
-            # we'd only execute dummy functions anyway
-            return
-        tree.xmlHashScan(
-            self._xpathCtxt.nsHash, _registerExsltFunctionsForNamespaces,
-            self._xpathCtxt)
-
     cdef registerVariables(self, variable_dict):
         for name, value in variable_dict.items():
             name_utf = self._to_utf(name)
             xpath.xmlXPathRegisterVariable(
-                self._xpathCtxt, _xcstr(name_utf), _wrapXPathObject(value, None, None))
+                self._xpathCtxt, _cstr(name_utf), _wrapXPathObject(value))
 
     cdef registerVariable(self, name, value):
         name_utf = self._to_utf(name)
         xpath.xmlXPathRegisterVariable(
-            self._xpathCtxt, _xcstr(name_utf), _wrapXPathObject(value, None, None))
+            self._xpathCtxt, _cstr(name_utf), _wrapXPathObject(value))
 
+    cdef void _registerVariable(self, name_utf, value):
+        xpath.xmlXPathRegisterVariable(
+            self._xpathCtxt, _cstr(name_utf), _wrapXPathObject(value))
 
-cdef void _registerExsltFunctionsForNamespaces(
-        void* _c_href, void* _ctxt, xmlChar* c_prefix):
-    c_href = <const_xmlChar*> _c_href
-    ctxt = <xpath.xmlXPathContext*> _ctxt
+    cdef void _setupDict(self, xpath.xmlXPathContext* xpathCtxt):
+        __GLOBAL_PARSER_CONTEXT.initXPathParserDict(xpathCtxt)
 
-    if tree.xmlStrcmp(c_href, xslt.EXSLT_DATE_NAMESPACE) == 0:
-        xslt.exsltDateXpathCtxtRegister(ctxt, c_prefix)
-    elif tree.xmlStrcmp(c_href, xslt.EXSLT_SETS_NAMESPACE) == 0:
-        xslt.exsltSetsXpathCtxtRegister(ctxt, c_prefix)
-    elif tree.xmlStrcmp(c_href, xslt.EXSLT_MATH_NAMESPACE) == 0:
-        xslt.exsltMathXpathCtxtRegister(ctxt, c_prefix)
-    elif tree.xmlStrcmp(c_href, xslt.EXSLT_STRINGS_NAMESPACE) == 0:
-        xslt.exsltStrXpathCtxtRegister(ctxt, c_prefix)
-
+cdef bint _XPATH_VERSION_WARNING_REQUIRED
+if _LIBXML_VERSION_INT == 20627:
+    _XPATH_VERSION_WARNING_REQUIRED = 1
+else:
+    _XPATH_VERSION_WARNING_REQUIRED = 0
 
 cdef class _XPathEvaluatorBase:
     cdef xpath.xmlXPathContext* _xpathCtxt
     cdef _XPathContext _context
     cdef python.PyThread_type_lock _eval_lock
     cdef _ErrorLog _error_log
-    def __cinit__(self):
-        self._xpathCtxt = NULL
-        if config.ENABLE_THREADING:
-            self._eval_lock = python.PyThread_allocate_lock()
-            if self._eval_lock is NULL:
-                raise MemoryError()
-        self._error_log = _ErrorLog()
 
     def __init__(self, namespaces, extensions, enable_regexp,
                  smart_strings):
-        self._context = _XPathContext(namespaces, extensions, self._error_log,
+        global _XPATH_VERSION_WARNING_REQUIRED
+        if _XPATH_VERSION_WARNING_REQUIRED:
+            _XPATH_VERSION_WARNING_REQUIRED = 0
+            import warnings
+            warnings.warn(u"This version of libxml2 has a known XPath bug. " + \
+                          u"Use it at your own risk.")
+        self._error_log = _ErrorLog()
+        self._context = _XPathContext(namespaces, extensions,
                                       enable_regexp, None, smart_strings)
+        if config.ENABLE_THREADING:
+            self._eval_lock = python.PyThread_allocate_lock()
+            if self._eval_lock is NULL:
+                python.PyErr_NoMemory()
 
     property error_log:
         def __get__(self):
-            assert self._error_log is not None, "XPath evaluator not initialised"
             return self._error_log.copy()
 
     def __dealloc__(self):
@@ -174,7 +161,6 @@ cdef class _XPathEvaluatorBase:
             c = path[0]
         return c == c'/'
 
-    @cython.final
     cdef int _lock(self) except -1:
         cdef int result
         if config.ENABLE_THREADING and self._eval_lock != NULL:
@@ -182,10 +168,9 @@ cdef class _XPathEvaluatorBase:
                 result = python.PyThread_acquire_lock(
                     self._eval_lock, python.WAIT_LOCK)
             if result == 0:
-                raise XPathError, u"XPath evaluator locking failed"
+                raise ParserError, u"parser locking failed"
         return 0
 
-    @cython.final
     cdef void _unlock(self):
         if config.ENABLE_THREADING and self._eval_lock != NULL:
             python.PyThread_release_lock(self._eval_lock)
@@ -227,7 +212,8 @@ cdef class _XPathEvaluatorBase:
             self._raise_eval_error()
 
         try:
-            result = _unwrapXPathObject(xpathObj, doc, self._context)
+            result = _unwrapXPathObject(xpathObj, doc,
+                                        self._context._build_smart_strings)
         finally:
             _freeXPathObject(xpathObj)
             self._context._release_temp_refs()
@@ -254,27 +240,23 @@ cdef class XPathElementEvaluator(_XPathEvaluatorBase):
         cdef xpath.xmlXPathContext* xpathCtxt
         cdef int ns_register_status
         cdef _Document doc
-        _assertValidNode(element)
-        _assertValidDoc(element._doc)
         self._element = element
         doc = element._doc
         _XPathEvaluatorBase.__init__(self, namespaces, extensions,
                                      regexp, smart_strings)
         xpathCtxt = xpath.xmlXPathNewContext(doc._c_doc)
         if xpathCtxt is NULL:
-            raise MemoryError()
+            python.PyErr_NoMemory()
         self.set_context(xpathCtxt)
 
     def register_namespace(self, prefix, uri):
         u"""Register a namespace with the XPath context.
         """
-        assert self._xpathCtxt is not NULL, "XPath context not initialised"
         self._context.addNamespace(prefix, uri)
 
     def register_namespaces(self, namespaces):
         u"""Register a prefix -> uri dict.
         """
-        assert self._xpathCtxt is not NULL, "XPath context not initialised"
         for prefix, uri in namespaces.items():
             self._context.addNamespace(prefix, uri)
 
@@ -291,21 +273,23 @@ cdef class XPathElementEvaluator(_XPathEvaluatorBase):
         """
         cdef xpath.xmlXPathObject*  xpathObj
         cdef _Document doc
-        assert self._xpathCtxt is not NULL, "XPath context not initialised"
+        cdef char* c_path
         path = _utf8(_path)
         doc = self._element._doc
 
         self._lock()
+        self._error_log.connect()
         self._xpathCtxt.node = self._element._c_node
         try:
             self._context.register_context(doc)
             self._context.registerVariables(_variables)
-            c_path = _xcstr(path)
+            c_path = _cstr(path)
             with nogil:
                 xpathObj = xpath.xmlXPathEvalExpression(
                     c_path, self._xpathCtxt)
             result = self._handle_result(xpathObj, doc)
         finally:
+            self._error_log.disconnect()
             self._context.unregister_context()
             self._unlock()
 
@@ -326,8 +310,7 @@ cdef class XPathDocumentEvaluator(XPathElementEvaluator):
                  extensions=None, regexp=True, smart_strings=True):
         XPathElementEvaluator.__init__(
             self, etree._context_node, namespaces=namespaces, 
-            extensions=extensions, regexp=regexp,
-            smart_strings=smart_strings)
+            extensions=extensions, regexp=regexp, smart_strings=smart_strings)
 
     def __call__(self, _path, **_variables):
         u"""__call__(self, _path, **_variables)
@@ -340,17 +323,18 @@ cdef class XPathDocumentEvaluator(XPathElementEvaluator):
         cdef xpath.xmlXPathObject*  xpathObj
         cdef xmlDoc* c_doc
         cdef _Document doc
-        assert self._xpathCtxt is not NULL, "XPath context not initialised"
+        cdef char* c_path
         path = _utf8(_path)
         doc = self._element._doc
 
         self._lock()
+        self._error_log.connect()
         try:
             self._context.register_context(doc)
             c_doc = _fakeRootDoc(doc._c_doc, self._element._c_node)
             try:
                 self._context.registerVariables(_variables)
-                c_path = _xcstr(path)
+                c_path = _cstr(path)
                 with nogil:
                     self._xpathCtxt.doc  = c_doc
                     self._xpathCtxt.node = tree.xmlDocGetRootElement(c_doc)
@@ -361,6 +345,7 @@ cdef class XPathDocumentEvaluator(XPathElementEvaluator):
                 _destroyFakeDoc(doc._c_doc, c_doc)
                 self._context.unregister_context()
         finally:
+            self._error_log.disconnect()
             self._unlock()
 
         return result
@@ -404,21 +389,22 @@ cdef class XPath(_XPathEvaluatorBase):
     ``smart_strings=False``.
     """
     cdef xpath.xmlXPathCompExpr* _xpath
-    cdef bytes _path
-    def __cinit__(self):
-        self._xpath = NULL
+    cdef readonly object path
 
     def __init__(self, path, *, namespaces=None, extensions=None,
                  regexp=True, smart_strings=True):
         cdef xpath.xmlXPathContext* xpathCtxt
         _XPathEvaluatorBase.__init__(self, namespaces, extensions,
                                      regexp, smart_strings)
-        self._path = _utf8(path)
+        self.path = path
+        path = _utf8(path)
         xpathCtxt = xpath.xmlXPathNewContext(NULL)
         if xpathCtxt is NULL:
-            raise MemoryError()
+            python.PyErr_NoMemory()
         self.set_context(xpathCtxt)
-        self._xpath = xpath.xmlXPathCtxtCompile(xpathCtxt, _xcstr(self._path))
+        self._error_log.connect()
+        self._xpath = xpath.xmlXPathCtxtCompile(xpathCtxt, _cstr(path))
+        self._error_log.disconnect()
         if self._xpath is NULL:
             self._raise_parse_error()
 
@@ -428,11 +414,11 @@ cdef class XPath(_XPathEvaluatorBase):
         cdef _Document document
         cdef _Element element
 
-        assert self._xpathCtxt is not NULL, "XPath context not initialised"
         document = _documentOrRaise(_etree_or_element)
         element  = _rootNodeOrRaise(_etree_or_element)
 
         self._lock()
+        self._error_log.connect()
         self._xpathCtxt.doc  = document._c_doc
         self._xpathCtxt.node = element._c_node
 
@@ -444,15 +430,10 @@ cdef class XPath(_XPathEvaluatorBase):
                     self._xpath, self._xpathCtxt)
             result = self._handle_result(xpathObj, document)
         finally:
+            self._error_log.disconnect()
             self._context.unregister_context()
             self._unlock()
         return result
-
-    property path:
-        u"""The literal XPath expression.
-        """
-        def __get__(self):
-            return self._path.decode(u'UTF-8')
 
     def __dealloc__(self):
         if self._xpath is not NULL:
@@ -464,11 +445,11 @@ cdef class XPath(_XPathEvaluatorBase):
 
 cdef object _replace_strings
 cdef object _find_namespaces
-_replace_strings = re.compile(b'("[^"]*")|(\'[^\']*\')').sub
-_find_namespaces = re.compile(b'({[^}]+})').findall
+_replace_strings = re.compile('("[^"]*")|(\'[^\']*\')').sub
+_find_namespaces = re.compile('({[^}]+})').findall
 
 cdef class ETXPath(XPath):
-    u"""ETXPath(self, path, extensions=None, regexp=True, smart_strings=True)
+    u"""ETXPath(self, path, extensions=None, regexp=True)
     Special XPath class that supports the ElementTree {uri} notation for namespaces.
 
     Note that this class does not accept the ``namespace`` keyword
@@ -476,8 +457,7 @@ cdef class ETXPath(XPath):
     string.  Smart strings will be returned for string results unless
     you pass ``smart_strings=False``.
     """
-    def __init__(self, path, *, extensions=None, regexp=True,
-                 smart_strings=True):
+    def __init__(self, path, *, extensions=None, regexp=True, smart_strings=True):
         path, namespaces = self._nsextract_path(path)
         XPath.__init__(self, path, namespaces=namespaces,
                        extensions=extensions, regexp=regexp,
@@ -489,18 +469,21 @@ cdef class ETXPath(XPath):
         cdef list namespace_defs = []
         cdef int i
         path_utf = _utf8(path)
-        stripped_path = _replace_strings(b'', path_utf) # remove string literals
+        stripped_path = _replace_strings('', path_utf) # remove string literals
         i = 1
         for namespace_def in _find_namespaces(stripped_path):
             if namespace_def not in namespace_defs:
-                prefix = python.PyBytes_FromFormat("__xpp%02d", i)
+                prefix = python.PyString_FromFormat("__xpp%02d", i)
                 i += 1
                 namespace_defs.append(namespace_def)
                 namespace = namespace_def[1:-1] # remove '{}'
-                namespace = (<bytes>namespace).decode('utf8')
-                namespaces[prefix.decode('utf8')] = namespace
-                prefix_str = prefix + b':'
+                namespace = python.PyUnicode_FromEncodedObject(
+                    namespace, 'UTF-8', 'strict')
+                namespaces[
+                    python.PyUnicode_FromEncodedObject(prefix, 'UTF-8', 'strict')
+                    ] = namespace
+                prefix_str = prefix + ':'
                 # FIXME: this also replaces {namespaces} within strings!
                 path_utf = path_utf.replace(namespace_def, prefix_str)
-        path = path_utf.decode('utf8')
+        path = python.PyUnicode_FromEncodedObject(path_utf, 'UTF-8', 'strict')
         return path, namespaces

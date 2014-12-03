@@ -9,17 +9,7 @@
 # TODO: add xml/html parsing tests
 # TODO: etc
 
-import re, sys
-
-def stdout():
-    if sys.version_info[0] < 3:
-        return sys.stdout
-    class bytes_stdout(object):
-        def write(self, data):
-            if isinstance(data, bytes):
-                data = data.decode('ISO8859-1')
-            sys.stdout.write(data)
-    return bytes_stdout()
+import re, sys, string
 
 try:
     from StringIO import StringIO as BytesIO
@@ -48,13 +38,10 @@ def serialize(elem, **options):
     file = BytesIO()
     tree = ElementTree.ElementTree(elem)
     tree.write(file, **options)
-    if sys.version_info[0] < 3:
-        try:
-            encoding = options["encoding"]
-        except KeyError:
-            encoding = "utf-8"
-    else:
-        encoding = 'ISO8859-1'
+    try:
+        encoding = options["encoding"]
+    except KeyError:
+        encoding = "utf-8"
     result = fix_compatibility(file.getvalue().decode(encoding))
     if sys.version_info[0] < 3:
         result = result.encode(encoding)
@@ -308,11 +295,9 @@ def bad_find():
     >>> elem.findall("/tag")
     Traceback (most recent call last):
     SyntaxError: cannot use absolute path on element
-
-    # this is supported in ET 1.3:
-    #>>> elem.findall("section//")
-    #Traceback (most recent call last):
-    #SyntaxError: invalid path
+    >>> elem.findall("section//")
+    Traceback (most recent call last):
+    SyntaxError: invalid path
     """
 
 def parsefile():
@@ -321,7 +306,7 @@ def parsefile():
 
     >>> tree = ElementTree.parse("samples/simple.xml")
     >>> normalize_crlf(tree)
-    >>> tree.write(stdout())
+    >>> tree.write(sys.stdout)
     <root>
        <element key="value">text</element>
        <element>text</element>tail
@@ -329,7 +314,7 @@ def parsefile():
     </root>
     >>> tree = ElementTree.parse("samples/simple-ns.xml")
     >>> normalize_crlf(tree)
-    >>> tree.write(stdout())
+    >>> tree.write(sys.stdout)
     <root xmlns="http://namespace/">
        <element key="value">text</element>
        <element>text</element>tail
@@ -360,19 +345,19 @@ del parsehtml
 def parseliteral():
     r"""
     >>> element = ElementTree.XML("<html><body>text</body></html>")
-    >>> ElementTree.ElementTree(element).write(stdout())
+    >>> ElementTree.ElementTree(element).write(sys.stdout)
     <html><body>text</body></html>
     >>> element = ElementTree.fromstring("<html><body>text</body></html>")
-    >>> ElementTree.ElementTree(element).write(stdout())
+    >>> ElementTree.ElementTree(element).write(sys.stdout)
     <html><body>text</body></html>
 
 ##     >>> sequence = ["<html><body>", "text</bo", "dy></html>"]
 ##     >>> element = ElementTree.fromstringlist(sequence)
-##     >>> ElementTree.ElementTree(element).write(stdout())
+##     >>> ElementTree.ElementTree(element).write(sys.stdout)
 ##     <html><body>text</body></html>
 
-    >>> print(repr(ElementTree.tostring(element)).lstrip('b'))
-    '<html><body>text</body></html>'
+    >>> print(ElementTree.tostring(element))
+    <html><body>text</body></html>
 
 # looks different in lxml
 #    >>> print(ElementTree.tostring(element, "ascii"))
@@ -531,10 +516,10 @@ def writefile():
 def writestring():
     """
     >>> elem = ElementTree.XML("<html><body>text</body></html>")
-    >>> print(repr(ElementTree.tostring(elem)).lstrip('b'))
+    >>> ElementTree.tostring(elem)
     '<html><body>text</body></html>'
     >>> elem = ElementTree.fromstring("<html><body>text</body></html>")
-    >>> print(repr(ElementTree.tostring(elem)).lstrip('b'))
+    >>> ElementTree.tostring(elem)
     '<html><body>text</body></html>'
     """
 
@@ -1259,6 +1244,3 @@ if __name__ == "__main__":
     import doctest, selftest
     failed, tested = doctest.testmod(selftest)
     print("%d tests ok." % (tested - failed))
-    if failed > 0:
-        print("%d tests failed. Exiting with non-zero return code." % failed)
-        sys.exit(1)

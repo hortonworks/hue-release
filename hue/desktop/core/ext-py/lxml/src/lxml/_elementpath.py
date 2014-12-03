@@ -1,6 +1,6 @@
 #
 # ElementTree
-# $Id: ElementPath.py 3375 2008-02-13 08:05:08Z fredrik $
+# $Id: ElementPath.py 3276 2007-09-12 06:52:30Z fredrik $
 #
 # limited xpath support for element trees
 #
@@ -9,12 +9,8 @@
 # 2003-05-28 fl   added support for // etc
 # 2003-08-27 fl   fixed parsing of periods in element names
 # 2007-09-10 fl   new selection engine
-# 2007-09-12 fl   fixed parent selector
-# 2007-09-13 fl   added iterfind; changed findall to return a list
-# 2007-11-30 fl   added namespaces support
-# 2009-10-30 fl   added child element value filter
 #
-# Copyright (c) 2003-2009 by Fredrik Lundh.  All rights reserved.
+# Copyright (c) 2003-2007 by Fredrik Lundh.  All rights reserved.
 #
 # fredrik@pythonware.com
 # http://www.pythonware.com
@@ -22,7 +18,7 @@
 # --------------------------------------------------------------------
 # The ElementTree toolkit is
 #
-# Copyright (c) 1999-2009 by Fredrik Lundh
+# Copyright (c) 1999-2007 by Fredrik Lundh
 #
 # By obtaining, using, and/or copying this software and/or its
 # associated documentation, you agree that you have read, understood,
@@ -55,7 +51,7 @@
 
 import re
 
-xpath_tokenizer_re = re.compile(
+xpath_tokenizer = re.compile(
     "("
     "'[^']*'|\"[^\"]*\"|"
     "::|"
@@ -63,60 +59,45 @@ xpath_tokenizer_re = re.compile(
     "\.\.|"
     "\(\)|"
     "[/.*:\[\]\(\)@=])|"
-    "((?:\{[^}]+\})?[^/\[\]\(\)@=\s]+)|"
+    "((?:\{[^}]+\})?[^/:\[\]\(\)@=\s]+)|"
     "\s+"
-    )
+    ).findall
 
-def xpath_tokenizer(pattern, namespaces=None):
-    for token in xpath_tokenizer_re.findall(pattern):
-        tag = token[1]
-        if tag and tag[0] != "{" and ":" in tag:
-            try:
-                prefix, uri = tag.split(":", 1)
-                if not namespaces:
-                    raise KeyError
-                yield token[0], "{%s}%s" % (namespaces[prefix], uri)
-            except KeyError:
-                raise SyntaxError("prefix %r not found in prefix map" % prefix)
-        else:
-            yield token
-
-
-def prepare_child(next, token):
+def prepare_tag(next, token):
     tag = token[1]
     def select(result):
         for elem in result:
-            for e in elem.iterchildren(tag):
+            for e in elem.iterchildren(tag=tag):
                 yield e
     return select
 
 def prepare_star(next, token):
     def select(result):
         for elem in result:
-            for e in elem.iterchildren('*'):
+            for e in elem:
                 yield e
     return select
 
-def prepare_self(next, token):
+def prepare_dot(next, token):
     def select(result):
         return result
     return select
 
-def prepare_descendant(next, token):
+def prepare_iter(next, token):
     token = next()
     if token[0] == "*":
         tag = "*"
     elif not token[0]:
         tag = token[1]
     else:
-        raise SyntaxError("invalid descendant")
+        raise SyntaxError
     def select(result):
         for elem in result:
-            for e in elem.iterdescendants(tag):
+            for e in elem.iterdescendants(tag=tag):
                 yield e
     return select
 
-def prepare_parent(next, token):
+def prepare_dot_dot(next, token):
     def select(result):
         for elem in result:
             parent = elem.getparent()
@@ -125,100 +106,52 @@ def prepare_parent(next, token):
     return select
 
 def prepare_predicate(next, token):
-    # FIXME: replace with real parser!!! refs:
-    # http://effbot.org/zone/simple-iterator-parser.htm
-    # http://javascript.crockford.com/tdop/tdop.html
-    signature = []
-    predicate = []
-    while 1:
+    # this one should probably be refactored...
+    token = next()
+    if token[0] == "@":
+        # attribute
+        token = next()
+        if token[0]:
+            raise SyntaxError("invalid attribute predicate")
+        key = token[1]
         token = next()
         if token[0] == "]":
-            break
-        if token[0] and token[0][:1] in "'\"":
-            token = "'", token[0][1:-1]
-        signature.append(token[0] or "-")
-        predicate.append(token[1])
-    signature = "".join(signature)
-    # use signature to determine predicate type
-    if signature == "@-":
-        # [@attribute] predicate
-        key = predicate[1]
-        def select(result):
-            for elem in result:
-                if elem.get(key) is not None:
-                    yield elem
-        return select
-    if signature == "@-='":
-        # [@attribute='value']
-        key = predicate[1]
-        value = predicate[-1]
-        def select(result):
-            for elem in result:
-                if elem.get(key) == value:
-                    yield elem
-        return select
-    if signature == "-" and not re.match("-?\d+$", predicate[0]):
-        # [tag]
-        tag = predicate[0]
-        def select(result):
-            for elem in result:
-                for _ in elem.iterchildren(tag):
-                    yield elem
-                    break
-        return select
-    if signature == "-='" and not re.match("-?\d+$", predicate[0]):
-        # [tag='value']
-        tag = predicate[0]
-        value = predicate[-1]
-        def select(result):
-            for elem in result:
-                for e in elem.iterchildren(tag):
-                    if "".join(e.itertext()) == value:
+            def select(result):
+                for elem in result:
+                    if elem.get(key) is not None:
                         yield elem
-                        break
-        return select
-    if signature == "-" or signature == "-()" or signature == "-()-":
-        # [index] or [last()] or [last()-index]
-        if signature == "-":
-            # [index]
-            index = int(predicate[0]) - 1
-            if index < 0:
-                if index == -1:
-                    raise SyntaxError(
-                        "indices in path predicates are 1-based, not 0-based")
-                else:
-                    raise SyntaxError("path index >= 1 expected")
-        else:
-            if predicate[0] != "last":
-                raise SyntaxError("unsupported function")
-            if signature == "-()-":
-                try:
-                    index = int(predicate[2]) - 1
-                except ValueError:
-                    raise SyntaxError("unsupported expression")
+        elif token[0] == "=":
+            value = next()[0]
+            if value[:1] == "'" or value[:1] == '"':
+                value = value[1:-1]
             else:
-                index = -1
+                raise SyntaxError("invalid comparison target")
+            token = next()
+            def select(result):
+                for elem in result:
+                    if elem.get(key) == value:
+                        yield elem
+        if token[0] != "]":
+            raise SyntaxError("invalid attribute predicate")
+    elif not token[0]:
+        tag = token[1]
+        token = next()
+        if token[0] != "]":
+            raise SyntaxError("invalid node predicate")
         def select(result):
             for elem in result:
-                parent = elem.getparent()
-                if parent is None:
-                    continue
-                try:
-                    # FIXME: what if the selector is "*" ?
-                    elems = list(parent.iterchildren(elem.tag))
-                    if elems[index] is elem:
-                        yield elem
-                except IndexError:
-                    pass
-        return select
-    raise SyntaxError("invalid predicate")
+                if find(elem, tag) is not None:
+                    yield elem
+    else:
+        raise SyntaxError("invalid predicate")
+    return select
 
 ops = {
-    "": prepare_child,
+    "": prepare_tag,
     "*": prepare_star,
-    ".": prepare_self,
-    "..": prepare_parent,
-    "//": prepare_descendant,
+    ".": prepare_dot,
+    "..": prepare_dot_dot,
+    "//": prepare_iter,
     "[": prepare_predicate,
     }
 
@@ -226,12 +159,10 @@ _cache = {}
 
 # --------------------------------------------------------------------
 
-def _build_path_iterator(path, namespaces):
+def _build_path_iterator(path):
     # compile selector pattern
-    if path[-1:] == "/":
-        path = path + "*" # implicit all (FIXME: keep this?)
     try:
-        return _cache[(path, namespaces and tuple(sorted(namespaces.items())) or None)]
+        return _cache[path]
     except KeyError:
         pass
     if len(_cache) > 100:
@@ -239,16 +170,14 @@ def _build_path_iterator(path, namespaces):
 
     if path[:1] == "/":
         raise SyntaxError("cannot use absolute path on element")
-    stream = iter(xpath_tokenizer(path, namespaces))
+    stream = iter(xpath_tokenizer(path))
     try:
         _next = stream.next
     except AttributeError:
         # Python 3
-        _next = stream.__next__
-    try:
-        token = _next()
-    except StopIteration:
-        raise SyntaxError("empty path expression")
+        def _next():
+            return next(stream)
+    token = _next()
     selector = []
     while 1:
         try:
@@ -261,14 +190,14 @@ def _build_path_iterator(path, namespaces):
                 token = _next()
         except StopIteration:
             break
-    _cache[path] = selector
     return selector
 
 ##
 # Iterate over the matching nodes
 
-def iterfind(elem, path, namespaces=None):
-    selector = _build_path_iterator(path, namespaces)
+def iterfind(elem, path):
+    # execute selector pattern
+    selector = _build_path_iterator(path)
     result = iter((elem,))
     for select in selector:
         result = select(result)
@@ -277,8 +206,8 @@ def iterfind(elem, path, namespaces=None):
 ##
 # Find first matching object.
 
-def find(elem, path, namespaces=None):
-    it = iterfind(elem, path, namespaces)
+def find(elem, path):
+    it = iterfind(elem, path)
     try:
         try:
             _next = it.next
@@ -292,14 +221,14 @@ def find(elem, path, namespaces=None):
 ##
 # Find all matching objects.
 
-def findall(elem, path, namespaces=None):
-    return list(iterfind(elem, path, namespaces))
+def findall(elem, path):
+    return list(iterfind(elem, path))
 
 ##
 # Find text for first matching object.
 
-def findtext(elem, path, default=None, namespaces=None):
-    el = find(elem, path, namespaces)
+def findtext(elem, path, default=None):
+    el = find(elem, path)
     if el is None:
         return default
     else:
