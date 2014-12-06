@@ -29,6 +29,6 @@ usermod -G users guest
 mkdir -p /home/knox
 chown -R knox:knox /home/knox
 
-service uxugsync stop
-service uxugsync start
+service ranger-usersync stop
+service ranger-usersync start
 

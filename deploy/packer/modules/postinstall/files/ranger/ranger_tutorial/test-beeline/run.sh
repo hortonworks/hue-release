@@ -10,4 +10,5 @@ if [ $# -gt 1 ]; then
 fi
 
 set -x
-beeline --silent=true -u "jdbc:hive2://sandbox.hortonworks.com:10000/default;auth=noSasl" -n $user -p $password -d org.apache.hive.jdbc.HiveDriver
+#beeline --silent=true -u "jdbc:hive2://sandbox.hortonworks.com:10000/default;auth=noSasl" -n $user -p $password -d org.apache.hive.jdbc.HiveDriver
+beeline --silent=true -u "jdbc:hive2://sandbox.hortonworks.com:10000/default" -n $user -p $password -d org.apache.hive.jdbc.HiveDriver

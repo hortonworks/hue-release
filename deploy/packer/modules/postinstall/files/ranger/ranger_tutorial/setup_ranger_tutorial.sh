@@ -30,6 +30,7 @@ cd hue
 cd $script_dir
 cd policies
 ./set_tutorial_policies.sh
+./set_audit_policies.sh http://localhost:6080 sandbox_hdfs admin admin
 
 
 #Setup HDFS

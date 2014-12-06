@@ -4,14 +4,17 @@
 #e.g. cd /tmp/ranger/install_overrides
 install_overrides_folder=`pwd`
 scripts_folder=${install_overrides_folder}/../scripts
+admin_conf_overrides_folder=${install_overrides_folder}/../admin_conf_overrides
+audit_setup_folder=${install_overrides_folder}/../audit_setup
 
-if [ ! -d admin ]; then
+if [ ! -d ranger-admin ]; then
 	echo "ERROR: This script should be run from override folder. e.g. /tmp/ranger/install_overrides"
 	exit 1
 fi
 
 #latest_ver=`ls | grep -v current | sort -unr | head --lines=1`
-latest_folder=`find /usr/hdp -name ranger | grep -v current | sort -unr | head --lines=1`
+latest_admin_folder=`find /usr/hdp -name ranger-admin | grep -v current | sort -unr | head --lines=1`
+latest_folder=${latest_admin_folder}/..
 
 if [ -f /etc/profile.d/java.sh ]; then
 	. /etc/profile.d/java.sh
@@ -23,34 +26,38 @@ set -x
 cd $install_overrides_folder
 cp -r * $latest_folder
 
-cd ${latest_folder}/admin
-./install.sh
+cd ${latest_folder}/ranger-admin
+./setup.sh
+cp -r ${admin_conf_overrides_folder}/* /etc/ranger/admin/conf
+service ranger-admin start
 
-cd ${latest_folder}/usersync
-./install.sh
+cd ${latest_folder}/ranger-usersync
+./setup.sh
+service ranger-usersync start
 
-cd ${latest_folder}/hdfs-agent
-./enable-hdfs-agent.sh 
-sed -i -e s/30000/5000/g /etc/hadoop/conf.empty/xasecure-hdfs-security.xml
+cd ${latest_folder}/ranger-hdfs-plugin
+./enable-hdfs-plugin.sh 
+sed -i -e s/30000/5000/g /etc/hadoop/conf/xasecure-hdfs-security.xml
 
-cd ${latest_folder}/hive-agent
-./enable-hive-agent.sh
-sed -i -e s/30000/5000/g /etc/hive/conf/xasecure-hive-security.xml
-cp /etc/hive/conf/xa* /etc/hive/conf.server
-sed -i -e s/30000/5000/g
-cp /etc/hive/conf/hiveserver2-site.xml /etc/hive/conf.server
-chown hive:hadoop /etc/hive/conf.server/hiveserver2-site.xml
+cd ${latest_folder}/ranger-hive-plugin
+./enable-hive-plugin.sh
+#sed -i -e s/30000/5000/g /etc/hive/conf/xasecure-hive-security.xml
+#cp /etc/hive/conf/xa* /etc/hive/conf.server
+#sed -i -e s/30000/5000/g
+#cp /etc/hive/conf/hiveserver2-site.xml /etc/hive/conf.server
+#chown hive:hadoop /etc/hive/conf.server/hiveserver2-site.xml
+sed -i -e s/30000/5000/g /etc/hive/conf.server/xasecure-hive-security.xml
 
-cd ${latest_folder}/hbase-agent
-./enable-hbase-agent.sh
+cd ${latest_folder}/ranger-hbase-plugin
+./enable-hbase-plugin.sh
 sed -i -e s/30000/5000/g /etc/hbase/conf/xasecure-hbase-security.xml
 
-cd ${latest_folder}/knox-agent
-./enable-knox-agent.sh
+cd ${latest_folder}/ranger-knox-plugin
+./enable-knox-plugin.sh
 sed -i -e s/30000/5000/g /etc/knox/conf/xasecure-knox-security.xml
 
-#cd ${latest_folder}/storm-agent
-#./enable-storm-agent.sh
+#cd ${latest_folder}/ranger-storm-plugin
+#./enable-storm-plugin.sh
 
 #Apply the patches
 cd $install_overrides_folder
@@ -74,6 +81,13 @@ cd /var/lib/ambari-server/resources/scripts
 #hive_startup_template=/var/lib/ambari-server/resources/stacks/HDP/2.0.6/services/HIVE/package/templates/startHiveserver2.sh.j2
 #cp $hive_startup_template ${hive_startup_template}.$(date +%m%d%y%H%M).by_ranger
 #cp startHiveserver2.sh.j2 $hive_startup_template
+
+
+#Setup for auditing to HDFS
+
+${audit_setup_folder}/create_hdfs_folders_for_audit.sh
+#Need to run this after the repository is created. So moved this running during setup tutorial
+#${audit_setup_folder}/set_audit_policies.sh http://localhost:6080 sandbox_hdfs admin admin
 
 
 #Restart all the servers
