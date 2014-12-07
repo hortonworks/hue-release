@@ -1,0 +1,23 @@
+{
+   "policyName":"Sample table folders",
+   "resourceName":"/apps/hive/warehouse/sample*",
+   "description":"This policy gives access to everyone for sample hive tables",
+   "repositoryName":"sandbox_hdfs",
+   "repositoryType":"HDFS",
+   "permMapList":[
+      {
+         "groupList":[
+            "public"
+         ],
+         "permList":[
+            "Read",
+            "Write",
+            "Execute"
+         ]
+      }
+   ],
+   "isEnabled":true,
+   "isRecursive":true,
+   "isAuditEnabled":true,
+   "replacePerm":false
+}

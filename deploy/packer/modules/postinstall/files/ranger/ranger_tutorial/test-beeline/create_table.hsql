@@ -1,5 +1,5 @@
 drop database if exists xademo cascade ;
 create database xademo ;
 create table xademo.call_detail_records ( phone_number STRING, phone_type STRING, in_out STRING, local STRING, duration STRING, date STRING, time STRING, roaming STRING, amount STRING, in_network STRING, is_promo STRING, toll_free STRING, bytes STRING, type STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE ;
-create table xademo.recharge_details   ( phone_number STRING, date STRING, channel STRING, plan STRING, amount STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE ;
-create table xademo.customer_details   ( phone_number STRING, plan STRING, date STRING, status STRING, balance STRING, imei STRING, REGION STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE ;
+create table xademo.recharge_details ( phone_number STRING, date STRING, channel STRING, plan STRING, amount STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE ; 
+create table xademo.customer_details ( phone_number STRING, plan STRING, date STRING, status STRING, balance STRING, imei STRING, REGION STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' STORED AS TEXTFILE ;
