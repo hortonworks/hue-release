@@ -56,7 +56,6 @@ class postinstall::ranger{
     source => "puppet:///modules/postinstall/ranger/policies/create_ranger_policies.sh",
     mode   => '777',
     require => Exec["ranger_restart_hbase"],
-    timeout => 600,
   }
   
   exec{"create_ranger_policies":
