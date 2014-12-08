@@ -90,7 +90,7 @@ ${ layout.menubar(section='bundles') }
     </div>
 
     <div class="span10">
-      <form id="jobForm" class="form-horizontal" action="${ url('oozie:edit_bundle', bundle=bundle.id) }" method="POST"> ${ csrf_token_field | n } 
+      <form id="jobForm" class="form-horizontal" action="${ url('oozie:edit_bundle', bundle=bundle.id) }" method="POST"> ${ csrf_token_field | n }
 
       <div id="properties" class="section">
         <ul class="nav nav-pills">
@@ -318,7 +318,7 @@ ${ layout.menubar(section='bundles') }
       var ViewModel = function() {
         var self = this;
 
-        self.parameters = ko.observableArray(${ bundle.parameters | n });
+        self.parameters = ko.observableArray(${ bundle.parameters_escapejs | n });
         self.add_parameters = function() {
           self.parameters.push({name: "", value: ""});
         };

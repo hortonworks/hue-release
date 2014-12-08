@@ -586,7 +586,7 @@ def display(request, path):
     """
     if not request.fs.isfile(path):
         raise PopupException(_("Not a file: '%(path)s'") % {'path': path})
-      
+
     mimetype = mimetypes.guess_type(path)[0]
     if mimetype is not None and INLINE_DISPLAY_MIMETYPE.search(mimetype):
       path_enc = urlencode(path)
@@ -1200,7 +1200,7 @@ def _upload_file(request):
             raise PopupException(msg)
 
         if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
-            raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))
+            raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': escape(uploaded_file.name)}))
 
         dest = request.fs.join(dest, uploaded_file.name)
         tmp_file = uploaded_file.get_temp_path()
