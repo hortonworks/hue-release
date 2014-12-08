@@ -5,6 +5,13 @@ class postpostinstall{
     timeout => 0
   }
 
+  exec{"ranger_create_hue_users":
+    cwd => "/tmp/ranger_tutorial/hue",
+    command => "bash /tmp/ranger_tutorial/hue/setup_data.sh",
+    require => Exec["prepare_hue"],
+    logoutput => true,
+  }
+
   exec { "slider_fix":
     command => 'su hdfs -c "hdfs dfs -mkdir /user/yarn"; su hdfs -c "hdfs dfs -chown yarn:hdfs /user/yarn"',
     logoutput => true
