@@ -542,7 +542,9 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
           r.ready = false;
           break;
         case FINISHED:
-          bringUp();
+          if (!this.hiveConf.get(HiveConf.ConfVars.HIVE_EXECUTION_ENGINE.varname, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE.defaultVal).equals("tez")){
+        	  bringUp();
+          }
           r.ready = true;
           try {
             materializeResults(r, fromBeginning, fetchSize);
@@ -626,7 +628,13 @@ public class BeeswaxServiceImpl implements BeeswaxService.Iface {
     }
 
     private void cleanSessionState() {
-      ((CleanableSessionState) SessionState.get()).destroyHiveHistory();
+      try {
+    	  if (SessionState.get() != null) {
+    		  ((CleanableSessionState) SessionState.get()).destroyHiveHistory();
+    	  }
+      } catch (IOException ex) {
+		LOG.error(ex.getLocalizedMessage());
+      }      
     }
 
     /**

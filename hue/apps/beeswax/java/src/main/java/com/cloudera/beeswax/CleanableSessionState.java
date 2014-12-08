@@ -15,6 +15,8 @@
 // limitations under the License.
 package com.cloudera.beeswax;
 
+import java.io.IOException;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.history.HiveHistory;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -36,7 +38,8 @@ public class CleanableSessionState extends SessionState {
     super(conf);
   }
 
-  public void destroyHiveHistory() {
+  public void destroyHiveHistory() throws IOException{	
     this.hiveHist = null;
+    this.close();
   }
 }
