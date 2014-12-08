@@ -27,7 +27,7 @@ class postinstall::ranger{
     command => "bash /tmp/ranger/scripts/ranger_override_properties_and_install.sh",
     require => File["ranger_directory"],
     logoutput => true,
-    timeout => 600,
+    timeout => 1800,
   }
 
   exec{"ranger_restart_namenode":
@@ -63,7 +63,7 @@ class postinstall::ranger{
     command => "/tmp/create_ranger_policies.sh",
     require => [File["stage_create_policies"], File["ranger_directory"]],
     logoutput => true,
-    timeout => 600,
+    timeout => 1800,
   }
   
 #  ambariApi {"maintenance_on":
