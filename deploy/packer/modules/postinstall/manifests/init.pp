@@ -13,9 +13,6 @@ class postinstall {
     class {hue:
       stage => postinstall_1
     }
-    # class {kafka:
-    #   stage => postinstall_1
-    # }
     class {solr:
       stage => postinstall_1
     }

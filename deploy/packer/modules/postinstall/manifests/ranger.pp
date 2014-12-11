@@ -1,13 +1,13 @@
 class postinstall::ranger{
-  
+
   user {"xapolicymgr":
     name => "xapolicymgr",
     password => "xapolicymgr",
     ensure     => "present",
     managehome => true,
   }
-  
-  
+
+
   package{"ranger_*":
     ensure => installed,
   }
@@ -19,9 +19,9 @@ class postinstall::ranger{
     recurse => true,
     require => Package["ranger_*"],
   }
- 
+
  #   Puppet doesn't like relative path like this
- #   cwd => "puppet:///modules/postinstall/ranger/install_overrides", 
+ #   cwd => "puppet:///modules/postinstall/ranger/install_overrides",
   exec{"override_properties_and_install":
     cwd => "/tmp/ranger/install_overrides",
     command => "bash /tmp/ranger/scripts/ranger_override_properties_and_install.sh",
@@ -50,14 +50,14 @@ class postinstall::ranger{
     require => Exec["ranger_restart_hiveservers"],
     logoutput => true,
   }
-  
+
   file { "stage_create_policies":
     path => "/tmp/create_ranger_policies.sh",
     source => "puppet:///modules/postinstall/ranger/policies/create_ranger_policies.sh",
     mode   => '777',
     require => Exec["ranger_restart_hbase"],
   }
-  
+
   exec{"create_ranger_policies":
     cwd => "/tmp/ranger/policies",
     command => "/tmp/create_ranger_policies.sh",
@@ -65,7 +65,21 @@ class postinstall::ranger{
     logoutput => true,
     timeout => 1800,
   }
-  
+
+  exec{"ranger_create_hue_users":
+    cwd => "/tmp/ranger_tutorial/hue",
+    command => "/bin/bash /tmp/ranger_tutorial/hue/setup_data.sh",
+    require => Class["postinstall::hue"],
+    logoutput => true,
+  }
+
+  ambariApi {"restart hbase":
+    url => "requests",
+    method => "POST",
+    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for HBASE","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HBASE"}},"Requests/resource_filters":[{"service_name":"HBASE","component_name":"HBASE_CLIENT","hosts":"sandbox.hortonworks.com"},{"service_name":"HBASE","component_name":"HBASE_MASTER","hosts":"sandbox.hortonworks.com"},{"service_name":"HBASE","component_name":"HBASE_REGIONSERVER","hosts":"sandbox.hortonworks.com"}]}'
+  }
+
+
 #  ambariApi {"maintenance_on":
 #    url => "hosts/sandbox.hortonworks.com",
 #    method => "PUT",

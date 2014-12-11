@@ -3,11 +3,10 @@ Exec { path => [ "/bin/", "/sbin/", "/usr/bin/", "/usr/sbin/", "/usr/local/bin" 
 stage { 'prepare': }
 stage { 'install': }
 stage { 'postinstall': }
-stage { 'postpostinstall': }
 stage { 'postinstall_1': }
 stage { 'postinstall_2': }
 
-Stage['prepare'] -> Stage['install'] -> Stage['postinstall'] -> Stage['postinstall_1'] -> Stage['postinstall_2'] -> Stage['postpostinstall']
+Stage['prepare'] -> Stage['install'] -> Stage['postinstall'] -> Stage['postinstall_1'] -> Stage['postinstall_2']
 
 
 node default {
@@ -20,9 +19,7 @@ node default {
   class {postinstall:
     stage => postinstall
   }
-  class {postpostinstall:
-    stage => postpostinstall
-  }
+
 }
 
 node /^host[0-9]\.hortonworks\.com$/ {
@@ -46,4 +43,3 @@ define ambariApi($url, $body, $method = 'POST') {
     }
   }
 }
-  

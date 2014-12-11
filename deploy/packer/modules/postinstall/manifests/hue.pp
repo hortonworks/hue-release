@@ -20,10 +20,16 @@ class postinstall::hue{
     require => [File["/etc/hue/conf/hue.ini"],Package["hue"], Exec["hue_fix"]]
   }
 
-  
+
   file { "/tmp/install/hdfs_prepare.sh":
     source => "puppet:///modules/postinstall/hdfs_prepare.sh"
   }
 
-  
+  exec {"prepare_hue":
+    command => "/bin/bash /tmp/install/hdfs_prepare.sh",
+    require => [File["/tmp/install/hdfs_prepare.sh"],Service["hue"]],
+    timeout => 0
+  }
+
+
 }
