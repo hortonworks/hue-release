@@ -62,7 +62,6 @@ class postinstall::ranger{
     cwd => "/tmp/ranger/policies",
     command => "/tmp/create_ranger_policies.sh",
     require => [File["stage_create_policies"], File["ranger_directory"]],
-    before => Class["postinstall::hue"],
     logoutput => true,
     timeout => 1800,
   }
