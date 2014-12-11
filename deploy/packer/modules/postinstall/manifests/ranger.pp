@@ -69,7 +69,7 @@ class postinstall::ranger{
   exec{"ranger_create_hue_users":
     cwd => "/tmp/ranger_tutorial/hue",
     command => "/bin/bash /tmp/ranger_tutorial/hue/setup_data.sh",
-    require => Class["postinstall::hue"],
+    require => [Class["postinstall::hue"], Exec["create_ranger_policies"]],
     logoutput => true,
   }
 
