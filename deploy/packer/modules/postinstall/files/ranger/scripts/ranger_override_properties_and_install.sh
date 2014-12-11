@@ -36,7 +36,7 @@ cd ${latest_folder}/ranger-usersync
 service ranger-usersync start
 
 cd ${latest_folder}/ranger-hdfs-plugin
-./enable-hdfs-plugin.sh 
+./enable-hdfs-plugin.sh
 sed -i -e s/30000/5000/g /etc/hadoop/conf/xasecure-hdfs-security.xml
 
 cd ${latest_folder}/ranger-hive-plugin
@@ -63,7 +63,7 @@ sed -i -e s/30000/5000/g /etc/knox/conf/xasecure-knox-security.xml
 cd $install_overrides_folder
 cd ../patches
 #Resolve hue getting databases issues. Should be removed later as it is fixed by dev team
-#./patch_for_audit_log_message/apply_patch.sh 
+#./patch_for_audit_log_message/apply_patch.sh
 
 
 #Set the properties in Hive and HBase to use Ranger
@@ -71,9 +71,12 @@ cd /var/lib/ambari-server/resources/scripts
 #./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authorization.enabled" "true"
 #./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authorization.manager" "com.xasecure.authorization.hive.authorizer.XaSecureHiveAuthorizerFactory"
 #./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.security.authenticator.manager" "org.apache.hadoop.hive.ql.security.SessionStateUserAuthenticator"
+./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hive-site "hive.server2.enable.doAs" "true"
 
 ./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hbase-site "hbase.coprocessor.master.classes" "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor"
 ./configs.sh -u admin -p admin -port 8080 set sandbox.hortonworks.com Sandbox hbase-site "hbase.coprocessor.region.classes" "com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor"
+
+
 
 #Override the HiveServer2 startup template used by Ambari
 #cd $install_overrides_folder
@@ -103,4 +106,3 @@ ${audit_setup_folder}/create_hdfs_folders_for_audit.sh
 #Copy the tutorial files to the home folder of root
 cd $install_overrides_folder
 cp -r ../ranger_tutorial /root
-

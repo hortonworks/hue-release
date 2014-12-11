@@ -71,7 +71,7 @@
                 "hive.enforce.bucketing": "true",
                 "hive.support.concurrency": "true",
                 "hive.exec.dynamic.partition.mode": "nonstrict",
-                "hive.server2.enable.doAs": "false",
+                "hive.server2.enable.doAs": "true",
                 "hive.txn.manager": "org.apache.hadoop.hive.ql.lockmgr.DbTxnManager",
                 "hive.txn.max.open.batch": "1000",
                 "hive.txn.timeout": "300",
