@@ -2,7 +2,7 @@ class postinstall::hue{
 
   package{"hue":
     ensure => installed,
-    require => Class["postinstall::ranger"],
+    # require => Class["install::ambari-bluprints"]
   }
 
   exec { "hue_fix":
