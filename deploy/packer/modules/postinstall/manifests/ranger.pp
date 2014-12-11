@@ -66,6 +66,13 @@ class postinstall::ranger{
     timeout => 1800,
   }
 
+  exec{"ranger_create_hue_users":
+    cwd => "/tmp/ranger_tutorial/hue",
+    command => "/bin/bash /tmp/ranger_tutorial/hue/setup_data.sh",
+    require => [Class["postinstall::hue"], Exec["create_ranger_policies"]],
+    logoutput => true,
+  }
+
   ambariApi {"restart hbase":
     url => "requests",
     method => "POST",
