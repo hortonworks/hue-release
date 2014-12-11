@@ -9,3 +9,17 @@ rm -rf VBoxGuestAdditions_*.iso VBoxGuestAdditions_*.iso.?
 rm -f /etc/udev/rules.d/70-persistent-net.rules
 sed -i 's/^HWADDR.*$//' /etc/sysconfig/network-scripts/ifcfg-eth0
 sed -i 's/^UUID.*$//' /etc/sysconfig/network-scripts/ifcfg-eth0
+
+# Manually delete all but en_US locales
+find /usr/share/locale -maxdepth 1 -mindepth 1 -type d | grep -v -e "en_US" | xargs rm -rf
+
+# Delete unused locales from local-archive
+localedef --list-archive | grep -v -e "en_US" | xargs localedef --delete-from-archive
+mv /usr/lib/locale/locale-archive /usr/lib/locale/locale-archive.tmpl
+build-locale-archive
+
+#clean wget cache
+rm -rf /var/cache/wget/*
+
+#clean docs
+rm -rf /usr/share/doc/*
