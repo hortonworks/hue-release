@@ -1,4 +1,9 @@
 #!/bin/sh -eux
+#clean wget cache
+rm -rf /var/cache/wget/*
+
+#clean docs
+rm -rf /usr/share/doc/*
 rm -rf /tmp/packer-puppet-masterless
 rm -rf /tmp/install
 yum -y clean all

@@ -18,8 +18,4 @@ localedef --list-archive | grep -v -e "en_US" | xargs localedef --delete-from-ar
 mv /usr/lib/locale/locale-archive /usr/lib/locale/locale-archive.tmpl
 build-locale-archive
 
-#clean wget cache
-rm -rf /var/cache/wget/*
 
-#clean docs
-rm -rf /usr/share/doc/*
