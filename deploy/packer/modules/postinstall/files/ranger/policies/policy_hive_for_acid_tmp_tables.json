@@ -1,0 +1,32 @@
+{
+   "policyName":"Allow access to ACID tmp tables",
+   "resourceName":"/*/*__tmp__table__*/*",
+   "description":"This policy lets access to temporary tables created during ACID operations",
+   "repositoryName":"sandbox_hive",
+   "repositoryType":"Hive",
+   "permMapList":[
+      {
+         "groupList":[
+            "public"
+         ],
+         "permList":[
+            "Admin",
+            "Select",
+            "Update",
+            "Create",
+            "Drop",
+            "Alter",
+            "Index",
+            "Lock",
+            "All"
+         ]
+      }
+   ],
+   "tables":"*__tmp__table__*",
+   "columns":"*",
+   "databases":"*",
+   "tableType":"Inclusion",
+   "columnType":"Inclusion",
+   "isEnabled":true,
+   "isAuditEnabled":true
+}
