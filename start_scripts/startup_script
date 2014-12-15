@@ -71,6 +71,7 @@ start)
 
     sudo -u hdfs /usr/hdp/current/hadoop-hdfs-client/bin/hdfs dfsadmin -safemode leave
 
+    mkdir -p /var/log/hadoop/hue
     touch /var/log/hadoop/hue/hadoop.log # pig access error workaround
     chown hue:hadoop -Rf /var/log/hadoop/hue/
     
