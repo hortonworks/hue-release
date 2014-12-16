@@ -120,11 +120,6 @@
                 "scripts/minimize.sh"
             ],
             "type": "shell"
-        },{
-            "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
-            "inline": "/usr/bin/vmware-config-tools.pl -d",
-            "type": "shell",
-            "only": ["vmware-iso"]
         }
     ]
 }
