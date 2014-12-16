@@ -76,7 +76,15 @@ class postinstall::ranger{
   ambariApi {"restart hbase":
     url => "requests",
     method => "POST",
-    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for HBASE","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HBASE"}},"Requests/resource_filters":[{"service_name":"HBASE","component_name":"HBASE_CLIENT","hosts":"sandbox.hortonworks.com"},{"service_name":"HBASE","component_name":"HBASE_MASTER","hosts":"sandbox.hortonworks.com"},{"service_name":"HBASE","component_name":"HBASE_REGIONSERVER","hosts":"sandbox.hortonworks.com"}]}'
+    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for HBASE","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HBASE"}},"Requests/resource_filters":[{"service_name":"HBASE","component_name":"HBASE_CLIENT","hosts":"sandbox.hortonworks.com"},{"service_name":"HBASE","component_name":"HBASE_MASTER","hosts":"sandbox.hortonworks.com"},{"service_name":"HBASE","component_name":"HBASE_REGIONSERVER","hosts":"sandbox.hortonworks.com"}]}',
+    require => Exec["override_properties_and_install"],
+  }
+
+  ambariApi {"restart hive":
+    url => "requests",
+    method => "POST",
+    body => '{"RequestInfo":{"command":"RESTART","context":"Restart all components for HIVE","operation_level":{"level":"SERVICE","cluster_name":"Sandbox","service_name":"HIVE"}},"Requests/resource_filters":[{"service_name":"HIVE","component_name":"HCAT","hosts":"sandbox.hortonworks.com"},{"service_name":"HIVE","component_name":"HIVE_CLIENT","hosts":"sandbox.hortonworks.com"},{"service_name":"HIVE","component_name":"HIVE_METASTORE","hosts":"sandbox.hortonworks.com"},{"service_name":"HIVE","component_name":"HIVE_SERVER","hosts":"sandbox.hortonworks.com"},{"service_name":"HIVE","component_name":"MYSQL_SERVER","hosts":"sandbox.hortonworks.com"},{"service_name":"HIVE","component_name":"WEBHCAT_SERVER","hosts":"sandbox.hortonworks.com"}]}',
+    require => Exec["override_properties_and_install"],
   }
 
 
