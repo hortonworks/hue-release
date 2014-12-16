@@ -32,7 +32,7 @@ class postinstall::hue{
   }
 
   exec {"bug_29129":
-        command => "sed -i \"s/components.insert(0, ('Tutorials', _get_tutorials_version()))/pass\n    # components.insert(0, ('Tutorials', _get_tutorials_version()))/g\" /usr/lib/hue/apps/about/src/about/views.py",
+        command => "sed -i \"s/components.insert(0, ('Tutorials', _get_tutorials_version()))/pass/g\" /usr/lib/hue/apps/about/src/about/views.py",
         require => Package['hue'],
         logoutput => true
       }
