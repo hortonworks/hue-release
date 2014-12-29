@@ -1,12 +1,12 @@
 #!/bin/bash
 
-case "$PACKER_BUILDER_TYPE" in 
+case "$PACKER_BUILDER_TYPE" in
 
 virtualbox-iso|virtualbox-ovf)
     yum install -y gcc kernel-devel kernel-headers dkms make bzip2 perl
     mkdir /tmp/vbox
     VER=$(cat /home/vagrant/.vbox_version)
-    mount -o loop /home/vagrant/VBoxGuestAdditions_$VER.iso /tmp/vbox 
+    mount -o loop /home/vagrant/VBoxGuestAdditions_$VER.iso /tmp/vbox
     sh /tmp/vbox/VBoxLinuxAdditions.run
     umount /tmp/vbox
     rmdir /tmp/vbox
@@ -14,7 +14,8 @@ virtualbox-iso|virtualbox-ovf)
     echo "vbox" > /virtualization
     ;;
 
-vmware-iso|vmware-ovf) 
+vmware-iso|vmware-ovf)
+    yum install -y fuse-libs
     mkdir /tmp/vmfusion
     yum -y install perl
     mkdir /tmp/vmfusion-archive
