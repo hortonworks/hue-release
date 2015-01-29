@@ -47,6 +47,7 @@
         var _this = this;
         var MARGIN = 6;
         var el = $("#jHueNotify").clone();
+        var message = _this.options.message && _this.options.message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         el.removeAttr("id");
 
         // stops all the current animations and resets the style
@@ -60,14 +61,14 @@
 
         if (_this.options.level == TYPES.ERROR){
             el.addClass("alert-error");
-            el.find(".message").html("<i class='icon-warning-sign'></i> <strong>" + _this.options.message + "</strong>");
+            el.find(".message").html("<i class='icon-warning-sign'></i> <strong>" + message + "</strong>");
         }
         else if (_this.options.level == TYPES.INFO){
             el.addClass("alert-info");
-            el.find(".message").html("<i class='icon-info-sign'></i> <strong>" + _this.options.message + "</strong>");
+            el.find(".message").html("<i class='icon-info-sign'></i> <strong>" + message + "</strong>");
         }
         else {
-            el.find(".message").html(_this.options.message);
+            el.find(".message").html(message);
         }
 
         if (_this.options.css != null){
