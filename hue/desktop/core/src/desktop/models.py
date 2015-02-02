@@ -252,31 +252,6 @@ class DocumentManager(models.Manager):
   def sync(self):
 
     try:
-      from oozie.models import Workflow, Coordinator, Bundle
-
-      for job in list(chain(Workflow.objects.all(), Coordinator.objects.all(), Bundle.objects.all())):
-        if job.doc.count() > 1:
-          LOG.warn('Deleting duplicate document %s for %s' % (job.doc.all(), job))
-          job.doc.all().delete()
-
-        if not job.doc.exists():
-          doc = Document.objects.link(job, owner=job.owner, name=job.name, description=job.description)
-          tag = DocumentTag.objects.get_example_tag(user=job.owner)
-          doc.tags.add(tag)
-          if job.is_trashed:
-            doc.send_to_trash()
-          if job.is_shared:
-            doc.share_to_default()
-          if hasattr(job, 'managed'):
-            if not job.managed:
-              doc.extra = 'jobsub'
-              doc.save()
-        if job.owner.username == SAMPLE_USERNAME:
-          job.doc.get().share_to_default()
-    except Exception, e:
-      LOG.warn(force_unicode(e))
-
-    try:
       from beeswax.models import SavedQuery
 
       for job in SavedQuery.objects.all():
@@ -290,23 +265,6 @@ class DocumentManager(models.Manager):
           doc.tags.add(tag)
           if job.is_trashed:
             doc.send_to_trash()
-        if job.owner.username == SAMPLE_USERNAME:
-          job.doc.get().share_to_default()
-    except Exception, e:
-      LOG.warn(force_unicode(e))
-
-    try:
-      from pig.models import PigScript
-
-      for job in PigScript.objects.all():
-        if job.doc.count() > 1:
-          LOG.warn('Deleting duplicate document %s for %s' % (job.doc.all(), job))
-          job.doc.all().delete()
-
-        if not job.doc.exists():
-          doc = Document.objects.link(job, owner=job.owner, name=job.dict['name'], description='')
-          tag = DocumentTag.objects.get_example_tag(user=job.owner)
-          doc.tags.add(tag)
         if job.owner.username == SAMPLE_USERNAME:
           job.doc.get().share_to_default()
     except Exception, e:
