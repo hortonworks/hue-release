@@ -876,6 +876,19 @@ Available formats are ``DATE_FORMAT``, ``TIME_FORMAT``, ``DATETIME_FORMAT``,
 ``SHORT_DATETIME_FORMAT``, ``FIRST_DAY_OF_WEEK``, ``DECIMAL_SEPARATOR``,
 ``THOUSAND_SEPARATOR`` and ``NUMBER_GROUPING``.
 
+.. setting:: USE_X_FORWARDED_HOST
+
+USE_X_FORWARDED_HOST
+--------------------
+
+.. versionadded:: 1.3.1
+
+Default: ``False``
+
+A boolean that specifies whether to use the X-Forwarded-Host header in
+preference to the Host header. This should only be enabled if a proxy
+which sets this header is in use.
+
 .. setting:: IGNORABLE_404_ENDS
 
 IGNORABLE_404_ENDS
