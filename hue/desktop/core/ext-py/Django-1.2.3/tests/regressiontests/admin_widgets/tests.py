@@ -1,7 +1,9 @@
+from unittest import TestCase
+
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import widgets
-from unittest import TestCase
+from django.contrib.admin.widgets import AdminFileWidget
 from django.test import TestCase as DjangoTestCase
 from django.db.models import DateField
 import models
@@ -151,3 +153,20 @@ class AdminForeignKeyRawIdWidget(DjangoTestCase):
             post_data)
         self.assertContains(response,
             'Select a valid choice. That choice is not one of the available choices.')
+
+class AdminFileWidgetTest(DjangoTestCase):
+
+    def test_render_escapes_html(self):
+        class StrangeFieldFile(object):
+            url = "something?chapter=1&sect=2&copy=3&lang=en"
+
+            def __unicode__(self):
+                return u'''something<div onclick="alert('oops')">.jpg'''
+
+        widget = AdminFileWidget()
+        field = StrangeFieldFile()
+        output = widget.render('myfile', field)
+        self.assertFalse(field.url in output)
+        self.assertTrue(u'href="something?chapter=1&amp;sect=2&amp;copy=3&amp;lang=en"' in output)
+        self.assertFalse(unicode(field) in output)
+        self.assertTrue(u'something&lt;div onclick=&quot;alert(&#39;oops&#39;)&quot;&gt;.jpg' in output)
