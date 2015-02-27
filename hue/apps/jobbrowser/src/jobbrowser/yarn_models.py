@@ -98,8 +98,14 @@ class Job(object):
     setattr(self, 'maps_percent_complete', None)
     setattr(self, 'reduces_percent_complete', None)
     if self.state in ('FINISHED', 'FAILED', 'KILLED'):
-      setattr(self, 'finishTime', self.finishedTime)
-      setattr(self, 'startTime', self.startedTime)
+      try:
+        setattr(self, 'finishTime', self.finishedTime)
+      except AttributeError:
+        setattr(self, 'finishTime', self.finishTime)
+      try:
+        setattr(self, 'startTime', self.startedTime)
+      except AttributeError:
+        setattr(self, 'startTime', self.startTime)
     setattr(self, 'duration', self.finishTime - self.startTime)
     setattr(self, 'finishTimeFormatted', format_unixtime_ms(self.finishTime))
     setattr(self, 'startTimeFormatted', format_unixtime_ms(self.startTime))
