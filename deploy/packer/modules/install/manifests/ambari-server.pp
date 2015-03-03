@@ -7,15 +7,15 @@ class install::ambari-server{
     require => Exec["ambari-repo"]
   }
 
-  exec {"ambari-server hive patch":
-    command => 'sed -i.bak "s/metatool -listFSRoot 2>\/dev\/null | grep hdfs:\/\//metatool -listFSRoot 2>\/dev\/null | grep hdfs:\/\/ |  grep -v \\\\\".db$\\\\\"/g" /var/lib/ambari-server/resources/stacks/HDP/2.0.6/services/HIVE/package/scripts/hive_service.py',
-    require => [Package["ambari-server"]]
-  }
+#  exec {"ambari-server hive patch":
+#    command => 'sed -i.bak "s/metatool -listFSRoot 2>\/dev\/null | grep hdfs:\/\//metatool -listFSRoot 2>\/dev\/null | grep hdfs:\/\/ |  grep -v \\\\\".db$\\\\\"/g" /var/lib/ambari-server/resources/stacks/HDP/2.0.6/services/HIVE/package/scripts/hive_service.py',
+#    require => [Package["ambari-server"]]
+#  }
 
 
   exec {"ambari-server setup":
     command => 'ambari-server setup -j `source /etc/profile.d/java.sh; echo $JAVA_HOME` -s',
-    require => [Exec["ambari-server hive patch"]]
+#    require => [Exec["ambari-server hive patch"]]
   }
 
 

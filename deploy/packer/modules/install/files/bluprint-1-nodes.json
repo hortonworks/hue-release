@@ -186,7 +186,6 @@
                 {"name" : "KAFKA_BROKER"},
                 {"name" : "MAPREDUCE2_CLIENT"},
                 {"name" : "MYSQL_SERVER"},
-                {"name" : "NAGIOS_SERVER"},
                 {"name" : "NAMENODE"},
                 {"name" : "NIMBUS"},
                 {"name" : "NODEMANAGER"},
