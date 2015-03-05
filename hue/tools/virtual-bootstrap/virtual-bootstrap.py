@@ -19,6 +19,7 @@
 """
 
 virtualenv_version = "1.4.5"
+setuptools_version_req = "<=7.0"
 
 import sys
 import os
@@ -331,7 +332,7 @@ def _install_req(py_executable, unzip=False, distribute=False):
             os.chdir(os.path.dirname(source))
         else:
             logger.info('No %s egg found; downloading' % project_name)
-        cmd.extend(['--always-copy', '-U', project_name])
+        cmd.extend(['--always-copy', '-U', project_name + setuptools_version_req])
     logger.start_progress('Installing %s...' % project_name)
     logger.indent += 2
     cwd = None
