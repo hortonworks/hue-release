@@ -10,9 +10,9 @@ class postinstall {
     # class {spark:
     #   stage => postinstall_1
     # }
-    class {hue:
-      stage => postinstall_1
-    }
+#    class {hue:
+#      stage => postinstall_1
+#    }
     class {solr:
       stage => postinstall_1
     }
