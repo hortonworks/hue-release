@@ -165,7 +165,7 @@ class DocumentTag(models.Model):
 class DocumentManager(models.Manager):
 
   def documents(self, user):
-    return Document.objects.filter(Q(owner=user) | Q(documentpermission__users=user) | Q(documentpermission__groups__in=user.groups.all())).distinct()
+    return Document.objects.filter(Q(owner=user) | Q(documentpermission__users=user) | Q(documentpermission__groups__in=user.groups.all())).defer('description', 'extra').distinct()
 
   def get_docs(self, user, model_class=None, extra=None):
     docs = Document.objects.documents(user).exclude(name='pig-app-hue-script')
@@ -521,8 +521,8 @@ class DocumentPermission(models.Model):
 
   doc = models.ForeignKey(Document)
 
-  users = models.ManyToManyField(auth_models.User, db_index=True)
-  groups = models.ManyToManyField(auth_models.Group, db_index=True)
+  users = models.ManyToManyField(auth_models.User, db_index=True, db_table='documentpermission_users')
+  groups = models.ManyToManyField(auth_models.Group, db_index=True, db_table='documentpermission_groups')
   perms = models.TextField(default=READ_PERM, choices=( # one perm
     (READ_PERM, 'read'),
     (WRITE_PERM, 'write'),
