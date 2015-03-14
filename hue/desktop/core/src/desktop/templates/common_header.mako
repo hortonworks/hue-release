@@ -100,23 +100,6 @@ from django.utils.translation import ugettext as _
   <script src="/static/ext/js/fileuploader.js"></script>
 
   <script type="text/javascript" charset="utf-8">
-    $(document).ready(function(){
-      $.ajaxSetup({
-        cache: false
-      });
-      $("input:text[placeholder]").simplePlaceholder();
-      $(".submitter").keydown(function(e){
-        if (e.keyCode==13){
-          $(this).closest("form").submit();
-        }
-      }).change(function(){
-        $(this).closest("form").submit();
-      });
-      $(".navbar .nav-tooltip").tooltip({
-        delay:0,
-        placement:'bottom'});
-   
-    });
 
     function getCookie(name) {
         var cookieValue = null;
@@ -136,9 +119,32 @@ from django.utils.translation import ugettext as _
 
     function getCSRFInputField() {
         var csrftoken = getCookie('csrftoken');
-        return '<div style="display:none"><input type="hidden" name="csrfmiddlewaretoken" value="' + 
-               csrftoken + '" /></div>'
+        return '<div style="display:none"><input type="hidden" name="csrfmiddlewaretoken" value="' + csrftoken + '" /></div>'
     }
+
+    $(document).ready(function(){
+      $.ajaxSetup({
+        cache: false,
+        beforeSend: function(xhr, settings) {
+            if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                // Only send the token to relative URLs i.e. locally.
+                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            }
+        }
+      });
+      $("input:text[placeholder]").simplePlaceholder();
+      $(".submitter").keydown(function(e){
+        if (e.keyCode==13){
+          $(this).closest("form").submit();
+        }
+      }).change(function(){
+        $(this).closest("form").submit();
+      });
+      $(".navbar .nav-tooltip").tooltip({
+        delay:0,
+        placement:'bottom'});
+   
+    });
   </script>
 </head>
 <body>

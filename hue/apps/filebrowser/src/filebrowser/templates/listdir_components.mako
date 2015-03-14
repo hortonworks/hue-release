@@ -545,7 +545,13 @@ from django.utils.translation import ugettext as _
             $("#hueBreadcrumbText").blur();
           }
         },
-        cache: false
+        cache: false,
+        beforeSend: function(xhr, settings) {
+            if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                // Only send the token to relative URLs i.e. locally.
+                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            }
+        }
       });
 
       $("#chownForm select[name='user']").change(function () {
