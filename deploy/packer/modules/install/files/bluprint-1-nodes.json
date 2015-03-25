@@ -1,5 +1,15 @@
 {
     "configurations" : [
+  	{
+           "ams-hbase-env" : {
+                "properties" : {
+                     "hbase_master_heapsize" : "512m",
+                     "hbase_regionserver_heapsize" : "512m",
+                     "hbase_regionserver_xmn_max" : "256m",
+                     "hbase_regionserver_xmn_ratio" : "0.2"
+                }
+           }
+        },
         {
             "capacity-scheduler" : {
                 "yarn.scheduler.capacity.root.default.maximum-am-resource-percent" :  "0.5",
@@ -174,7 +184,6 @@
                 {"name" : "FALCON_CLIENT"},
                 {"name" : "FALCON_SERVER"},
                 {"name" : "FLUME_HANDLER"},
-                {"name" : "GANGLIA_SERVER"},
                 {"name" : "HBASE_CLIENT"},
                 {"name" : "HBASE_MASTER"},
                 {"name" : "HBASE_REGIONSERVER"},
@@ -186,6 +195,8 @@
                 {"name" : "KAFKA_BROKER"},
                 {"name" : "MAPREDUCE2_CLIENT"},
                 {"name" : "MYSQL_SERVER"},
+        	{"name" : "METRICS_MONITOR"},
+        	{"name" : "METRICS_COLLECTOR"},
                 {"name" : "NAMENODE"},
                 {"name" : "NIMBUS"},
                 {"name" : "NODEMANAGER"},
@@ -210,6 +221,6 @@
     "Blueprints" : {
         "blueprint_name" : "sandbox",
         "stack_name" : "HDP",
-        "stack_version" : "2.2"
+        "stack_version" : "2.2.4"
     }
 }
