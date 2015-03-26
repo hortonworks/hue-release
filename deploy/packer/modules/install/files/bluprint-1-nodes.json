@@ -221,6 +221,6 @@
     "Blueprints" : {
         "blueprint_name" : "sandbox",
         "stack_name" : "HDP",
-        "stack_version" : "2.2.4"
+        "stack_version" : "2.2"
     }
 }
