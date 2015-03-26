@@ -110,13 +110,6 @@
             }
         },
         {
-            "nagios-env":{
-                "nagios_contact" : "admin@localhost.localdomain",
-                "nagios_web_login" : "nagiosadmin",
-                "nagios_web_password" : "admin"
-            }
-        },
-        {
             "oozie-site" : {
                 "oozie.service.ProxyUserService.proxyuser.hue.hosts" : "*",
                 "oozie.service.ProxyUserService.proxyuser.hue.groups" : "*",
@@ -202,6 +195,8 @@
                 {"name" : "NODEMANAGER"},
                 {"name" : "OOZIE_SERVER"},
                 {"name" : "OOZIE_CLIENT"},
+                {"name" : "SPARK_CLIENT"},
+                {"name" : "SPARK_JOBHISTORYSERVER"},
                 {"name" : "PIG"},
                 {"name" : "RESOURCEMANAGER"},
                 {"name" : "SECONDARY_NAMENODE"},
