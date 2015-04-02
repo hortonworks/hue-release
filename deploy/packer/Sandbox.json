@@ -109,12 +109,16 @@
 					{
 						"type": "file",
 						"source":"hiera.yaml",
-						"destination":"/etc/puppet/hiera.yaml"
+						"destination":"/tmp/hiera.yaml"
 					},
 					{
 						"type":"file",
 						"source":"hieradata",
-						"destination":"/vagrant"
+						"destination":"/tmp"
+					},
+					{
+						"type":"shell",
+						"inline":["mv /tmp/hiera.yaml /etc/puppet/hiera.yaml && mv /tmp/hieradata /vagrant/hieradata"] 
 					},
 					{
             "type": "puppet-masterless",
