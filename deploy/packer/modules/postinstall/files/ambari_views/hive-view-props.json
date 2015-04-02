@@ -1,0 +1,14 @@
+[ {
+"ViewInstanceInfo" : {
+    "properties" : {
+	"webhdfs.url" : "hdfs://sandbox.hortonworks.com:8020",
+	"webhcat.url" : "http://sandbox.hortonworks.com:50111/templeton/v1",
+	"scripts.dir" : "/tmp/.hivequeries",
+	"jobs.dir" : "/tmp/.hivejobs",
+	"hive.host": "sandbox.hortonworks.com",
+	"hive.port": "10000",
+	"hive.auth": "auth=NONE",
+	"yarn.ats.url": "http://sandbox.hortonworks.com:8188"
+    }
+  }
+} ]

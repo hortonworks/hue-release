@@ -1,0 +1,7 @@
+[{
+  "PrivilegeInfo" : {
+      "permission_name" : "VIEW.USE", 
+      "principal_name" : "views", 
+      "principal_type" : "GROUP"
+  }
+}]

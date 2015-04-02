@@ -1,0 +1,81 @@
+[{
+  "Users" : {
+      "user_name" : "horton", 
+      "password" : "hadoop", 
+      "active" : "true", 
+       "admin" : "true"
+  }
+},
+{
+  "Users" : {
+      "user_name" : "helga", 
+      "password" : "hadoop", 
+      "active" : "true", 
+       "admin" : "false"
+  }
+},
+{
+  "Users" : {
+      "user_name" : "sally", 
+      "password" : "hadoop", 
+      "active" : "true", 
+       "admin" : "false"
+  }
+},
+{
+  "Users" : {
+      "user_name" : "rudy", 
+      "password" : "hadoop", 
+      "active" : "true", 
+       "admin" : "false"
+  }
+},
+{
+  "Users" : {
+      "user_name" : "yummo", 
+      "password" : "hadoop", 
+      "active" : "true", 
+       "admin" : "false"
+  }
+}]'
+	}
+	file {'groups.json':
+		path	=> "/tmp/groups.json",
+		content	=>'
+[{
+	"Groups/group_name":"views"
+}]'
+	}
+	file {'adduserstogroup.json':
+		path	=> "/tmp/adduserstogroup.json",
+		content	=>'
+[{
+  "MemberInfo" : {
+      "user_name" : "horton",
+      "group_name" : "views"
+  }
+},
+{
+  "MemberInfo" : {
+      "user_name" : "helga",
+      "group_name" : "views"
+  }
+},
+{
+  "MemberInfo" : {
+      "user_name" : "sally",
+      "group_name" : "views"
+  }
+},
+{
+  "MemberInfo" : {
+      "user_name" : "yummo",
+      "group_name" : "views"
+  }
+},
+{
+  "MemberInfo" : {
+      "user_name" : "rudy",
+      "group_name" : "views"
+  }
+}]
