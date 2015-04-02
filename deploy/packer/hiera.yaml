@@ -1,0 +1,11 @@
+---
+:backends: yaml
+:yaml:
+  :datadir: /vagrant/hieradata
+:hierarchy: 
+- "%{module_name}/%{calling_class}"
+- "postinstall/%{calling_class}"
+- "%{calling_class}"
+- common
+:logger: console
+
