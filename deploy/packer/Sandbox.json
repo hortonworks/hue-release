@@ -52,7 +52,7 @@
             ["modifyvm", "{{.Name}}", "--natpf1", "HBaseRegion,tcp,127.0.0.1,60030,,60030"],
             ["modifyvm", "{{.Name}}", "--natpf1", "WebHBase,tcp,127.0.0.1,60080,,60080"],
             ["modifyvm", "{{.Name}}", "--natpf1", "XASecure,tcp,127.0.0.1,6080,,6080"],
-            ["modifyvm", "{{.Name}}", "--natpf1", "SparkHistoryServer,tcp,127.0.0.1,18080,,18080"]
+            ["modifyvm", "{{.Name}}", "--natpf1", "SparkHistoryServer,tcp,127.0.0.1,18080,,18080"],
             ["modifyvm", "{{.Name}}", "--natpf1", "YarnATS,tcp,127.0.0.1,8188,,8188"]
 
         ]
