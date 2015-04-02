@@ -114,15 +114,12 @@
 					{
 						"type":"file",
 						"source":"hieradata",
-						"destination":"/tmp"
-					},
-					{
-						"type":"shell",
-						"inline":["mv /tmp/hiera.yaml /etc/puppet/hiera.yaml && mv /tmp/hieradata /vagrant/hieradata"] 
+						"destination":"/vagrant"
 					},
 					{
             "type": "puppet-masterless",
             "manifest_file": "manifests/init.pp",
+						"hiera_config_path":"hiera.yaml",
             "module_paths": ["modules"],
             "facter": {"role": "ambari","nodecount": "1", "sandbox": "true", "xasecure_version": "3.5.001"}
         },{
