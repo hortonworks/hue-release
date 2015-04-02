@@ -9,7 +9,7 @@ class postinstall::ambari_views{
   Class['create_users']->
   Class['finish_install']
 }
-  class download_ambari_views{
+  class download_ambari_views($files_jar, $pig_jar, $cs_jar, $hive_jar) {
     
     exec {"files":
       command => "/usr/bin/wget --directory-prefix='/var/lib/ambari-server/resources/views/' $files_jar",
