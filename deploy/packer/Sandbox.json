@@ -15,7 +15,7 @@
         "disk_size" : "50000",
         "format" : "ova",
         "output_directory": "packer_virtualbox",
-        "vm_name" : "virtualbox-iso",
+        "vm_name" : "Hortonworks Sandbox with HDP 2.2.4",
 	"headless" : "true",
 	"http_directory": "http",
         "vboxmanage": [
@@ -76,6 +76,7 @@
         "ssh_wait_timeout": "10000s",
         "tools_upload_flavor": "linux",
         "type": "vmware-iso",
+				"vm_name":"Hortonworks Sandbox with HDP 2.2.4",
         "vmx_data": {
             "cpuid.coresPerSocket": "2",
             "memsize": "4096",

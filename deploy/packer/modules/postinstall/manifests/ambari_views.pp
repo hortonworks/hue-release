@@ -126,7 +126,7 @@ class create_instances{
   }
 
   exec {'hive_instance':
-      command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/HIVE/versions/0.0.1/instances/MyHive --data "@/tmp/hive-view-props.json"',
+      command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/HIVE/versions/0.1.0/instances/MyHive --data "@/tmp/hive-view-props.json"',
       require => Exec['hive_wait_deploy'],
       provider => 'shell',
       timeout => 0,
