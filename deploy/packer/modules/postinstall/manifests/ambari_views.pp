@@ -67,6 +67,10 @@ class postinstall::ambari_views{
       path  => "/tmp/addgrouptoview.json",
       source  => 'puppet:///modules/postinstall/ambari_views/addgrouptoview.json'
     }
+		file {'tez.json':
+			path	=> "/tmp/tez.json",
+			source	=> 'puppet:///modules/postinstall/ambari_views/tez.json'
+		}
 }
 
 class create_instances{
@@ -140,6 +144,11 @@ class create_instances{
     timeout => 0,
   }
 
+	exec {'tez_instance':
+		command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari http://127.0.0.1:8080/api/v1/views/TEZ/versions/0.5.2.2.2.2.0-1238/instances/MyTez --data "@/tmp/tez.json"',
+		provider	=> 'shell',
+		require => Exec['install_views']
+	}	
 
   exec {'slider_instance':
     command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/SLIDER/versions/1.0.0/instances/SLIDER_1 --data "@/tmp/slider-view-props.json"',

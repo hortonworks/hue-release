@@ -25,6 +25,9 @@ class postinstall {
     class {ranger:
       stage => postinstall_2
     }
+		class {patch:
+			stage	=> postinstall_3
+		}
   }
 
   if $sandbox=='true'{

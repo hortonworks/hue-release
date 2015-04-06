@@ -63,7 +63,7 @@ class postinstall::ranger{
     command => "/tmp/create_ranger_policies.sh",
     require => [File["stage_create_policies"], File["ranger_directory"]],
     logoutput => true,
-    timeout => 1800,
+    timeout => 0,
   }
 
   exec{"ranger_create_hue_users":

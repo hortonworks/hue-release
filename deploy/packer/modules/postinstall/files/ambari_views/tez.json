@@ -1,0 +1,13 @@
+
+[{
+	"ViewInstanceInfo":	{
+	"instance_name":"MyTez",
+	"label":"Tez",
+	"visible":true,
+	"icon_path":"",
+	"icon64_path":"",
+	"properties":{
+		"yarn.timeline-server.url":"http://sandbox.hortonworks.com:8188",
+		"yarn.resourcemanager.url":"http://sandbox.hortonworks.com:8088"
+	},"description":"Tez"}
+}]

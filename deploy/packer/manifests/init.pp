@@ -5,8 +5,9 @@ stage { 'install': }
 stage { 'postinstall': }
 stage { 'postinstall_1': }
 stage { 'postinstall_2': }
+stage { 'postinstall_3': }
 
-Stage['prepare'] -> Stage['install'] -> Stage['postinstall'] -> Stage['postinstall_1'] -> Stage['postinstall_2']
+Stage['prepare'] -> Stage['install'] -> Stage['postinstall'] -> Stage['postinstall_1'] -> Stage['postinstall_2'] -> Stage['postinstall_3']
 
 
 node default {
