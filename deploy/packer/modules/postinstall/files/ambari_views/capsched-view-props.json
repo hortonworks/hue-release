@@ -4,6 +4,6 @@
 "ambari.server.url" : "http://sandbox.hortonworks.com:8080/api/v1/clusters/Sandbox",
 "ambari.server.username" : "admin",
 "ambari.server.password" : "admin"
-}
-}
-} ]
+}},
+"description" : "User interface to configure the compute resources within your Hadoop cluster"
+}]

@@ -1,5 +1,6 @@
 [ {
 "ViewInstanceInfo" : {
+	"description": "User Interface to write and execute Hive Query Language (HQL) scripts.",
     "properties" : {
 	"webhdfs.url" : "hdfs://sandbox.hortonworks.com:8020",
 	"webhcat.url" : "http://sandbox.hortonworks.com:50111/templeton/v1",

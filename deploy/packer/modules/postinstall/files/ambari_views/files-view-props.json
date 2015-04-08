@@ -1,7 +1,8 @@
 [ {
 "ViewInstanceInfo" : {
+"description" : "User interface to allow management of files within the Hadoop Distributed File System (HDFS)",
 "properties" : {
 	"webhdfs.url" : "webhdfs://sandbox.hortonworks.com:50070",
 	"webhdfs.username" : "${username}"}
-}
-} ]
+},
+}]

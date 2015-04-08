@@ -1,5 +1,6 @@
 [ {
 "ViewInstanceInfo" : {
+"description": "User Interface to write and execute Pig scripts",
 "properties" : {
      "webhcat.url" : "http://sandbox.hortonworks.com:50111/templeton/v1",
       "webhdfs.url" : "webhdfs://sandbox.hortonworks.com:50070",
