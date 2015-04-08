@@ -22,6 +22,10 @@ echo "Adding guest user"
 su - hdfs -c "hdfs dfs -mkdir /user/guest"
 su - hdfs -c "hdfs dfs -chown guest:guest /user/guest"
 
+echo "Adding yarn user"
+su - hdfs -c "hdfs dfs -mkdir /user/yarn"
+su - hdfs -c "hdfs dfs -chown yarn:yarn /user/yarn"
+
 touch /root/.hdfs_prepared
 /etc/init.d/hue restart
 )
