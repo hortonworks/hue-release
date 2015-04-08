@@ -4,5 +4,5 @@
 "properties" : {
 	"webhdfs.url" : "webhdfs://sandbox.hortonworks.com:50070",
 	"webhdfs.username" : "${username}"}
-},
+}
 }]
