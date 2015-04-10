@@ -18,7 +18,7 @@ class postinstall::solr{
   # }
 
   exec {"download solr":
-    command => "wget -N -P /var/cache/wget http://mirror.reverse.net/pub/apache/lucene/solr/4.7.2/solr-4.7.2.tgz && cp /var/cache/wget/solr*.tgz ./solr.tar.gz && tar xvf solr.tar.gz && rm solr.tar.gz",
+    command => "wget -N -P /var/cache/wget http://mirror.reverse.net/pub/apache/lucene/solr/4.10.4/solr-4.10.4.tgz && cp /var/cache/wget/solr*.tgz ./solr.tar.gz && tar xvf solr.tar.gz && rm solr.tar.gz",
     cwd => "/opt/solr",
     require => [File["/opt/solr"]],
     timeout => 0,

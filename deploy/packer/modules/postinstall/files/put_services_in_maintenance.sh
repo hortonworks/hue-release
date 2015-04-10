@@ -1,5 +1,5 @@
 #!/bin/bash
-for i in SPARK HBASE FALCON STORM KAFKA FLUME; do 
+for i in SPARK HBASE FALCON STORM KAFKA FLUME AMBARI_METRICS; do 
 	
 	#stop required service
 	curl --user admin:admin -X PUT -H "X-Requested-By: ambari"  -d "{\"RequestInfo\":{\"context\":\"Stop required services\",\"operation_level\":{\"level\":\"SERVICE\",\"cluster_name\":\"Sandbox\",\"service_name\":\"$i\"}},\"Body\":{\"ServiceInfo\":{\"state\":\"INSTALLED\"}}}" "http://localhost:8080/api/v1/clusters/Sandbox/services/$i"

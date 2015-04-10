@@ -1,5 +1,6 @@
 [ {
 "ViewInstanceInfo" : {
+"description":"Provide a management view of applications deployed using Slider framework.",
 "properties" : {
 "ambari.server.url" : "http://sandbox.hortonworks.com:8080/api/v1/clusters/Sandbox",
 "ambari.server.username" : "admin",

@@ -15,7 +15,7 @@ class postinstall::patch{
 	}
 	#see bug BUG-34248 for this sed:
 	exec{'update_version':
-		command	=>"sed -i s/'HDP 2.2'/'HDP 2.2.4'/g /usr/lib/hue/tools/start_scripts/splash.py",
+		command	=>"sed -i s/'HDP 2.2'/'HDP 2.2.4.2'/g /usr/lib/hue/tools/start_scripts/splash.py",
 		provider	=> 'shell', 
 	}
 }

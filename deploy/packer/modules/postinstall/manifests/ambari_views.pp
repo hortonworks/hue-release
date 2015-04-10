@@ -25,10 +25,15 @@ class postinstall::ambari_views{
       command => "/usr/bin/wget --directory-prefix='/var/lib/ambari-server/resources/views/' $cs_jar",
       timeout => 0,
     }
-    exec {"hive":
-      command => "/usr/bin/wget --directory-prefix='/var/lib/ambari-server/resources/views/' $hive_jar",
-      timeout => 0,
-      }
+# no download link available so using it from a local file
+#    exec {"hive":
+#      command => "/usr/bin/wget --directory-prefix='/var/lib/ambari-server/resources/views/' $hive_jar",
+#      timeout => 0,
+#      }
+		file { 'hive.jar':
+			path	=> "/var/lib/ambari-server/resources/views/hive-0.2.0-SNAPSHOT.jar",
+			source	=> 'puppet:///modules/postinstall/ambari_views/hive-0.2.0-SNAPSHOT.jar'
+		}
     file { 'pig-view-props.json':
         path    => "/tmp/pig-view-props.json",
         source => "puppet:///modules/postinstall/ambari_views/pig-view-props.json"
@@ -123,14 +128,14 @@ class create_instances{
       timeout => 0,
     }
   exec {'hive_wait_deploy':
-      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/HIVE/versions/0.0.1 | grep DEPLOYING >/dev/null; do sleep 1; done',
+      command => 'while curl -s --user admin:admin http://127.0.0.1:8080/api/v1/views/HIVE/versions/0.2.0 | grep DEPLOYING >/dev/null; do sleep 1; done',
       require => Exec['install_views'],
       provider => 'shell',
       timeout => 0,
   }
 
   exec {'hive_instance':
-      command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/HIVE/versions/0.1.0/instances/MyHive --data "@/tmp/hive-view-props.json"',
+      command => 'curl -v -X POST --user admin:admin -H X-Requested-By:ambari 127.0.0.1:8080/api/v1/views/HIVE/versions/0.2.0/instances/MyHive --data "@/tmp/hive-view-props.json"',
       require => Exec['hive_wait_deploy'],
       provider => 'shell',
       timeout => 0,
