@@ -12,7 +12,7 @@ chown solr:solr -R /opt/solr
 su - solr << EOF
 cd /opt/solr
 
-[ -e solr ] || ln -sf solr-4.7.2 solr
+[ -e solr ] || ln -sf solr-4.10.4 solr
 
 cd solr
 cp -r example hdp
