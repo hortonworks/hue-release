@@ -34,7 +34,7 @@ class install::ambari-server{
   }
 
   exec { "slider storm":
-    command => 'wget -N http://dev.hortonworks.com.s3.amazonaws.com/HDP/centos6/2.x/BUILDS/2.2.4.2-2/slider-app-packages/storm && cp slider-storm*.zip /var/lib/ambari-server/resources/apps/',
+    command => 'wget -N http://dev.hortonworks.com.s3.amazonaws.com/HDP/centos6/2.x/BUILDS/2.2.4.2-2/slider-app-packages/storm/slider-storm-app-package-0.9.3.2.2.4.2-2.zip && cp slider-storm*.zip /var/lib/ambari-server/resources/apps/',
     cwd => "/var/cache/wget",
     logoutput => true,
     require => Exec["ambari-server setup"]
