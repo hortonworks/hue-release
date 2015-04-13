@@ -56,6 +56,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.network :forwarded_port, guest: 80, host: 42080, host_ip: "127.0.0.1", auto_correct: true #Apache http
   config.vm.network :forwarded_port, guest: 111, host: 42111, host_ip: "127.0.0.1", auto_correct: true #NFS portmap
+  config.vm.network :forwarded_port, guest: 4040, host: 4040, host_ip: "127.0.0.1", auto_correct: true #Spark
   config.vm.network :forwarded_port, guest: 6080, host: 6080, host_ip: "127.0.0.1", auto_correct: true #XASecure Manager
   config.vm.network :forwarded_port, guest: 8000, host: 8000, host_ip: "127.0.0.1", auto_correct: true #Hue
   config.vm.network :forwarded_port, guest: 8020, host: 8020, host_ip: "127.0.0.1", auto_correct: true #Hdfs

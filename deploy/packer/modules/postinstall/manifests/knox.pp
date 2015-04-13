@@ -10,6 +10,11 @@ class postinstall::knox{
     require => Package["knox_*"]
   }
 
+  exec{"copy knox libraries: BUG-34455":
+    command => "cp /usr/share/java/mysql-connector-java.jar /usr/hdp/2.2.4*/knox/ext",
+    require => Package["knox_*"]
+  }
+
 
   file { "/etc/knox/sandbox.xml.provided":
     source => "puppet:///modules/postinstall/knox/sandbox.xml",

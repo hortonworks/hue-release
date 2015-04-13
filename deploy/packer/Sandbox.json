@@ -26,6 +26,7 @@
             ["modifyvm", "{{.Name}}", "--nic2", "none"],
             ["modifyvm", "{{.Name}}", "--mouse", "usbtablet"],
             ["modifyvm", "{{.Name}}", "--natpf1", "ssh,tcp,127.0.0.1,2222,,22"],
+            ["modifyvm", "{{.Name}}", "--natpf1", "Spark,tcp,127.0.0.1,4040,,4040"],
             ["modifyvm", "{{.Name}}", "--natpf1", "solr,tcp,127.0.0.1,8983,,8983"],
             ["modifyvm", "{{.Name}}", "--natpf1", "apache,tcp,127.0.0.1,42080,,80"],
             ["modifyvm", "{{.Name}}", "--natpf1", "nfs,tcp,127.0.0.1,111,,42111"],
