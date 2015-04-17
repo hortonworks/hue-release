@@ -48,9 +48,6 @@
         {
             "hbase-site" : {
                 "hbase.security.authorization": "true",
-                "hbase.rpc.engine": "org.apache.hadoop.hbase.ipc.SecureRpcEngine",
-                "hbase_master_heapsize": "250",
-                "hbase_regionserver_heapsize": "250",
                 "hbase.rpc.protection": "PRIVACY"
             }
         },
@@ -74,7 +71,6 @@
                 "hive.users.in.admin.role" : "hue,hive",
                 "hive_metastore_user_passwd" : "hive",
                 "hive.server2.enable.impersonation": "true",
-
                 "hive.compactor.check.interval": "300s",
                 "hive.compactor.initiator.on": "true",
                 "hive.compactor.worker.timeout": "86400s",
