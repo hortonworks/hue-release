@@ -85,14 +85,6 @@
         }
     }
                 ],
-    "post-processors": [
-        {
-            "type": "vagrant",
-            "only": ["virtualbox-iso"],
-            "output" : "packer_vagrant/packer_{{.BuildName}}_{{.Provider}}.box",
-            "keep_input_artifact": true
-        }
-    ],
     "provisioners": [
         {
             "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
