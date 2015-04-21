@@ -26,14 +26,19 @@ class postinstall::ambari_views{
       timeout => 0,
     }
 # no download link available so using it from a local file
-#    exec {"hive":
-#      command => "/usr/bin/wget --directory-prefix='/var/lib/ambari-server/resources/views/' $hive_jar",
-#      timeout => 0,
-#      }
-		file { 'hive.jar':
-			path	=> "/var/lib/ambari-server/resources/views/hive-0.2.0-SNAPSHOT.jar",
-			source	=> 'puppet:///modules/postinstall/ambari_views/hive-0.2.0-SNAPSHOT.jar'
+    exec {"hive":
+      command => "/usr/bin/wget --directory-prefix='/var/lib/ambari-server/resources/views/' $hive_jar",
+      timeout => 0,
+      }
+		exec{'rename_hive':
+			command	=> "mv /var/lib/ambari-server/resources/views/hive-0.2.0-20150421.074823-32.jar /var/lib/ambari-server/resources/views/hive-0.2.0.jar",
+			provider => 'shell',
+			require	=> Exec["hive"],
 		}
+#		file { 'hive.jar':
+#			path	=> "/var/lib/ambari-server/resources/views/hive-0.2.0-SNAPSHOT.jar",
+#			source	=> 'puppet:///modules/postinstall/ambari_views/hive-0.2.0-SNAPSHOT.jar'
+#		}
     file { 'pig-view-props.json':
         path    => "/tmp/pig-view-props.json",
         source => "puppet:///modules/postinstall/ambari_views/pig-view-props.json"
