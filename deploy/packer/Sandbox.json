@@ -19,8 +19,8 @@
 	"headless" : "true",
 	"http_directory": "http",
         "vboxmanage": [
-            ["modifyvm", "{{.Name}}", "--memory", "4096"],
-            ["modifyvm", "{{.Name}}", "--cpus", "2"],
+            ["modifyvm", "{{.Name}}", "--memory", "16000"],
+            ["modifyvm", "{{.Name}}", "--cpus", "8"],
             ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
             ["modifyvm", "{{.Name}}", "--nictype1", "Am79C973"],
             ["modifyvm", "{{.Name}}", "--nic2", "none"],
