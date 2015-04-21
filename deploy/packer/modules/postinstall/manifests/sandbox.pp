@@ -69,8 +69,7 @@ class postinstall::sandbox{
   ProxyPass /cgi-bin !
   ProxyPass / http://127.0.0.1:8888/
   ProxyPassReverse / http://127.0.0.1:8888/
-</VirtualHost>
-'
+</VirtualHost>'
     }
 
   package{$postInstallPackages:
@@ -97,6 +96,19 @@ class postinstall::sandbox{
      ensure => link,
       target => "/usr/lib/hue/tools/start_scripts/start_hbase.sh",
       mode => 0755,
+  }
+	#need to add our version of consts.sh and splash.py 
+	file{'splash.py':
+		ensure	=> present,
+		path		=> "/usr/lib/hue/tools/start_scripts/splash.py",
+		source	=> "puppet:///modules/postinstall/start_scripts/splash.py",
+		require	=>	Package["hue-sandbox"],
+	}
+	file{'consts.sh':
+  	ensure  => present,
+    path    => "/usr/lib/hue/tools/start_scripts/consts.sh",
+    source  => "puppet:///modules/postinstall/start_scripts/consts.sh",
+    require =>  Package["hue-sandbox"],
   }
 
   $hueSandbox = ["hue-sandbox", "hue-tutorials"]
