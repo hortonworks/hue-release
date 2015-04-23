@@ -13,6 +13,9 @@ class postinstall::patch{
 		require	=>File['maintenance_script'],
 		timeout	=> 0
 	}
-	#see bug BUG-34248 for this sed:
+	exec{'bug-34455':
+		command	=> "cp /usr/share/java/mysql-connector-java.jar /usr/hdp/*/knox/ext/",
+		provider	=> 'shell',
+	}
 }
 #include postinstall::patch
