@@ -1,0 +1,13 @@
+{
+	"RequestInfo":{
+		"command":"RESTART",
+		"context":"Restart all components with Stale Configs for HIVE",
+		"operation_level":{"level":"SERVICE",
+		"cluster_name":"Sandbox",
+		"service_name":"HIVE"}
+	},
+	"Requests/resource_filters":[{
+		"service_name":"HIVE",
+		"component_name":"WEBHCAT_SERVER",
+		"hosts":"sandbox.hortonworks.com"}]
+}

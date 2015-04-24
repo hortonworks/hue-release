@@ -1,0 +1,20 @@
+{
+	"RequestInfo":{
+		"command":"RESTART",
+		"context":"Restart all components with Stale Configs for HBASE",
+		"operation_level":{"level":"SERVICE",
+		"cluster_name":"Sandbox","service_name":"HBASE"}},
+		"Requests/resource_filters":[{"service_name":"HBASE",
+		"component_name":"HBASE_CLIENT","hosts":"sandbox.hortonworks.com"
+		},
+		{
+			"service_name":"HBASE",
+			"component_name":"HBASE_MASTER",
+			"hosts":"sandbox.hortonworks.com"
+		},
+		{
+			"service_name":"HBASE",
+			"component_name":"HBASE_REGIONSERVER",
+			"hosts":"sandbox.hortonworks.com"
+		}]
+}
