@@ -22,6 +22,7 @@ import urllib
 from django.utils.encoding import iri_to_uri, smart_str
 
 from requests import exceptions
+from requests.auth import HTTPBasicAuth
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 from desktop.conf import DJANGO_DEBUG_MODE
 
@@ -73,17 +74,17 @@ class HttpClient(object):
   """
   Basic HTTP client tailored for rest APIs.
   """
-  def __init__(self, base_url, exc_class=None, logger=None):
+  def __init__(self, base_url, exc_class=None, logger=None, cert_validate=True):
     """
     @param base_url: The base url to the API.
     @param exc_class: An exception class to handle non-200 results.
 
-    Creates an HTTP(S) client to connect to the Cloudera Manager API.
     """
     self._base_url = base_url.rstrip('/')
     self._exc_class = exc_class or RestException
     self._logger = logger or LOG
     self._session = requests.Session()
+    self._cert_validate = cert_validate
     requests_log = logging.getLogger("requests")
     requests_log.setLevel(logging.WARNING)
 
@@ -94,6 +95,9 @@ class HttpClient(object):
     self.is_kerberos_auth = True
     return self
 
+  def set_basic_auth(self, username, password):
+    self._session.auth = HTTPBasicAuth(username, password)
+    return self
 
   def set_headers(self, headers):
     """
@@ -164,6 +168,7 @@ class HttpClient(object):
       request_kwargs['headers'] = headers
     if data:
       request_kwargs['data'] = data
+    request_kwargs["verify"] = self._cert_validate
 
     try:
       resp = getattr(self._session, http_method.lower())(url, **request_kwargs)
