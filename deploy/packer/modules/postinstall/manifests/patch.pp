@@ -27,5 +27,9 @@ class postinstall::patch{
 		command	=> "cp /usr/share/java/mysql-connector-java.jar /usr/hdp/*/knox/ext/",
 		provider	=> 'shell',
 	}
+	exec{'BUG-35799':
+		command => 'rm -f /var/lib/ambari-agent/data/structured-out-status.json',
+		provider	=> 'shell'
+	}
 }
 include postinstall::patch
