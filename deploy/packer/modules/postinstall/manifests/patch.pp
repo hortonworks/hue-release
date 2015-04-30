@@ -28,7 +28,7 @@ class postinstall::patch{
 		provider	=> 'shell',
 	}
 	exec{'BUG-35799':
-		command => 'rm -f /var/lib/ambari-agent/data/structured-out-status.json',
+		command => 'ambari-agent stop && rm -f /var/lib/ambari-agent/data/structured-out-status.json',
 		provider	=> 'shell'
 	}
 }
